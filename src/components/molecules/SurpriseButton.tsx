@@ -1,0 +1,34 @@
+'use client';
+
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+import { Dices, Loader2 } from 'lucide-react';
+import { Button } from '@/components/atoms/Button';
+import { getRandomMedia } from '@/lib/api';
+import { cn, ThemeType, THEME_CONFIG } from '@/lib/utils';
+import type { MediaType } from '@/lib/store';
+
+export function SurpriseButton({ type, theme, className }: { type: MediaType; theme: ThemeType; className?: string }) {
+  const [loading, setLoading] = React.useState(false);
+  const router = useRouter();
+  const config = THEME_CONFIG[theme] || THEME_CONFIG.default;
+
+  const handleSurprise = async () => {
+    setLoading(true);
+    try {
+      const { slug } = await getRandomMedia(type);
+      setTimeout(() => {
+        router.push(`/${type === 'movie' ? 'movies' : type}/${slug}`);
+        setLoading(false);
+      }, 800);
+    } catch { setLoading(false); }
+  };
+
+  return (
+    <Button variant="outline" onClick={handleSurprise} disabled={loading} className={cn("rounded-2xl border-zinc-800 h-12 gap-3 group relative overflow-hidden", className)}>
+      {loading ? <Loader2 className="w-4 h-4 animate-spin text-zinc-400" /> : <Dices className={cn("w-4 h-4 transition-transform group-hover:rotate-180 duration-500", config.text)} />}
+      <span className="text-[10px] font-black uppercase tracking-widest">Surprise Me</span>
+      {loading && <div className="absolute inset-0 bg-white/5 animate-pulse" />}
+    </Button>
+  );
+}
