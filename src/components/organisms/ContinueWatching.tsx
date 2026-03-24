@@ -4,19 +4,22 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Play, ChevronRight, Clock } from 'lucide-react';
-import { getHistory, HistoryItem } from '@/lib/store';
+import { AuthGateNotice } from '@/components/molecules/AuthGateNotice';
 import { Button } from '@/components/atoms/Button';
 import { ScrollArea, ScrollBar } from '@/components/atoms/ScrollArea';
+import { useAuthGate } from '@/components/hooks/useAuthGate';
+import { getHistoryForAuth, HistoryItem } from '@/lib/store';
 import { cn, THEME_CONFIG, ThemeType } from '@/lib/utils';
 
 export function ContinueWatching() {
+  const authGate = useAuthGate();
   const [history, setHistory] = React.useState<HistoryItem[]>([]);
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    setHistory(getHistory().slice(0, 10));
+    setHistory(getHistoryForAuth(authGate.authenticated).slice(0, 10));
     setMounted(true);
-  }, []);
+  }, [authGate.authenticated]);
 
   // Use a deterministic "hash" instead of Math.random to satisfy linter purity rules
   const getProgress = (id: string) => {
@@ -27,7 +30,32 @@ export function ContinueWatching() {
     return 10 + (Math.abs(hash) % 80); // Consistent 10-90%
   };
 
-  if (!mounted || history.length === 0) return null;
+  if (!mounted || authGate.loading) return null;
+
+  if (!authGate.authenticated) {
+    return (
+      <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex items-center justify-between border-b border-zinc-900 pb-6">
+          <div className="flex items-center gap-3">
+            <div className="relative p-2 bg-zinc-900 rounded-xl border border-zinc-800">
+              <Clock className="w-5 h-5 text-zinc-400" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black italic tracking-tighter uppercase text-white">Continue Watching</h2>
+          </div>
+        </div>
+
+        <AuthGateNotice
+          compact
+          loginHref={authGate.loginHref}
+          title="Continue watching is available after login"
+          description="Sign in to unlock your local watch progress on this device."
+          actionLabel="Login"
+        />
+      </section>
+    );
+  }
+
+  if (history.length === 0) return null;
 
   return (
     <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">

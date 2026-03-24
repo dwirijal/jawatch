@@ -23,6 +23,11 @@ const HISTORY_KEY = 'dwizzy_history';
 const BOOKMARKS_KEY = 'dwizzy_bookmarks';
 const INTEREST_KEY = 'dwizzy_interests';
 const DEAD_MIRRORS_KEY = 'dwizzy_dead_mirrors';
+const VIDEO_TRAILER_PREF_KEY = 'dwizzy_video_trailer_pref';
+
+export function canUseLocalHistory(authenticated: boolean): boolean {
+  return authenticated;
+}
 
 // --- DEAD MIRRORS (Source Filtering) ---
 export function reportDeadMirror(url: string) {
@@ -64,6 +69,23 @@ export function getHistory(): HistoryItem[] {
   } catch {
     return [];
   }
+}
+
+export function getHistoryForAuth(authenticated: boolean): HistoryItem[] {
+  if (!canUseLocalHistory(authenticated)) {
+    return [];
+  }
+
+  return getHistory();
+}
+
+export function saveHistoryForAuth(authenticated: boolean, item: HistoryItem): boolean {
+  if (!canUseLocalHistory(authenticated)) {
+    return false;
+  }
+
+  saveHistory(item);
+  return true;
 }
 
 export function clearHistory() {
