@@ -12,37 +12,14 @@ function compactDisplayName(displayName: string) {
   return token.length > 12 ? `${token.slice(0, 11)}…` : token;
 }
 
-function getAvatarBackgroundImage(avatarUrl?: string) {
-  const candidate = avatarUrl?.trim();
-  if (!candidate) {
-    return undefined;
-  }
-
-  if (candidate.startsWith('/')) {
-    return `url("${candidate}")`;
-  }
-
-  try {
-    const url = new URL(candidate);
-    if (url.protocol === 'http:' || url.protocol === 'https:') {
-      return `url("${url.toString()}")`;
-    }
-  } catch {}
-
-  return undefined;
-}
-
 function Avatar({
   displayName,
-  avatarUrl,
   className,
 }: {
   displayName: string;
-  avatarUrl?: string;
   className?: string;
 }) {
   const initial = displayName.trim().charAt(0).toUpperCase() || 'D';
-  const backgroundImage = getAvatarBackgroundImage(avatarUrl);
 
   return (
     <span
@@ -52,12 +29,6 @@ function Avatar({
         className
       )}
     >
-      {backgroundImage ? (
-        <span
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage }}
-        />
-      ) : null}
       <span className="relative z-10">{initial}</span>
     </span>
   );
@@ -87,7 +58,7 @@ export function AuthNavEntry() {
 
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900 px-2 py-2">
-      <Avatar displayName={session.user.displayName} avatarUrl={session.user.avatarUrl} />
+      <Avatar displayName={session.user.displayName} />
       <div className="min-w-0">
         <p className="truncate text-sm font-black uppercase tracking-[0.18em] text-white">
           {compactDisplayName(session.user.displayName)}

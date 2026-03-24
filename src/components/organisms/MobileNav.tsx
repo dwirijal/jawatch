@@ -15,9 +15,9 @@ export function MobileNav() {
 
   const navItems = [
     { label: "Home", href: "/", icon: Home },
+    { label: "Movies", href: "/movies", icon: Film },
     { label: "Search", onClick: () => setSearchOpen(true), icon: Search, isAction: true },
     { label: "Anime", href: "/anime", icon: Play },
-    { label: "Movies", href: "/movies", icon: Film },
     { label: "Donghua", href: "/donghua", icon: Zap },
   ];
 

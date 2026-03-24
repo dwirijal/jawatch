@@ -9,7 +9,6 @@ import { DeviceListener } from "@/components/atoms/DeviceListener";
 import { PWAInstallPrompt } from "@/components/molecules/PWAInstallPrompt";
 import { LiveActivityToast } from "@/components/molecules/LiveActivityToast";
 import { AuthSessionProvider } from "@/components/providers/AuthSessionProvider";
-import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,8 +43,7 @@ const otfitsGrotesk = localFont({
       style: "normal",
     },
     {
-      path: "../../public/fonts/OtfitsGrotesk-VF.ttf",
-      weight: "100 900",
+      path: "../../public/fonts/Otfits Grotesk Var-VF.ttf",
       style: "normal",
     },
   ],
@@ -53,15 +51,11 @@ const otfitsGrotesk = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: SITE_URL,
   title: {
     default: "dwizzyWEEB - Premium Discovery",
     template: "%s | dwizzyWEEB"
   },
   description: "High-performance platform for Anime, Manga, Donghua and Movies discovery.",
-  alternates: {
-    canonical: "/",
-  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

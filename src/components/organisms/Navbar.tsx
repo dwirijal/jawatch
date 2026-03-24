@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Play, BookOpen, Zap, Film } from 'lucide-react';
+import { Home, Play, BookOpen, LibraryBig, Zap, Film } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SearchModal } from './SearchModal';
 import { useUIStore } from '@/store/useUIStore';
@@ -16,10 +16,11 @@ export function Navbar() {
 
   const navItems = [
     { label: "Home", href: "/", icon: Home },
-    { label: "Anime", href: "/anime", icon: Play },
     { label: "Movies", href: "/movies", icon: Film },
+    { label: "Anime", href: "/anime", icon: Play },
     { label: "Manga", href: "/manga", icon: BookOpen },
     { label: "Donghua", href: "/donghua", icon: Zap },
+    { label: "Library", href: "/collection", icon: LibraryBig },
   ];
 
   return (

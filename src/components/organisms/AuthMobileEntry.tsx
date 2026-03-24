@@ -12,44 +12,15 @@ function compactDisplayName(displayName: string) {
   return token.length > 8 ? `${token.slice(0, 7)}…` : token;
 }
 
-function getAvatarBackgroundImage(avatarUrl?: string) {
-  const candidate = avatarUrl?.trim();
-  if (!candidate) {
-    return undefined;
-  }
-
-  if (candidate.startsWith('/')) {
-    return `url("${candidate}")`;
-  }
-
-  try {
-    const url = new URL(candidate);
-    if (url.protocol === 'http:' || url.protocol === 'https:') {
-      return `url("${url.toString()}")`;
-    }
-  } catch {}
-
-  return undefined;
-}
-
 function MobileAvatar({
   displayName,
-  avatarUrl,
 }: {
   displayName: string;
-  avatarUrl?: string;
 }) {
   const initial = displayName.trim().charAt(0).toUpperCase() || 'D';
-  const backgroundImage = getAvatarBackgroundImage(avatarUrl);
 
   return (
     <span className="relative flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-zinc-900 text-[10px] font-black uppercase text-white">
-      {backgroundImage ? (
-        <span
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage }}
-        />
-      ) : null}
       <span className="relative z-10">{initial}</span>
     </span>
   );
@@ -90,7 +61,7 @@ export function AuthMobileEntry() {
         aria-label={`Log out ${session.user.displayName}`}
       >
         <div className="relative">
-          <MobileAvatar displayName={session.user.displayName} avatarUrl={session.user.avatarUrl} />
+          <MobileAvatar displayName={session.user.displayName} />
           <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white text-zinc-950">
             <LogOut className="h-2.5 w-2.5" />
           </span>
