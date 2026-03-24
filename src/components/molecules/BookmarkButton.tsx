@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Bookmark } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
+import { AuthGateNotice } from '@/components/molecules/AuthGateNotice';
+import { useAuthGate } from '@/components/hooks/useAuthGate';
 import { checkIsBookmarked, toggleBookmark, BookmarkItem } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
@@ -14,12 +16,15 @@ interface BookmarkButtonProps {
 
 export function BookmarkButton({ item, theme = 'anime', className }: BookmarkButtonProps) {
   const [, setRefreshKey] = useState(0);
-  const isSaved = checkIsBookmarked(item.id);
+  const authGate = useAuthGate();
+  const isSaved = authGate.authenticated && checkIsBookmarked(item.id);
 
   const handleToggle = () => {
     toggleBookmark(item);
     setRefreshKey((value) => value + 1);
   };
+
+  const handleClick = authGate.requireAuth(handleToggle);
 
   const themeClasses = {
     manga: isSaved ? 'bg-orange-600 text-white hover:bg-orange-700 border-transparent' : 'text-orange-500 hover:bg-orange-600/10 border-orange-600/50',
@@ -29,17 +34,29 @@ export function BookmarkButton({ item, theme = 'anime', className }: BookmarkBut
   };
 
   return (
-    <Button
-      variant="outline"
-      onClick={handleToggle}
-      className={cn(
-        "gap-2 px-4 transition-all duration-300",
-        themeClasses[theme],
-        className
-      )}
-    >
-      <Bookmark className={cn("w-4 h-4", isSaved && "fill-current")} />
-      {isSaved ? 'Saved' : 'Save'}
-    </Button>
+    <div className="space-y-3">
+      <Button
+        variant="outline"
+        onClick={handleClick}
+        className={cn(
+          "gap-2 px-4 transition-all duration-300",
+          themeClasses[theme],
+          className
+        )}
+      >
+        <Bookmark className={cn("w-4 h-4", isSaved && "fill-current")} />
+        {isSaved ? 'Saved' : 'Save'}
+      </Button>
+
+      {!authGate.authenticated && authGate.noticeVisible ? (
+        <AuthGateNotice
+          compact
+          loginHref={authGate.loginHref}
+          title="Login to save"
+          description="Sign in to keep bookmarks in your collection."
+          actionLabel="Login"
+        />
+      ) : null}
+    </div>
   );
 }
