@@ -1,12 +1,12 @@
 'use client';
 
-import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Play, BookOpen, LibraryBig, Search, User, Zap, Film } from 'lucide-react';
+import { Home, Play, BookOpen, Zap, Film } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SearchModal } from './SearchModal';
 import { useUIStore } from '@/store/useUIStore';
+import { AuthNavEntry } from './AuthNavEntry';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -16,11 +16,10 @@ export function Navbar() {
 
   const navItems = [
     { label: "Home", href: "/", icon: Home },
-    { label: "Movies", href: "/movies", icon: Film },
     { label: "Anime", href: "/anime", icon: Play },
+    { label: "Movies", href: "/movies", icon: Film },
     { label: "Manga", href: "/manga", icon: BookOpen },
     { label: "Donghua", href: "/donghua", icon: Zap },
-    { label: "Library", href: "/collection", icon: LibraryBig },
   ];
 
   return (
@@ -55,9 +54,7 @@ export function Navbar() {
 
         <div className="flex items-center gap-6">
           <SearchModal />
-          <button className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:border-zinc-700 transition-colors">
-            <User className="w-5 h-5 text-zinc-400" />
-          </button>
+          <AuthNavEntry />
         </div>
       </div>
     </nav>

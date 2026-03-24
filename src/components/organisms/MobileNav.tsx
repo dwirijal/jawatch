@@ -1,11 +1,11 @@
 'use client';
 
-import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Play, Search, Zap, Film } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
+import { AuthMobileEntry } from './AuthMobileEntry';
 
 export function MobileNav() {
   const pathname = usePathname();
@@ -15,9 +15,9 @@ export function MobileNav() {
 
   const navItems = [
     { label: "Home", href: "/", icon: Home },
-    { label: "Movies", href: "/movies", icon: Film },
     { label: "Search", onClick: () => setSearchOpen(true), icon: Search, isAction: true },
     { label: "Anime", href: "/anime", icon: Play },
+    { label: "Movies", href: "/movies", icon: Film },
     { label: "Donghua", href: "/donghua", icon: Zap },
   ];
 
@@ -53,6 +53,7 @@ export function MobileNav() {
             </Link>
           );
         })}
+        <AuthMobileEntry />
       </div>
     </div>
   );
