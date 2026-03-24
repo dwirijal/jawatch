@@ -58,6 +58,7 @@ export function SavedContentSection({ type, title = "Your Collection", limit }: 
         </div>
 
         <AuthGateNotice
+          compact
           loginHref={authGate.loginHref}
           title="Saved content is available after login"
           description="Sign in to unlock your personal collection. Once you are in, your existing local-only saved content behavior stays the same."

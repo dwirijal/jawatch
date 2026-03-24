@@ -18,6 +18,7 @@ export function BookmarkButton({ item, theme = 'anime', className }: BookmarkBut
   const [, setRefreshKey] = useState(0);
   const authGate = useAuthGate();
   const isSaved = authGate.authenticated && checkIsBookmarked(item.id);
+  const isPending = authGate.loading;
 
   const handleToggle = () => {
     toggleBookmark(item);
@@ -38,14 +39,17 @@ export function BookmarkButton({ item, theme = 'anime', className }: BookmarkBut
       <Button
         variant="outline"
         onClick={handleClick}
+        disabled={isPending}
+        aria-busy={isPending}
         className={cn(
           "gap-2 px-4 transition-all duration-300",
+          isPending && "cursor-wait opacity-70",
           themeClasses[theme],
           className
         )}
       >
-        <Bookmark className={cn("w-4 h-4", isSaved && "fill-current")} />
-        {isSaved ? 'Saved' : 'Save'}
+        <Bookmark className={cn("w-4 h-4", isSaved && "fill-current", isPending && "animate-pulse")} />
+        {isPending ? 'Checking...' : isSaved ? 'Saved' : 'Save'}
       </Button>
 
       {!authGate.authenticated && authGate.noticeVisible ? (
