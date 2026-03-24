@@ -8,7 +8,8 @@ import { StaggerEntry } from '@/components/molecules/StaggerEntry';
 import { MediaCard } from '@/components/molecules/MediaCard';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
-import { ThemeType, GenericMediaItem } from '@/lib/utils';
+import { ThemeType } from '@/lib/utils';
+import type { GenericMediaItem } from '@/lib/api';
 
 interface MediaHubTemplateProps {
   title: string;
