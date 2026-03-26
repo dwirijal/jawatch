@@ -1,8 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LogOut, UserRound } from 'lucide-react';
+import { Avatar } from '@/components/atoms/Avatar';
+import { Link } from '@/components/atoms/Link';
 import { useAuthSession } from '@/components/hooks/useAuthSession';
 import { buildLoginUrl, buildLogoutRequest } from '@/lib/auth-gateway';
 import { cn } from '@/lib/utils';
@@ -12,33 +13,19 @@ function compactDisplayName(displayName: string) {
   return token.length > 8 ? `${token.slice(0, 7)}…` : token;
 }
 
-function MobileAvatar({
-  displayName,
-}: {
-  displayName: string;
-}) {
-  const initial = displayName.trim().charAt(0).toUpperCase() || 'D';
-
-  return (
-    <span className="relative flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-zinc-900 text-[10px] font-black uppercase text-white">
-      <span className="relative z-10">{initial}</span>
-    </span>
-  );
-}
-
 export function AuthMobileEntry() {
   const pathname = usePathname() || '/';
   const session = useAuthSession();
 
   if (session.loading) {
-    return <div className="h-11 w-14 animate-pulse rounded-2xl bg-zinc-900/70" />;
+    return <div className="h-11 w-14 animate-pulse rounded-[var(--radius-sm)] bg-surface-1/80" />;
   }
 
   if (!session.authenticated || !session.user) {
     return (
       <Link
         href={buildLoginUrl(pathname)}
-        className="flex flex-col items-center justify-center gap-1 text-zinc-500 transition-all hover:text-white"
+        className="focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-zinc-500 transition-colors hover:bg-surface-1 hover:text-white"
       >
         <UserRound className="h-5 w-5" />
         <span className="text-[10px] font-black uppercase tracking-widest">Login</span>
@@ -48,20 +35,22 @@ export function AuthMobileEntry() {
 
   const logoutRequest = buildLogoutRequest(pathname);
   const returnTo = logoutRequest.body.get('returnTo') ?? '/';
+  const origin = logoutRequest.body.get('origin') ?? '';
 
   return (
     <form action={logoutRequest.url} method={logoutRequest.method}>
       <input type="hidden" name="returnTo" value={returnTo} />
+      <input type="hidden" name="origin" value={origin} />
       <button
         type="submit"
         className={cn(
-          'flex flex-col items-center justify-center gap-1 transition-all',
-          'text-zinc-500 hover:text-white'
+          'focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 transition-colors',
+          'text-zinc-500 hover:bg-surface-1 hover:text-white'
         )}
         aria-label={`Log out ${session.user.displayName}`}
       >
         <div className="relative">
-          <MobileAvatar displayName={session.user.displayName} />
+          <Avatar name={session.user.displayName} size="sm" className="border-border-subtle bg-surface-2" />
           <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white text-zinc-950">
             <LogOut className="h-2.5 w-2.5" />
           </span>

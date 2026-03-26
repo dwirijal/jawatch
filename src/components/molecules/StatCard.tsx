@@ -1,5 +1,7 @@
 import { LucideIcon } from "lucide-react"
+import { Paper } from "@/components/atoms/Paper"
 import { cn } from "@/lib/utils"
+import { Typography } from "@/components/atoms/Typography"
 
 interface StatCardProps {
   label: string;
@@ -10,15 +12,15 @@ interface StatCardProps {
 
 export function StatCard({ label, value, icon: Icon, className }: StatCardProps) {
   return (
-    <div className={cn(
-      "p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl flex items-center justify-between group hover:border-zinc-700 transition-all shadow-sm",
+    <Paper className={cn(
+      "group flex min-h-[4.25rem] items-center justify-between rounded-[var(--radius-sm)] bg-surface-1/80 p-3.5 shadow-none transition-colors hover:bg-surface-elevated md:p-4",
       className
     )}>
       <div className="flex items-center gap-3">
         {Icon && <Icon className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-colors" />}
-        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{label}</span>
+        <Typography size="xs" uppercase className="tracking-[0.16em] text-zinc-500">{label}</Typography>
       </div>
-      <span className="text-[10px] font-black uppercase text-zinc-200">{value}</span>
-    </div>
+      <Typography size="sm" className="text-zinc-200">{value}</Typography>
+    </Paper>
   );
 }

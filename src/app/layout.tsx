@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Lora } from "next/font/google";
-import localFont from "next/font/local";
+import { Bricolage_Grotesque, Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
+import { CssBaseline } from "@/components/atoms/CssBaseline";
 import { Navbar } from "@/components/organisms/Navbar";
 import { Footer } from "@/components/organisms/Footer";
 import { MobileNav } from "@/components/organisms/MobileNav";
 import { DeviceListener } from "@/components/atoms/DeviceListener";
+import { InitColorSchemeScript } from "@/components/atoms/InitColorSchemeScript";
+import { NoSsr } from "@/components/atoms/NoSsr";
 import { PWAInstallPrompt } from "@/components/molecules/PWAInstallPrompt";
-import { LiveActivityToast } from "@/components/molecules/LiveActivityToast";
 import { AuthSessionProvider } from "@/components/providers/AuthSessionProvider";
+import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,37 +23,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const lora = Lora({
-  variable: "--font-lora",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta-sans",
   subsets: ["latin"],
 });
 
-const otfitsGrotesk = localFont({
-  src: [
-    {
-      path: "../../public/fonts/OtfitsGrotesk-Regular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/OtfitsGrotesk-Bold.ttf",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/OtfitsGrotesk-Black.ttf",
-      weight: "900",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Otfits Grotesk Var-VF.ttf",
-      style: "normal",
-    },
-  ],
-  variable: "--font-otfits-grotesk",
+const bricolageGrotesque = Bricolage_Grotesque({
+  variable: "--font-bricolage-grotesque",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
+  metadataBase: SITE_URL,
   title: {
     default: "dwizzyWEEB - Premium Discovery",
     template: "%s | dwizzyWEEB"
@@ -93,15 +77,29 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${lora.variable} ${otfitsGrotesk.variable} h-full antialiased`}
+      data-color-scheme="dark"
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} ${plusJakartaSans.variable} ${bricolageGrotesque.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-50 font-sans">
+      <head>
+        <InitColorSchemeScript />
+        <CssBaseline />
+        <Script
+          id="adsense-script"
+          async
+          strategy="afterInteractive"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8868090753979495"
+          crossOrigin="anonymous"
+        />
+      </head>
+      <body className="min-h-full flex flex-col text-foreground font-sans">
         <AuthSessionProvider>
           <DeviceListener />
           <Navbar />
           <main className="flex-1 min-h-screen pb-20 md:pb-0">{children}</main>
-          <PWAInstallPrompt />
-          <LiveActivityToast />
+          <NoSsr>
+            <PWAInstallPrompt />
+          </NoSsr>
           <MobileNav />
           <Footer />
         </AuthSessionProvider>

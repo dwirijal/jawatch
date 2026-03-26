@@ -2,10 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
 import { getKanataAnimeByGenre, getKanataGenres, KanataAnime, KanataGenre } from '@/lib/api';
 import { Film, ArrowLeft, Tag } from 'lucide-react';
+import { Card } from '@/components/atoms/Card';
+import { Button } from '@/components/atoms/Button';
+import { Link } from '@/components/atoms/Link';
+import { Paper } from '@/components/atoms/Paper';
+import { AdSection } from '@/components/organisms/AdSection';
+import { SkeletonCard } from '@/components/molecules/SkeletonCard';
+import { CardGrid } from '@/components/molecules/card';
+import { SectionHeader } from '@/components/molecules/SectionHeader';
+import { StateInfo } from '@/components/molecules/StateInfo';
 
 export default function GenrePage() {
   const params = useParams();
@@ -58,118 +65,82 @@ export default function GenrePage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Navigation */}
-        <nav className="mb-8">
+    <main className="app-shell bg-zinc-950 font-sans text-zinc-50">
+      <div className="app-container space-y-8 py-4 sm:py-6">
+        <nav>
           <Link
             href="/anime"
-            className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-50 transition-colors"
+            className="inline-flex items-center gap-2 text-zinc-400 transition-colors hover:text-zinc-50"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Anime Hub
           </Link>
         </nav>
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Tag className="w-6 h-6 text-blue-400" />
-            <h1 className="text-4xl font-black tracking-tight text-blue-400">
-              {genreName || 'Genre'}
-            </h1>
-          </div>
-          <p className="text-zinc-500">
-            Browse anime in this category
-          </p>
-        </div>
+        <section className="surface-panel-elevated p-6 sm:p-8">
+          <SectionHeader
+            title={genreName || 'Genre'}
+            subtitle="Browse anime in this category"
+            icon={Tag}
+            contentClassName="max-w-3xl"
+            className="border-0 pb-0"
+          />
 
-        {/* Genre Tags */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Film className="w-4 h-4 text-zinc-500" />
-            <h3 className="text-xs font-black text-zinc-500 uppercase tracking-widest">All Genres</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {genres.map((genre) => (
-              <button
-                key={genre.slug}
-                onClick={() => handleGenreClick(genre.slug)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-                  slug === genre.slug
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                    : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-blue-500/50 hover:text-blue-400'
-                }`}
-              >
-                {genre.name}
-              </button>
-            ))}
-          </div>
-        </div>
+          <Paper tone="muted" className="mt-6 rounded-[var(--radius-xl)] p-4 sm:mt-8 sm:p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <Film className="h-4 w-4 text-zinc-500" />
+              <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">All Genres</h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {genres.map((genre) => (
+                <Button
+                  key={genre.slug}
+                  onClick={() => handleGenreClick(genre.slug)}
+                  variant={slug === genre.slug ? 'anime' : 'outline'}
+                  size="sm"
+                  className={slug === genre.slug ? 'rounded-xl px-4' : 'rounded-xl px-4 text-zinc-300'}
+                >
+                  {genre.name}
+                </Button>
+              ))}
+            </div>
+          </Paper>
+        </section>
 
-        {/* Anime Grid */}
-        <main>
-          <div className="flex items-center gap-3 mb-6">
-            <Film className="w-6 h-6 text-blue-400" />
-            <h2 className="text-2xl font-black italic tracking-tighter uppercase">
-              {genreName ? `${genreName} Anime` : 'Anime List'}
-            </h2>
-            <span className="text-sm text-zinc-500 font-medium">
-              ({animeList.length} titles)
-            </span>
-          </div>
+        <AdSection />
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+        <section className="space-y-4 sm:space-y-5">
+          <SectionHeader
+            title={genreName ? `${genreName} Anime` : 'Anime List'}
+            subtitle={`${animeList.length} titles`}
+            icon={Film}
+          />
+
+          <CardGrid>
             {loading ? (
-              Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="bg-zinc-900 rounded-2xl overflow-hidden animate-pulse aspect-[2/3]" />
-              ))
+              Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
             ) : animeList.length > 0 ? (
               animeList.map((anime, index) => (
-                <Link
+                <Card
                   key={`${anime.slug}-${index}`}
                   href={`/anime/${anime.slug}`}
-                  className="group relative flex flex-col"
-                >
-                  <div className="relative aspect-[2/3] rounded-2xl overflow-hidden mb-4 border border-zinc-800 transition-all group-hover:border-blue-500/50 group-hover:scale-[1.02] shadow-2xl">
-                    <Image
-                      src={anime.thumb}
-                      alt={anime.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 50vw, 20vw"
-                      unoptimized
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-transparent to-transparent opacity-100" />
-                    <div className="absolute bottom-3 left-3 flex flex-col gap-1">
-                      <span className="text-[9px] bg-blue-600 text-white px-2 py-1 rounded-md font-black tracking-widest w-fit">
-                        {anime.episode.toUpperCase()}
-                      </span>
-                    </div>
-                    {anime.type && (
-                      <div className="absolute top-2 right-2">
-                        <span className="text-[8px] bg-zinc-900/90 text-zinc-300 px-1.5 py-0.5 rounded font-bold">
-                          {anime.type}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="font-black text-sm line-clamp-2 group-hover:text-blue-400 transition-colors leading-tight px-1">
-                    {anime.title}
-                  </h3>
-                  <p className="text-[10px] text-zinc-500 mt-1 px-1">{anime.type}</p>
-                </Link>
+                  image={anime.thumb}
+                  title={anime.title}
+                  subtitle={anime.type}
+                  badgeText={anime.episode ? anime.episode.toUpperCase() : 'TBA'}
+                  theme="anime"
+                />
               ))
             ) : (
-              <div className="col-span-full py-20 text-center">
-                <p className="text-zinc-500 font-medium">
-                  No anime found in this genre.
-                </p>
-              </div>
+              <StateInfo
+                title="No anime found"
+                description="This genre does not have synced titles yet. Try another genre or browse the full anime hub."
+                className="col-span-full py-20"
+              />
             )}
-          </div>
-        </main>
+          </CardGrid>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

@@ -1,8 +1,21 @@
+import { withCloudflareEdgeCache } from './cloudflare-cache';
+import {
+  readSnapshotDomainFile,
+  readSnapshotPlayback,
+  readSnapshotTitle,
+  searchSnapshotDomain,
+} from './runtime-snapshot';
+
 /**
  * Secure & Standardized API Engine.
  */
 
 const d = (s: string) => typeof window !== 'undefined' ? atob(s) : Buffer.from(s, 'base64').toString();
+
+type CacheEntry = {
+  expiresAt: number;
+  value: unknown;
+};
 
 export const API_CONFIG = {
   M: d('aHR0cHM6Ly9hcGkucnl6dW1pLm5ldC9hcGkva29taWt1'),
@@ -15,10 +28,86 @@ export const API_CONFIG = {
   IMDB: d('aHR0cHM6Ly9pbWRiLmlhbWlkaW90YXJleW91dG9vLmNvbS9zZWFyY2g='),
 } as const;
 
-async function fetchJson<T>(url: string | URL): Promise<T> {
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  return res.json();
+const runtimeCache = new Map<string, CacheEntry>();
+const inflightCache = new Map<string, Promise<unknown>>();
+
+const CACHE_TTL = {
+  short: 1000 * 60 * 5,
+  medium: 1000 * 60 * 15,
+  long: 1000 * 60 * 60 * 6,
+} as const;
+
+type ReadingHomeSnapshot = {
+  popular?: MangaSearchResult[];
+  newest?: MangaSearchResult[];
+};
+
+type DonghuaHomeSnapshot = {
+  latest_updates: AnichinDonghua[];
+  ongoing_series: AnichinDonghua[];
+};
+
+async function withRuntimeCache<T>(key: string, ttlMs: number, loader: () => Promise<T>): Promise<T> {
+  const now = Date.now();
+  const cached = runtimeCache.get(key);
+  if (cached && cached.expiresAt > now) {
+    return cached.value as T;
+  }
+
+  const inflight = inflightCache.get(key);
+  if (inflight) {
+    return inflight as Promise<T>;
+  }
+
+  const pending = loader()
+    .then((value) => {
+      runtimeCache.set(key, {
+        expiresAt: now + ttlMs,
+        value,
+      });
+      return value;
+    })
+    .finally(() => {
+      inflightCache.delete(key);
+    });
+
+  inflightCache.set(key, pending as Promise<unknown>);
+  return pending;
+}
+
+type FetchJsonOptions = {
+  edgeCacheKey?: string;
+  edgeCacheTtlSeconds?: number;
+};
+
+export async function fetchJson<T>(url: string, options: FetchJsonOptions = {}): Promise<T> {
+  const loader = async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json' },
+        next: { revalidate: 3600 },
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      return res.json();
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('API timeout');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
+
+  if (options.edgeCacheKey && options.edgeCacheTtlSeconds) {
+    return withCloudflareEdgeCache(options.edgeCacheKey, options.edgeCacheTtlSeconds, loader);
+  }
+
+  return loader();
 }
 
 /**
@@ -26,20 +115,24 @@ async function fetchJson<T>(url: string | URL): Promise<T> {
  * Since MovieTube posters are unreliable, we fetch high-quality ones from IMDB.
  */
 export async function getMovieMetadata(title: string): Promise<{ poster?: string; rating?: string; actors?: string }> {
-  try {
-    const data = await fetchJson<any>(`${API_CONFIG.IMDB}?q=${encodeURIComponent(title)}`);
-    if (data.ok && data.description?.length > 0) {
-      const top = data.description[0];
-      return {
-        poster: top['#IMG_POSTER'],
-        rating: top['#RANK'] ? String(top['#RANK']) : undefined,
-        actors: top['#ACTORS']
-      };
+  const normalizedTitle = title.trim().toLowerCase();
+  return withRuntimeCache(`imdb:${normalizedTitle}`, CACHE_TTL.long, async () => {
+    try {
+      const data = await fetchJson<Record<string, unknown>>(`${API_CONFIG.IMDB}?q=${encodeURIComponent(title)}`);
+      const description = data.description as Array<Record<string, unknown>>;
+      if (data.ok && description?.length > 0) {
+        const top = description[0];
+        return {
+          poster: top['#IMG_POSTER'] as string | undefined,
+          rating: top['#RANK'] ? String(top['#RANK']) : undefined,
+          actors: top['#ACTORS'] as string | undefined
+        };
+      }
+      return {};
+    } catch {
+      return {};
     }
-    return {};
-  } catch {
-    return {};
-  }
+  });
 }
 
 // --- CORE OBJECTS ---
@@ -47,17 +140,35 @@ export async function getMovieMetadata(title: string): Promise<{ poster?: string
 export const anime = {
   getDetail: async (slug: string): Promise<KanataAnimeDetail> => {
     try {
-      const data = await fetchJson<KanataAnimeDetail>(`${API_CONFIG.A}/anime/${slug}`);
+      const data = await fetchJson<KanataAnimeDetail>(`${API_CONFIG.A}/anime/${slug}`, {
+        edgeCacheKey: `detail:anime:legacy:${slug}:animasu`,
+        edgeCacheTtlSeconds: 1800,
+      });
       if (data && data.title) return { ...data, provider: 'animasu' };
       throw new Error();
     } catch {
-      const data = await fetchJson<KanataAnimeDetail>(`${API_CONFIG.O}/anime/${slug}`);
+      const data = await fetchJson<KanataAnimeDetail>(`${API_CONFIG.O}/anime/${slug}`, {
+        edgeCacheKey: `detail:anime:legacy:${slug}:otakudesu`,
+        edgeCacheTtlSeconds: 1800,
+      });
       return { ...data, provider: 'otakudesu' };
     }
   },
-  getEpisode: (slug: string, p: 'animasu' | 'otakudesu' = 'animasu') => fetchJson<KanataEpisodeDetail>(`${p === 'otakudesu' ? API_CONFIG.O : API_CONFIG.A}/episode/${slug}`),
-  search: async (query: string) => (await fetchJson<{result?: KanataAnime[]}>(`${API_CONFIG.S}?query=${encodeURIComponent(query)}`)).result || [],
-  getSchedule: () => fetchJson<AnimeSchedule[]>(`${API_CONFIG.A}/schedule`),
+  getEpisode: (slug: string, p: 'animasu' | 'otakudesu' = 'animasu') => fetchJson<KanataEpisodeDetail>(`${p === 'otakudesu' ? API_CONFIG.O : API_CONFIG.A}/episode/${slug}`, {
+    edgeCacheKey: `playback:anime:legacy:${slug}:${p}`,
+    edgeCacheTtlSeconds: 300,
+  }),
+  search: async (query: string) => {
+    const trimmed = query.trim().toLowerCase();
+    return (await fetchJson<{result?: KanataAnime[]}>(`${API_CONFIG.S}?query=${encodeURIComponent(query)}`, {
+      edgeCacheKey: `search:anime:${trimmed}`,
+      edgeCacheTtlSeconds: 300,
+    })).result || [];
+  },
+  getSchedule: () => withRuntimeCache('anime:schedule', CACHE_TTL.medium, () => fetchJson<AnimeSchedule[]>(`${API_CONFIG.A}/schedule`, {
+    edgeCacheKey: 'home:anime:schedule',
+    edgeCacheTtlSeconds: 900,
+  })),
   getCompleted: (page = 1) => fetchJson<KanataCompletedAnime[]>(`${API_CONFIG.O}/complete?page=${page}`),
   getList: () => fetchJson<AnimeListGroup[]>(`${API_CONFIG.O}/anime-list`),
   getBatch: (slug: string) => fetchJson<KanataAnimeBatch>(`${API_CONFIG.O}/batch/${slug}`),
@@ -66,28 +177,166 @@ export const anime = {
 };
 
 export const movie = {
-  getHome: (s: 'popular' | 'latest' | 'trending' = 'latest') => fetchJson<{data: MovieCardItem[]}>(`${API_CONFIG.MT}/home?section=${s}`).then(r => r.data || []),
-  search: (q: string, p = 1) => fetchJson<{data: MovieCardItem[]}>(`${API_CONFIG.MT}/search?q=${encodeURIComponent(q)}&page=${p}`).then(r => r.data || []),
-  getDetail: (slug: string, t: 'movie' | 'series' = 'movie') => fetchJson<{data: MovieDetail}>(`${API_CONFIG.MT}/detail/${slug}?type=${t}`).then(r => r.data),
-  getStream: (id: string, t: 'movie' | 'series' = 'movie') => fetchJson<{stream_url: string}>(`${API_CONFIG.MT}/stream?id=${id}&type=${t}`).then(r => r.stream_url),
-  getByGenre: (g: string, p = 1) => fetchJson<{data: MovieCardItem[]}>(`${API_CONFIG.MT}/genre/${g}?page=${p}`).then(r => r.data || []),
+  getHome: (s: 'popular' | 'latest' | 'trending' = 'latest') => withRuntimeCache(`movie:home:${s}`, CACHE_TTL.medium, async () => {
+    const snapshot = await readSnapshotDomainFile<{ popular?: MovieCardItem[]; latest?: MovieCardItem[]; trending?: MovieCardItem[] }>('movies', 'home.json');
+    const snapshotItems = snapshot?.[s];
+    if (snapshotItems && snapshotItems.length > 0) {
+      return snapshotItems;
+    }
+    return fetchJson<{data: MovieCardItem[]}>(`${API_CONFIG.MT}/home?section=${s}`, {
+      edgeCacheKey: `home:movie:${s}`,
+      edgeCacheTtlSeconds: 900,
+    }).then(r => r.data || []);
+  }),
+  search: (q: string, p = 1) => fetchJson<{data: MovieCardItem[]}>(`${API_CONFIG.MT}/search?q=${encodeURIComponent(q)}&page=${p}`, {
+    edgeCacheKey: `search:movie:${q.trim().toLowerCase()}:${p}`,
+    edgeCacheTtlSeconds: 300,
+  }).then(r => r.data || []),
+  getDetail: (slug: string, t: 'movie' | 'series' = 'movie') => fetchJson<{data: MovieDetail}>(`${API_CONFIG.MT}/detail/${slug}?type=${t}`, {
+    edgeCacheKey: `detail:movie:legacy:${slug}:${t}`,
+    edgeCacheTtlSeconds: 1800,
+  }).then(r => r.data),
+  getStream: (id: string, t: 'movie' | 'series' = 'movie') =>
+    fetchJson<{ stream_url?: string; data?: string }>(`${API_CONFIG.MT}/stream?id=${id}&type=${t}`, {
+      edgeCacheKey: `playback:movie:legacy:${id}:${t}`,
+      edgeCacheTtlSeconds: 300,
+    }).then((response) => response.stream_url || response.data || ''),
+  getByGenre: (g: string, p = 1) => fetchJson<{data: MovieCardItem[]}>(`${API_CONFIG.MT}/genre/${g}?page=${p}`, {
+    edgeCacheKey: `home:movie:genre-legacy:${g.trim().toLowerCase()}:${p}`,
+    edgeCacheTtlSeconds: 900,
+  }).then(r => r.data || []),
 };
 
 export const manga = {
-  search: (q: string, p = 1) => fetchJson<{data: MangaSearchResult[]}>(`${API_CONFIG.M}/search?q=${encodeURIComponent(q)}&page=${p}`),
-  getDetail: (slug: string) => fetchJson<MangaDetail>(`${API_CONFIG.M}/detail?slug=${slug}`),
-  getChapter: (seg: string) => fetchJson<ChapterDetail>(`${API_CONFIG.M}/chapter?segment=${seg}`),
-  getPopular: () => fetchJson<{comics: MangaSearchResult[]}>(`${API_CONFIG.M}/populer`),
-  getNew: (p = 1, l = 10) => fetchJson<{comics: MangaSearchResult[]}>(`${API_CONFIG.M}/terbaru?page=${p}&limit=${l}`),
-  getRecommendations: (slug: string) => fetchJson<{recommendations: MangaSearchResult[]}>(`${API_CONFIG.M}/rekomendasi?based_on=${slug}`),
-  getByGenre: (g: string, p = 1) => fetchJson<{comics: MangaSearchResult[]}>(`${API_CONFIG.M}/genre?genre=${g}&page=${p}`),
+  search: async (q: string, p = 1) => {
+    if (p === 1) {
+      const snapshotResults = (
+        await Promise.all(
+          (['manga', 'manhwa', 'manhua'] as const).map((domain) =>
+            searchSnapshotDomain<MangaSearchResult>(domain, q, 24)
+          )
+        )
+      ).flat();
+      if (snapshotResults.length > 0) {
+        return { data: snapshotResults };
+      }
+    }
+    return fetchJson<{data: MangaSearchResult[]}>(`${API_CONFIG.M}/search?q=${encodeURIComponent(q)}&page=${p}`, {
+      edgeCacheKey: `search:manga:${q.trim().toLowerCase()}:${p}`,
+      edgeCacheTtlSeconds: 300,
+    });
+  },
+  getDetail: async (slug: string) => {
+    for (const domain of ['manga', 'manhwa', 'manhua'] as const) {
+      const snapshot = await readSnapshotTitle<MangaDetail>(domain, slug);
+      if (snapshot) {
+        return snapshot;
+      }
+    }
+    return fetchJson<MangaDetail>(`${API_CONFIG.M}/detail?slug=${slug}`, {
+      edgeCacheKey: `detail:manga:${slug}`,
+      edgeCacheTtlSeconds: 1800,
+    });
+  },
+  getChapter: async (seg: string) => {
+    for (const domain of ['manga', 'manhwa', 'manhua'] as const) {
+      const snapshot = await readSnapshotPlayback<ChapterDetail>(domain, seg);
+      if (snapshot) {
+        return snapshot;
+      }
+    }
+    return fetchJson<ChapterDetail>(`${API_CONFIG.M}/chapter?segment=${seg}`, {
+      edgeCacheKey: `playback:manga:${seg}`,
+      edgeCacheTtlSeconds: 300,
+    });
+  },
+  getPopular: () => withRuntimeCache('manga:popular', CACHE_TTL.medium, async () => {
+    const snapshotResults = (
+      await Promise.all(
+        (['manga', 'manhwa', 'manhua'] as const).map(async (domain) => {
+          const snapshot = await readSnapshotDomainFile<ReadingHomeSnapshot>(domain, 'home.json');
+          return snapshot?.popular || [];
+        })
+      )
+    ).flat();
+    if (snapshotResults.length > 0) {
+      return { comics: snapshotResults };
+    }
+    return fetchJson<{comics: MangaSearchResult[]}>(`${API_CONFIG.M}/populer`, {
+      edgeCacheKey: 'home:manga:popular',
+      edgeCacheTtlSeconds: 900,
+    });
+  }),
+  getNew: (p = 1, l = 10) => withRuntimeCache(`manga:new:${p}:${l}`, CACHE_TTL.medium, async () => {
+    if (p === 1) {
+      const snapshotResults = (
+        await Promise.all(
+          (['manga', 'manhwa', 'manhua'] as const).map(async (domain) => {
+            const snapshot = await readSnapshotDomainFile<ReadingHomeSnapshot>(domain, 'home.json');
+            return snapshot?.newest || [];
+          })
+        )
+      ).flat();
+      if (snapshotResults.length > 0) {
+        return { comics: snapshotResults.slice(0, l) };
+      }
+    }
+    return fetchJson<{comics: MangaSearchResult[]}>(`${API_CONFIG.M}/terbaru?page=${p}&limit=${l}`, {
+      edgeCacheKey: `home:manga:new:${p}:${l}`,
+      edgeCacheTtlSeconds: 900,
+    });
+  }),
+  getRecommendations: (slug: string) => fetchJson<{recommendations: MangaSearchResult[]}>(`${API_CONFIG.M}/rekomendasi?based_on=${slug}`, {
+    edgeCacheKey: `detail:manga:recommendations:${slug}`,
+    edgeCacheTtlSeconds: 1800,
+  }),
+  getByGenre: (g: string, p = 1) => fetchJson<{comics: MangaSearchResult[]}>(`${API_CONFIG.M}/genre?genre=${g}&page=${p}`, {
+    edgeCacheKey: `home:manga:genre:${g.trim().toLowerCase()}:${p}`,
+    edgeCacheTtlSeconds: 900,
+  }),
 };
 
 export const donghua = {
-  getHome: () => fetchJson<AnichinHomeResult>(`${API_CONFIG.D}/home`),
-  getDetail: (slug: string) => fetchJson<AnichinDetail>(`${API_CONFIG.D}/detail/${slug}`),
-  search: (q: string) => fetchJson<AnichinDonghua[]>(`${API_CONFIG.D}/search?q=${encodeURIComponent(q)}`),
-  getEpisode: (slug: string) => fetchJson<KanataEpisodeDetail>(`${API_CONFIG.D}/episode/${slug}`),
+  getHome: () => withRuntimeCache('donghua:home', CACHE_TTL.medium, async () => {
+    const snapshot = await readSnapshotDomainFile<DonghuaHomeSnapshot>('donghua', 'home.json');
+    if (snapshot) {
+      return snapshot;
+    }
+    return fetchJson<AnichinHomeResult>(`${API_CONFIG.D}/home`, {
+      edgeCacheKey: 'home:donghua',
+      edgeCacheTtlSeconds: 900,
+    });
+  }),
+  getDetail: async (slug: string) => {
+    const snapshot = await readSnapshotTitle<AnichinDetail>('donghua', slug);
+    if (snapshot) {
+      return snapshot;
+    }
+    return fetchJson<AnichinDetail>(`${API_CONFIG.D}/detail/${slug}`, {
+      edgeCacheKey: `detail:donghua:${slug}`,
+      edgeCacheTtlSeconds: 1800,
+    });
+  },
+  search: async (q: string) => {
+    const snapshot = await searchSnapshotDomain<AnichinDonghua>('donghua', q, 24);
+    if (snapshot.length > 0) {
+      return snapshot;
+    }
+    return fetchJson<AnichinDonghua[] | { data?: AnichinDonghua[] }>(`${API_CONFIG.D}/search?q=${encodeURIComponent(q)}`, {
+      edgeCacheKey: `search:donghua:${q.trim().toLowerCase()}`,
+      edgeCacheTtlSeconds: 300,
+    }).then((response) => Array.isArray(response) ? response : response.data || []);
+  },
+  getEpisode: async (slug: string) => {
+    const snapshot = await readSnapshotPlayback<KanataEpisodeDetail>('donghua', slug);
+    if (snapshot) {
+      return snapshot;
+    }
+    return fetchJson<KanataEpisodeDetail>(`${API_CONFIG.D}/episode/${slug}`, {
+      edgeCacheKey: `playback:donghua:${slug}`,
+      edgeCacheTtlSeconds: 300,
+    });
+  },
 };
 
 // --- COMPATIBILITY RE-EXPORTS ---
@@ -113,6 +362,7 @@ export const getDonghuaHome = donghua.getHome;
 export const getDonghuaDetail = donghua.getDetail;
 export const searchDonghua = donghua.search;
 export const getDonghuaEpisode = donghua.getEpisode;
+export const getDonghuaWatch = donghua.getEpisode;
 
 export const getMovieHome = movie.getHome;
 export const searchMovies = movie.search;
@@ -127,6 +377,7 @@ export const getOngoingAnime = async (page = 1): Promise<KanataAnime[]> => {
 
 // --- INTERFACES ---
 export interface GenericMediaItem { slug: string; title: string; thumb?: string; image?: string; thumbnail?: string; poster?: string; episode?: string; chapter?: string; year?: string; status?: string; type?: string; link?: string; }
+export type MangaSubtype = 'manga' | 'manhwa' | 'manhua';
 export interface MangaSearchResult { title: string; altTitle: string | null; slug: string; href: string; thumbnail: string; type: string; genre: string; description: string; chapter?: string; time_ago?: string; link: string; image: string; }
 export interface MangaChapter { chapter: string; slug: string; link: string; date: string; }
 export interface MangaDetail { creator: string; slug: string; title: string; title_indonesian: string; image: string; synopsis: string; synopsis_full: string; summary: string; background_story: string; metadata: { type: string; author: string; status: string; concept: string; age_rating: string; reading_direction: string; }; genres: Array<{ name: string; slug: string; link: string }>; chapters: MangaChapter[]; similar_manga: Array<{ title: string; slug: string; link: string; image: string; type: string; description: string }>; }
@@ -142,7 +393,15 @@ export interface KanataGenre { name: string; slug: string; url: string; }
 export interface AnichinHomeResult { latest_updates: AnichinDonghua[]; ongoing_series: AnichinDonghua[]; }
 export interface AnichinDetail { title: string; meta: { studio: string; status: string; episodes: string; season: string; country: string; network: string; duration: string; released: string; updated_on: string; }; episodes: Array<{ slug: string; title: string; episode: string; date: string; }>; synopsis: string; thumb: string; genres: string[]; }
 export interface AnichinDonghua { title: string; slug: string; thumb: string; episode: string; image?: string; status?: string; type?: string; }
-export interface JikanEnrichment { score: number; rank: number; popularity: number; synopsis: string; trailer_url: string; status: string; source: string; rating: string; year: number | null; season: string; genres: string[]; themes: string[]; studios: string[]; title: string; url: string; mediaType: 'anime' | 'manga'; chapters?: number | null; episodes?: number | null; }
+export interface AnimeCastMember {
+  id: number;
+  name: string;
+  role: string;
+  image?: string;
+  voiceActor?: string;
+  voiceActorLanguage?: string;
+}
+export interface JikanEnrichment { malId: number; score: number; rank: number; popularity: number; synopsis: string; trailer_url: string; status: string; source: string; rating: string; year: number | null; season: string; genres: string[]; themes: string[]; studios: string[]; title: string; url: string; mediaType: 'anime' | 'manga'; chapters?: number | null; episodes?: number | null; }
 export interface MovieCardItem { slug: string; title: string; poster: string; year: string; type: 'movie' | 'series'; rating?: string; status?: string; genres?: string; }
 export interface MovieDetail { slug: string; title: string; poster: string; year: string; rating?: string; genres: string; type: 'movie' | 'series'; duration?: string; synopsis: string; quality: string; cast?: string; director?: string; country?: string; recommendations?: MovieCardItem[]; }
 
@@ -153,6 +412,14 @@ export type AnimasuSearchResult = KanataAnime;
 
 // HELPERS
 export const extractSlugFromUrl = (url: string) => url ? url.split('/').filter(Boolean).pop() || '' : '';
+export const getMangaSubtype = (item: Pick<MangaSearchResult, 'type'>): MangaSubtype => {
+  const type = item.type?.toLowerCase() ?? '';
+  if (type.includes('manhwa')) return 'manhwa';
+  if (type.includes('manhua')) return 'manhua';
+  return 'manga';
+};
+export const filterMangaBySubtype = (items: MangaSearchResult[], subtype: MangaSubtype): MangaSearchResult[] =>
+  items.filter((item) => getMangaSubtype(item) === subtype);
 export const getHDThumbnail = (url: string) => {
   if (!url) return '';
   if (url.startsWith('//')) return `https:${url}`;
@@ -175,15 +442,89 @@ export async function getRandomMedia(type: 'anime' | 'manga' | 'movie' | 'donghu
 
 export async function getJikanEnrichment(type: 'anime' | 'manga', title: string): Promise<JikanEnrichment | null> {
   try {
-    const data = await fetchJson<{data: any[]}>(`${API_CONFIG.J}/${type}?q=${encodeURIComponent(title)}&limit=1`);
+    const data = await fetchJson<{data: Record<string, unknown>[] }>(`${API_CONFIG.J}/${type}?q=${encodeURIComponent(title)}&limit=1`);
     const item = data.data?.[0];
     if (!item) return null;
+    
+    // Helper to safely extract arrays of objects with a name property
+    const extractNames = (arr: unknown): string[] => {
+        if (Array.isArray(arr)) {
+            return arr.map((x: Record<string, unknown>) => x.name as string).filter(Boolean);
+        }
+        return [];
+    };
+
     return {
-      score: item.score, rank: item.rank, popularity: item.popularity, synopsis: item.synopsis, trailer_url: item.trailer?.url,
-      status: item.status, source: item.source, rating: item.rating, year: item.year, season: item.season,
-      genres: (item.genres || []).map((g: any) => g.name), themes: (item.themes || []).map((t: any) => t.name),
-      studios: (item.studios || []).map((s: any) => s.name), title: item.title, url: item.url, mediaType: type,
-      chapters: item.chapters, episodes: item.episodes
+      malId: item.mal_id as number,
+      score: item.score as number, 
+      rank: item.rank as number, 
+      popularity: item.popularity as number, 
+      synopsis: item.synopsis as string, 
+      trailer_url: (item.trailer as Record<string, unknown>)?.url as string,
+      status: item.status as string, 
+      source: item.source as string, 
+      rating: item.rating as string, 
+      year: item.year as number | null, 
+      season: item.season as string,
+      genres: extractNames(item.genres), 
+      themes: extractNames(item.themes),
+      studios: extractNames(item.studios), 
+      title: item.title as string, 
+      url: item.url as string, 
+      mediaType: type,
+      chapters: item.chapters as number | null, 
+      episodes: item.episodes as number | null
     };
   } catch { return null; }
+}
+
+export async function getAnimeCast(malId: number): Promise<AnimeCastMember[]> {
+  return withRuntimeCache(`jikan:anime-cast:${malId}`, CACHE_TTL.long, async () => {
+    try {
+      const data = await fetchJson<{
+        data?: Array<{
+          role?: string;
+          favorites?: number;
+          character?: {
+            mal_id?: number;
+            name?: string;
+            images?: {
+              webp?: { image_url?: string };
+              jpg?: { image_url?: string };
+            };
+          };
+          voice_actors?: Array<{
+            language?: string;
+            person?: {
+              name?: string;
+            };
+          }>;
+        }>;
+      }>(`${API_CONFIG.J}/anime/${malId}/characters`);
+
+      return (data.data ?? [])
+        .sort((left, right) => {
+          const roleScore = (entry: { role?: string }) => (entry.role === 'Main' ? 2 : entry.role === 'Supporting' ? 1 : 0);
+          return roleScore(right) - roleScore(left) || (right.favorites ?? 0) - (left.favorites ?? 0);
+        })
+        .map((entry, index) => {
+          const japaneseVoiceActor =
+            entry.voice_actors?.find((voiceActor) => voiceActor.language === 'Japanese') ??
+            entry.voice_actors?.[0];
+
+          return {
+            id: entry.character?.mal_id ?? index + 1,
+            name: entry.character?.name ?? 'Unknown Character',
+            role: entry.role ?? 'Cast',
+            image: entry.character?.images?.webp?.image_url || entry.character?.images?.jpg?.image_url,
+            voiceActor: japaneseVoiceActor?.person?.name,
+            voiceActorLanguage: japaneseVoiceActor?.language,
+          };
+        })
+        .filter((entry) => entry.name)
+        .slice(0, 6);
+    } catch {
+      return [];
+    }
+  });
 }

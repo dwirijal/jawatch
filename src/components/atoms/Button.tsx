@@ -13,20 +13,20 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button";
     const config = (variant in THEME_CONFIG) ? THEME_CONFIG[variant as ThemeType] : null;
 
-    const baseStyles = "inline-flex items-center justify-center rounded-xl text-sm font-bold transition-all active:scale-95 disabled:pointer-events-none disabled:opacity-50";
+    const baseStyles = "inline-flex shrink-0 items-center justify-center gap-2 rounded-[var(--radius-sm)] text-sm font-black tracking-[0.02em] transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50";
     
     const sizes = {
-      default: "h-11 px-6 py-2",
-      sm: "h-9 px-4 text-xs",
-      lg: "h-14 px-10 text-base",
+      default: "h-10 px-4.5 py-2",
+      sm: "h-8 px-3.5 text-[11px]",
+      lg: "h-12 px-6 text-sm",
       icon: "h-10 w-10",
     };
 
     const variants = {
-      theme: config ? `${config.primary} ${config.shadow} text-white` : "",
-      ghost: "hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100",
-      outline: "border border-zinc-800 bg-transparent hover:bg-zinc-900 text-zinc-100",
-      link: "text-zinc-400 underline-offset-4 hover:underline",
+      theme: config ? `${config.primary} text-white hard-shadow-sm hover:brightness-110` : "",
+      ghost: "bg-transparent text-zinc-400 hover:bg-surface-1 hover:text-white",
+      outline: "border border-border-subtle bg-surface-1 text-zinc-100 hover:bg-surface-elevated hover:text-white",
+      link: "h-auto rounded-none px-0 py-0 text-zinc-400 underline-offset-4 hover:text-white hover:underline",
     };
 
     return (
@@ -34,7 +34,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={cn(
           baseStyles,
-          sizes[size],
+          variant !== "link" && sizes[size],
           config ? variants.theme : variants[variant as keyof typeof variants],
           className
         )}

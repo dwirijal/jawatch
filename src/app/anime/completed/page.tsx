@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { getCompletedAnime, KanataCompletedAnime } from '@/lib/api';
-import { MediaCard } from '@/components/molecules/MediaCard';
+import { Card } from '@/components/atoms/Card';
+import { AdSection } from '@/components/organisms/AdSection';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { Pagination } from '@/components/molecules/Pagination';
 import { StaggerEntry } from '@/components/molecules/StaggerEntry';
+import { CardGrid } from '@/components/molecules/card';
+import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function CompletedAnimePage() {
@@ -30,51 +33,59 @@ export default function CompletedAnimePage() {
   }, [page]);
 
   return (
-    <div className="min-h-screen bg-zinc-950 pb-20">
-      <header className="py-16 px-8 border-b border-zinc-900 bg-zinc-900/20">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-600 rounded-lg shadow-lg shadow-green-600/20">
-              <CheckCircle2 className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-4xl font-black tracking-tight text-white uppercase italic">Completed Anime</h1>
-          </div>
-          <p className="text-zinc-500 font-medium max-w-md">Binge-watch your favorite series from start to finish with our collection of completed anime.</p>
-        </div>
-      </header>
+    <main className="app-shell">
+      <div className="app-container space-y-8 py-4 sm:py-6">
+        <section className="surface-panel-elevated p-6 sm:p-8">
+          <SectionHeader
+            title="Completed Anime"
+            subtitle="Binge-watch your favorite series from start to finish with our collection of completed anime."
+            leading={
+              <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] border border-border-subtle bg-green-500/15">
+                <CheckCircle2 className="h-5 w-5 text-green-400" />
+              </div>
+            }
+            contentClassName="max-w-3xl"
+            className="border-0 pb-0"
+          />
+        </section>
 
-      <main className="max-w-7xl mx-auto px-8 mt-12 space-y-12">
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        ) : (
-          <>
-            <StaggerEntry className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
-              {data.map((anime, index) => (
-                <MediaCard
-                  key={`${anime.slug}-${index}`}
-                  href={`/anime/${anime.slug}`}
-                  image={anime.thumb}
-                  title={anime.title}
-                  subtitle={anime.episode}
-                  badgeText="End"
-                  theme="anime"
-                />
+        <AdSection />
+
+        <div className="app-section-stack">
+          {loading ? (
+            <CardGrid>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <SkeletonCard key={i} />
               ))}
-            </StaggerEntry>
+            </CardGrid>
+          ) : (
+            <>
+              <CardGrid>
+                <StaggerEntry className="contents">
+                  {data.map((anime, index) => (
+                    <Card
+                      key={`${anime.slug}-${index}`}
+                      href={`/anime/${anime.slug}`}
+                      image={anime.thumb}
+                      title={anime.title}
+                      subtitle={anime.episode}
+                      badgeText="End"
+                      theme="anime"
+                    />
+                  ))}
+                </StaggerEntry>
+              </CardGrid>
 
-            <Pagination 
-              currentPage={page} 
-              hasMore={data.length > 0} 
-              onPageChange={setPage} 
-              theme="anime" 
-            />
-          </>
-        )}
-      </main>
-    </div>
+              <Pagination
+                currentPage={page}
+                hasMore={data.length > 0}
+                onPageChange={setPage}
+                theme="anime"
+              />
+            </>
+          )}
+        </div>
+      </div>
+    </main>
   );
 }

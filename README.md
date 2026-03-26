@@ -1,6 +1,18 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## dwizzyWEEB
+
+Next.js 16 app for the `weebs.dwizzy.my.id` frontend.
+
+## Data Access Model
+
+`dwizzyWEEB` reads media data through the API gateway (default `https://api.dwizzy.my.id`).
+
+- No direct DB call from this app to Neon
+- No direct media read path from Supabase
+- Supabase is reserved for account/auth concerns outside media catalog reads
 
 ## Getting Started
+
+Copy [.env.example](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/.env.example) to `.env.local` and set your gateway/app URLs.
 
 First, run the development server:
 
@@ -14,11 +26,16 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open the local URL printed by Next.js with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Main envs:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `DWIZZY_API_BASE_URL` (server fetch base, default: `https://api.dwizzy.my.id`)
+- `NEXT_PUBLIC_DWIZZY_API_BASE_URL` (optional client-safe mirror)
+- `SITE_URL` (canonical site URL for metadata/sitemap)
+- `NEXT_PUBLIC_SITE_URL` (client app origin fallback)
+
+You can start editing the app from [src/app/page.tsx](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/src/app/page.tsx). The page auto-updates as you edit the file.
 
 ## Learn More
 
@@ -31,6 +48,26 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Preferred deployment target:
+
+- first-time auth: `npx vercel login`
+- link project: `npm run link:vercel`
+- production deploy: `npm run deploy:vercel`
+
+Recommended Vercel envs:
+
+- `DWIZZY_API_BASE_URL`
+- optional `NEXT_PUBLIC_DWIZZY_API_BASE_URL`
+- optional `SITE_URL`
+- optional `NEXT_PUBLIC_SITE_URL`
+
+`SITE_URL` automatically falls back to Vercel system envs like `VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`, then to `https://weebs.dwizzy.my.id`.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Cloudflare Fallback
+
+Cloudflare-specific deploy flows are still available, but no longer the primary target:
+
+- preview: `npm run preview:cloudflare`
+- deploy: `npm run deploy:cloudflare`

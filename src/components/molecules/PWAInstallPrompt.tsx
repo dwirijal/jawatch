@@ -3,8 +3,8 @@
 import * as React from 'react';
 import { Download, X, Share, PlusSquare, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
+import { Paper } from '@/components/atoms/Paper';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
-import { cn } from '@/lib/utils';
 
 export function PWAInstallPrompt() {
   const { showPrompt, showIOSGuide, handleInstall, isStandalone } = usePWAInstall();
@@ -14,58 +14,61 @@ export function PWAInstallPrompt() {
   if (!showPrompt && !showIOSGuide) return null;
 
   return (
-    <div className="fixed bottom-20 md:bottom-8 left-4 right-4 md:left-auto md:right-8 md:w-96 z-[300] animate-in slide-in-from-bottom-10 duration-700">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-[2.5rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden group">
-        {/* Background Glow */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-600/10 blur-[80px] rounded-full group-hover:bg-blue-600/20 transition-colors" />
-        
-        <button 
-          onClick={() => setIsVisible(false)}
-          className="absolute top-4 right-4 p-2 hover:bg-white/5 rounded-full transition-colors"
-        >
-          <X className="w-4 h-4 text-zinc-500" />
-        </button>
+    <div className="fixed bottom-20 left-4 right-4 z-[300] animate-in slide-in-from-bottom-10 duration-700 md:bottom-8 md:left-auto md:right-8 md:w-96">
+      <Paper tone="muted" shadow="md" className="group relative overflow-hidden rounded-[var(--radius-2xl)] p-5 md:p-6">
+        <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-blue-500/12 blur-[72px] transition-colors group-hover:bg-blue-500/18" />
 
-        <div className="flex items-start gap-5">
-          <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-900/20">
-            <Download className="w-7 h-7 text-white" />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsVisible(false)}
+          className="absolute right-4 top-4 h-9 w-9 rounded-full text-zinc-500"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+
+        <div className="relative flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-blue-600 text-white hard-shadow-sm">
+            <Download className="h-5 w-5" />
           </div>
-          
-          <div className="flex-1 space-y-1">
-            <h3 className="text-sm font-black uppercase italic tracking-tight text-white">Install dwizzyWEEB</h3>
-            <p className="text-[11px] text-zinc-500 font-medium leading-relaxed">
-              {showIOSGuide 
-                ? "Tap 'Share' and 'Add to Home Screen' for the best experience." 
-                : "Get faster access and premium features directly from your home screen."}
+
+          <div className="min-w-0 flex-1 space-y-1.5 pr-10">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-300">Install App</p>
+            <h3 className="text-base font-black tracking-tight text-white">Save dwizzyWEEB to your home screen</h3>
+            <p className="text-sm leading-6 text-zinc-400">
+              {showIOSGuide
+                ? "Use Share, then Add to Home Screen for the best playback and browsing experience."
+                : "Launch faster and get a cleaner full-screen experience straight from your device."}
             </p>
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="relative mt-5">
           {showIOSGuide ? (
-            <div className="flex items-center justify-between px-4 py-3 bg-white/5 rounded-2xl border border-white/10">
-               <div className="flex items-center gap-3">
-                  <Share className="w-4 h-4 text-blue-400" />
-                  <span className="text-[10px] font-black text-zinc-400 uppercase">Share</span>
-               </div>
-               <div className="w-px h-4 bg-zinc-800" />
-               <div className="flex items-center gap-3">
-                  <PlusSquare className="w-4 h-4 text-blue-400" />
-                  <span className="text-[10px] font-black text-zinc-400 uppercase">Add to Home</span>
-               </div>
-               <ArrowUp className="w-4 h-4 text-blue-500 animate-bounce" />
-            </div>
+            <Paper tone="outline" padded={false} className="flex items-center justify-between gap-3 rounded-[var(--radius-xl)] px-4 py-3">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <Share className="h-4 w-4 text-blue-400" />
+                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400">Share</span>
+              </div>
+              <div className="h-4 w-px bg-border-subtle" />
+              <div className="flex min-w-0 items-center gap-2.5">
+                <PlusSquare className="h-4 w-4 text-blue-400" />
+                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400">Add to Home</span>
+              </div>
+              <ArrowUp className="h-4 w-4 shrink-0 animate-bounce text-blue-400" />
+            </Paper>
           ) : (
-            <Button 
+            <Button
               onClick={handleInstall}
-              variant="anime" 
-              className="w-full rounded-2xl h-12 shadow-xl shadow-blue-900/20"
+              variant="anime"
+              className="h-12 w-full rounded-[var(--radius-xl)]"
             >
-              INSTALL NOW
+              Install dwizzyWEEB
             </Button>
           )}
         </div>
-      </div>
+      </Paper>
     </div>
   );
 }

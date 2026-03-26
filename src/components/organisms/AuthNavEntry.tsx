@@ -1,37 +1,16 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LogOut } from 'lucide-react';
+import { Avatar } from '@/components/atoms/Avatar';
+import { Button } from '@/components/atoms/Button';
+import { Link } from '@/components/atoms/Link';
 import { useAuthSession } from '@/components/hooks/useAuthSession';
 import { buildLoginUrl, buildLogoutRequest } from '@/lib/auth-gateway';
-import { cn } from '@/lib/utils';
 
 function compactDisplayName(displayName: string) {
   const token = displayName.trim().split(/\s+/)[0] ?? displayName.trim();
   return token.length > 12 ? `${token.slice(0, 11)}…` : token;
-}
-
-function Avatar({
-  displayName,
-  className,
-}: {
-  displayName: string;
-  className?: string;
-}) {
-  const initial = displayName.trim().charAt(0).toUpperCase() || 'D';
-
-  return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        'relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-800 bg-zinc-900 text-sm font-black uppercase text-white',
-        className
-      )}
-    >
-      <span className="relative z-10">{initial}</span>
-    </span>
-  );
 }
 
 export function AuthNavEntry() {
@@ -39,14 +18,14 @@ export function AuthNavEntry() {
   const session = useAuthSession();
 
   if (session.loading) {
-    return <div className="h-10 w-32 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/70" />;
+    return <div className="h-10 w-32 animate-pulse rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1" />;
   }
 
   if (!session.authenticated || !session.user) {
     return (
       <Link
         href={buildLoginUrl(pathname)}
-        className="rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm font-black uppercase tracking-[0.24em] text-zinc-100 transition-colors hover:border-zinc-700 hover:bg-zinc-900/80"
+        className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-2.5 text-sm font-black uppercase tracking-[0.24em] text-zinc-100 transition-colors hover:bg-surface-elevated hover:text-white"
       >
         Login
       </Link>
@@ -55,10 +34,11 @@ export function AuthNavEntry() {
 
   const logoutRequest = buildLogoutRequest(pathname);
   const returnTo = logoutRequest.body.get('returnTo') ?? '/';
+  const origin = logoutRequest.body.get('origin') ?? '';
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900 px-2 py-2">
-      <Avatar displayName={session.user.displayName} />
+    <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-2 py-2">
+      <Avatar name={session.user.displayName} className="border-border-subtle bg-surface-2" />
       <div className="min-w-0">
         <p className="truncate text-sm font-black uppercase tracking-[0.18em] text-white">
           {compactDisplayName(session.user.displayName)}
@@ -67,13 +47,16 @@ export function AuthNavEntry() {
       </div>
       <form action={logoutRequest.url} method={logoutRequest.method}>
         <input type="hidden" name="returnTo" value={returnTo} />
-        <button
+        <input type="hidden" name="origin" value={origin} />
+        <Button
           type="submit"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-400 transition-colors hover:border-zinc-700 hover:text-white"
+          variant="outline"
+          size="icon"
+          className="rounded-[var(--radius-sm)] border-border-subtle bg-surface-2 text-zinc-400 hover:bg-surface-elevated hover:text-white"
           aria-label="Log out"
         >
           <LogOut className="h-4 w-4" />
-        </button>
+        </Button>
       </form>
     </div>
   );

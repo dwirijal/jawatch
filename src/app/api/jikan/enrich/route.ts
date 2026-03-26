@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { buildEdgeCacheControl } from '@/lib/cloudflare-cache';
 
 type JikanMediaType = 'anime' | 'manga';
 
@@ -147,14 +148,26 @@ export async function GET(request: Request) {
       .sort((left, right) => right.score - left.score)[0];
 
     if (!bestMatch || bestMatch.score < 20) {
-      return NextResponse.json({ data: null });
+      return NextResponse.json({ data: null }, {
+        headers: {
+          'Cache-Control': buildEdgeCacheControl(600, 3600),
+        },
+      });
     }
 
     return NextResponse.json({
       data: toEnrichment(mediaType, title, bestMatch.item),
+    }, {
+      headers: {
+        'Cache-Control': buildEdgeCacheControl(60 * 60 * 12, 60 * 60 * 24),
+      },
     });
   } catch (error) {
     console.error('Failed to fetch Jikan enrichment:', error);
-    return NextResponse.json({ data: null });
+    return NextResponse.json({ data: null }, {
+      headers: {
+        'Cache-Control': buildEdgeCacheControl(600, 3600),
+      },
+    });
   }
 }

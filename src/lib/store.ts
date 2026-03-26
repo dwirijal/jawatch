@@ -149,6 +149,20 @@ export function getInterests(): Record<MediaType, number> {
   }
 }
 
+// --- VIDEO TRAILER PREFERENCE ---
+export function getVideoTrailerPreference(): boolean | null {
+  if (typeof window === 'undefined') return null;
+  const value = localStorage.getItem(VIDEO_TRAILER_PREF_KEY);
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return null;
+}
+
+export function setVideoTrailerPreference(value: boolean) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(VIDEO_TRAILER_PREF_KEY, String(value));
+}
+
 // Kept for backward compatibility
 export interface RecentManga {
   slug: string;

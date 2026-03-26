@@ -1,26 +1,243 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b; /* zinc-950 */
-  --foreground: #fafafa; /* zinc-50 */
+  --background: #080808;
+  --background-alt: #111111;
+  --foreground: #e0e0e0;
+  --muted-foreground: #a1a1aa;
+  --border-subtle: #242424;
+  --surface-1: #121212;
+  --surface-2: #161616;
+  --surface-elevated: #1d1d1d;
+
+  --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.18);
+  --accent-strong: #2563eb;
+  --shadow-hard: #000000;
+
+  --radius-sm: 0.7rem;
+  --radius-md: 0.95rem;
+  --radius-lg: 1.2rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.7rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  --layout-max: 77.5rem;
+  --layout-max-wide: 90rem;
+  --layout-max-immersive: 105rem;
+  --layout-pad: 0.5rem;
+  --section-gap: 2rem;
+  --section-gap-wide: 3rem;
+  --card-columns: 2;
+  --card-gap: 0.5rem;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-alt: var(--background-alt);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-otfits-grotesk), var(--font-lora), serif;
-  --font-lora: var(--font-lora), serif;
+  --color-muted-foreground: var(--muted-foreground);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-border-subtle: var(--border-subtle);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-strong: var(--accent-strong);
+  --font-sans: var(--font-plus-jakarta-sans), var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+  --font-heading: var(--font-bricolage-grotesque), var(--font-plus-jakarta-sans), sans-serif;
+  --font-lora: var(--font-plus-jakarta-sans), sans-serif;
+}
+
+[data-theme='anime'] {
+  --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.2);
+  --accent-strong: #2563eb;
+}
+
+[data-theme='movie'] {
+  --accent: #6366f1;
+  --accent-soft: rgba(99, 102, 241, 0.2);
+  --accent-strong: #4f46e5;
+}
+
+[data-theme='manga'] {
+  --accent: #ea580c;
+  --accent-soft: rgba(234, 88, 12, 0.2);
+  --accent-strong: #c2410c;
+}
+
+[data-theme='donghua'] {
+  --accent: #ef4444;
+  --accent-soft: rgba(239, 68, 68, 0.2);
+  --accent-strong: #dc2626;
 }
 
 @layer base {
+  * {
+    border-color: var(--border-subtle);
+  }
+
   body {
+    @apply font-sans;
     background: var(--background);
     color: var(--foreground);
+    line-height: 1.45;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
+    @apply font-heading font-extrabold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .app-shell {
+    min-height: 100svh;
+    padding-bottom: var(--space-12);
+  }
+
+  .app-container {
+    margin-inline: auto;
+    width: min(var(--layout-max), calc(100% - (var(--layout-pad) * 2)));
+  }
+
+  .app-container-wide {
+    margin-inline: auto;
+    width: min(var(--layout-max-wide), calc(100% - (var(--layout-pad) * 2)));
+  }
+
+  .app-container-immersive {
+    margin-inline: auto;
+    width: min(var(--layout-max-immersive), calc(100% - (var(--layout-pad) * 2)));
+  }
+
+  .app-section-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--section-gap);
+  }
+
+  .surface-panel {
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-1);
+    border-radius: var(--radius-2xl);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24);
+  }
+
+  .surface-panel-elevated {
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-elevated);
+    border-radius: var(--radius-2xl);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+  }
+
+  .hard-shadow-sm {
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+  }
+
+  .hard-shadow-md {
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+  }
+
+  .focus-tv {
+    outline: none;
+  }
+
+  .focus-tv:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .type-display {
+    font-size: clamp(1.9rem, 4.8vw, 4.5rem);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+  }
+
+  .type-section-title {
+    font-size: clamp(1.15rem, 2vw, 1.65rem);
+    line-height: 1.02;
+    letter-spacing: -0.022em;
+  }
+
+  .type-kicker {
+    font-size: 0.64rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 900;
+    color: var(--muted-foreground);
+  }
+
+  .type-muted {
+    color: var(--muted-foreground);
+  }
+
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--card-columns), minmax(0, 1fr));
+    gap: var(--card-gap);
+  }
+
+  .media-rail {
+    display: flex;
+    gap: var(--card-gap);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .media-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .media-rail-item {
+    flex: 0 0 calc((100% - (var(--card-gap) * (var(--card-columns) - 1))) / var(--card-columns));
+    max-width: calc((100% - (var(--card-gap) * (var(--card-columns) - 1))) / var(--card-columns));
+    scroll-snap-align: start;
+  }
+
+  .cinematic-frame {
+    aspect-ratio: 1.618;
+  }
+
+  [data-view-mode='compact'] .media-grid,
+  [data-view-mode='compact'] .media-rail {
+    gap: var(--card-gap);
+  }
+}
+
+@media (min-width: 500px) {
+  :root {
+    --card-columns: 4;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --section-gap: 2.5rem;
+  }
+
+  @layer utilities {
+    .app-section-stack {
+      gap: var(--section-gap-wide);
+    }
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --card-columns: 8;
   }
 }

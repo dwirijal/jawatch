@@ -2,12 +2,13 @@
 
 import * as React from 'react';
 import { Bookmark } from 'lucide-react';
+import { Card } from '@/components/atoms/Card';
 import { AuthGateNotice } from '@/components/molecules/AuthGateNotice';
 import { useAuthGate } from '@/components/hooks/useAuthGate';
 import { getBookmarks, BookmarkItem, MediaType } from '@/lib/store';
-import { MediaCard } from '@/components/molecules/MediaCard';
-import { Typography } from '@/components/atoms/Typography';
+import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { THEME_CONFIG } from '@/lib/utils';
+import { CardGrid } from '@/components/molecules/card';
 
 interface SavedContentSectionProps {
   type?: MediaType;
@@ -41,21 +42,15 @@ export function SavedContentSection({ type, title = "Your Collection", limit }: 
   if (!authGate.authenticated) {
     return (
       <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 md:space-y-8">
-        <div className="flex items-center justify-between gap-4 border-b border-zinc-900 pb-5 md:pb-6">
-          <div className="flex min-w-0 items-center gap-3 md:gap-4">
-            <div className={`rounded-[1.15rem] p-2.5 md:rounded-2xl md:p-3 ${config.bg} ${config.text} border ${config.border}`}>
+        <SectionHeader
+          title={title}
+          subtitle="Login to view and keep your saved picks in one place"
+          leading={
+            <div className={`rounded-[1.15rem] border p-2.5 md:rounded-2xl md:p-3 ${config.bg} ${config.text} ${config.border}`}>
               <Bookmark className="h-5 w-5 md:h-6 md:w-6" />
             </div>
-            <div className="min-w-0">
-              <Typography as="h2" size="2xl" className="text-xl leading-none text-white md:text-2xl">
-                {title}
-              </Typography>
-              <Typography size="xs" className="mt-1.5 text-[10px] text-zinc-500 md:mt-2 md:text-xs">
-                Login to view and keep your saved picks in one place
-              </Typography>
-            </div>
-          </div>
-        </div>
+          }
+        />
 
         <AuthGateNotice
           compact
@@ -72,25 +67,19 @@ export function SavedContentSection({ type, title = "Your Collection", limit }: 
 
   return (
     <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 md:space-y-8">
-      <div className="flex items-center justify-between gap-4 border-b border-zinc-900 pb-5 md:pb-6">
-        <div className="flex min-w-0 items-center gap-3 md:gap-4">
-          <div className={`rounded-[1.15rem] p-2.5 md:rounded-2xl md:p-3 ${config.bg} ${config.text} border ${config.border}`}>
+      <SectionHeader
+        title={title}
+        subtitle="Items you have bookmarked"
+        leading={
+          <div className={`rounded-[1.15rem] border p-2.5 md:rounded-2xl md:p-3 ${config.bg} ${config.text} ${config.border}`}>
             <Bookmark className="h-5 w-5 md:h-6 md:w-6" />
           </div>
-          <div className="min-w-0">
-            <Typography as="h2" size="2xl" className="text-xl leading-none text-white md:text-2xl">
-              {title}
-            </Typography>
-            <Typography size="xs" className="mt-1.5 text-[10px] text-zinc-500 md:mt-2 md:text-xs">
-              Items you have bookmarked
-            </Typography>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 md:grid-cols-4 lg:grid-cols-5 lg:gap-8 xl:grid-cols-6">
+      <CardGrid>
         {items.map((item) => (
-          <MediaCard
+          <Card
             key={item.id}
             href={`/${item.type === 'movie' ? 'movies' : item.type}/${item.id}`}
             image={item.image}
@@ -99,7 +88,7 @@ export function SavedContentSection({ type, title = "Your Collection", limit }: 
             theme={item.type}
           />
         ))}
-      </div>
+      </CardGrid>
     </section>
   );
 }

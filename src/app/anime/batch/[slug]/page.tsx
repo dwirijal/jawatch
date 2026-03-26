@@ -2,10 +2,12 @@
 
 import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { getAnimeBatch, KanataAnimeBatch } from '@/lib/api';
 import { Button } from '@/components/atoms/Button';
+import { Link } from '@/components/atoms/Link';
+import { AdSection } from '@/components/organisms/AdSection';
 import { Badge } from '@/components/atoms/Badge';
+import { Paper } from '@/components/atoms/Paper';
 import { ChevronLeft, Download, HardDrive } from 'lucide-react';
 
 interface PageProps {
@@ -35,7 +37,7 @@ export default function AnimeBatchPage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="app-shell flex min-h-screen items-center justify-center bg-background">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -43,7 +45,7 @@ export default function AnimeBatchPage({ params }: PageProps) {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-8">
+      <div className="app-shell flex min-h-screen flex-col items-center justify-center bg-background p-8 text-white">
         <h1 className="text-2xl font-bold mb-4">Batch tidak ditemukan</h1>
         <Button variant="anime" asChild>
           <Link href="/anime">Kembali ke Anime Hub</Link>
@@ -53,16 +55,18 @@ export default function AnimeBatchPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 pb-20">
-      <header className="relative py-20 px-8 overflow-hidden">
+    <div className="app-shell bg-background text-white">
+      <header className="relative overflow-hidden py-16 sm:py-18">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-600/10 to-transparent pointer-events-none" />
-        <div className="max-w-7xl mx-auto relative z-10 space-y-8">
-          <Link href="/anime" className="text-zinc-400 hover:text-blue-400 transition-colors flex items-center gap-2 text-xs font-black uppercase tracking-widest">
-            <ChevronLeft className="w-4 h-4" /> Back to Browse
-          </Link>
+        <div className="app-container-wide relative z-10 space-y-6 md:space-y-8">
+          <Button variant="outline" size="sm" asChild className="w-fit rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 hover:bg-surface-elevated">
+            <Link href="/anime">
+              <ChevronLeft className="mr-2 h-4 w-4" /> Back to Browse
+            </Link>
+          </Button>
           
           <div className="flex flex-col md:flex-row gap-10 items-end">
-            <div className="w-48 aspect-[2/3] flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl border border-zinc-800">
+            <div className="w-48 aspect-[2/3] flex-shrink-0 overflow-hidden rounded-2xl border border-border-subtle shadow-2xl">
               <div className="relative h-full w-full">
                 <Image
                   src={data.thumb}
@@ -87,17 +91,18 @@ export default function AnimeBatchPage({ params }: PageProps) {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-8 mt-12 space-y-16">
+      <main className="app-container-wide space-y-12 pb-20 pt-6 md:space-y-14 md:pt-8">
+        <AdSection />
         {data.download_list.map((section, sectionIdx) => (
           <section key={sectionIdx} className="space-y-8">
             <div className="flex items-center gap-4">
               <h2 className="text-xl font-black italic text-zinc-300 uppercase tracking-tighter">{section.title}</h2>
-              <div className="flex-1 h-px bg-zinc-900" />
+              <div className="h-px flex-1 bg-border-subtle" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {section.links.map((item: { quality: string; size: string; links: { url: string; name: string }[] }, itemIdx: number) => (
-                <div key={itemIdx} className="bg-zinc-900/30 border border-zinc-800 rounded-3xl p-6 hover:border-blue-500/30 transition-all group shadow-sm">
+                <Paper key={itemIdx} tone="muted" shadow="sm" className="group p-5 transition-colors hover:border-blue-500/30">
                   <div className="flex items-center justify-between mb-6">
                     <Badge variant="anime" className="px-4 py-1.5 rounded-xl">{item.quality}</Badge>
                     <div className="flex items-center gap-2 text-zinc-500 font-bold text-[10px] uppercase tracking-widest">
@@ -111,7 +116,7 @@ export default function AnimeBatchPage({ params }: PageProps) {
                         key={linkIdx}
                         variant="outline"
                         size="sm"
-                        className="rounded-xl border-zinc-800 hover:bg-zinc-800 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest"
+                        className="rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 text-[10px] font-black uppercase tracking-widest hover:bg-surface-elevated hover:text-white"
                         asChild
                       >
                         <a href={link.url} target="_blank" rel="noopener noreferrer">
@@ -120,7 +125,7 @@ export default function AnimeBatchPage({ params }: PageProps) {
                       </Button>
                     ))}
                   </div>
-                </div>
+                </Paper>
               ))}
             </div>
           </section>

@@ -2,13 +2,21 @@
 
 import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getDonghuaEpisode, getDonghuaDetail, KanataEpisodeDetail, AnichinDetail } from '@/lib/api';
 import { ChevronLeft, ChevronRight, Info, Zap } from 'lucide-react';
+import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
+import { Link } from '@/components/atoms/Link';
+import { AdSection } from '@/components/organisms/AdSection';
+import { Paper } from '@/components/atoms/Paper';
 import { ScrollArea, ScrollBar } from '@/components/atoms/ScrollArea';
-import { VideoPlayer } from '@/components/molecules/VideoPlayer';
+import { VideoPlayer } from '@/components/organisms/VideoPlayer';
+import { CommunityCTA } from '@/components/molecules/CommunityCTA';
+import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
+import { CircularLoader } from '@/components/atoms/CircularLoader';
+import { VideoPlaybackScaffold } from '@/components/organisms/VideoPlaybackScaffold';
+import { StateInfo } from '@/components/molecules/StateInfo';
 import { saveHistory } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
@@ -58,92 +66,85 @@ export default function DonghuaEpisodePage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-zinc-500 font-black animate-pulse uppercase tracking-widest text-[10px]">Cultivating Stream...</p>
-        </div>
+      <div className="app-shell flex min-h-screen items-center justify-center bg-background text-white">
+        <CircularLoader theme="donghua" />
       </div>
     );
   }
 
   if (!episode) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-8 space-y-6">
-        <h1 className="text-2xl font-black text-red-500 uppercase italic">Episode not found</h1>
-        <Button variant="donghua" asChild>
-          <Link href="/donghua">Return to Anichin</Link>
-        </Button>
+      <div className="app-shell flex min-h-screen items-center justify-center bg-background p-8 text-white">
+        <StateInfo
+          type="error"
+          title="Episode not found"
+          description="This donghua episode could not be loaded."
+          actionLabel="Back to Donghua"
+          onAction={() => router.push('/donghua')}
+          className="w-full max-w-xl"
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <header className="bg-zinc-900/50 border-b border-zinc-800 p-4 sticky top-0 z-[160] backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 min-w-0">
-            <Button variant="ghost" size="icon" asChild className="rounded-full shrink-0">
-              <Link href={`/donghua/${episode.navigation?.anime_info || ''}`}>
-                <ChevronLeft className="w-6 h-6" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-sm md:text-base font-black line-clamp-1 text-red-500 italic uppercase">{episode.title}</h1>
-              <p className="text-[9px] text-zinc-500 uppercase font-black tracking-widest flex items-center gap-1">
-                <Zap className="w-2 h-2 text-red-500" /> Streaming Now
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2 shrink-0">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              disabled={!episode.navigation?.prev}
-              asChild={!!episode.navigation?.prev}
-              className="rounded-xl border-zinc-800"
-            >
-              {episode.navigation?.prev ? (
-                <Link href={`/donghua/episode/${episode.navigation.prev}`}><ChevronLeft className="w-5 h-5" /></Link>
-              ) : (
-                <ChevronLeft className="w-5 h-5" />
-              )}
-            </Button>
-            <Button 
-              variant="donghua" 
-              size="icon" 
-              disabled={!episode.navigation?.next}
-              asChild={!!episode.navigation?.next}
-              className="rounded-xl"
-            >
-              {episode.navigation?.next ? (
-                <Link href={`/donghua/episode/${episode.navigation.next}`}><ChevronRight className="w-5 h-5" /></Link>
-              ) : (
-                <ChevronRight className="w-5 h-5" />
-              )}
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3">
-          <VideoPlayer 
-            mirrors={episode.mirrors} 
-            defaultUrl={episode.default_embed} 
-            title={episode.title}
-            theme="donghua"
-            hasNext={!!episode.navigation?.next}
-            onNext={() => episode.navigation?.next && router.push(`/donghua/episode/${episode.navigation.next}`)}
-          />
-        </div>
-
-        <div className="space-y-8">
-          {donghua && (
-            <div className="bg-zinc-900/30 border border-zinc-800 rounded-[2rem] p-8 space-y-8">
-              <div className="flex gap-5">
-                <div className="w-20 aspect-[2/3] rounded-2xl overflow-hidden flex-shrink-0 border border-zinc-800 shadow-xl">
+    <VideoPlaybackScaffold
+      backHref={`/donghua/${episode.navigation?.anime_info || ''}`}
+      eyebrow="Now Watching"
+      title={episode.title}
+      subtitle={
+        <>
+          <Badge variant="donghua" className="px-2 py-0.5 text-[10px]">Playback Ready</Badge>
+          <span className="inline-flex items-center gap-1 uppercase font-black tracking-widest text-[9px]">
+            <Zap className="h-2 w-2 text-red-500" /> Queue synced
+          </span>
+        </>
+      }
+      headerActions={
+        <>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            disabled={!episode.navigation?.prev}
+            asChild={!!episode.navigation?.prev}
+            className="rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 hover:bg-surface-elevated"
+          >
+            {episode.navigation?.prev ? (
+              <Link href={`/donghua/episode/${episode.navigation.prev}`}><ChevronLeft className="w-5 h-5" /></Link>
+            ) : (
+              <ChevronLeft className="w-5 h-5" />
+            )}
+          </Button>
+          <Button 
+            variant="donghua" 
+            size="icon" 
+            disabled={!episode.navigation?.next}
+            asChild={!!episode.navigation?.next}
+            className="rounded-xl"
+          >
+            {episode.navigation?.next ? (
+              <Link href={`/donghua/episode/${episode.navigation.next}`}><ChevronRight className="w-5 h-5" /></Link>
+            ) : (
+              <ChevronRight className="w-5 h-5" />
+            )}
+          </Button>
+        </>
+      }
+      stage={
+        <VideoPlayer 
+          mirrors={episode.mirrors} 
+          defaultUrl={episode.default_embed} 
+          title={episode.title}
+          theme="donghua"
+          hasNext={!!episode.navigation?.next}
+          onNext={() => episode.navigation?.next && router.push(`/donghua/episode/${episode.navigation.next}`)}
+        />
+      }
+      sidebar={
+        donghua ? (
+          <Paper tone="muted" shadow="sm" className="space-y-6 p-4 md:p-5">
+              <div className="flex gap-4">
+                <div className="aspect-[2/3] w-[4.5rem] flex-shrink-0 overflow-hidden rounded-2xl border border-border-subtle shadow-xl md:w-20">
                   <Image
                     src={donghua.thumb}
                     alt={donghua.title}
@@ -153,19 +154,19 @@ export default function DonghuaEpisodePage({ params }: PageProps) {
                     unoptimized
                   />
                 </div>
-                <div className="flex-1 space-y-3">
-                  <h3 className="text-xs font-black leading-tight mb-2 line-clamp-2 uppercase">{donghua.title}</h3>
-                  <Button variant="outline" size="sm" asChild className="rounded-full w-full justify-start text-[9px] h-8 border-zinc-800">
+                <div className="flex-1 space-y-2.5">
+                  <h3 className="mb-1.5 line-clamp-2 text-xs font-black leading-tight uppercase">{donghua.title}</h3>
+                  <Button variant="outline" size="sm" asChild className="h-8 w-full justify-start rounded-full border-border-subtle bg-surface-1 text-[9px] hover:bg-surface-elevated">
                     <Link href={`/donghua/${episode.navigation?.anime_info || ''}`}>
-                      <Info className="w-3 h-3 mr-2 text-red-500" /> Details
+                      <Info className="w-3 h-3 mr-2 text-red-500" /> View Details
                     </Link>
                   </Button>
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-zinc-800/50">
+              <div className="space-y-3.5 border-t border-border-subtle pt-4">
                 <div className="flex items-center justify-between px-1">
-                  <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Playlist</h4>
+                  <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Queue</h4>
                   <span className="text-[9px] font-bold text-zinc-600">{donghua.episodes.length} EPISODES</span>
                 </div>
                 
@@ -176,10 +177,10 @@ export default function DonghuaEpisodePage({ params }: PageProps) {
                         key={ep.slug}
                         href={`/donghua/episode/${ep.slug}`}
                         className={cn(
-                          "group p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border flex items-center justify-between",
+                          "group flex items-center justify-between rounded-2xl border p-3.5 text-[10px] font-black uppercase tracking-widest transition-all",
                           episodeSlug === ep.slug 
                             ? "bg-red-600/10 border-red-600/50 text-red-400 shadow-lg shadow-red-600/5" 
-                            : "bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-200"
+                            : "border-border-subtle bg-surface-1 text-zinc-500 hover:bg-surface-elevated hover:text-zinc-200"
                         )}
                       >
                         <span className="line-clamp-1">{ep.title}</span>
@@ -190,10 +191,31 @@ export default function DonghuaEpisodePage({ params }: PageProps) {
                   <ScrollBar />
                 </ScrollArea>
               </div>
+          </Paper>
+        ) : null
+      }
+    >
+      {donghua ? (
+        <section className="space-y-8">
+          <DetailSectionHeading title="Overview" theme="donghua" />
+          <Paper tone="muted" shadow="sm" className="space-y-3.5 p-4 md:p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="px-2.5 py-1 text-[10px]">{donghua.meta.updated_on}</Badge>
+              <Badge variant="outline" className="px-2.5 py-1 text-[10px]">{donghua.meta.status}</Badge>
+              <Badge variant="outline" className="px-2.5 py-1 text-[10px]">{donghua.meta.duration}</Badge>
             </div>
-          )}
-        </div>
-      </main>
-    </div>
+            <p className="text-sm leading-6 text-zinc-400">
+              {donghua.synopsis || 'No synopsis available for this donghua.'}
+            </p>
+          </Paper>
+        </section>
+      ) : null}
+
+      <div className="pb-2">
+        <AdSection />
+      </div>
+
+      {donghua ? <CommunityCTA mediaId={episode.navigation?.anime_info || episodeSlug} title={donghua.title} type="donghua" theme="donghua" /> : null}
+    </VideoPlaybackScaffold>
   );
 }

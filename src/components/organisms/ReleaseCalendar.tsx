@@ -1,12 +1,14 @@
 'use client';
 
-import Link from "next/link"
 import * as Tabs from "@radix-ui/react-tabs"
 import { Calendar, ChevronRight } from "lucide-react"
 import { AnimeSchedule } from "@/lib/api"
+import { Paper } from "@/components/atoms/Paper"
 import { cn } from "@/lib/utils"
+import { Card } from "@/components/atoms/Card"
 import { ScrollArea, ScrollBar } from "@/components/atoms/ScrollArea"
-import { MediaCard } from "@/components/molecules/MediaCard"
+import { SectionHeader } from "@/components/molecules/SectionHeader"
+import { CardRail } from '@/components/molecules/card';
 
 interface ReleaseCalendarProps {
   schedule: AnimeSchedule[];
@@ -15,7 +17,7 @@ interface ReleaseCalendarProps {
 
 export function ReleaseCalendar({ schedule, theme = "anime" }: ReleaseCalendarProps) {
   const currentDay = new Intl.DateTimeFormat('id-ID', { weekday: 'long' }).format(new Date());
-  
+
   const themeColors = {
     anime: "data-[state=active]:text-blue-500 data-[state=active]:border-blue-500 hover:text-blue-400",
     donghua: "data-[state=active]:text-red-500 data-[state=active]:border-red-500 hover:text-red-400",
@@ -28,43 +30,44 @@ export function ReleaseCalendar({ schedule, theme = "anime" }: ReleaseCalendarPr
 
   return (
     <div className="w-full space-y-8">
-      <div className="flex items-center justify-between border-b border-zinc-900 pb-6">
-        <div className="flex items-center gap-3">
-          <Calendar className={cn("w-6 h-6", theme === "anime" ? "text-blue-500" : "text-red-500")} />
-          <h2 className="text-2xl md:text-3xl font-black italic tracking-tighter uppercase">Weekly Schedule</h2>
-        </div>
-        <div className="flex items-center gap-2 text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-          Scroll to view more <ChevronRight className="w-3 h-3" />
-        </div>
-      </div>
-      
-      <Tabs.Root defaultValue={currentDay} className="flex flex-col">
-        <ScrollArea className="w-full mb-8">
-          <Tabs.List className="flex border-b border-zinc-900 gap-2 pb-2">
-            {schedule.map((day) => (
-              <Tabs.Trigger
-                key={day.day}
-                value={day.day}
-                className={cn(
-                  "px-6 py-3 rounded-t-xl text-xs font-black uppercase tracking-widest transition-all border-b-2 border-transparent text-zinc-500 whitespace-nowrap",
-                  themeColors[theme],
-                  activeBg[theme]
-                )}
-              >
-                {day.day}
-              </Tabs.Trigger>
-            ))}
-          </Tabs.List>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+      <SectionHeader
+        title="Weekly Schedule"
+        icon={Calendar}
+        action={
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-600">
+            Scroll to view more <ChevronRight className="w-3 h-3" />
+          </div>
+        }
+      />
 
-        {schedule.map((day) => (
-          <Tabs.Content key={day.day} value={day.day} className="outline-none animate-in fade-in slide-in-from-left-2 duration-500">
-            <ScrollArea className="w-full">
-              <div className="flex gap-6 pb-6">
-                {day.anime_list.map((item, idx) => (
-                  <div key={`${item.slug}-${idx}`} className="flex-shrink-0 w-40 md:w-48">
-                    <MediaCard
+      <Tabs.Root defaultValue={currentDay} className="flex flex-col">
+        <Paper tone="muted" shadow="sm" padded={false} className="overflow-hidden">
+          <ScrollArea className="mb-6 w-full">
+            <Tabs.List className="flex gap-2 border-b border-border-subtle px-3 pb-2 pt-3">
+              {schedule.map((day) => (
+                <Tabs.Trigger
+                  key={day.day}
+                  value={day.day}
+                  className={cn(
+                    "whitespace-nowrap rounded-[var(--radius-sm)] border border-transparent px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-500 transition-all",
+                    themeColors[theme],
+                    activeBg[theme]
+                  )}
+                >
+                  {day.day}
+                </Tabs.Trigger>
+              ))}
+            </Tabs.List>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+
+          {schedule.map((day) => (
+            <Tabs.Content key={day.day} value={day.day} className="animate-in fade-in slide-in-from-left-2 px-3 pb-3 outline-none duration-500">
+              <ScrollArea className="w-full">
+                <CardRail>
+                  {day.anime_list.map((item, idx) => (
+                    <Card
+                      key={`${item.slug}-${idx}`}
                       href={`/anime/${item.slug}`}
                       image={item.thumb}
                       title={item.title}
@@ -72,13 +75,13 @@ export function ReleaseCalendar({ schedule, theme = "anime" }: ReleaseCalendarPr
                       badgeText={item.status !== "??" ? `Ep ${item.status}` : "TBA"}
                       theme={theme}
                     />
-                  </div>
-                ))}
-              </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-          </Tabs.Content>
-        ))}
+                  ))}
+                </CardRail>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            </Tabs.Content>
+          ))}
+        </Paper>
       </Tabs.Root>
     </div>
   );

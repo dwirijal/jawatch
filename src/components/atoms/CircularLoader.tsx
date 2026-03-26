@@ -22,7 +22,7 @@ export function CircularLoader({ text = " • LOADING • DWIZZYWEEB • PLEASE 
     anime: "bg-blue-600",
     donghua: "bg-red-600",
     movie: "bg-indigo-600",
-    default: "bg-zinc-100"
+    default: "bg-surface-elevated"
   };
 
   return (
@@ -40,7 +40,7 @@ export function CircularLoader({ text = " • LOADING • DWIZZYWEEB • PLEASE 
           </div>
         </div>
       </div>
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 animate-pulse">Synchronizing Data</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 animate-pulse">Synchronizing Data</p>
     </div>
   );
 }

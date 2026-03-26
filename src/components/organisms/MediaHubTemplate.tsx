@@ -1,13 +1,17 @@
 'use client';
 
 import * as React from 'react';
-import { LucideIcon, LayoutGrid } from 'lucide-react';
+import { Grid3X3, LayoutGrid, LucideIcon } from 'lucide-react';
+import { Button } from '@/components/atoms/Button';
+import { AdSection } from '@/components/organisms/AdSection';
 import { MediaHubHeader } from './MediaHubHeader';
+import { Card } from '@/components/atoms/Card';
 import { GenreFilter } from '@/components/molecules/GenreFilter';
+import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { StaggerEntry } from '@/components/molecules/StaggerEntry';
-import { MediaCard } from '@/components/molecules/MediaCard';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
+import { CardGrid } from '@/components/molecules/card';
 import { ThemeType } from '@/lib/utils';
 import type { GenericMediaItem } from '@/lib/api';
 
@@ -23,10 +27,12 @@ interface MediaHubTemplateProps {
   activeGenre: string | null;
   onGenreClick: (genre: string) => void;
   onClearResults: () => void;
-  children?: React.ReactNode; 
+  children?: React.ReactNode;
   extraHeaderActions?: React.ReactNode;
   extraFilters?: React.ReactNode;
 }
+
+type ViewMode = 'comfortable' | 'compact';
 
 export function MediaHubTemplate({
   title,
@@ -44,54 +50,103 @@ export function MediaHubTemplate({
   extraHeaderActions,
   extraFilters
 }: MediaHubTemplateProps) {
+  const [viewMode, setViewMode] = React.useState<ViewMode>('compact');
+  const viewModeStorageKey = `dwizzy_view_mode_${theme}`;
+
+  React.useEffect(() => {
+    const saved = window.localStorage.getItem(viewModeStorageKey);
+    if (saved === 'comfortable' || saved === 'compact') {
+      setViewMode(saved);
+    }
+  }, [viewModeStorageKey]);
+
+  React.useEffect(() => {
+    window.localStorage.setItem(viewModeStorageKey, viewMode);
+  }, [viewMode, viewModeStorageKey]);
+
   return (
-    <div className="min-h-screen bg-zinc-950 pb-20">
+    <div className="app-shell" data-theme={theme} data-view-mode={viewMode}>
       <MediaHubHeader
         title={title}
         description={description}
         icon={icon}
         theme={theme}
+        containerClassName="app-container-wide"
       >
         {extraHeaderActions}
-        <div className="h-8 w-px bg-zinc-800 mx-2 hidden md:block" />
-        <GenreFilter 
-          genres={genres.slice(0, 10)} 
-          activeGenre={activeGenre} 
-          onGenreClick={onGenreClick} 
-          theme={theme} 
+        <div className="mx-2 hidden h-8 w-px bg-border-subtle md:block" />
+        <GenreFilter
+          genres={genres.slice(0, 10)}
+          activeGenre={activeGenre}
+          onGenreClick={onGenreClick}
+          theme={theme}
           className="md:pt-0 space-y-0"
         />
       </MediaHubHeader>
 
-      <main className="max-w-7xl mx-auto px-8 mt-12 space-y-12">
+      <main className="app-container-wide mt-8 space-y-10 sm:mt-10 md:mt-12 md:space-y-12">
         {/* Advanced Filters Area */}
-        {extraFilters && (
-          <div className="flex justify-end">
-            {extraFilters}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="inline-flex items-center gap-1 rounded-[var(--radius-lg)] border border-white/10 bg-surface-1 p-1">
+            <button
+              type="button"
+              aria-label="Comfortable view"
+              onClick={() => setViewMode('comfortable')}
+              className={`inline-flex items-center gap-2 rounded-[calc(var(--radius-lg)-0.35rem)] px-3 py-2 text-xs font-semibold tracking-[0.02em] transition ${viewMode === 'comfortable'
+                  ? 'bg-accent-soft text-accent'
+                  : 'text-muted-foreground hover:text-foreground'
+                }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              Comfort
+            </button>
+            <button
+              type="button"
+              aria-label="Compact view"
+              onClick={() => setViewMode('compact')}
+              className={`inline-flex items-center gap-2 rounded-[calc(var(--radius-lg)-0.35rem)] px-3 py-2 text-xs font-semibold tracking-[0.02em] transition ${viewMode === 'compact'
+                  ? 'bg-accent-soft text-accent'
+                  : 'text-muted-foreground hover:text-foreground'
+                }`}
+            >
+              <Grid3X3 className="h-3.5 w-3.5" />
+              Compact
+            </button>
           </div>
-        )}
+          {extraFilters && (
+            <div className="flex justify-end">
+              {extraFilters}
+            </div>
+          )}
+        </div>
 
-        <div className="space-y-32">
+        <AdSection />
+
+        <div className="app-section-stack">
           {results ? (
-            <section className="space-y-8 animate-in fade-in duration-500">
-              <div className="flex items-center justify-between border-b border-zinc-900 pb-6">
-                <div className="flex items-center gap-3">
-                  <LayoutGrid className="w-6 h-6" />
-                  <h2 className="text-2xl font-black italic tracking-tighter uppercase">
-                    {activeGenre ? `Genre: ${activeGenre}` : `Filtered Results`}
-                  </h2>
-                </div>
-                <button className="text-xs font-black text-zinc-500 hover:text-white uppercase tracking-widest" onClick={onClearResults}>
-                  Clear Filter
-                </button>
-              </div>
+            <section className="animate-in space-y-4 fade-in duration-500">
+              <SectionHeader
+                title={activeGenre ? `Genre: ${activeGenre}` : `Filtered results`}
+                icon={LayoutGrid}
+                action={
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    onClick={onClearResults}
+                    className="focus-tv shrink-0 text-xs font-semibold tracking-[0.02em] text-zinc-500 hover:text-white"
+                  >
+                    Clear filter
+                  </Button>
+                }
+              />
 
               {error ? (
                 <StateInfo type="error" title="Search Error" description={error} />
               ) : results.length > 0 ? (
-                <StaggerEntry className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+                <StaggerEntry className="media-grid">
                   {results.map((item, index) => (
-                    <MediaCard
+                    <Card
                       key={`${item.slug}-${index}`}
                       href={`/${theme === 'movie' ? 'movies' : theme}/${item.slug || ''}`}
                       image={item.thumb || item.image || item.thumbnail || item.poster || ''}
@@ -106,9 +161,9 @@ export function MediaHubTemplate({
               )}
             </section>
           ) : loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+            <CardGrid>
               {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
-            </div>
+            </CardGrid>
           ) : (
             children
           )}

@@ -3,15 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "postinstall": "node scripts/patch-opennext-load-manifest.mjs",
+    "snapshots:build": "node scripts/build-snapshot-bundle.mjs",
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev",
     "build": "next build",
     "start": "next start",
+    "link:vercel": "npm exec --yes -- vercel link",
+    "deploy:vercel": "npm exec --yes -- vercel --prod",
+    "preview:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "lint": "eslint",
     "test:movie": "node scripts/movie-dataflow-check.mjs",
     "test:anime": "node scripts/anime-dataflow-check.mjs",
     "test:donghua": "node scripts/donghua-dataflow-check.mjs"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "^1.17.1",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -39,6 +47,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.76.0"
   }
 }

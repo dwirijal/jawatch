@@ -1,60 +1,69 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Play, Search, Zap, Film } from 'lucide-react';
+import { Link } from '@/components/atoms/Link';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
-import { AuthMobileEntry } from './AuthMobileEntry';
+import { MOBILE_NAV_ITEMS } from '@/lib/navigation';
+import { MobileMenuPanel } from './MobileMenuPanel';
 
 export function MobileNav() {
-  const pathname = usePathname();
-  const { device, setSearchOpen } = useUIStore();
+  const pathname = usePathname() || '/';
+  const { device, setSearchOpen, setSidebarOpen } = useUIStore();
 
   if (device !== 'mobile') return null;
 
-  const navItems = [
-    { label: "Home", href: "/", icon: Home },
-    { label: "Movies", href: "/movies", icon: Film },
-    { label: "Search", onClick: () => setSearchOpen(true), icon: Search, isAction: true },
-    { label: "Anime", href: "/anime", icon: Play },
-    { label: "Donghua", href: "/donghua", icon: Zap },
-  ];
-
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] bg-black/80 backdrop-blur-xl border-t border-zinc-800 pb-safe">
-      <div className="flex items-center justify-around h-16">
-        {navItems.map((item) => {
-          if (item.isAction) {
-            return (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                className="flex flex-col items-center justify-center gap-1 text-zinc-500"
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
-              </button>
-            );
-          }
+    <>
+      <div className="fixed bottom-0 left-0 right-0 z-[100] border-t border-border-subtle bg-background/95 pb-safe backdrop-blur-xl">
+        <div className="app-container flex h-16 items-center justify-around gap-1">
+          {MOBILE_NAV_ITEMS.map((item) => {
+            if ('action' in item && item.action === 'search') {
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setSearchOpen(true)}
+                  className="focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-zinc-500 transition-colors hover:bg-surface-1 hover:text-white"
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+                </button>
+              );
+            }
 
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href!}
-              className={cn(
-                "flex flex-col items-center justify-center gap-1 transition-all",
-                isActive ? "text-white scale-110" : "text-zinc-500"
-              )}
-            >
-              <item.icon className={cn("w-5 h-5", isActive && "fill-current")} />
-              <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
-            </Link>
-          );
-        })}
-        <AuthMobileEntry />
+            if ('action' in item && item.action === 'menu') {
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setSidebarOpen(true)}
+                  className="focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-zinc-500 transition-colors hover:bg-surface-1 hover:text-white"
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+                </button>
+              );
+            }
+
+            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.key}
+                href={item.href!}
+                className={cn(
+                  'focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 transition-colors',
+                  isActive ? 'bg-surface-1 text-white' : 'text-zinc-500 hover:bg-surface-1 hover:text-white'
+                )}
+              >
+                <item.icon className={cn('h-5 w-5', isActive && 'fill-current')} />
+                <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
-    </div>
+      <MobileMenuPanel />
+    </>
   );
 }

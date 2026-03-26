@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Play, BookOpen, Film, Zap } from 'lucide-react';
 import { animate } from 'animejs';
+import { ANIMATION_PRESETS } from '@/lib/animations';
 import { cn } from '@/lib/utils';
 
 const ACTIVITIES = [
@@ -14,7 +15,7 @@ const ACTIVITIES = [
   { name: "Fany", action: "reading", target: "Berserk", type: "manga" },
 ];
 
-export function LiveActivityToast() {
+export function ActivityToast() {
   const [current, setCurrent] = React.useState<typeof ACTIVITIES[0] | null>(null);
   const toastRef = React.useRef<HTMLDivElement>(null);
 
@@ -25,30 +26,30 @@ export function LiveActivityToast() {
 
       // Animate In
       if (toastRef.current) {
-        animate(toastRef.current, {
-          translateX: [100, 0],
-          opacity: [0, 1],
-          duration: 1000,
-          ease: 'outExpo'
-        });
+        animate(toastRef.current, ANIMATION_PRESETS.slideInRight);
 
         // Animate Out after 5s
-        setTimeout(() => {
+        const timer = setTimeout(() => {
           if (toastRef.current) {
             animate(toastRef.current, {
               translateX: [0, 100],
               opacity: [1, 0],
               duration: 1000,
-              ease: 'inExpo',
+              easing: 'easeInExpo',
               complete: () => setCurrent(null)
             });
           }
         }, 5000);
+        
+        return timer;
       }
+      return null;
     };
 
     const interval = setInterval(() => {
-      if (Math.random() > 0.7) showToast();
+      if (Math.random() > 0.7) {
+        showToast();
+      }
     }, 15000);
 
     return () => clearInterval(interval);

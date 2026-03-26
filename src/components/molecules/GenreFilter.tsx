@@ -24,7 +24,7 @@ export function GenreFilter({
     <div className={cn("space-y-4", className)}>
       <div className="flex items-center gap-2">
         <Filter className="w-4 h-4 text-zinc-500" />
-        <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Filter by Genres</h3>
+        <h3 className="type-kicker">Filter by Genres</h3>
       </div>
       <div className="flex flex-wrap gap-2">
         {genres.map(genre => (

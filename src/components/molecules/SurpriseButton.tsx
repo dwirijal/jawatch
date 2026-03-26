@@ -8,7 +8,21 @@ import { getRandomMedia } from '@/lib/api';
 import { cn, ThemeType, THEME_CONFIG } from '@/lib/utils';
 import type { MediaType } from '@/lib/store';
 
-export function SurpriseButton({ type, theme, className }: { type: MediaType; theme: ThemeType; className?: string }) {
+interface SurpriseButtonProps {
+  type: MediaType;
+  theme: ThemeType;
+  className?: string;
+  hrefBase?: string;
+  resolveSlug?: () => string | Promise<string>;
+}
+
+export function SurpriseButton({
+  type,
+  theme,
+  className,
+  hrefBase,
+  resolveSlug,
+}: SurpriseButtonProps) {
   const [loading, setLoading] = React.useState(false);
   const router = useRouter();
   const config = THEME_CONFIG[theme] || THEME_CONFIG.default;
@@ -16,9 +30,14 @@ export function SurpriseButton({ type, theme, className }: { type: MediaType; th
   const handleSurprise = async () => {
     setLoading(true);
     try {
-      const { slug } = await getRandomMedia(type);
+      const slug = resolveSlug ? await resolveSlug() : (await getRandomMedia(type)).slug;
+      if (!slug) {
+        setLoading(false);
+        return;
+      }
+
       setTimeout(() => {
-        router.push(`/${type === 'movie' ? 'movies' : type}/${slug}`);
+        router.push(`${hrefBase ?? `/${type === 'movie' ? 'movies' : type}`}/${slug}`);
         setLoading(false);
       }, 800);
     } catch { setLoading(false); }

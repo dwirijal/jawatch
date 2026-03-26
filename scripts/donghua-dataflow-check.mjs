@@ -1,4 +1,4 @@
-/* eslint-disable */
+ 
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,7 +9,16 @@ import ts from 'typescript';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const sourcePath = path.join(__dirname, '..', 'src', 'lib', 'api.ts');
-const source = fs.readFileSync(sourcePath, 'utf8');
+const source = fs
+  .readFileSync(sourcePath, 'utf8')
+  .replace(
+    "import { withCloudflareEdgeCache } from './cloudflare-cache';",
+    "const withCloudflareEdgeCache = async (_key, _ttl, loader) => loader();",
+  )
+  .replace(
+    /import\s*\{\s*readSnapshotDomainFile,\s*readSnapshotPlayback,\s*readSnapshotTitle,\s*searchSnapshotDomain,\s*\}\s*from '\.\/runtime-snapshot';/,
+    "const readSnapshotDomainFile = async () => null;\nconst readSnapshotPlayback = async () => null;\nconst readSnapshotTitle = async () => null;\nconst searchSnapshotDomain = async () => [];",
+  );
 
 const compiled = ts.transpileModule(source, {
   compilerOptions: {

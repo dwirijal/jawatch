@@ -1,14 +1,52 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import * as Dialog from '@radix-ui/react-dialog';
 import { Search, X, Command, Play, BookOpen, Zap, Loader2, Film } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
-import { manga, anime, donghua, movie, MangaSearchResult, KanataAnime, AnichinDonghua, MovieCardItem, getMovieMetadata } from '@/lib/api';
+import { Input } from '@/components/atoms/Input';
+import { Kbd } from '@/components/atoms/Kbd';
+import { ModalContent, ModalRoot, ModalTitle } from '@/components/atoms/Modal';
+import { Paper } from '@/components/atoms/Paper';
+import { MangaSearchResult, AnichinDonghua } from '@/lib/api';
 import { ScrollArea, ScrollBar } from '@/components/atoms/ScrollArea';
 import { useUIStore } from '@/store/useUIStore';
+
+type AnimeSearchModalResult = {
+  title: string;
+  slug: string;
+  thumb: string;
+};
+
+type MovieSearchModalResult = {
+  title: string;
+  slug: string;
+  poster: string;
+};
+
+const RESULT_THEME = {
+  manga: 'manga',
+  anime: 'anime',
+  donghua: 'donghua',
+  movies: 'movie',
+} as const;
+
+const RESULT_ICON = {
+  manga: BookOpen,
+  anime: Play,
+  donghua: Zap,
+  movies: Film,
+} as const;
+
+const RESULT_ICON_CLASS = {
+  manga: 'text-orange-400',
+  anime: 'text-blue-400',
+  donghua: 'text-red-400',
+  movies: 'text-indigo-400',
+} as const;
 
 export function SearchModal() {
   const { isSearchOpen, setSearchOpen } = useUIStore();
@@ -16,6 +54,20 @@ export function SearchModal() {
   const [results, setResults] = React.useState<{ type: string; title: string; slug: string; image: string }[]>([]);
   const [loading, setLoading] = React.useState(false);
   const router = useRouter();
+  const latestRequestId = React.useRef(0);
+
+  const openSearchResults = React.useCallback(() => {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      return;
+    }
+
+    setSearchOpen(false);
+    setLoading(false);
+    setResults([]);
+    latestRequestId.current += 1;
+    router.push(`/search?q=${encodeURIComponent(trimmed)}&type=all`);
+  }, [query, router, setSearchOpen]);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -28,60 +80,92 @@ export function SearchModal() {
     return () => document.removeEventListener('keydown', down);
   }, [isSearchOpen, setSearchOpen]);
 
-  const handleSearch = async (val: string) => {
-    setQuery(val);
-    if (val.length < 3) {
+  React.useEffect(() => {
+    if (query.length < 3) {
+      latestRequestId.current += 1;
+      setLoading(false);
       setResults([]);
       return;
     }
 
-    setLoading(true);
-    try {
-      const [mangaRes, animeRes, donghuaRes, movieRes] = await Promise.all([
-        manga.search(val).catch(() => ({ data: [] as MangaSearchResult[] })),
-        anime.search(val).catch(() => [] as KanataAnime[]),
-        donghua.search(val).catch(() => [] as AnichinDonghua[]),
-        movie.search(val).catch(() => [] as MovieCardItem[])
-      ]);
+    const timeoutId = window.setTimeout(() => {
+      const requestId = latestRequestId.current + 1;
+      latestRequestId.current = requestId;
 
-      const initialCombined = [
-        ...(mangaRes.data || []).map((m) => ({ type: 'manga', title: m.title, slug: m.slug, image: m.thumbnail })),
-        ...(animeRes || []).slice(0, 5).map((a) => ({ type: 'anime', title: a.title, slug: a.slug, image: a.thumb })),
-        ...(donghuaRes || []).slice(0, 5).map((d) => ({ type: 'donghua', title: d.title, slug: d.slug, image: d.thumb || d.image || '' })),
-        ...(movieRes || []).slice(0, 5).map((mv) => ({ type: 'movies', title: mv.title, slug: mv.slug, image: mv.poster }))
-      ];
+      void (async () => {
+        setLoading(true);
+        try {
+          const [mangaRes, animeRes, movieRes, donghuaRes] = await Promise.all([
+            fetch(`/api/search/manga?q=${encodeURIComponent(query)}&page=1&limit=5`)
+              .then(async (response) => {
+                if (!response.ok) {
+                  throw new Error(`manga search route failed with status ${response.status}`);
+                }
+                return response.json() as Promise<MangaSearchResult[]>;
+              })
+              .catch(() => [] as MangaSearchResult[]),
+            fetch(`/api/search/anime?q=${encodeURIComponent(query)}&limit=5`)
+              .then(async (response) => {
+                if (!response.ok) {
+                  throw new Error(`anime search route failed with status ${response.status}`);
+                }
+                return response.json() as Promise<AnimeSearchModalResult[]>;
+              })
+              .catch(() => [] as AnimeSearchModalResult[]),
+            fetch(`/api/search/movies?q=${encodeURIComponent(query)}&limit=5`)
+              .then(async (response) => {
+                if (!response.ok) {
+                  throw new Error(`movie search route failed with status ${response.status}`);
+                }
+                return response.json() as Promise<MovieSearchModalResult[]>;
+              })
+              .catch(() => [] as MovieSearchModalResult[]),
+            fetch(`/api/search/donghua?q=${encodeURIComponent(query)}`)
+              .then(async (response) => {
+                if (!response.ok) {
+                  throw new Error(`donghua search route failed with status ${response.status}`);
+                }
+                return response.json() as Promise<AnichinDonghua[]>;
+              })
+              .catch(() => [] as AnichinDonghua[]),
+          ]);
 
-      setResults(initialCombined);
-
-      // Async enrichment for movies in background
-      const movieIndices = initialCombined.map((item, idx) => item.type === 'movies' ? idx : -1).filter(idx => idx !== -1);
-      
-      if (movieIndices.length > 0) {
-        Promise.all(movieIndices.map(async (idx) => {
-          const item = initialCombined[idx];
-          const meta = await getMovieMetadata(item.title);
-          if (meta.poster) {
-            setResults(prev => {
-              const updated = [...prev];
-              if (updated[idx]) updated[idx] = { ...updated[idx], image: meta.poster };
-              return updated;
-            });
+          if (latestRequestId.current !== requestId) {
+            return;
           }
-        }));
-      }
 
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+          const initialCombined = [
+            ...(mangaRes || []).slice(0, 5).map((m) => ({ type: 'manga', title: m.title, slug: m.slug, image: m.thumbnail })),
+            ...(animeRes || []).slice(0, 5).map((a) => ({ type: 'anime', title: a.title, slug: a.slug, image: a.thumb })),
+            ...(movieRes || []).slice(0, 5).map((m) => ({ type: 'movies', title: m.title, slug: m.slug, image: m.poster })),
+            ...(donghuaRes || []).slice(0, 5).map((d) => ({ type: 'donghua', title: d.title, slug: d.slug, image: d.thumb || d.image || '' })),
+          ];
+
+          setResults(initialCombined);
+        } catch (err) {
+          if (latestRequestId.current === requestId) {
+            console.error(err);
+          }
+        } finally {
+          if (latestRequestId.current === requestId) {
+            setLoading(false);
+          }
+        }
+      })();
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [query]);
 
   const onSelect = (type: string, slug: string) => {
     setSearchOpen(false);
     setQuery('');
     setResults([]);
-    router.push(`/${type === 'movies' ? 'movies' : type}/${slug}`);
+    setLoading(false);
+    latestRequestId.current += 1;
+    router.push(`/${type}/${slug}`);
   };
 
   return (
@@ -89,105 +173,132 @@ export function SearchModal() {
       <Button 
         variant="ghost" 
         onClick={() => setSearchOpen(true)}
-        className="hidden md:flex items-center gap-4 px-4 py-2 bg-zinc-900 border border-zinc-800 text-zinc-500 rounded-xl hover:border-zinc-700"
+        className="hidden items-center gap-4 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-2 text-zinc-400 hover:bg-surface-elevated hover:text-white md:flex"
       >
         <div className="flex items-center gap-2">
           <Search className="w-4 h-4" />
           <span className="text-xs font-bold uppercase tracking-widest">Search anything...</span>
         </div>
-        <div className="flex items-center gap-1 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">
+        <div className="flex items-center gap-1 rounded-[var(--radius-xs)] border border-border-subtle bg-surface-2 px-1.5 py-0.5">
           <Command className="w-2.5 h-2.5" />
           <span className="text-[10px] font-black">K</span>
         </div>
       </Button>
 
-      <Dialog.Root open={isSearchOpen} onOpenChange={setSearchOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm animate-in fade-in duration-300" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[201] w-full max-w-xl -translate-x-1/2 -translate-y-1/2 p-4 animate-in zoom-in-95 duration-300 outline-none">
-            <div className="overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-950 shadow-2xl">
-              <div className="flex items-center border-b border-zinc-900 p-4">
+      <ModalRoot open={isSearchOpen} onOpenChange={setSearchOpen}>
+          <ModalContent className="w-full max-w-xl p-4 animate-in zoom-in-95 duration-300" overlayClassName="z-[200] animate-in fade-in duration-300">
+            <ModalTitle className="sr-only">Search media</ModalTitle>
+            <Paper tone="muted" shadow="md" padded={false} className="overflow-hidden rounded-[var(--radius-2xl)]">
+              <div className="flex items-center border-b border-border-subtle px-4 py-4">
                 <Search className="mr-3 h-5 w-5 text-zinc-500" />
-                <input
+                <Input
                   autoFocus
-                  placeholder="Search Movies, Anime, Manga..."
+                  placeholder="Search Anime, Movies, Manga, Donghua..."
                   value={query}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="flex-1 bg-transparent text-lg font-medium outline-none placeholder:text-zinc-600"
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      openSearchResults();
+                    }
+                  }}
+                  className="h-auto flex-1 border-0 bg-transparent px-0 py-0 text-base font-medium text-white placeholder:text-zinc-600 focus-visible:ring-0 md:text-lg"
                 />
                 {loading ? (
                   <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
                 ) : (
-                  <button 
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setSearchOpen(false)}
-                    className="rounded-lg p-1 hover:bg-zinc-900 transition-colors"
+                    className="h-8 w-8 rounded-[var(--radius-xs)] text-zinc-500"
                   >
                     <X className="h-5 w-5 text-zinc-500" />
-                  </button>
+                  </Button>
                 )}
               </div>
 
               <ScrollArea className="max-h-[60vh]">
-                <div className="p-4 space-y-6">
+                <div className="space-y-5 p-4">
                   {results.length > 0 ? (
                     <div className="space-y-2">
                       {results.map((item, idx) => (
-                        <button
+                        <Paper
                           key={`${item.slug}-${idx}`}
-                          onClick={() => onSelect(item.type, item.slug)}
-                          className="flex w-full items-center gap-4 rounded-2xl p-3 hover:bg-zinc-900 transition-all group border border-transparent hover:border-zinc-800"
+                          asChild
+                          tone="muted"
+                          padded={false}
+                          className="overflow-hidden border-transparent transition-colors hover:border-border-subtle hover:bg-surface-elevated"
                         >
-                          <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-lg bg-zinc-900 border border-zinc-800">
-                            <img src={item.image} alt="" className="h-full w-full object-cover" />
-                          </div>
-                          <div className="flex-1 text-left">
-                            <div className="flex items-center gap-2 mb-1">
-                              {item.type === 'manga' && <BookOpen className="w-3 h-3 text-orange-500" />}
-                              {item.type === 'anime' && <Play className="w-3 h-3 text-blue-500 fill-current" />}
-                              {item.type === 'donghua' && <Zap className="w-3 h-3 text-red-500 fill-current" />}
-                              {item.type === 'movies' && <Film className="w-3 h-3 text-indigo-500 fill-current" />}
-                              <span className={cn(
-                                "text-[10px] font-black uppercase tracking-widest",
-                                item.type === 'manga' && "text-orange-500",
-                                item.type === 'anime' && "text-blue-500",
-                                item.type === 'donghua' && "text-red-500",
-                                item.type === 'movies' && "text-indigo-500",
-                              )}>
-                                {item.type}
-                              </span>
+                          <button
+                            type="button"
+                            onClick={() => onSelect(item.type, item.slug)}
+                            className="group flex w-full items-center gap-4 p-3 text-left"
+                          >
+                            <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-[var(--radius-xs)] border border-border-subtle bg-surface-2">
+                              <Image
+                                src={item.image || '/favicon.ico'}
+                                alt=""
+                                fill
+                                sizes="48px"
+                                className="object-cover"
+                                unoptimized
+                              />
                             </div>
-                            <h4 className="font-bold text-sm text-zinc-200 group-hover:text-white transition-colors line-clamp-1">{item.title}</h4>
-                          </div>
-                        </button>
+                            <div className="min-w-0 flex-1">
+                              <div className="mb-1 flex items-center gap-2">
+                                {React.createElement(RESULT_ICON[item.type as keyof typeof RESULT_ICON], {
+                                  className: cn(
+                                    'h-3 w-3',
+                                    item.type !== 'manga' && 'fill-current',
+                                    RESULT_ICON_CLASS[item.type as keyof typeof RESULT_ICON_CLASS]
+                                  ),
+                                })}
+                                <Badge
+                                  variant={RESULT_THEME[item.type as keyof typeof RESULT_THEME] ?? 'outline'}
+                                  className="px-2 py-0.5 text-[9px] tracking-[0.16em]"
+                                >
+                                  {item.type}
+                                </Badge>
+                              </div>
+                              <h4 className="line-clamp-1 text-sm font-bold text-zinc-200 transition-colors group-hover:text-white">{item.title}</h4>
+                            </div>
+                          </button>
+                        </Paper>
                       ))}
                     </div>
                   ) : query.length >= 3 && !loading ? (
-                    <div className="py-12 text-center">
-                      <p className="text-zinc-500 font-medium text-sm">No results found for &quot;{query}&quot;</p>
-                    </div>
+                    <Paper tone="outline" className="py-12 text-center">
+                      <p className="text-sm font-medium text-zinc-500">No results found for &quot;{query}&quot;</p>
+                    </Paper>
                   ) : (
-                    <div className="py-12 text-center space-y-2">
-                      <p className="text-xs font-black text-zinc-700 uppercase tracking-[0.3em]">Start typing to search</p>
-                      <p className="text-[10px] text-zinc-800 font-bold">MINIMUM 3 CHARACTERS</p>
-                    </div>
+                    <Paper tone="outline" className="space-y-2 py-12 text-center">
+                      <p className="text-xs font-black uppercase tracking-[0.3em] text-zinc-500">Start typing to search</p>
+                      <p className="text-[10px] font-bold text-zinc-600">MINIMUM 3 CHARACTERS</p>
+                    </Paper>
                   )}
                 </div>
                 <ScrollBar />
               </ScrollArea>
               
-              <div className="bg-zinc-900/50 p-3 px-6 border-t border-zinc-900 flex justify-between items-center">
+              <div className="flex items-center justify-between border-t border-border-subtle bg-surface-1 px-6 py-3">
                  <div className="flex items-center gap-4">
+                    {query.trim().length >= 2 ? (
+                      <Button type="button" variant="outline" size="sm" onClick={openSearchResults}>
+                        View all results
+                      </Button>
+                    ) : null}
                     <div className="flex items-center gap-1.5">
-                       <kbd className="bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] font-black border border-zinc-700">ESC</kbd>
+                       <Kbd className="border-border-subtle bg-surface-2 text-[10px] text-zinc-300">ESC</Kbd>
                        <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">to close</span>
                     </div>
                  </div>
-                 <span className="text-[9px] font-black text-zinc-600 italic uppercase">Powered by dwizzyWEEB</span>
+                 <span className="text-[9px] font-black uppercase italic text-zinc-600">Powered by dwizzyWEEB</span>
               </div>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+            </Paper>
+          </ModalContent>
+      </ModalRoot>
     </>
   );
 }

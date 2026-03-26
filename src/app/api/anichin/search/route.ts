@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { buildEdgeCacheControl } from '@/lib/cloudflare-cache';
 
 export async function GET(request: Request) {
   try {
@@ -19,7 +20,11 @@ export async function GET(request: Request) {
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': buildEdgeCacheControl(300, 1800),
+      },
+    });
   } catch (error) {
     console.error('Error searching donghua:', error);
     return NextResponse.json({ error: 'Failed to search donghua' }, { status: 500 });

@@ -1,204 +1,343 @@
-'use client';
-
-import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { getAnimeEpisode, getAnimeDetail, KanataEpisodeDetail, KanataAnimeDetail } from '@/lib/api';
-import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { notFound } from 'next/navigation';
+import { ChevronLeft, ChevronRight, Download, Info, MessageSquare } from 'lucide-react';
+import { Link } from '@/components/atoms/Link';
+import { getAnimeDetailBySlug, getAnimeEpisodeBySlug, getAnimeHomeItems } from '@/lib/anime-source';
+import { Badge } from '@/components/atoms/Badge';
+import { Paper } from '@/components/atoms/Paper';
 import { Button } from '@/components/atoms/Button';
-import { ScrollArea, ScrollBar } from '@/components/atoms/ScrollArea';
-import { VideoPlayer } from '@/components/molecules/VideoPlayer';
-import { saveHistory } from '@/lib/store';
+import { Card } from '@/components/atoms/Card';
+import { ScrollArea } from '@/components/atoms/ScrollArea';
+import { AdSection } from '@/components/organisms/AdSection';
+import { BookmarkButton } from '@/components/organisms/BookmarkButton';
+import { CommunityCTA } from '@/components/molecules/CommunityCTA';
+import { SectionHeader } from '@/components/molecules/SectionHeader';
+import { ShareButton } from '@/components/molecules/ShareButton';
+import { CardGrid } from '@/components/molecules/card';
+import { CastRail } from '@/components/organisms/CastRail';
+import MediaDownloadOptionsPanel from '@/components/organisms/MediaDownloadOptionsPanel';
+import { VideoPlaybackScaffold } from '@/components/organisms/VideoPlaybackScaffold';
 import { cn } from '@/lib/utils';
+import AnimeEpisodeHistoryTracker from './AnimeEpisodeHistoryTracker';
+import EpisodePlaybackPanel from './EpisodePlaybackPanel';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export default function EpisodePage({ params }: PageProps) {
-  const { slug } = use(params);
-  const searchParams = useSearchParams();
-  const provider = (searchParams.get('p') as 'animasu' | 'otakudesu') || 'animasu';
-  
-  const router = useRouter();
-  const [episode, setEpisode] = useState<KanataEpisodeDetail | null>(null);
-  const [anime, setAnime] = useState<KanataAnimeDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      try {
-        const epData = await getAnimeEpisode(slug, provider);
-        if (!epData) throw new Error("Episode data not found");
-        
-        setEpisode(epData);
-        
-        // Fetch anime info for sidebar if available
-        if (epData.navigation?.anime_info) {
-          const animeData = await getAnimeDetail(epData.navigation.anime_info);
-          setAnime(animeData);
-          
-          saveHistory({
-            id: epData.navigation.anime_info,
-            type: 'anime',
-            title: animeData?.title || epData.title,
-            image: animeData?.thumb || '',
-            lastChapterOrEpisode: epData.title,
-            lastLink: `/anime/episode/${slug}?p=${provider}`,
-            timestamp: Date.now()
-          });
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-    window.scrollTo(0, 0);
-  }, [slug, provider]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-zinc-500 font-black animate-pulse uppercase tracking-[0.2em] text-[10px]">Preparing Stream...</p>
-        </div>
-      </div>
-    );
+function formatEpisodeLabel(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) {
+    return '?';
   }
+
+  if (Number.isInteger(value)) {
+    return String(value);
+  }
+
+  return value.toFixed(1).replace(/\.0$/, '');
+}
+
+function StatusBadge({ label }: { label: string }) {
+  return (
+    <Badge variant="outline" className="inline-flex items-center gap-2 border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-[10px] tracking-[0.2em] text-emerald-300">
+      <span className="h-2 w-2 rounded-full bg-emerald-300" />
+      {label}
+    </Badge>
+  );
+}
+
+export default async function EpisodePage({ params }: PageProps) {
+  const { slug } = await params;
+  const episode = await getAnimeEpisodeBySlug(slug);
 
   if (!episode) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-8 space-y-6">
-        <h1 className="text-2xl font-black text-red-500 uppercase italic">Episode not found</h1>
-        <Button variant="anime" asChild>
-          <Link href="/anime">Return to Anime Hub</Link>
-        </Button>
-      </div>
-    );
+    notFound();
   }
 
+  const [anime, fallbackRecommendations] = await Promise.all([
+    getAnimeDetailBySlug(episode.animeSlug).catch(() => null),
+    getAnimeHomeItems(15).catch(() => []),
+  ]);
+
+  const routeHref = `/anime/episode/${episode.episodeSlug}`;
+  const hasDownloads = episode.downloadGroups.length > 0;
+  const recommendationItems = fallbackRecommendations.filter((item) => item.slug !== episode.animeSlug).slice(0, 12);
+  const metaItems = [
+    `Episode ${episode.episodeNumber}`,
+    anime?.type || 'Anime',
+    anime?.status || 'Unknown Status',
+    episode.mirrors.length > 0 ? `${episode.mirrors.length} Mirrors` : `${episode.serverOptions.length} Sources`,
+    `${episode.playlist.length} Queue`,
+    hasDownloads ? `${episode.downloadGroups.length} Download Packs` : 'Downloads Pending',
+  ];
+
   return (
-    <div className="min-h-screen bg-black">
-      <header className="bg-zinc-900/50 border-b border-zinc-800 p-4 sticky top-0 z-[160] backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 min-w-0">
-            <Button variant="ghost" size="icon" asChild className="rounded-full shrink-0">
-              <Link href={`/anime/${episode.navigation?.anime_info || ''}`}>
-                <ChevronLeft className="w-6 h-6" />
-              </Link>
-            </Button>
-            <div className="min-w-0">
-              <h1 className="text-sm md:text-base font-black line-clamp-1 uppercase italic text-white">{episode.title}</h1>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                <p className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">High Quality Stream</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2 shrink-0">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              disabled={!episode.navigation?.prev}
-              asChild={!!episode.navigation?.prev}
-              className="rounded-xl border-zinc-800"
-            >
-              {episode.navigation?.prev ? (
-                <Link href={`/anime/episode/${episode.navigation.prev}?p=${provider}`}><ChevronLeft className="w-5 h-5" /></Link>
-              ) : (
-                <ChevronLeft className="w-5 h-5" />
-              )}
-            </Button>
-            <Button 
-              variant="anime" 
-              size="icon" 
-              disabled={!episode.navigation?.next}
-              asChild={!!episode.navigation?.next}
-              className="rounded-xl"
-            >
-              {episode.navigation?.next ? (
-                <Link href={`/anime/episode/${episode.navigation.next}?p=${provider}`}><ChevronRight className="w-5 h-5" /></Link>
-              ) : (
-                <ChevronRight className="w-5 h-5" />
-              )}
-            </Button>
-          </div>
-        </div>
-      </header>
+    <>
+      <AnimeEpisodeHistoryTracker
+        animeSlug={episode.animeSlug}
+        animeTitle={episode.animeTitle}
+        image={episode.poster}
+        episodeTitle={episode.title}
+        href={routeHref}
+      />
 
-      <main className="max-w-7xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3">
-          <VideoPlayer 
-            mirrors={episode.mirrors} 
-            defaultUrl={episode.default_embed} 
-            title={episode.title}
-            theme="anime"
-            hasNext={!!episode.navigation?.next}
-            onNext={() => episode.navigation?.next && router.push(`/anime/episode/${episode.navigation.next}?p=${provider}`)}
-          />
-        </div>
+      <VideoPlaybackScaffold
+        backHref={episode.animeDetailHref}
+        eyebrow="Now Watching"
+        title={episode.title}
+        subtitle={
+          <>
+            <span>{episode.animeTitle}</span>
+            {episode.releaseLabel ? (
+              <>
+                <span className="h-1 w-1 rounded-full bg-zinc-600" />
+                <span>{episode.releaseLabel}</span>
+              </>
+            ) : null}
+            <span className="h-1 w-1 rounded-full bg-zinc-600" />
+            <span>Episode {episode.episodeNumber}</span>
+          </>
+        }
+        stage={
+          <>
+            <EpisodePlaybackPanel
+              mirrors={episode.mirrors}
+              defaultUrl={episode.defaultUrl}
+              title={episode.title}
+              downloadHref={hasDownloads ? '#downloads' : undefined}
+              serverOptions={episode.serverOptions}
+            />
 
-        <div className="space-y-8">
-          {anime && (
-            <div className="bg-zinc-900/30 border border-zinc-800 rounded-[2rem] p-8 space-y-8">
-              <div className="flex gap-5">
-                <div className="w-20 aspect-[2/3] rounded-2xl overflow-hidden flex-shrink-0 border border-zinc-800 shadow-xl bg-zinc-900">
-                  <Image
-                    src={anime.thumb}
-                    alt={anime.title}
-                    width={160}
-                    height={240}
-                    className="w-full h-full object-cover"
-                    unoptimized
-                  />
-                </div>
-                <div className="flex-1 space-y-3">
-                  <h3 className="text-sm font-black leading-tight uppercase italic text-zinc-200">{anime.title}</h3>
-                  <Button variant="outline" size="sm" asChild className="rounded-full w-full justify-start text-[9px] h-8 border-zinc-800">
-                    <Link href={`/anime/${episode.navigation?.anime_info || ''}`}>
-                      <Info className="w-3 h-3 mr-2 text-blue-500" /> Anime Info
+            <section className="space-y-4">
+              <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex w-max items-center gap-2 pb-1">
+                  <Button variant="outline" size="sm" className="h-11 rounded-full border-border-subtle bg-surface-1 px-4 hover:bg-surface-elevated" asChild>
+                    <Link href={episode.animeDetailHref}>
+                      <Info className="mr-2 h-3.5 w-3.5 text-blue-400" />
+                      View Details
                     </Link>
                   </Button>
+
+                  {hasDownloads ? (
+                    <Button variant="outline" size="sm" className="h-11 rounded-full border-border-subtle bg-surface-1 px-4 hover:bg-surface-elevated" asChild>
+                      <Link href="#downloads">
+                        Downloads
+                        <Download className="ml-2 h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                  ) : null}
+
+                  <Button variant="outline" size="sm" className="h-11 rounded-full border-sky-400/20 bg-sky-500/10 px-4 text-sky-300 hover:bg-sky-500/15" asChild>
+                    <a href="https://discord.gg/gu5bgTXxhQ" target="_blank" rel="noopener noreferrer">
+                      <MessageSquare className="mr-2 h-3.5 w-3.5" />
+                      Join Community
+                    </a>
+                  </Button>
+
+                  <ShareButton title={episode.title} theme="anime" className="h-11 w-11 rounded-full border-border-subtle bg-surface-1" />
+
+                  <BookmarkButton
+                    item={{
+                      id: routeHref,
+                      type: 'anime',
+                      title: episode.title,
+                      image: episode.poster,
+                      timestamp: 0,
+                    }}
+                    theme="anime"
+                    className="h-11 rounded-full border-border-subtle bg-surface-1 px-4"
+                  />
                 </div>
               </div>
+            </section>
 
-              <div className="space-y-4 pt-4 border-t border-zinc-800/50">
-                <div className="flex items-center justify-between px-1">
-                  <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Playlist</h4>
-                  <span className="text-[9px] font-bold text-zinc-600">{anime.episodes.length} EPISODES</span>
-                </div>
-                
-                <ScrollArea className="w-full h-[400px]">
-                  <div className="flex flex-col gap-2 pr-4">
-                    {anime.episodes.map((ep) => (
-                      <Link
-                        key={ep.slug}
-                        href={`/anime/episode/${ep.slug}?p=${provider}`}
-                        className={cn(
-                          "group p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border flex items-center justify-between",
-                          slug === ep.slug 
-                            ? "bg-blue-600/10 border-blue-600/50 text-blue-400 shadow-lg shadow-blue-600/5" 
-                            : "bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-200"
-                        )}
+            <section>
+              <div className="space-y-6">
+                <Paper as="article" tone="muted" className="rounded-[var(--radius-2xl)] p-4 md:p-5">
+                  <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {episode.genres.slice(0, 4).map((genre) => (
+                        <Badge
+                          key={genre}
+                          variant="outline"
+                          className="bg-surface-2 px-3 py-2 text-[10px] tracking-[0.22em] text-zinc-300"
+                        >
+                          {genre}
+                        </Badge>
+                      ))}
+                    </div>
+                    <StatusBadge label="Playback Ready" />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <SectionHeader title="Overview" className="border-b-0 pb-0" contentClassName="space-y-0" />
+                      <p className="max-w-4xl text-sm leading-6 text-zinc-400">{episode.synopsis}</p>
+                    </div>
+
+                    {anime?.cast.length ? (
+                      <div className="space-y-4">
+                        <SectionHeader title="Cast" className="border-b-0 pb-0" contentClassName="space-y-0" />
+                        <CastRail items={anime.cast} theme="anime" layout="scroll" />
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-6">
+                    {metaItems.map((item) => (
+                      <Paper
+                        key={item}
+                        as="div"
+                        tone="outline"
+                        padded={false}
+                        className="rounded-[var(--radius-md)] bg-surface-2 px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-300"
                       >
-                        <span className="line-clamp-1">{ep.title}</span>
-                        {slug === ep.slug && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />}
-                      </Link>
+                        {item}
+                      </Paper>
                     ))}
                   </div>
-                  <ScrollBar />
-                </ScrollArea>
+                </Paper>
+
+                {hasDownloads ? <MediaDownloadOptionsPanel groups={episode.downloadGroups} accent="blue" /> : null}
               </div>
+            </section>
+          </>
+        }
+        sidebar={
+          <Paper as="section" tone="muted" padded={false} className="overflow-hidden rounded-[var(--radius-2xl)]">
+              <div className="px-4 py-4 md:px-5">
+                <SectionHeader
+                  title="Queue"
+                  subtitle="Up next and full playlist rail"
+                  className="pb-0"
+                  action={
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={!episode.prevEpisodeSlug}
+                        asChild={Boolean(episode.prevEpisodeSlug)}
+                        className="h-10 w-10 rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 hover:bg-surface-elevated"
+                      >
+                        {episode.prevEpisodeSlug ? (
+                          <Link href={`/anime/episode/${episode.prevEpisodeSlug}`}>
+                            <ChevronLeft className="h-4 w-4" />
+                          </Link>
+                        ) : (
+                          <ChevronLeft className="h-4 w-4" />
+                        )}
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={!episode.nextEpisodeSlug}
+                        asChild={Boolean(episode.nextEpisodeSlug)}
+                        className="h-10 w-10 rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 hover:bg-surface-elevated"
+                      >
+                        {episode.nextEpisodeSlug ? (
+                          <Link href={`/anime/episode/${episode.nextEpisodeSlug}`}>
+                            <ChevronRight className="h-4 w-4" />
+                          </Link>
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  }
+                />
+              </div>
+
+              <ScrollArea className="max-h-[calc(100vh-3rem)]">
+                <div className="space-y-2 p-2.5 md:p-3">
+                  {episode.playlist.map((item) => {
+                    const isActive = item.episode_slug === episode.episodeSlug;
+
+                    return (
+                      <Paper
+                        key={item.episode_slug}
+                        asChild
+                        tone={isActive ? 'muted' : 'outline'}
+                        padded={false}
+                        className={cn(
+                          'overflow-hidden p-2.5 transition-colors md:p-3',
+                          isActive
+                            ? 'border-blue-500/35 bg-blue-500/10'
+                            : 'hover:bg-surface-elevated'
+                        )}
+                      >
+                        <Link href={`/anime/episode/${item.episode_slug}`} className="flex gap-3 text-left">
+                          <div className="relative w-36 shrink-0 overflow-hidden rounded-[var(--radius-lg)] bg-surface-2">
+                            <Image
+                              src={episode.poster || '/favicon.ico'}
+                              alt={item.title}
+                              fill
+                              className="object-cover"
+                              sizes="160px"
+                              unoptimized
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                            <div className="absolute bottom-2 right-2 rounded-[var(--radius-sm)] bg-black/70 px-2 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/80">
+                              EP {formatEpisodeLabel(item.episode_number)}
+                            </div>
+                          </div>
+
+                          <div className="min-w-0 flex-1 space-y-1.5">
+                            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
+                              Episode {formatEpisodeLabel(item.episode_number)}
+                            </p>
+                            <p className="line-clamp-2 text-sm font-black leading-5 text-white/90">{item.title}</p>
+                            <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                              {item.release_label ? <span>{item.release_label}</span> : <span>Queue Item</span>}
+                              {isActive ? (
+                                <>
+                                  <span className="h-1 w-1 rounded-full bg-zinc-600" />
+                                  <span className="text-blue-300">Now Playing</span>
+                                </>
+                              ) : null}
+                            </div>
+                          </div>
+                        </Link>
+                      </Paper>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </Paper>
+        }
+      >
+        {recommendationItems.length > 0 ? (
+          <section className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Recommended Anime</p>
+                <h2 className="mt-2 text-xl font-black tracking-tight text-white">More Like This</h2>
+              </div>
+              <Button variant="outline" size="sm" className="h-11 rounded-full border-border-subtle bg-surface-1 px-5 hover:bg-surface-elevated" asChild>
+                <Link href="/anime">See All</Link>
+              </Button>
             </div>
-          )}
-        </div>
-      </main>
-    </div>
+
+            <CardGrid>
+              {recommendationItems.slice(0, 12).map((item) => (
+                <Card
+                  key={item.slug}
+                  href={`/anime/${item.slug}`}
+                  image={item.thumb}
+                  title={item.title}
+                  subtitle={item.status || item.episode}
+                  badgeText={item.type || 'Anime'}
+                  theme="anime"
+                />
+              ))}
+            </CardGrid>
+          </section>
+        ) : null}
+
+        <AdSection />
+
+        <CommunityCTA mediaId={slug} title={episode.title} type="anime" theme="anime" />
+      </VideoPlaybackScaffold>
+    </>
   );
 }

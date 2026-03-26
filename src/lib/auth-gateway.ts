@@ -3,6 +3,7 @@
 import type { AuthBridgeSessionResponse, AuthLogoutRequest, AuthStatus, AuthUser } from '@/lib/auth-types';
 
 const DEFAULT_AUTH_ORIGIN = 'https://auth.dwizzy.my.id';
+const DEFAULT_APP_ORIGIN = 'https://weebs.dwizzy.my.id';
 const DEFAULT_RETURN_PATH = '/';
 
 function normalizeOrigin(value: string | undefined): string {
@@ -18,6 +19,14 @@ function normalizeOrigin(value: string | undefined): string {
 
 function resolveAuthOrigin(): string {
   return normalizeOrigin(process.env.NEXT_PUBLIC_AUTH_ORIGIN);
+}
+
+function resolveAppOrigin(): string {
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return window.location.origin.replace(/\/+$/, '');
+  }
+
+  return normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_APP_ORIGIN);
 }
 
 function sanitizeRelativePath(nextPath: string | undefined): string {
@@ -76,6 +85,7 @@ export async function getAuthStatus(): Promise<AuthStatus> {
 export function buildLoginUrl(nextPath: string): string {
   const url = new URL('/login', resolveAuthOrigin());
   url.searchParams.set('next', sanitizeRelativePath(nextPath));
+  url.searchParams.set('origin', resolveAppOrigin());
   return url.toString();
 }
 
@@ -83,6 +93,7 @@ export function buildLogoutRequest(nextPath: string): AuthLogoutRequest {
   const url = new URL('/logout', resolveAuthOrigin()).toString();
   const body = new URLSearchParams();
   body.set('returnTo', sanitizeRelativePath(nextPath));
+  body.set('origin', resolveAppOrigin());
 
   return {
     url,

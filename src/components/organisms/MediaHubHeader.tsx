@@ -10,6 +10,7 @@ interface MediaHubHeaderProps {
   icon: LucideIcon;
   theme: ThemeType;
   children?: React.ReactNode;
+  containerClassName?: string;
 }
 
 export function MediaHubHeader({
@@ -17,38 +18,37 @@ export function MediaHubHeader({
   description,
   icon: Icon,
   theme,
-  children
+  children,
+  containerClassName = 'app-container',
 }: MediaHubHeaderProps) {
   const config = THEME_CONFIG[theme] || THEME_CONFIG.default;
 
   return (
-    <header className="py-16 md:py-24 px-8 border-b border-zinc-900 bg-zinc-900/20 relative overflow-hidden">
-      {/* Subtle Background Glow */}
-      <div className={cn("absolute -top-24 -left-24 w-96 h-96 blur-[120px] rounded-full opacity-10", config.primary)} />
-      
-      <div className="max-w-7xl mx-auto space-y-12 relative z-10">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10">
+    <header className="surface-panel-elevated relative overflow-hidden px-4 py-8 sm:px-6 sm:py-9 md:px-8 md:py-10">
+      <div className={cn("pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full opacity-[0.18] blur-3xl", config.primary)} />
+      <div className={cn(containerClassName, "relative z-10 space-y-6 md:space-y-8")}>
+        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end lg:gap-8">
           {/* Brand & Info */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-5">
-              <div className={cn("p-4 rounded-[1.5rem] shadow-2xl transition-transform hover:scale-110 duration-500", config.primary, config.shadow)}>
-                <Icon className="w-10 h-10 text-white fill-white" />
+          <div className="space-y-4 md:space-y-5">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className={cn("rounded-[var(--radius-lg)] p-2.5 transition-transform duration-500 hover:scale-110 md:p-3", config.primary, 'hard-shadow-sm')}>
+                <Icon className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
               </div>
               <div className="space-y-1">
-                <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white uppercase italic leading-none">
+                <h1 className="type-display text-white">
                   {title}
                 </h1>
-                <div className={cn("h-1.5 w-24 rounded-full", config.primary)} />
+                <div className={cn("h-1 w-14 md:w-20", config.primary)} />
               </div>
             </div>
-            <p className="text-zinc-400 font-medium max-w-xl text-lg md:text-xl leading-relaxed italic">
-              &quot;{description}&quot;
+            <p className="max-w-xl text-sm font-medium leading-relaxed text-muted-foreground md:text-[1.05rem]">
+              {description}
             </p>
           </div>
 
           {/* Action Slots Area (Filters, Surprise Button, etc) */}
           {children && (
-            <div className="flex flex-wrap items-center gap-4 lg:pb-2">
+            <div className="flex flex-wrap items-center gap-2.5 md:gap-3 lg:pb-1">
               {children}
             </div>
           )}

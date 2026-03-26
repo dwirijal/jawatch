@@ -2,7 +2,10 @@
 
 import * as React from 'react';
 import { Calendar, Monitor, FilterX } from 'lucide-react';
-import { cn, THEME_CONFIG, ThemeType } from '@/lib/utils';
+import { Button } from '@/components/atoms/Button';
+import { Paper } from '@/components/atoms/Paper';
+import { Select } from '@/components/atoms/Select';
+import { ThemeType } from '@/lib/utils';
 
 interface MediaHubFiltersProps {
   years: string[];
@@ -25,51 +28,48 @@ export function MediaHubFilters({
   onClear,
   theme
 }: MediaHubFiltersProps) {
-  const config = THEME_CONFIG[theme] || THEME_CONFIG.default;
-
   return (
-    <div className="flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-left-4 duration-500">
-      {/* Year Filter */}
-      <div className="flex items-center gap-3 bg-zinc-900/50 border border-zinc-800 px-4 py-2 rounded-2xl focus-within:border-zinc-700 transition-all">
+    <div data-theme={theme} className="flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-left-4 duration-500">
+      <Paper tone="muted" padded={false} className="flex items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2 focus-within:border-white/15">
         <Calendar className="w-4 h-4 text-zinc-500" />
-        <select 
+        <Select
           value={activeYear || ''} 
           onChange={(e) => onYearChange(e.target.value || null)}
-          className="bg-transparent text-xs font-black uppercase tracking-widest outline-none text-zinc-300 cursor-pointer"
+          className="h-auto border-0 bg-transparent px-0 py-0"
         >
           <option value="" className="bg-zinc-950 text-zinc-500">All Years</option>
           {years.map(year => (
             <option key={year} value={year} className="bg-zinc-950 text-zinc-300">{year}</option>
           ))}
-        </select>
-      </div>
+        </Select>
+      </Paper>
 
-      {/* Studio Filter (Optional) */}
       {studios && onStudioChange && (
-        <div className="flex items-center gap-3 bg-zinc-900/50 border border-zinc-800 px-4 py-2 rounded-2xl focus-within:border-zinc-700 transition-all">
+        <Paper tone="muted" padded={false} className="flex items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2 focus-within:border-white/15">
           <Monitor className="w-4 h-4 text-zinc-500" />
-          <select 
+          <Select
             value={activeStudio || ''} 
             onChange={(e) => onStudioChange(e.target.value || null)}
-            className="bg-transparent text-xs font-black uppercase tracking-widest outline-none text-zinc-300 cursor-pointer max-w-[150px]"
+            className="h-auto max-w-[150px] border-0 bg-transparent px-0 py-0"
           >
             <option value="" className="bg-zinc-950 text-zinc-500">All Studios</option>
             {studios.map(studio => (
               <option key={studio} value={studio} className="bg-zinc-950 text-zinc-300">{studio}</option>
             ))}
-          </select>
-        </div>
+          </Select>
+        </Paper>
       )}
 
-      {/* Clear Button */}
       {(activeYear || activeStudio) && (
-        <button 
+        <Button
+          variant="outline"
+          size="sm"
           onClick={onClear}
-          className="flex items-center gap-2 px-4 py-2 rounded-2xl hover:bg-red-500/10 text-red-500 transition-all group"
+          className="gap-2 rounded-[var(--radius-lg)] border-red-500/20 bg-red-500/5 text-red-300 hover:bg-red-500/10 hover:text-red-200"
         >
           <FilterX className="w-4 h-4" />
           <span className="text-[10px] font-black uppercase tracking-widest">Reset Filters</span>
-        </button>
+        </Button>
       )}
     </div>
   );

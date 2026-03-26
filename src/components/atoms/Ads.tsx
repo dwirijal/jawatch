@@ -1,43 +1,52 @@
-'use client';
-
-import * as React from 'react';
 import { ShieldAlert } from 'lucide-react';
+import { Paper } from '@/components/atoms/Paper';
 import { cn } from '@/lib/utils';
 
 interface AdsProps {
   type?: 'horizontal' | 'vertical' | 'square';
+  compact?: boolean;
   className?: string;
 }
 
-export function Ads({ type = 'horizontal', className }: AdsProps) {
-  const styles = {
-    horizontal: "w-full h-32 md:h-40",
-    vertical: "w-64 h-[600px]",
-    square: "w-full aspect-square"
-  };
+const ADS_SIZES = {
+  horizontal: 'min-h-32 w-full md:min-h-40',
+  vertical: 'h-[600px] w-full max-w-sm',
+  square: 'aspect-square w-full',
+} as const;
 
+export function Ads({ type = 'horizontal', compact = false, className }: AdsProps) {
   return (
-    <div className={cn(
-      "bg-zinc-900/20 border border-zinc-900 rounded-3xl flex flex-col items-center justify-center p-8 group relative overflow-hidden",
-      styles[type],
-      className
-    )}>
-      {/* Animated Background Pulse */}
-      <div className="absolute inset-0 bg-white/[0.02] animate-pulse" />
-      
-      <div className="relative z-10 flex flex-col items-center text-center space-y-3">
-        <div className="p-3 bg-zinc-900 rounded-2xl border border-zinc-800">
-          <ShieldAlert className="w-5 h-5 text-zinc-700 group-hover:text-zinc-500 transition-colors" />
+    <Paper
+      tone="muted"
+      shadow="sm"
+      className={cn(
+        'relative overflow-hidden border border-border-subtle/80 bg-surface-1',
+        ADS_SIZES[type],
+        className
+      )}
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.05),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.03),transparent_30%)]" />
+      <div
+        className={cn(
+          'relative flex h-full min-h-full flex-col items-center justify-center text-center',
+          compact ? 'gap-2 px-4 py-3.5' : 'gap-3 px-6 py-8'
+        )}
+      >
+        <div
+          className={cn(
+            'inline-flex items-center justify-center border border-border-subtle bg-surface-2 text-zinc-300',
+            compact ? 'h-9 w-9 rounded-xl' : 'h-12 w-12 rounded-2xl'
+          )}
+        >
+          <ShieldAlert className={cn(compact ? 'h-4 w-4' : 'h-5 w-5')} />
         </div>
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-700">Advertisement Slot</p>
-          <p className="text-[8px] font-bold text-zinc-800 uppercase tracking-widest mt-1">Contact for placements</p>
+        <div className="space-y-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Advertisement</p>
+          <p className={cn('text-zinc-400', compact ? 'max-w-[14rem] text-[11px] leading-4' : 'max-w-xs text-xs leading-5')}>
+            Reserved placement slot for sponsors, campaigns, or network promotions.
+          </p>
         </div>
       </div>
-
-      {/* Decorative corners */}
-      <div className="absolute top-4 left-4 w-2 h-2 border-t border-l border-zinc-800" />
-      <div className="absolute bottom-4 right-4 w-2 h-2 border-b border-r border-zinc-800" />
-    </div>
+    </Paper>
   );
 }

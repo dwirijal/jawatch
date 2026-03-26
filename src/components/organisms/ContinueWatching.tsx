@@ -2,11 +2,15 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { Play, ChevronRight, Clock } from 'lucide-react';
 import { AuthGateNotice } from '@/components/molecules/AuthGateNotice';
+import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
+import { Link } from '@/components/atoms/Link';
+import { Paper } from '@/components/atoms/Paper';
+import { Progress } from '@/components/atoms/Progress';
 import { ScrollArea, ScrollBar } from '@/components/atoms/ScrollArea';
+import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { useAuthGate } from '@/components/hooks/useAuthGate';
 import { getHistoryForAuth, HistoryItem } from '@/lib/store';
 import { cn, THEME_CONFIG, ThemeType } from '@/lib/utils';
@@ -34,15 +38,8 @@ export function ContinueWatching() {
 
   if (!authGate.authenticated) {
     return (
-      <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="flex items-center justify-between border-b border-zinc-900 pb-6">
-          <div className="flex items-center gap-3">
-            <div className="relative p-2 bg-zinc-900 rounded-xl border border-zinc-800">
-              <Clock className="w-5 h-5 text-zinc-400" />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-black italic tracking-tighter uppercase text-white">Continue Watching</h2>
-          </div>
-        </div>
+      <section className="animate-in space-y-4 fade-in slide-in-from-bottom-4 duration-700">
+        <SectionHeader title="Continue Watching" icon={Clock} />
 
         <AuthGateNotice
           compact
@@ -58,73 +55,76 @@ export function ContinueWatching() {
   if (history.length === 0) return null;
 
   return (
-    <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between border-b border-zinc-900 pb-6">
-        <div className="flex items-center gap-3">
-          <div className="relative p-2 bg-zinc-900 rounded-xl border border-zinc-800">
-            <Clock className="w-5 h-5 text-zinc-400" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse border-2 border-zinc-950" />
-          </div>
-          <h2 className="text-2xl md:text-3xl font-black italic tracking-tighter uppercase text-white">Continue Watching</h2>
-        </div>
-        <Button variant="ghost" size="sm" className="hidden md:flex text-zinc-500 hover:text-white" asChild>
-          <Link href="/collection">
-            View Full History <ChevronRight className="w-4 h-4 ml-1" />
-          </Link>
-        </Button>
-      </div>
+    <section className="animate-in space-y-4 fade-in slide-in-from-bottom-4 duration-700">
+      <SectionHeader
+        title="Continue Watching"
+        icon={Clock}
+        action={
+          <Button variant="ghost" size="sm" className="hidden text-zinc-500 hover:text-white md:flex" asChild>
+            <Link href="/collection">
+              View Full History <ChevronRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
+        }
+      />
 
       <ScrollArea className="w-full overflow-hidden">
-        <div className="flex gap-6 pb-6">
+        <div className="flex gap-4 pb-4 md:gap-6 md:pb-6">
           {history.map((item) => {
             const config = THEME_CONFIG[item.type as ThemeType] || THEME_CONFIG.default;
             const progress = getProgress(item.id);
 
             return (
-              <div key={item.id} className="flex-shrink-0 w-64 md:w-80 group relative">
-                <Link href={item.lastLink} className={cn(
-                  "block relative aspect-video rounded-3xl overflow-hidden border border-zinc-800 transition-all shadow-2xl bg-zinc-900",
+              <Paper
+                key={item.id}
+                asChild
+                tone="muted"
+                shadow="sm"
+                padded={false}
+                interactive
+                className={cn(
+                  "group relative w-[68vw] max-w-[16rem] min-w-[14rem] flex-shrink-0 overflow-hidden sm:w-[52vw] sm:max-w-[18rem] md:w-80",
                   config.hoverBorder
-                )}>
-                  <Image
-                    src={item.image || '/placeholder-poster.jpg'}
-                    alt={item.title}
-                    fill
-                    className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-all group-hover:scale-105 duration-700"
-                    sizes="(max-width: 768px) 256px, 320px"
-                    unoptimized
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                  
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform scale-90 group-hover:scale-100 duration-300">
-                    <div className={cn("w-14 h-14 rounded-full flex items-center justify-center shadow-2xl text-white", config.primary, config.shadow)}>
-                      <Play className="w-6 h-6 fill-current ml-1" />
+                )}
+              >
+                <Link href={item.lastLink} className="block">
+                  <div className="relative aspect-video border-b border-border-subtle bg-surface-2">
+                    <Image
+                      src={item.image || '/placeholder-poster.jpg'}
+                      alt={item.title}
+                      fill
+                      className="h-full w-full object-cover opacity-60 transition-all duration-700 group-hover:scale-105 group-hover:opacity-40"
+                      sizes="(max-width: 768px) 256px, 320px"
+                      unoptimized
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                    
+                    <div className="absolute inset-0 flex scale-90 items-center justify-center opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100">
+                      <div className={cn("flex h-14 w-14 items-center justify-center rounded-full text-white shadow-2xl", config.primary, config.shadow)}>
+                        <Play className="ml-1 h-6 w-6 fill-current" />
+                      </div>
+                    </div>
+
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="mb-1.5 flex items-center gap-2">
+                        <Badge variant={item.type as ThemeType} className="px-2.5 py-0.5 text-[9px] tracking-[0.2em]">
+                          {item.type}
+                        </Badge>
+                      </div>
+                      <h3 className="line-clamp-1 text-sm font-black tracking-tight text-white">{item.title}</h3>
+                      <p className="mt-1 line-clamp-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                        {item.type === 'manga' ? 'Read:' : 'Watch:'} {item.lastChapterOrEpisode}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className={cn(
-                        "text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-0.5 rounded-full border",
-                        config.bg, config.text, config.border
-                      )}>
-                        {item.type}
-                      </span>
-                    </div>
-                    <h3 className="font-black text-sm text-white line-clamp-1 uppercase italic tracking-tight">{item.title}</h3>
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1 line-clamp-1">
-                      {item.type === 'manga' ? 'Read:' : 'Watch:'} {item.lastChapterOrEpisode}
-                    </p>
-                  </div>
-                  
-                  <div className="absolute bottom-0 left-0 h-1.5 bg-zinc-800 w-full overflow-hidden">
-                    <div 
-                      className={cn("h-full transition-all duration-1000", config.primary, config.shadow)} 
-                      style={{ width: `${progress}%` }} 
-                    />
-                  </div>
+                  <Progress
+                    value={progress}
+                    theme={item.type as ThemeType}
+                    className="absolute bottom-0 left-0"
+                  />
                 </Link>
-              </div>
+              </Paper>
             );
           })}
         </div>

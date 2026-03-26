@@ -1,8 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { Lock } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
+import { Link } from '@/components/atoms/Link';
+import { Paper } from '@/components/atoms/Paper';
 import { cn } from '@/lib/utils';
 
 interface AuthGateNoticeProps {
@@ -23,9 +24,11 @@ export function AuthGateNotice({
   className,
 }: AuthGateNoticeProps) {
   return (
-    <div
+    <Paper
+      tone="muted"
+      shadow="sm"
       className={cn(
-        'rounded-2xl border border-zinc-800 bg-zinc-950/90 text-zinc-100 shadow-xl shadow-black/20',
+        'text-zinc-100',
         compact ? 'flex items-start gap-3 px-3 py-3' : 'flex flex-col gap-4 px-5 py-5 md:px-6 md:py-6',
         className
       )}
@@ -53,12 +56,12 @@ export function AuthGateNotice({
         asChild
         size={compact ? 'sm' : 'default'}
         className={cn(
-          'shrink-0 border border-zinc-700 bg-zinc-100 text-zinc-950 hover:bg-white',
+          'shrink-0 border-border-subtle bg-white text-zinc-950 hover:bg-zinc-50',
           compact ? 'self-center px-3' : 'self-start'
         )}
       >
         <Link href={loginHref}>{actionLabel}</Link>
       </Button>
-    </div>
+    </Paper>
   );
 }
