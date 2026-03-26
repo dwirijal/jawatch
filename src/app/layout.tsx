@@ -84,6 +84,7 @@ export default function RootLayout({
       <head>
         <InitColorSchemeScript />
         <CssBaseline />
+        <meta name="google-adsense-account" content="ca-pub-8868090753979495" />
         <Script
           id="adsense-script"
           async
