@@ -1,0 +1,76 @@
+{
+  "episodeSlug": "3d-kanojo-real-girl-2nd-season-episode-12-seelesai",
+  "animeSlug": "3d-kanojo-real-girl-2nd-season",
+  "animeTitle": "3D Kanojo: Real Girl 2nd Season",
+  "title": "3D Kanojo: Real Girl 2nd Season Episode 12 [selesai] Sub Indo",
+  "episodeNumber": "12",
+  "releaseLabel": "2019-05-11T10:55:53+00:00",
+  "synopsis": "Second season of 3D Kanojo: Real Girl.",
+  "genres": [
+    "Romance",
+    "School",
+    "Shoujo"
+  ],
+  "poster": "https://v2.samehadaku.how/wp-content/uploads/2020/05/97219.jpg",
+  "animeDetailHref": "/anime/3d-kanojo-real-girl-2nd-season",
+  "mirrors": [],
+  "defaultUrl": "",
+  "serverOptions": [
+    {
+      "label": "Server 1",
+      "postId": "2682",
+      "number": "1",
+      "type": "schtml"
+    },
+    {
+      "label": "Server 2",
+      "postId": "2682",
+      "number": "2",
+      "type": "schtml"
+    }
+  ],
+  "downloadGroups": [
+    {
+      "format": "Hardsubs",
+      "quality": "360p",
+      "links": [
+        {
+          "label": "G-Drive",
+          "href": "https://gdriveplayer.me/download.php?link=mcnO5HOsauY80N5roQgzCgx6Fr01I0lUilpMB4pIV1MTdn9JyNOGyBfOJvk0Wxjq903rYb0GUR8mcVyosUo5xkLe3X%252FbuG%252Fo5zfqazQMPrHo6HkqWP7POZceYYV%252FrfJkyxeYVWdsFPYHWoatT9gUjs%252F3Fz9fG%252FXlofeIALW3VTaUZuU9sEZYhjXJU4a6Rn9OM%253D"
+        },
+        {
+          "label": "Reupload",
+          "href": "https://reupload.org/tavjz1y71ac2"
+        },
+        {
+          "label": "Zippyshare",
+          "href": "https://www4.zippyshare.com/v/hfeqYMZF/file.html"
+        }
+      ]
+    },
+    {
+      "format": "Hardsubs",
+      "quality": "480p",
+      "links": [
+        {
+          "label": "G-Drive",
+          "href": "https://gdriveplayer.me/download.php?link=mcnO5HOsauY80N5roQgzCgx6Fr01I0lUilpMB4pIV1MTdn9JyNOGyBfOJvk0Wxjq903rYb0GUR8mcVyosUo5xkLe3X%252FbuG%252Fo5zfqazQMPrHo6HkqWP7POZceYYV%252FrfJkyxeYVWdsFPYHWoatT9gUjs%252F3Fz9fG%252FXlofeIALW3VTaUZuU9sEZYhjXJU4a6Rn9OM%253D"
+        },
+        {
+          "label": "Reupload",
+          "href": "https://reupload.org/hjnr2664v0s1"
+        },
+        {
+          "label": "Zippyshare",
+          "href": "https://www4.zippyshare.com/v/ESgFdqt8/file.html"
+        }
+      ]
+    }
+  ],
+  "playlist": [],
+  "prevEpisodeSlug": "3d-kanojo-real-girl-2nd-season-episode-11",
+  "nextEpisodeSlug": "#",
+  "externalUrl": "https://v1.samehadaku.how/3d-kanojo-real-girl-2nd-season-episode-12-seelesai/",
+  "animeExternalUrl": "https://v2.samehadaku.how/anime/3d-kanojo-real-girl-2nd-season/",
+  "fetchStatus": "ready"
+}

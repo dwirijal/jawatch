@@ -1,0 +1,120 @@
+{
+  "creator": "Kentarou Kawashima",
+  "slug": "aoppella-hajimari-no-playlist",
+  "title": "-Aoppella!?- Hajimari no Playlist",
+  "title_indonesian": "Aoppella Playlist Awal Cerita",
+  "image": "https://thumbnail.komiku.org/uploads/manga/aoppella-hajimari-no-playlist/manga_thumbnail-Manga-Aoppella-Hajimari-no-Playlist.jpg?w=500",
+  "synopsis": "Cerita ini mengikuti perjalanan seorang remaja yang penuh semangat dalam menemukan cinta dan persahabatan melalui kelompok musik a cappella di sekolahnya. Mereka menghadapi berbagai tantangan dan belajar mengatasi perbedaan untuk menciptakan harmoni yang indah bersama. Seiring waktu, ikatan antara anggota kelompok menjadi semakin kuat dan mereka mulai menyadari bahwa musik bukan hanya soal suara tetapi juga tentang menyatukan hati. Melalui setiap lagu, mereka mengungkapkan kisah hidup dan impian mereka yang terdalam.",
+  "synopsis_full": "Cerita ini mengikuti perjalanan seorang remaja yang penuh semangat dalam menemukan cinta dan persahabatan melalui kelompok musik a cappella di sekolahnya. Mereka menghadapi berbagai tantangan dan belajar mengatasi perbedaan untuk menciptakan harmoni yang indah bersama. Seiring waktu, ikatan antara anggota kelompok menjadi semakin kuat dan mereka mulai menyadari bahwa musik bukan hanya soal suara tetapi juga tentang menyatukan hati. Melalui setiap lagu, mereka mengungkapkan kisah hidup dan impian mereka yang terdalam.",
+  "summary": "Cerita ini mengikuti perjalanan seorang remaja yang penuh semangat dalam menemukan cinta dan persahabatan melalui kelompok musik a cappella di sekolahnya. Mereka menghadapi berbagai tantangan dan belajar mengatasi perbedaan untuk menciptakan harmoni yang indah bersama. Seiring waktu, ikatan antara anggota kelompok menjadi semakin kuat dan mereka mulai menyadari bahwa musik bukan hanya soal suara tetapi juga tentang menyatukan hati. Melalui setiap lagu, mereka mengungkapkan kisah hidup dan impian mereka yang terdalam.",
+  "background_story": "",
+  "metadata": {
+    "type": "Manga",
+    "author": "Kentarou Kawashima",
+    "status": "Ongoing",
+    "concept": "",
+    "age_rating": "",
+    "reading_direction": "vertical"
+  },
+  "genres": [
+    {
+      "name": "Comedy",
+      "slug": "comedy",
+      "link": "#"
+    },
+    {
+      "name": "Drama",
+      "slug": "drama",
+      "link": "#"
+    },
+    {
+      "name": "Music",
+      "slug": "music",
+      "link": "#"
+    },
+    {
+      "name": "School life",
+      "slug": "school-life",
+      "link": "#"
+    },
+    {
+      "name": "Shoujo",
+      "slug": "shoujo",
+      "link": "#"
+    },
+    {
+      "name": "Slice of Life",
+      "slug": "slice-of-life",
+      "link": "#"
+    }
+  ],
+  "chapters": [
+    {
+      "chapter": "Chapter 9",
+      "slug": "aoppella-hajimari-no-playlist-chapter-9",
+      "link": "https://komiku.org/aoppella-hajimari-no-playlist-chapter-9/",
+      "date": "28/09/2022"
+    },
+    {
+      "chapter": "Chapter 8",
+      "slug": "aoppella-hajimari-no-playlist-chapter-8",
+      "link": "https://komiku.org/aoppella-hajimari-no-playlist-chapter-8/",
+      "date": "28/09/2022"
+    },
+    {
+      "chapter": "Chapter 7",
+      "slug": "aoppella-hajimari-no-playlist-chapter-7",
+      "link": "https://komiku.org/aoppella-hajimari-no-playlist-chapter-7/",
+      "date": "28/09/2022"
+    },
+    {
+      "chapter": "Chapter 6",
+      "slug": "aoppella-hajimari-no-playlist-chapter-6",
+      "link": "https://komiku.org/aoppella-hajimari-no-playlist-chapter-6/",
+      "date": "28/09/2022"
+    },
+    {
+      "chapter": "Chapter 5",
+      "slug": "aoppella-hajimari-no-playlist-chapter-5",
+      "link": "https://komiku.org/aoppella-hajimari-no-playlist-chapter-5/",
+      "date": "28/09/2022"
+    },
+    {
+      "chapter": "Chapter 4.5",
+      "slug": "aoppella-hajimari-no-playlist-chapter-4-5",
+      "link": "https://komiku.org/aoppella-hajimari-no-playlist-chapter-4-5/",
+      "date": "28/09/2022"
+    },
+    {
+      "chapter": "Chapter 4",
+      "slug": "aoppella-hajimari-no-playlist-chapter-4",
+      "link": "https://komiku.org/aoppella-hajimari-no-playlist-chapter-4/",
+      "date": "28/09/2022"
+    },
+    {
+      "chapter": "Chapter 3",
+      "slug": "aoppella-hajimari-no-playlist-chapter-3",
+      "link": "https://komiku.org/aoppella-hajimari-no-playlist-chapter-3/",
+      "date": "28/09/2022"
+    },
+    {
+      "chapter": "Chapter 2.5",
+      "slug": "aoppella-hajimari-no-playlist-chapter-2-5",
+      "link": "https://komiku.org/aoppella-hajimari-no-playlist-chapter-2-5/",
+      "date": "28/09/2022"
+    },
+    {
+      "chapter": "Chapter 2",
+      "slug": "aoppella-hajimari-no-playlist-chapter-2",
+      "link": "https://komiku.org/aoppella-hajimari-no-playlist-chapter-2/",
+      "date": "28/09/2022"
+    },
+    {
+      "chapter": "Chapter 1",
+      "slug": "aoppella-hajimari-no-playlist-chapter-1",
+      "link": "https://komiku.org/aoppella-hajimari-no-playlist-chapter-1/",
+      "date": "28/09/2022"
+    }
+  ],
+  "similar_manga": []
+}

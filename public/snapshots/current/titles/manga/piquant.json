@@ -1,0 +1,51 @@
+{
+  "creator": "Kanan Minami",
+  "slug": "piquant",
+  "title": "-PIQUANT-",
+  "title_indonesian": "Pedasnya Hidup",
+  "image": "https://thumbnail.komiku.org/img/upload/-piquant-/img_6846a70ed3abe9.02524086.jpg?w=500",
+  "synopsis": "Komik PIQUANT menggambarkan perjalanan seorang chef muda yang penuh semangat dalam menguasai seni memasak dengan cita rasa yang tajam dan unik. Dalam usahanya membuka restoran sendiri, ia menghadapi berbagai tantangan mulai dari persaingan ketat hingga konflik internal yang menguji tekad dan kreativitasnya. Selain fokus pada dunia kuliner, cerita ini juga menyoroti kehidupan pribadi tokoh utama yang semakin kompleks seiring ia bertemu dengan berbagai karakter beragam, yang membantu dan menghambat langkahnya. Melalui perjuangan keras, ia belajar tentang arti kesabaran dan inovasi untuk mencapai mimpi yang diimpikannya.",
+  "synopsis_full": "Komik PIQUANT menggambarkan perjalanan seorang chef muda yang penuh semangat dalam menguasai seni memasak dengan cita rasa yang tajam dan unik. Dalam usahanya membuka restoran sendiri, ia menghadapi berbagai tantangan mulai dari persaingan ketat hingga konflik internal yang menguji tekad dan kreativitasnya. Selain fokus pada dunia kuliner, cerita ini juga menyoroti kehidupan pribadi tokoh utama yang semakin kompleks seiring ia bertemu dengan berbagai karakter beragam, yang membantu dan menghambat langkahnya. Melalui perjuangan keras, ia belajar tentang arti kesabaran dan inovasi untuk mencapai mimpi yang diimpikannya.",
+  "summary": "Komik PIQUANT menggambarkan perjalanan seorang chef muda yang penuh semangat dalam menguasai seni memasak dengan cita rasa yang tajam dan unik. Dalam usahanya membuka restoran sendiri, ia menghadapi berbagai tantangan mulai dari persaingan ketat hingga konflik internal yang menguji tekad dan kreativitasnya. Selain fokus pada dunia kuliner, cerita ini juga menyoroti kehidupan pribadi tokoh utama yang semakin kompleks seiring ia bertemu dengan berbagai karakter beragam, yang membantu dan menghambat langkahnya. Melalui perjuangan keras, ia belajar tentang arti kesabaran dan inovasi untuk mencapai mimpi yang diimpikannya.",
+  "background_story": "",
+  "metadata": {
+    "type": "Manga",
+    "author": "Kanan Minami",
+    "status": "Ongoing",
+    "concept": "",
+    "age_rating": "",
+    "reading_direction": "vertical"
+  },
+  "genres": [
+    {
+      "name": "Comedy",
+      "slug": "comedy",
+      "link": "#"
+    },
+    {
+      "name": "School life",
+      "slug": "school-life",
+      "link": "#"
+    },
+    {
+      "name": "Slice of Life",
+      "slug": "slice-of-life",
+      "link": "#"
+    }
+  ],
+  "chapters": [
+    {
+      "chapter": "Chapter 2",
+      "slug": "piquant-chapter-2",
+      "link": "https://komiku.org/piquant-chapter-2/",
+      "date": "09/06/2025"
+    },
+    {
+      "chapter": "Chapter 1",
+      "slug": "piquant-chapter-1",
+      "link": "https://komiku.org/piquant-chapter-1/",
+      "date": "09/06/2025"
+    }
+  ],
+  "similar_manga": []
+}

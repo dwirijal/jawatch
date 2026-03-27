@@ -1,0 +1,970 @@
+{
+  "popular": [
+    {
+      "slug": "war-machine-2026",
+      "title": "War Machine",
+      "poster": "/wp-content/uploads/2026/03/film-war-machine-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.8",
+      "status": "",
+      "genres": "Action, Thriller, Sci-fi"
+    },
+    {
+      "slug": "shelter-2026",
+      "title": "Shelter",
+      "poster": "/wp-content/uploads/2026/02/film-shelter-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.0",
+      "status": "",
+      "genres": "Action, Thriller"
+    },
+    {
+      "slug": "kraken-2025",
+      "title": "Kraken",
+      "poster": "/wp-content/uploads/2026/03/film-kraken-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "6.3",
+      "status": "",
+      "genres": "Action, Mystery, Sci-fi"
+    },
+    {
+      "slug": "papa-zola-movie-2025",
+      "title": "Papa Zola: The Movie",
+      "poster": "/wp-content/uploads/2026/03/film-papa-zola-movie-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "9.0",
+      "status": "",
+      "genres": "Animation, Action, Adventure, Comedy, Family, Sci-fi"
+    },
+    {
+      "slug": "zootopia-2-2025",
+      "title": "Zootopia 2",
+      "poster": "/wp-content/uploads/2025/12/film-zootopia-2-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.6",
+      "status": "",
+      "genres": "Animation, Action, Adventure, Comedy, Crime, Family, Mystery"
+    },
+    {
+      "slug": "peaky-blinders-immortal-man-2026",
+      "title": "Peaky Blinders: The Immortal Man",
+      "poster": "/wp-content/uploads/2026/03/film-peaky-blinders-immortal-man-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Crime, Drama, History"
+    },
+    {
+      "slug": "twilight-of-the-warriors-walled-in-2024",
+      "title": "Twilight of the Warriors: Walled In",
+      "poster": "/wp-content/uploads/2024/08/film-twilight-of-the-warriors-walled-in-2024-lk21-d21.jpg",
+      "year": "2024",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Action, Crime, Thriller"
+    },
+    {
+      "slug": "demon-slayer-kimetsu-no-yaiba-the-movie-infinity-castle-2025",
+      "title": "Demon Slayer -Kimetsu no Yaiba- The Movie: Infinity Castle",
+      "poster": "/wp-content/uploads/2025/07/film-demon-slayer-kimetsu-no-yaiba-the-movie-infinity-castle-2025-lk21-d21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "8.5",
+      "status": "",
+      "genres": "Animation, Action, Adventure"
+    },
+    {
+      "slug": "housemaid-2025",
+      "title": "The Housemaid",
+      "poster": "/wp-content/uploads/2026/02/film-housemaid-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Mystery, Thriller"
+    },
+    {
+      "slug": "crime-101-2026",
+      "title": "Crime 101",
+      "poster": "/wp-content/uploads/2026/02/film-crime-101-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.1",
+      "status": "",
+      "genres": "Crime, Drama, Thriller"
+    },
+    {
+      "slug": "muhammad-messenger-god-2015",
+      "title": "Muhammad: The Messenger of God (Mohammad Rasoolollah)",
+      "poster": "/wp-content/uploads/2017/07/film-muhammad-the-messenger-of-god-2015.jpg",
+      "year": "2015",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Drama, Biography, History"
+    },
+    {
+      "slug": "wrecking-crew-2026",
+      "title": "The Wrecking Crew",
+      "poster": "/wp-content/uploads/2026/02/film-wrecking-crew-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.5",
+      "status": "",
+      "genres": "Action, Comedy, Crime"
+    },
+    {
+      "slug": "bu-feng-zhui-ying-2025",
+      "title": "The Shadow&#039;s Edge (Bu feng zhui ying aka)",
+      "poster": "/wp-content/uploads/2025/08/film-bu-feng-zhui-ying-2025-lk21-4.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Action, Crime, Drama, Thriller"
+    },
+    {
+      "slug": "avatar-fire-ash-2025",
+      "title": "Avatar: Fire and Ash",
+      "poster": "/wp-content/uploads/2025/12/film-avatar-fire-ash-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.1",
+      "status": "",
+      "genres": "Action, Adventure, Fantasy"
+    },
+    {
+      "slug": "once-we-us-2025",
+      "title": "Once We Were Us",
+      "poster": "/wp-content/uploads/2026/03/film-once-we-us-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Romance"
+    },
+    {
+      "slug": "bluff-2026",
+      "title": "The Bluff",
+      "poster": "/wp-content/uploads/2026/02/film-bluff-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "5.4",
+      "status": "",
+      "genres": "Action, Adventure, Drama, History"
+    },
+    {
+      "slug": "predator-badlands-2025",
+      "title": "Predator: Badlands",
+      "poster": "/wp-content/uploads/2025/11/film-predator-badlands-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.8",
+      "status": "",
+      "genres": "Action, Adventure, Sci-fi, Thriller"
+    },
+    {
+      "slug": "scream-7-2026",
+      "title": "Scream 7",
+      "poster": "/wp-content/uploads/2026/03/film-scream-7-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.0",
+      "status": "",
+      "genres": "Horror, Mystery"
+    },
+    {
+      "slug": "boss-2025",
+      "title": "Boss",
+      "poster": "/wp-content/uploads/2026/03/film-boss-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "6.0",
+      "status": "",
+      "genres": "Action, Comedy"
+    },
+    {
+      "slug": "kingdom-heaven-2005",
+      "title": "Kingdom of Heaven",
+      "poster": "/wp-content/uploads/2015/12/film-kingdom-of-heaven-2005.jpg",
+      "year": "2005",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Action, Adventure"
+    },
+    {
+      "slug": "unexpected-family-2026",
+      "title": "Unexpected Family",
+      "poster": "/wp-content/uploads/2026/02/film-unexpected-family-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.8",
+      "status": "",
+      "genres": "Comedy, Drama"
+    },
+    {
+      "slug": "greenland-2-migration-2026",
+      "title": "Greenland 2: Migration",
+      "poster": "/wp-content/uploads/2026/01/film-greenland-2-migration-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.4",
+      "status": "",
+      "genres": "Action, Adventure, Sci-fi, Thriller"
+    },
+    {
+      "slug": "one-mile-2026",
+      "title": "One Mile",
+      "poster": "/wp-content/uploads/2026/02/film-one-mile-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "5.8",
+      "status": "",
+      "genres": "Action, Adventure, Drama, Thriller"
+    },
+    {
+      "slug": "avengers-endgame-2019",
+      "title": "Avengers: Endgame",
+      "poster": "/wp-content/uploads/2019/04/film-avengers-endgame-2019-lk21.jpg",
+      "year": "2019",
+      "type": "movie",
+      "rating": "8.4",
+      "status": "",
+      "genres": "Drama, Action, Adventure"
+    }
+  ],
+  "latest": [
+    {
+      "slug": "war-machine-2026",
+      "title": "War Machine",
+      "poster": "/wp-content/uploads/2026/03/film-war-machine-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.8",
+      "status": "",
+      "genres": "Action, Thriller, Sci-fi"
+    },
+    {
+      "slug": "shelter-2026",
+      "title": "Shelter",
+      "poster": "/wp-content/uploads/2026/02/film-shelter-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.0",
+      "status": "",
+      "genres": "Action, Thriller"
+    },
+    {
+      "slug": "kraken-2025",
+      "title": "Kraken",
+      "poster": "/wp-content/uploads/2026/03/film-kraken-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "6.3",
+      "status": "",
+      "genres": "Action, Mystery, Sci-fi"
+    },
+    {
+      "slug": "papa-zola-movie-2025",
+      "title": "Papa Zola: The Movie",
+      "poster": "/wp-content/uploads/2026/03/film-papa-zola-movie-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "9.0",
+      "status": "",
+      "genres": "Animation, Action, Adventure, Comedy, Family, Sci-fi"
+    },
+    {
+      "slug": "zootopia-2-2025",
+      "title": "Zootopia 2",
+      "poster": "/wp-content/uploads/2025/12/film-zootopia-2-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.6",
+      "status": "",
+      "genres": "Animation, Action, Adventure, Comedy, Crime, Family, Mystery"
+    },
+    {
+      "slug": "peaky-blinders-immortal-man-2026",
+      "title": "Peaky Blinders: The Immortal Man",
+      "poster": "/wp-content/uploads/2026/03/film-peaky-blinders-immortal-man-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Crime, Drama, History"
+    },
+    {
+      "slug": "twilight-of-the-warriors-walled-in-2024",
+      "title": "Twilight of the Warriors: Walled In",
+      "poster": "/wp-content/uploads/2024/08/film-twilight-of-the-warriors-walled-in-2024-lk21-d21.jpg",
+      "year": "2024",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Action, Crime, Thriller"
+    },
+    {
+      "slug": "demon-slayer-kimetsu-no-yaiba-the-movie-infinity-castle-2025",
+      "title": "Demon Slayer -Kimetsu no Yaiba- The Movie: Infinity Castle",
+      "poster": "/wp-content/uploads/2025/07/film-demon-slayer-kimetsu-no-yaiba-the-movie-infinity-castle-2025-lk21-d21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "8.5",
+      "status": "",
+      "genres": "Animation, Action, Adventure"
+    },
+    {
+      "slug": "housemaid-2025",
+      "title": "The Housemaid",
+      "poster": "/wp-content/uploads/2026/02/film-housemaid-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Mystery, Thriller"
+    },
+    {
+      "slug": "crime-101-2026",
+      "title": "Crime 101",
+      "poster": "/wp-content/uploads/2026/02/film-crime-101-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.1",
+      "status": "",
+      "genres": "Crime, Drama, Thriller"
+    },
+    {
+      "slug": "muhammad-messenger-god-2015",
+      "title": "Muhammad: The Messenger of God (Mohammad Rasoolollah)",
+      "poster": "/wp-content/uploads/2017/07/film-muhammad-the-messenger-of-god-2015.jpg",
+      "year": "2015",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Drama, Biography, History"
+    },
+    {
+      "slug": "wrecking-crew-2026",
+      "title": "The Wrecking Crew",
+      "poster": "/wp-content/uploads/2026/02/film-wrecking-crew-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.5",
+      "status": "",
+      "genres": "Action, Comedy, Crime"
+    },
+    {
+      "slug": "bu-feng-zhui-ying-2025",
+      "title": "The Shadow&#039;s Edge (Bu feng zhui ying aka)",
+      "poster": "/wp-content/uploads/2025/08/film-bu-feng-zhui-ying-2025-lk21-4.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Action, Crime, Drama, Thriller"
+    },
+    {
+      "slug": "avatar-fire-ash-2025",
+      "title": "Avatar: Fire and Ash",
+      "poster": "/wp-content/uploads/2025/12/film-avatar-fire-ash-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.1",
+      "status": "",
+      "genres": "Action, Adventure, Fantasy"
+    },
+    {
+      "slug": "once-we-us-2025",
+      "title": "Once We Were Us",
+      "poster": "/wp-content/uploads/2026/03/film-once-we-us-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Romance"
+    },
+    {
+      "slug": "bluff-2026",
+      "title": "The Bluff",
+      "poster": "/wp-content/uploads/2026/02/film-bluff-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "5.4",
+      "status": "",
+      "genres": "Action, Adventure, Drama, History"
+    },
+    {
+      "slug": "predator-badlands-2025",
+      "title": "Predator: Badlands",
+      "poster": "/wp-content/uploads/2025/11/film-predator-badlands-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.8",
+      "status": "",
+      "genres": "Action, Adventure, Sci-fi, Thriller"
+    },
+    {
+      "slug": "scream-7-2026",
+      "title": "Scream 7",
+      "poster": "/wp-content/uploads/2026/03/film-scream-7-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.0",
+      "status": "",
+      "genres": "Horror, Mystery"
+    },
+    {
+      "slug": "boss-2025",
+      "title": "Boss",
+      "poster": "/wp-content/uploads/2026/03/film-boss-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "6.0",
+      "status": "",
+      "genres": "Action, Comedy"
+    },
+    {
+      "slug": "kingdom-heaven-2005",
+      "title": "Kingdom of Heaven",
+      "poster": "/wp-content/uploads/2015/12/film-kingdom-of-heaven-2005.jpg",
+      "year": "2005",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Action, Adventure"
+    },
+    {
+      "slug": "unexpected-family-2026",
+      "title": "Unexpected Family",
+      "poster": "/wp-content/uploads/2026/02/film-unexpected-family-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.8",
+      "status": "",
+      "genres": "Comedy, Drama"
+    },
+    {
+      "slug": "greenland-2-migration-2026",
+      "title": "Greenland 2: Migration",
+      "poster": "/wp-content/uploads/2026/01/film-greenland-2-migration-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.4",
+      "status": "",
+      "genres": "Action, Adventure, Sci-fi, Thriller"
+    },
+    {
+      "slug": "one-mile-2026",
+      "title": "One Mile",
+      "poster": "/wp-content/uploads/2026/02/film-one-mile-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "5.8",
+      "status": "",
+      "genres": "Action, Adventure, Drama, Thriller"
+    },
+    {
+      "slug": "avengers-endgame-2019",
+      "title": "Avengers: Endgame",
+      "poster": "/wp-content/uploads/2019/04/film-avengers-endgame-2019-lk21.jpg",
+      "year": "2019",
+      "type": "movie",
+      "rating": "8.4",
+      "status": "",
+      "genres": "Drama, Action, Adventure"
+    }
+  ],
+  "trending": [
+    {
+      "slug": "war-machine-2026",
+      "title": "War Machine",
+      "poster": "/wp-content/uploads/2026/03/film-war-machine-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.8",
+      "status": "",
+      "genres": "Action, Thriller, Sci-fi"
+    },
+    {
+      "slug": "shelter-2026",
+      "title": "Shelter",
+      "poster": "/wp-content/uploads/2026/02/film-shelter-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.0",
+      "status": "",
+      "genres": "Action, Thriller"
+    },
+    {
+      "slug": "kraken-2025",
+      "title": "Kraken",
+      "poster": "/wp-content/uploads/2026/03/film-kraken-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "6.3",
+      "status": "",
+      "genres": "Action, Mystery, Sci-fi"
+    },
+    {
+      "slug": "papa-zola-movie-2025",
+      "title": "Papa Zola: The Movie",
+      "poster": "/wp-content/uploads/2026/03/film-papa-zola-movie-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "9.0",
+      "status": "",
+      "genres": "Animation, Action, Adventure, Comedy, Family, Sci-fi"
+    },
+    {
+      "slug": "zootopia-2-2025",
+      "title": "Zootopia 2",
+      "poster": "/wp-content/uploads/2025/12/film-zootopia-2-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.6",
+      "status": "",
+      "genres": "Animation, Action, Adventure, Comedy, Crime, Family, Mystery"
+    },
+    {
+      "slug": "peaky-blinders-immortal-man-2026",
+      "title": "Peaky Blinders: The Immortal Man",
+      "poster": "/wp-content/uploads/2026/03/film-peaky-blinders-immortal-man-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Crime, Drama, History"
+    },
+    {
+      "slug": "twilight-of-the-warriors-walled-in-2024",
+      "title": "Twilight of the Warriors: Walled In",
+      "poster": "/wp-content/uploads/2024/08/film-twilight-of-the-warriors-walled-in-2024-lk21-d21.jpg",
+      "year": "2024",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Action, Crime, Thriller"
+    },
+    {
+      "slug": "demon-slayer-kimetsu-no-yaiba-the-movie-infinity-castle-2025",
+      "title": "Demon Slayer -Kimetsu no Yaiba- The Movie: Infinity Castle",
+      "poster": "/wp-content/uploads/2025/07/film-demon-slayer-kimetsu-no-yaiba-the-movie-infinity-castle-2025-lk21-d21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "8.5",
+      "status": "",
+      "genres": "Animation, Action, Adventure"
+    },
+    {
+      "slug": "housemaid-2025",
+      "title": "The Housemaid",
+      "poster": "/wp-content/uploads/2026/02/film-housemaid-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Mystery, Thriller"
+    },
+    {
+      "slug": "crime-101-2026",
+      "title": "Crime 101",
+      "poster": "/wp-content/uploads/2026/02/film-crime-101-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.1",
+      "status": "",
+      "genres": "Crime, Drama, Thriller"
+    },
+    {
+      "slug": "muhammad-messenger-god-2015",
+      "title": "Muhammad: The Messenger of God (Mohammad Rasoolollah)",
+      "poster": "/wp-content/uploads/2017/07/film-muhammad-the-messenger-of-god-2015.jpg",
+      "year": "2015",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Drama, Biography, History"
+    },
+    {
+      "slug": "wrecking-crew-2026",
+      "title": "The Wrecking Crew",
+      "poster": "/wp-content/uploads/2026/02/film-wrecking-crew-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.5",
+      "status": "",
+      "genres": "Action, Comedy, Crime"
+    },
+    {
+      "slug": "bu-feng-zhui-ying-2025",
+      "title": "The Shadow&#039;s Edge (Bu feng zhui ying aka)",
+      "poster": "/wp-content/uploads/2025/08/film-bu-feng-zhui-ying-2025-lk21-4.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Action, Crime, Drama, Thriller"
+    },
+    {
+      "slug": "avatar-fire-ash-2025",
+      "title": "Avatar: Fire and Ash",
+      "poster": "/wp-content/uploads/2025/12/film-avatar-fire-ash-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.1",
+      "status": "",
+      "genres": "Action, Adventure, Fantasy"
+    },
+    {
+      "slug": "once-we-us-2025",
+      "title": "Once We Were Us",
+      "poster": "/wp-content/uploads/2026/03/film-once-we-us-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Romance"
+    },
+    {
+      "slug": "bluff-2026",
+      "title": "The Bluff",
+      "poster": "/wp-content/uploads/2026/02/film-bluff-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "5.4",
+      "status": "",
+      "genres": "Action, Adventure, Drama, History"
+    },
+    {
+      "slug": "predator-badlands-2025",
+      "title": "Predator: Badlands",
+      "poster": "/wp-content/uploads/2025/11/film-predator-badlands-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.8",
+      "status": "",
+      "genres": "Action, Adventure, Sci-fi, Thriller"
+    },
+    {
+      "slug": "scream-7-2026",
+      "title": "Scream 7",
+      "poster": "/wp-content/uploads/2026/03/film-scream-7-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.0",
+      "status": "",
+      "genres": "Horror, Mystery"
+    },
+    {
+      "slug": "boss-2025",
+      "title": "Boss",
+      "poster": "/wp-content/uploads/2026/03/film-boss-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "6.0",
+      "status": "",
+      "genres": "Action, Comedy"
+    },
+    {
+      "slug": "kingdom-heaven-2005",
+      "title": "Kingdom of Heaven",
+      "poster": "/wp-content/uploads/2015/12/film-kingdom-of-heaven-2005.jpg",
+      "year": "2005",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Action, Adventure"
+    },
+    {
+      "slug": "unexpected-family-2026",
+      "title": "Unexpected Family",
+      "poster": "/wp-content/uploads/2026/02/film-unexpected-family-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.8",
+      "status": "",
+      "genres": "Comedy, Drama"
+    },
+    {
+      "slug": "greenland-2-migration-2026",
+      "title": "Greenland 2: Migration",
+      "poster": "/wp-content/uploads/2026/01/film-greenland-2-migration-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.4",
+      "status": "",
+      "genres": "Action, Adventure, Sci-fi, Thriller"
+    },
+    {
+      "slug": "one-mile-2026",
+      "title": "One Mile",
+      "poster": "/wp-content/uploads/2026/02/film-one-mile-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "5.8",
+      "status": "",
+      "genres": "Action, Adventure, Drama, Thriller"
+    },
+    {
+      "slug": "avengers-endgame-2019",
+      "title": "Avengers: Endgame",
+      "poster": "/wp-content/uploads/2019/04/film-avengers-endgame-2019-lk21.jpg",
+      "year": "2019",
+      "type": "movie",
+      "rating": "8.4",
+      "status": "",
+      "genres": "Drama, Action, Adventure"
+    }
+  ],
+  "items": [
+    {
+      "slug": "war-machine-2026",
+      "title": "War Machine",
+      "poster": "/wp-content/uploads/2026/03/film-war-machine-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.8",
+      "status": "",
+      "genres": "Action, Thriller, Sci-fi"
+    },
+    {
+      "slug": "shelter-2026",
+      "title": "Shelter",
+      "poster": "/wp-content/uploads/2026/02/film-shelter-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.0",
+      "status": "",
+      "genres": "Action, Thriller"
+    },
+    {
+      "slug": "kraken-2025",
+      "title": "Kraken",
+      "poster": "/wp-content/uploads/2026/03/film-kraken-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "6.3",
+      "status": "",
+      "genres": "Action, Mystery, Sci-fi"
+    },
+    {
+      "slug": "papa-zola-movie-2025",
+      "title": "Papa Zola: The Movie",
+      "poster": "/wp-content/uploads/2026/03/film-papa-zola-movie-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "9.0",
+      "status": "",
+      "genres": "Animation, Action, Adventure, Comedy, Family, Sci-fi"
+    },
+    {
+      "slug": "zootopia-2-2025",
+      "title": "Zootopia 2",
+      "poster": "/wp-content/uploads/2025/12/film-zootopia-2-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.6",
+      "status": "",
+      "genres": "Animation, Action, Adventure, Comedy, Crime, Family, Mystery"
+    },
+    {
+      "slug": "peaky-blinders-immortal-man-2026",
+      "title": "Peaky Blinders: The Immortal Man",
+      "poster": "/wp-content/uploads/2026/03/film-peaky-blinders-immortal-man-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Crime, Drama, History"
+    },
+    {
+      "slug": "twilight-of-the-warriors-walled-in-2024",
+      "title": "Twilight of the Warriors: Walled In",
+      "poster": "/wp-content/uploads/2024/08/film-twilight-of-the-warriors-walled-in-2024-lk21-d21.jpg",
+      "year": "2024",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Action, Crime, Thriller"
+    },
+    {
+      "slug": "demon-slayer-kimetsu-no-yaiba-the-movie-infinity-castle-2025",
+      "title": "Demon Slayer -Kimetsu no Yaiba- The Movie: Infinity Castle",
+      "poster": "/wp-content/uploads/2025/07/film-demon-slayer-kimetsu-no-yaiba-the-movie-infinity-castle-2025-lk21-d21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "8.5",
+      "status": "",
+      "genres": "Animation, Action, Adventure"
+    },
+    {
+      "slug": "housemaid-2025",
+      "title": "The Housemaid",
+      "poster": "/wp-content/uploads/2026/02/film-housemaid-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Mystery, Thriller"
+    },
+    {
+      "slug": "crime-101-2026",
+      "title": "Crime 101",
+      "poster": "/wp-content/uploads/2026/02/film-crime-101-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.1",
+      "status": "",
+      "genres": "Crime, Drama, Thriller"
+    },
+    {
+      "slug": "muhammad-messenger-god-2015",
+      "title": "Muhammad: The Messenger of God (Mohammad Rasoolollah)",
+      "poster": "/wp-content/uploads/2017/07/film-muhammad-the-messenger-of-god-2015.jpg",
+      "year": "2015",
+      "type": "movie",
+      "rating": "7.3",
+      "status": "",
+      "genres": "Drama, Biography, History"
+    },
+    {
+      "slug": "wrecking-crew-2026",
+      "title": "The Wrecking Crew",
+      "poster": "/wp-content/uploads/2026/02/film-wrecking-crew-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.5",
+      "status": "",
+      "genres": "Action, Comedy, Crime"
+    },
+    {
+      "slug": "bu-feng-zhui-ying-2025",
+      "title": "The Shadow&#039;s Edge (Bu feng zhui ying aka)",
+      "poster": "/wp-content/uploads/2025/08/film-bu-feng-zhui-ying-2025-lk21-4.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Action, Crime, Drama, Thriller"
+    },
+    {
+      "slug": "avatar-fire-ash-2025",
+      "title": "Avatar: Fire and Ash",
+      "poster": "/wp-content/uploads/2025/12/film-avatar-fire-ash-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.1",
+      "status": "",
+      "genres": "Action, Adventure, Fantasy"
+    },
+    {
+      "slug": "once-we-us-2025",
+      "title": "Once We Were Us",
+      "poster": "/wp-content/uploads/2026/03/film-once-we-us-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Romance"
+    },
+    {
+      "slug": "bluff-2026",
+      "title": "The Bluff",
+      "poster": "/wp-content/uploads/2026/02/film-bluff-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "5.4",
+      "status": "",
+      "genres": "Action, Adventure, Drama, History"
+    },
+    {
+      "slug": "predator-badlands-2025",
+      "title": "Predator: Badlands",
+      "poster": "/wp-content/uploads/2025/11/film-predator-badlands-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "7.8",
+      "status": "",
+      "genres": "Action, Adventure, Sci-fi, Thriller"
+    },
+    {
+      "slug": "scream-7-2026",
+      "title": "Scream 7",
+      "poster": "/wp-content/uploads/2026/03/film-scream-7-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.0",
+      "status": "",
+      "genres": "Horror, Mystery"
+    },
+    {
+      "slug": "boss-2025",
+      "title": "Boss",
+      "poster": "/wp-content/uploads/2026/03/film-boss-2025-lk21.jpg",
+      "year": "2025",
+      "type": "movie",
+      "rating": "6.0",
+      "status": "",
+      "genres": "Action, Comedy"
+    },
+    {
+      "slug": "kingdom-heaven-2005",
+      "title": "Kingdom of Heaven",
+      "poster": "/wp-content/uploads/2015/12/film-kingdom-of-heaven-2005.jpg",
+      "year": "2005",
+      "type": "movie",
+      "rating": "7.2",
+      "status": "",
+      "genres": "Drama, Action, Adventure"
+    },
+    {
+      "slug": "unexpected-family-2026",
+      "title": "Unexpected Family",
+      "poster": "/wp-content/uploads/2026/02/film-unexpected-family-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "7.8",
+      "status": "",
+      "genres": "Comedy, Drama"
+    },
+    {
+      "slug": "greenland-2-migration-2026",
+      "title": "Greenland 2: Migration",
+      "poster": "/wp-content/uploads/2026/01/film-greenland-2-migration-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "6.4",
+      "status": "",
+      "genres": "Action, Adventure, Sci-fi, Thriller"
+    },
+    {
+      "slug": "one-mile-2026",
+      "title": "One Mile",
+      "poster": "/wp-content/uploads/2026/02/film-one-mile-2026-lk21.jpg",
+      "year": "2026",
+      "type": "movie",
+      "rating": "5.8",
+      "status": "",
+      "genres": "Action, Adventure, Drama, Thriller"
+    },
+    {
+      "slug": "avengers-endgame-2019",
+      "title": "Avengers: Endgame",
+      "poster": "/wp-content/uploads/2019/04/film-avengers-endgame-2019-lk21.jpg",
+      "year": "2019",
+      "type": "movie",
+      "rating": "8.4",
+      "status": "",
+      "genres": "Drama, Action, Adventure"
+    }
+  ]
+}
