@@ -759,6 +759,26 @@ export const getMovieDetail = movie.getDetail;
 export const getMovieStream = movie.getStream;
 export const getMoviesByGenre = movie.getByGenre;
 
+export type AnimePaginationResult<T> = {
+  items: T[];
+  hasNextPage: boolean;
+};
+
+export const getCompletedAnimePage = async (page = 1): Promise<AnimePaginationResult<KanataCompletedAnime>> => {
+  const payload = await fetchSankaJson<{
+    data?: { animeList?: unknown[] };
+    pagination?: { hasNextPage?: boolean };
+  }>(`/anime/samehadaku/completed?page=${page}`);
+
+  return {
+    items: normalizeSankaAnimeList(readObject(payload.data).animeList).map((item) => ({
+      ...item,
+      date: '',
+    })),
+    hasNextPage: Boolean(readObject(payload.pagination).hasNextPage),
+  };
+};
+
 export const getOngoingAnime = async (page = 1): Promise<KanataAnime[]> => {
   const payload = await fetchSankaJson<{
     data?: { animeList?: unknown[] };

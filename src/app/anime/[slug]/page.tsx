@@ -82,7 +82,7 @@ export default async function AnimeDetailPage({ params }: PageProps) {
           <DetailActionCard
             theme="anime"
             title="Ready to watch"
-            description="Episode links dibaca via API gateway. Buka daftar episode di bawah untuk lanjut streaming dari flow video yang sama."
+            description="Episode guide and playback links are synced from Samehadaku. Start from the list below to stay in the same video flow."
             actions={watchHref ? [{ href: watchHref, label: 'Start Watching' }] : []}
           />
 
@@ -187,7 +187,7 @@ export default async function AnimeDetailPage({ params }: PageProps) {
               <span className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Canonical</span>
             </div>
             <p className="max-w-3xl text-sm leading-7 text-zinc-400">
-              Source sudah tersinkron ke gateway, jadi kamu bisa lanjut dari daftar episode tanpa membuka source page terpisah.
+              Samehadaku is treated as the canonical anime source here, so you can keep moving through episodes without leaving the app flow.
             </p>
           </Paper>
         </section>

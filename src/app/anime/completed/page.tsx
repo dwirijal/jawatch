@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getCompletedAnime, KanataCompletedAnime } from '@/lib/api';
+import { getCompletedAnimePage, KanataCompletedAnime } from '@/lib/api';
 import { Card } from '@/components/atoms/Card';
 import { AdSection } from '@/components/organisms/AdSection';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
@@ -15,13 +15,15 @@ export default function CompletedAnimePage() {
   const [data, setData] = useState<KanataCompletedAnime[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
-        const list = await getCompletedAnime(page);
-        setData(list);
+        const result = await getCompletedAnimePage(page);
+        setData(result.items);
+        setHasMore(result.hasNextPage);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (err) {
         console.error(err);
@@ -38,7 +40,7 @@ export default function CompletedAnimePage() {
         <section className="surface-panel-elevated p-6 sm:p-8">
           <SectionHeader
             title="Completed Anime"
-            subtitle="Binge-watch your favorite series from start to finish with our collection of completed anime."
+            subtitle="Finished series pulled from Samehadaku, ready for full-season binge sessions."
             leading={
               <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] border border-border-subtle bg-green-500/15">
                 <CheckCircle2 className="h-5 w-5 text-green-400" />
@@ -78,7 +80,7 @@ export default function CompletedAnimePage() {
 
               <Pagination
                 currentPage={page}
-                hasMore={data.length > 0}
+                hasMore={hasMore}
                 onPageChange={setPage}
                 theme="anime"
               />

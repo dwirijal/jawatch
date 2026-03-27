@@ -56,7 +56,7 @@ export default function AnimeIndexPageClient({ groups }: AnimeIndexPageClientPro
         <div className="app-container">
           <SectionHeader
             title="Anime Index"
-            subtitle="Browse the full anime library from gateway-backed catalog data, organized from A to Z."
+            subtitle="Browse the full Samehadaku-backed anime library, organized from A to Z."
             icon={List}
             contentClassName="max-w-2xl"
             className="border-0 pb-0"
@@ -94,7 +94,7 @@ export default function AnimeIndexPageClient({ groups }: AnimeIndexPageClientPro
           <div className="surface-panel-elevated px-6 py-14 text-center md:px-8 md:py-16">
             <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Anime index unavailable</p>
             <p className="mx-auto mt-4 max-w-xl text-sm text-zinc-400">
-              Anime catalog from the API gateway could not be loaded for the index page right now.
+              Samehadaku catalog data could not be loaded for the index page right now.
             </p>
           </div>
         ) : (
