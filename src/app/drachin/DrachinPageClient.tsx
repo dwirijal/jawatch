@@ -90,6 +90,17 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
       : 'Semua short drama sekarang dikumpulkan di satu hub. Judul Drachin langsung membuka episode 1 atau episode terakhir yang tersimpan di browser, sementara lane DramaBox tetap ikut masuk ke alur discovery yang sama.';
 
   const badgeLabel = entry === 'dramabox' ? 'DramaBox Entry' : 'Vertical Drama';
+  const buildDramaboxDetailHref = (item: DramaboxHomeData['latest'][number]) => {
+    const params = new URLSearchParams();
+    params.set('title', item.title);
+    if (item.image) {
+      params.set('image', item.image);
+    }
+    if (item.subtitle) {
+      params.set('subtitle', item.subtitle);
+    }
+    return `/dramabox/${item.slug}?${params.toString()}`;
+  };
 
   return (
     <div className="app-shell" data-theme="drama">
@@ -155,7 +166,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
               : dramaboxData.latest.map((item) => (
                 <Card
                   key={`dramabox-latest-${item.slug}`}
-                  href={`/dramabox/${item.slug}`}
+                  href={buildDramaboxDetailHref(item)}
                   image={item.image}
                   title={item.title}
                   subtitle={item.subtitle}
@@ -174,7 +185,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
                   })),
                   ...dramaboxData.trending.map((item) => ({
                     ...item,
-                    href: `/dramabox/${item.slug}`,
+                    href: buildDramaboxDetailHref(item),
                   })),
                 ]
                   .slice(0, 18)
