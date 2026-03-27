@@ -40,6 +40,9 @@
   --section-gap-wide: 3rem;
   --card-columns: 2;
   --card-gap: 0.5rem;
+  --rail-card-min: 9.75rem;
+  --rail-card-ideal: 42vw;
+  --rail-card-max: 12rem;
 }
 
 @theme inline {
@@ -190,9 +193,13 @@
   }
 
   .media-rail {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: clamp(var(--rail-card-min), var(--rail-card-ideal), var(--rail-card-max));
     gap: var(--card-gap);
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: 0.125rem;
     scrollbar-width: none;
     -ms-overflow-style: none;
     scroll-snap-type: x proximity;
@@ -203,8 +210,8 @@
   }
 
   .media-rail-item {
-    flex: 0 0 calc((100% - (var(--card-gap) * (var(--card-columns) - 1))) / var(--card-columns));
-    max-width: calc((100% - (var(--card-gap) * (var(--card-columns) - 1))) / var(--card-columns));
+    min-width: 0;
+    max-width: none;
     scroll-snap-align: start;
   }
 
@@ -221,6 +228,9 @@
 @media (min-width: 500px) {
   :root {
     --card-columns: 4;
+    --rail-card-min: 10.5rem;
+    --rail-card-ideal: 28vw;
+    --rail-card-max: 13rem;
   }
 }
 
@@ -239,5 +249,8 @@
 @media (min-width: 1200px) {
   :root {
     --card-columns: 8;
+    --rail-card-min: 11rem;
+    --rail-card-ideal: 16vw;
+    --rail-card-max: 13.5rem;
   }
 }
