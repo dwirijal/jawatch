@@ -99,7 +99,10 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
     if (item.subtitle) {
       params.set('subtitle', item.subtitle);
     }
-    return `/dramabox/${item.slug}?${params.toString()}`;
+    if (item.bookId) {
+      params.set('bookId', item.bookId);
+    }
+    return `/dramabox/${item.bookId || item.slug}?${params.toString()}`;
   };
 
   return (

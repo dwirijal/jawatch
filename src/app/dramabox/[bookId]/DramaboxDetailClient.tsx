@@ -8,7 +8,7 @@ import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StateInfo } from '@/components/molecules/StateInfo';
-import { getDramaboxDetailByBookId, type DramaboxDetailData } from '@/lib/drama-source';
+import { getDramaboxDetailByBookId, isDramaboxBookId, type DramaboxDetailData } from '@/lib/drama-source';
 
 interface DramaboxDetailClientProps {
   bookId: string;
@@ -22,11 +22,31 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
   const fallbackTitle = searchParams.get('title')?.trim() || '';
   const fallbackCover = searchParams.get('image')?.trim() || '';
   const fallbackSubtitle = searchParams.get('subtitle')?.trim() || '';
+  const fallbackBookId = searchParams.get('bookId')?.trim() || '';
+  const resolvedBookId = React.useMemo(() => {
+    if (isDramaboxBookId(bookId)) {
+      return bookId;
+    }
+
+    if (isDramaboxBookId(fallbackBookId)) {
+      return fallbackBookId;
+    }
+
+    return '';
+  }, [bookId, fallbackBookId]);
 
   React.useEffect(() => {
     let cancelled = false;
 
-    getDramaboxDetailByBookId(bookId)
+    if (!resolvedBookId) {
+      setDetail(null);
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    getDramaboxDetailByBookId(resolvedBookId)
       .then((nextData) => {
         if (!cancelled) {
           setDetail(nextData);
@@ -41,7 +61,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
     return () => {
       cancelled = true;
     };
-  }, [bookId]);
+  }, [resolvedBookId]);
 
   return (
     <div className="app-shell bg-background text-white">

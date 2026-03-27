@@ -44,6 +44,10 @@ export function extractDramaboxBookId(coverUrl: string): string {
   return match?.[1] ?? '';
 }
 
+export function isDramaboxBookId(value: string): boolean {
+  return /^4\d{10}$/.test(value.trim());
+}
+
 function qualityRank(label: string): number {
   const parsed = Number.parseInt(label.replace(/[^0-9]/g, ''), 10);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -55,6 +59,7 @@ export interface DramaCatalogCard {
   image: string;
   subtitle?: string;
   badgeText?: string;
+  bookId?: string;
 }
 
 export interface DrachinHomeData {
@@ -130,7 +135,8 @@ function normalizeDramaBoxCard(item: unknown): DramaCatalogCard | null {
   const record = readObject(item);
   const title = readString(record.judul) || readString(record.title);
   const image = readString(record.cover) || readString(record.poster);
-  const bookId = readString(record.bookId) || extractDramaboxBookId(image);
+  const candidateBookId = readString(record.bookId) || extractDramaboxBookId(image);
+  const bookId = isDramaboxBookId(candidateBookId) ? candidateBookId : '';
   const slug = bookId || slugifyTitle(title);
 
   if (!slug || !title) {
@@ -143,6 +149,7 @@ function normalizeDramaBoxCard(item: unknown): DramaCatalogCard | null {
     image,
     subtitle: readString(record.total_episode) || undefined,
     badgeText: 'DramaBox',
+    bookId: bookId || undefined,
   };
 }
 
@@ -254,6 +261,10 @@ export async function searchDramabox(query: string): Promise<DramaCatalogCard[]>
 }
 
 export async function getDramaboxDetailByBookId(bookId: string): Promise<DramaboxDetailData | null> {
+  if (!isDramaboxBookId(bookId)) {
+    return null;
+  }
+
   try {
     const payload = await fetchSankaJson<{ status?: string; data?: Record<string, unknown> }>(
       `/anime/dramabox/detail?bookId=${encodeURIComponent(bookId)}`
