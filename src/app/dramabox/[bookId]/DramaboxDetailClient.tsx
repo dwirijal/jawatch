@@ -18,6 +18,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
   const searchParams = useSearchParams();
   const [detail, setDetail] = React.useState<DramaboxDetailData | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   const fallbackTitle = searchParams.get('title')?.trim() || '';
   const fallbackCover = searchParams.get('image')?.trim() || '';
@@ -40,6 +41,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
 
     if (!resolvedBookId) {
       setDetail(null);
+      setError(null);
       setLoading(false);
       return () => {
         cancelled = true;
@@ -50,6 +52,13 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
       .then((nextData) => {
         if (!cancelled) {
           setDetail(nextData);
+          setError(null);
+        }
+      })
+      .catch((cause) => {
+        if (!cancelled) {
+          setDetail(null);
+          setError(cause instanceof Error ? cause.message : 'Failed to load story detail.');
         }
       })
       .finally(() => {
@@ -106,6 +115,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
                       This story is already part of Drama China. Episode playback for this title is still being prepared, so keep exploring the
                       shared catalog while this page fills in.
                     </p>
+                    {error ? <p className="text-xs leading-6 text-zinc-500">{error}</p> : null}
                   </div>
                 </div>
               </div>
