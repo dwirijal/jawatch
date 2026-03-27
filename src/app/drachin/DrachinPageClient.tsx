@@ -11,6 +11,7 @@ import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { AdSection } from '@/components/organisms/AdSection';
 import { getDrachinHome, type DrachinHomeData } from '@/lib/drama-source';
+import { getDrachinPlaybackHref } from '@/lib/vertical-drama-store';
 
 const EMPTY_HOME: DrachinHomeData = {
   featured: [],
@@ -22,6 +23,7 @@ export default function DrachinPageClient() {
   const [data, setData] = React.useState<DrachinHomeData>(EMPTY_HOME);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [resumeReady, setResumeReady] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -49,6 +51,10 @@ export default function DrachinPageClient() {
     };
   }, []);
 
+  React.useEffect(() => {
+    setResumeReady(true);
+  }, []);
+
   return (
     <div className="app-shell" data-theme="drama">
       <MediaHubHeader
@@ -64,8 +70,8 @@ export default function DrachinPageClient() {
       <main className="app-container-wide mt-8 space-y-10 sm:mt-10 md:space-y-12">
         <Paper tone="muted" shadow="sm" className="p-4 md:p-5">
           <p className="text-sm leading-6 text-zinc-400">
-            Drachin sekarang langsung memakai family endpoint Sanka yang stabil untuk home, detail, dan episode.
-            Flow detail dan playback hidup tanpa gateway tambahan.
+            Drachin sekarang diperlakukan sebagai vertical drama feed. Card langsung masuk ke episode 1 atau last-view episode
+            dari browser storage, jadi flow utamanya watch-first, bukan detail-first.
           </p>
         </Paper>
 
@@ -86,7 +92,7 @@ export default function DrachinPageClient() {
               : data.featured.map((item) => (
                 <Card
                   key={`featured-${item.slug}`}
-                  href={`/drachin/${item.slug}`}
+                  href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
                   image={item.image}
                   title={item.title}
                   subtitle={item.subtitle}
@@ -102,7 +108,7 @@ export default function DrachinPageClient() {
               : data.latest.map((item) => (
                 <Card
                   key={`latest-${item.slug}`}
-                  href={`/drachin/${item.slug}`}
+                  href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
                   image={item.image}
                   title={item.title}
                   subtitle={item.subtitle}
@@ -118,7 +124,7 @@ export default function DrachinPageClient() {
               : data.popular.map((item) => (
                 <Card
                   key={`popular-${item.slug}`}
-                  href={`/drachin/${item.slug}`}
+                  href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
                   image={item.image}
                   title={item.title}
                   subtitle={item.subtitle}

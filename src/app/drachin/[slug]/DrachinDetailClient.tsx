@@ -11,6 +11,7 @@ import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { AdSection } from '@/components/organisms/AdSection';
 import { getDrachinDetailBySlug, type DrachinDetailData } from '@/lib/drama-source';
+import { getDrachinPlaybackHref } from '@/lib/vertical-drama-store';
 
 interface DrachinDetailClientProps {
   slug: string;
@@ -20,6 +21,7 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
   const [detail, setDetail] = React.useState<DrachinDetailData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [playHref, setPlayHref] = React.useState(`/drachin/episode/${slug}?index=1`);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -45,6 +47,10 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
     return () => {
       cancelled = true;
     };
+  }, [slug]);
+
+  React.useEffect(() => {
+    setPlayHref(getDrachinPlaybackHref(slug));
   }, [slug]);
 
   return (
@@ -100,8 +106,8 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
 
                   <div className="flex flex-wrap gap-3">
                     <Button variant="drama" asChild>
-                      <Link href={`/drachin/episode/${detail.slug}?index=1`}>
-                        <Play className="h-4 w-4 fill-current" /> Start Watching
+                      <Link href={playHref}>
+                        <Play className="h-4 w-4 fill-current" /> Resume Watching
                       </Link>
                     </Button>
                   </div>
@@ -114,7 +120,7 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
             <section className="space-y-4">
               <SectionHeader
                 title="Episode Guide"
-                subtitle={`${detail.totalEpisodes} short episodes available from the live Drachin feed.`}
+                subtitle={`${detail.totalEpisodes} short episodes available. Main entry is playback-first, and this page acts as secondary series info.`}
                 icon={Clapperboard}
               />
 
@@ -138,4 +144,3 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
     </div>
   );
 }
-

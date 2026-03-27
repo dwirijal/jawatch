@@ -17,8 +17,10 @@ interface VideoPlayerProps {
   showMirrorPanel?: boolean;
   title?: string;
   theme?: 'anime' | 'donghua' | 'movie' | 'drama';
+  format?: 'landscape' | 'vertical';
   onNext?: () => void;
   hasNext?: boolean;
+  onEnded?: () => void;
 }
 
 const THEME_ACCENT = {
@@ -52,8 +54,10 @@ export function VideoPlayer({
   showMirrorPanel = true,
   title,
   theme = 'anime',
+  format = 'landscape',
   onNext,
   hasNext,
+  onEnded,
 }: VideoPlayerProps) {
   const isControlled = typeof currentUrl === 'string';
   const [internalUrl, setInternalUrl] = React.useState(defaultUrl);
@@ -65,6 +69,12 @@ export function VideoPlayer({
   const activeUrl = isControlled ? currentUrl : internalUrl;
   const accent = THEME_ACCENT[theme];
   const useNativePlayer = isDirectMediaUrl(activeUrl || '');
+  const frameClassName =
+    isTheaterMode && device !== 'mobile'
+      ? 'h-full w-full rounded-none border-0'
+      : format === 'vertical'
+        ? 'mx-auto aspect-[9/16] w-full max-w-[26rem] rounded-[var(--radius-2xl)]'
+        : 'aspect-video rounded-[var(--radius-2xl)]';
 
   React.useEffect(() => {
     setDeadMirrors(getDeadMirrors());
@@ -139,7 +149,7 @@ export function VideoPlayer({
 
       <div className={cn(
         "group relative overflow-hidden border border-border-subtle bg-surface-2 hard-shadow-md transition-all duration-700",
-        isTheaterMode && device !== 'mobile' ? "h-full w-full rounded-none border-0" : "aspect-video rounded-[var(--radius-2xl)]",
+        frameClassName,
         isLightsDimmed && !isTheaterMode && "ring-4 ring-zinc-100/10"
       )}>
         {activeUrl ? (
@@ -152,6 +162,7 @@ export function VideoPlayer({
               autoPlay={autoPlay}
               playsInline
               preload="metadata"
+              onEnded={onEnded}
             />
           ) : (
             <iframe

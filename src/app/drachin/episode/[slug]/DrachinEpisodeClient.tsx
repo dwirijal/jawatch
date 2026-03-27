@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { LayoutGrid } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
@@ -13,12 +14,14 @@ import { AdSection } from '@/components/organisms/AdSection';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { VideoPlaybackScaffold } from '@/components/organisms/VideoPlaybackScaffold';
 import { getDrachinDetailBySlug, getDrachinEpisodeBySlug, type DrachinDetailData, type DrachinEpisodeData } from '@/lib/drama-source';
+import { saveVerticalDramaProgress } from '@/lib/vertical-drama-store';
 
 interface DrachinEpisodeClientProps {
   slug: string;
 }
 
 export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const index = searchParams.get('index') || '1';
   const episodeIndex = Number.parseInt(index, 10) || 1;
@@ -55,6 +58,12 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
     };
   }, [slug, episodeIndex]);
 
+  React.useEffect(() => {
+    if (!loading && episode) {
+      saveVerticalDramaProgress('drachin', slug, episodeIndex);
+    }
+  }, [episode, episodeIndex, loading, slug]);
+
   if (loading) {
     return (
       <div className="app-shell bg-background text-white">
@@ -83,16 +92,18 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
   const currentIndex = detail.episodes.findIndex((item) => item.index === String(episodeIndex));
   const previousEpisode = currentIndex > 0 ? detail.episodes[currentIndex - 1] : null;
   const nextEpisode = currentIndex >= 0 && currentIndex < detail.episodes.length - 1 ? detail.episodes[currentIndex + 1] : null;
+  const nextEpisodeHref = nextEpisode ? `/drachin/episode/${nextEpisode.slug}?index=${nextEpisode.index}` : null;
+  const followingEpisodes = currentIndex >= 0 ? detail.episodes.slice(currentIndex + 1, currentIndex + 9) : detail.episodes.slice(0, 8);
 
   return (
     <VideoPlaybackScaffold
-      backHref={`/drachin/${slug}`}
+      backHref="/drachin"
       eyebrow="Now Watching"
       title={detail.title}
       subtitle={
         <>
           <Badge variant="drama" className="px-2 py-0.5 text-[10px]">Episode {episode.episode}</Badge>
-          <p className="text-[10px] md:text-xs">{episode.mirrors.length} quality options ready</p>
+          <p className="text-[10px] md:text-xs">Vertical drama flow with auto-resume and auto-next</p>
         </>
       }
       headerActions={
@@ -108,8 +119,10 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
           defaultUrl={episode.defaultUrl}
           title={episode.title}
           theme="drama"
+          format="vertical"
           hasNext={Boolean(nextEpisode)}
-          onNext={nextEpisode ? () => { window.location.href = `/drachin/episode/${nextEpisode.slug}?index=${nextEpisode.index}`; } : undefined}
+          onNext={nextEpisodeHref ? () => router.push(nextEpisodeHref) : undefined}
+          onEnded={nextEpisodeHref ? () => router.push(nextEpisodeHref) : undefined}
         />
       }
       sidebar={
@@ -133,9 +146,12 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="drama">Drachin</Badge>
                   <Badge variant="outline">{detail.totalEpisodes} Episodes</Badge>
+                  <Badge variant="outline">EP {episode.episode}</Badge>
                 </div>
-                <h2 className="text-xl font-semibold tracking-tight text-white">{detail.title}</h2>
-                <p className="text-sm leading-6 text-zinc-400">{detail.synopsis}</p>
+                <h2 className="text-lg font-semibold tracking-tight text-white">{detail.title}</h2>
+                <p className="text-sm leading-6 text-zinc-400">
+                  Saved locally in your browser. Open the title again and playback will resume from the last viewed episode.
+                </p>
 
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" asChild>
@@ -146,9 +162,9 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
                       <Link href={`/drachin/episode/${previousEpisode.slug}?index=${previousEpisode.index}`}>Previous</Link>
                     </Button>
                   ) : null}
-                  {nextEpisode ? (
+                  {nextEpisodeHref ? (
                     <Button variant="drama" size="sm" asChild>
-                      <Link href={`/drachin/episode/${nextEpisode.slug}?index=${nextEpisode.index}`}>Next</Link>
+                      <Link href={nextEpisodeHref}>Next</Link>
                     </Button>
                   ) : null}
                 </div>
@@ -159,12 +175,12 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
           <Paper tone="muted" shadow="sm" className="p-4 md:p-5">
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">Episode Guide</h3>
-                <Badge variant="outline">EP {episode.episode}</Badge>
+                <h3 className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">Quick Queue</h3>
+                <Badge variant="outline">{detail.totalEpisodes} Total</Badge>
               </div>
 
               <div className="grid max-h-[28rem] grid-cols-3 gap-2 overflow-auto pr-1">
-                {detail.episodes.map((item) => {
+                {detail.episodes.slice(Math.max(0, episodeIndex - 4), Math.min(detail.totalEpisodes, episodeIndex + 11)).map((item) => {
                   const isActive = item.index === String(episodeIndex);
                   return (
                     <Button key={`${item.slug}:${item.index}`} variant={isActive ? 'drama' : 'outline'} size="sm" asChild className="w-full">
@@ -179,7 +195,38 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
       }
     >
       <AdSection />
+
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-3 border-b border-border-subtle pb-3.5 md:pb-4">
+          <div className="min-w-0">
+            <h2 className="type-section-title text-white">Continue Scrolling</h2>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Next episodes stay below the player so the flow feels like a vertical drama feed, not a heavy detail page.
+            </p>
+          </div>
+          {nextEpisodeHref ? (
+            <Button variant="drama" size="sm" asChild>
+              <Link href={nextEpisodeHref}>Jump to Next</Link>
+            </Button>
+          ) : null}
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {followingEpisodes.map((item) => (
+            <Paper key={`${item.slug}:${item.index}`} asChild tone="muted" shadow="sm" padded={false}>
+              <Link href={`/drachin/episode/${item.slug}?index=${item.index}`} className="flex min-h-[7rem] flex-col justify-between gap-3 p-4 transition-colors hover:bg-surface-elevated">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Up Next</p>
+                  <h3 className="text-lg font-semibold tracking-tight text-white">Episode {item.episode}</h3>
+                </div>
+                <p className="text-xs text-zinc-400">
+                  Continue the story immediately without going back to the series page.
+                </p>
+              </Link>
+            </Paper>
+          ))}
+        </div>
+      </section>
     </VideoPlaybackScaffold>
   );
 }
-
