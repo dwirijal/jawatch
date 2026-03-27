@@ -6,6 +6,7 @@ const outputRoot = path.resolve(process.argv[3] || 'public/snapshots/current');
 const tmdbBaseUrl = (process.env.TMDB_BASE_URL || 'https://api.themoviedb.org/3').replace(/\/+$/, '');
 const tmdbReadToken = (process.env.TMDB_READ_TOKEN || '').trim();
 const tmdbApiKey = (process.env.TMDB_API_KEY || '').trim();
+const maxSnapshotBytes = Number(process.env.MAX_SNAPSHOT_BYTES || 1_000_000_000);
 
 function toSlugFromUrl(value) {
   if (!value || typeof value !== 'string') return '';
@@ -93,6 +94,27 @@ async function seedExistingOutput(outputDir, backupDir) {
   await fs.mkdir(outputDir, { recursive: true });
   await fs.cp(backupDir, outputDir, { recursive: true });
   return true;
+}
+
+async function getDirSizeBytes(dir) {
+  let total = 0;
+  const stack = [dir];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    const entries = await fs.readdir(current, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+        continue;
+      }
+      if (entry.isFile()) {
+        const stat = await fs.stat(fullPath);
+        total += stat.size;
+      }
+    }
+  }
+  return total;
 }
 
 function movieCardFromHome(item) {
@@ -703,8 +725,12 @@ async function main() {
   }
 
   await writeJson(path.join(outputRoot, 'manifest.json'), manifest);
+  const bundleSizeBytes = await getDirSizeBytes(outputRoot);
+  if (Number.isFinite(maxSnapshotBytes) && maxSnapshotBytes > 0 && bundleSizeBytes > maxSnapshotBytes) {
+    throw new Error(`snapshot bundle exceeds MAX_SNAPSHOT_BYTES: ${bundleSizeBytes} > ${maxSnapshotBytes}`);
+  }
   await fs.rm(previousRoot, { recursive: true, force: true });
-  console.log(`snapshot bundle written to ${outputRoot}`);
+  console.log(`snapshot bundle written to ${outputRoot} (${bundleSizeBytes} bytes)`);
 }
 
 main().catch((error) => {
