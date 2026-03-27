@@ -42,7 +42,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
       <main className="app-container-wide app-section-stack py-6 md:py-8">
         <div className="flex items-center gap-3">
           <Button variant="outline" asChild>
-            <Link href="/dramabox">Back to DramaBox</Link>
+            <Link href="/drachin">Back to Drama China</Link>
           </Button>
         </div>
 
@@ -57,8 +57,8 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
         ) : !detail ? (
           <StateInfo
             type="error"
-            title="DramaBox detail unavailable"
-            description="The catalog feed is live, but Sanka is still failing on many DramaBox detail requests. This route is kept ready so it can light up as soon as upstream stabilizes."
+            title="Drama detail unavailable"
+            description="This title page is not ready right now. Try another story from the shared drama hub."
           />
         ) : (
           <Paper tone="muted" shadow="sm" className="overflow-hidden p-5 md:p-6">
@@ -83,7 +83,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
                 <div className="space-y-2">
                   <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">{detail.title}</h1>
                   <p className="max-w-3xl text-sm leading-7 text-zinc-400 md:text-base">
-                    {detail.synopsis || 'Detail is partially available, but playback has not been exposed reliably by the provider yet.'}
+                    {detail.synopsis || 'This title page is still filling in. Browse another story from the shared drama hub and jump straight into playback when available.'}
                   </p>
                 </div>
               </div>

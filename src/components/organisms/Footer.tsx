@@ -3,8 +3,7 @@ import { Link } from '@/components/atoms/Link';
 export function Footer() {
   const navLinks = [
     { href: '/anime', label: 'Anime' },
-    { href: '/drachin', label: 'Drachin' },
-    { href: '/dramabox', label: 'DramaBox' },
+    { href: '/drachin', label: 'Drama China' },
     { href: '/manga', label: 'Manga' },
     { href: '/manhwa', label: 'Manhwa' },
     { href: '/manhua', label: 'Manhua' },

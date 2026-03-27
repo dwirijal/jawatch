@@ -58,7 +58,7 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
       <main className="app-container-wide app-section-stack py-6 md:py-8">
         <div className="flex items-center gap-3">
           <Button variant="outline" asChild>
-            <Link href="/drachin">Back to Drachin</Link>
+            <Link href="/drachin">Back to Drama China</Link>
           </Button>
         </div>
 
@@ -120,7 +120,7 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
             <section className="space-y-4">
               <SectionHeader
                 title="Episode Guide"
-                subtitle={`${detail.totalEpisodes} short episodes available. Main entry is playback-first, and this page acts as secondary series info.`}
+                subtitle={`${detail.totalEpisodes} short episodes available. Use this page to jump into any part of the story quickly.`}
                 icon={Clapperboard}
               />
 

@@ -41,8 +41,7 @@ const VIDEO_GROUP: NavigationGroup = {
     { label: 'Film', href: '/movies', description: 'Movies and watch pages.' },
     { label: 'Anime', href: '/anime', description: 'Anime discovery and episodes.' },
     { label: 'Donghua', href: '/donghua', description: 'Chinese animation hub.' },
-    { label: 'Drachin', href: '/drachin', description: 'Short-form dubbed drama episodes.' },
-    { label: 'DramaBox', href: '/dramabox', description: 'Short drama discovery feed.' },
+    { label: 'Drama China', href: '/drachin', description: 'Vertical short-drama hub.' },
   ],
 };
 

@@ -109,7 +109,7 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
       headerActions={
         <Button variant="outline" size="sm" asChild className="hidden md:inline-flex">
           <Link href="/drachin">
-            <LayoutGrid className="mr-2 h-4 w-4" /> More Drachin
+            <LayoutGrid className="mr-2 h-4 w-4" /> Drama Hub
           </Link>
         </Button>
       }
@@ -150,12 +150,12 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
                 </div>
                 <h2 className="text-lg font-semibold tracking-tight text-white">{detail.title}</h2>
                 <p className="text-sm leading-6 text-zinc-400">
-                  Saved locally in your browser. Open the title again and playback will resume from the last viewed episode.
+                  Progress is saved in your browser, so opening this title again will continue from the last viewed episode.
                 </p>
 
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/drachin/${slug}`}>View Details</Link>
+                    <Link href={`/drachin/${slug}`}>Story Page</Link>
                   </Button>
                   {previousEpisode ? (
                     <Button variant="outline" size="sm" asChild>
@@ -201,7 +201,7 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
           <div className="min-w-0">
             <h2 className="type-section-title text-white">Continue Scrolling</h2>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Next episodes stay below the player so the flow feels like a vertical drama feed, not a heavy detail page.
+              Next episodes stay right below the player so the flow feels like a continuous short-drama feed.
             </p>
           </div>
           {nextEpisodeHref ? (

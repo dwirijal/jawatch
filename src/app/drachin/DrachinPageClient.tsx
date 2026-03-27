@@ -10,7 +10,7 @@ import { Paper } from '@/components/atoms/Paper';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { AdSection } from '@/components/organisms/AdSection';
-import { getDrachinHome, type DrachinHomeData } from '@/lib/drama-source';
+import { getDrachinHome, getDramaboxHome, type DrachinHomeData, type DramaboxHomeData } from '@/lib/drama-source';
 import { getDrachinPlaybackHref } from '@/lib/vertical-drama-store';
 
 const EMPTY_HOME: DrachinHomeData = {
@@ -19,8 +19,14 @@ const EMPTY_HOME: DrachinHomeData = {
   popular: [],
 };
 
+const EMPTY_DRAMABOX_HOME: DramaboxHomeData = {
+  latest: [],
+  trending: [],
+};
+
 export default function DrachinPageClient() {
-  const [data, setData] = React.useState<DrachinHomeData>(EMPTY_HOME);
+  const [drachinData, setDrachinData] = React.useState<DrachinHomeData>(EMPTY_HOME);
+  const [dramaboxData, setDramaboxData] = React.useState<DramaboxHomeData>(EMPTY_DRAMABOX_HOME);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [resumeReady, setResumeReady] = React.useState(false);
@@ -28,17 +34,31 @@ export default function DrachinPageClient() {
   React.useEffect(() => {
     let cancelled = false;
 
-    getDrachinHome()
-      .then((nextData) => {
-        if (!cancelled) {
-          setData(nextData);
-          setError(null);
+    Promise.allSettled([getDrachinHome(), getDramaboxHome()])
+      .then(([drachinResult, dramaboxResult]) => {
+        if (cancelled) {
+          return;
         }
-      })
-      .catch((cause) => {
-        if (!cancelled) {
-          setError(cause instanceof Error ? cause.message : 'Failed to load Drachin catalog.');
+
+        if (drachinResult.status === 'fulfilled') {
+          setDrachinData(drachinResult.value);
         }
+
+        if (dramaboxResult.status === 'fulfilled') {
+          setDramaboxData(dramaboxResult.value);
+        }
+
+        if (drachinResult.status === 'rejected' && dramaboxResult.status === 'rejected') {
+          setError('The short-drama catalog is unavailable right now. Try again in a moment.');
+          return;
+        }
+
+        if (drachinResult.status === 'rejected' || dramaboxResult.status === 'rejected') {
+          setError('Some short-drama lanes are temporarily unavailable, but the rest of the catalog is still online.');
+          return;
+        }
+
+        setError(null);
       })
       .finally(() => {
         if (!cancelled) {
@@ -58,20 +78,20 @@ export default function DrachinPageClient() {
   return (
     <div className="app-shell" data-theme="drama">
       <MediaHubHeader
-        title="Drachin"
-        description="Short-form dubbed drama episodes from Sanka, with direct episode playback and rapid updates."
+        title="Drama China"
+        description="Vertical short-drama catalog built for fast scrolling, direct playback, and quick continuation."
         icon={Clapperboard}
         theme="drama"
         containerClassName="app-container-wide"
       >
-        <Badge variant="drama">Sanka Direct</Badge>
+        <Badge variant="drama">Vertical Drama</Badge>
       </MediaHubHeader>
 
       <main className="app-container-wide mt-8 space-y-10 sm:mt-10 md:space-y-12">
         <Paper tone="muted" shadow="sm" className="p-4 md:p-5">
           <p className="text-sm leading-6 text-zinc-400">
-            Drachin sekarang diperlakukan sebagai vertical drama feed. Card langsung masuk ke episode 1 atau last-view episode
-            dari browser storage, jadi flow utamanya watch-first, bukan detail-first.
+            Semua short drama sekarang dikumpulkan di satu hub. Judul Drachin langsung membuka episode 1 atau episode terakhir
+            yang tersimpan di browser, sementara lane DramaBox tetap ikut masuk ke alur discovery yang sama.
           </p>
         </Paper>
 
@@ -79,59 +99,82 @@ export default function DrachinPageClient() {
 
         {error && !loading ? (
           <StateInfo
-            type="error"
-            title="Drachin is unavailable"
-            description="Sanka did not return a valid Drachin payload right now. Try again in a moment."
+            type="empty"
+            title="Short-drama catalog is partially unavailable"
+            description={error}
           />
         ) : null}
 
         <div className="app-section-stack">
-          <SectionCard title="Featured Dramas" subtitle="Pinned stories and freshly surfaced titles" icon={Sparkles} mode="rail">
+          <SectionCard title="Featured Stories" subtitle="Pinned vertical dramas ready to open immediately" icon={Sparkles} mode="rail">
             {loading
               ? Array.from({ length: 6 }).map((_, index) => <SkeletonCard key={`featured-${index}`} />)
-              : data.featured.map((item) => (
+              : drachinData.featured.map((item) => (
                 <Card
                   key={`featured-${item.slug}`}
                   href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
                   image={item.image}
                   title={item.title}
                   subtitle={item.subtitle}
-                  badgeText={item.badgeText}
                   theme="drama"
                 />
               ))}
           </SectionCard>
 
-          <SectionCard title="Latest Episodes" subtitle="Newest releases from the Drachin feed" icon={Clapperboard}>
+          <SectionCard title="Drachin Episodes" subtitle="Fast-entry episodes that resume from where you left off" icon={Clapperboard}>
             {loading
               ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`latest-${index}`} />)
-              : data.latest.map((item) => (
+              : drachinData.latest.map((item) => (
                 <Card
                   key={`latest-${item.slug}`}
                   href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
                   image={item.image}
                   title={item.title}
                   subtitle={item.subtitle}
-                  badgeText={item.badgeText}
                   theme="drama"
                 />
               ))}
           </SectionCard>
 
-          <SectionCard title="Popular Now" subtitle="What is currently moving fastest in the Drachin catalog" icon={Flame}>
+          <SectionCard title="DramaBox Latest" subtitle="Fresh vertical-drama titles inside the shared catalog" icon={Clapperboard}>
             {loading
-              ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`popular-${index}`} />)
-              : data.popular.map((item) => (
+              ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`dramabox-latest-${index}`} />)
+              : dramaboxData.latest.map((item) => (
                 <Card
-                  key={`popular-${item.slug}`}
-                  href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
+                  key={`dramabox-latest-${item.slug}`}
+                  href={`/dramabox/${item.slug}`}
                   image={item.image}
                   title={item.title}
                   subtitle={item.subtitle}
-                  badgeText={item.badgeText}
                   theme="drama"
                 />
               ))}
+          </SectionCard>
+
+          <SectionCard title="Moving Fast" subtitle="Short-drama titles with the strongest momentum right now" icon={Flame}>
+            {loading
+              ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`moving-fast-${index}`} />)
+              : [
+                  ...drachinData.popular.map((item) => ({
+                    ...item,
+                    href: resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`,
+                  })),
+                  ...dramaboxData.trending.map((item) => ({
+                    ...item,
+                    href: `/dramabox/${item.slug}`,
+                  })),
+                ]
+                  .slice(0, 18)
+                  .map((item) => (
+                    <Card
+                      key={`moving-fast-${item.slug}`}
+                      href={item.href}
+                      image={item.image}
+                      title={item.title}
+                      subtitle={item.subtitle}
+                      theme="drama"
+                    />
+                  ))}
           </SectionCard>
         </div>
       </main>
