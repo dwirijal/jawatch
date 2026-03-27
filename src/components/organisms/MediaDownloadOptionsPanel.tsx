@@ -76,7 +76,24 @@ function getFormatTone(format: string) {
 }
 
 function defaultNormalizeLabel(label: string): string {
-  return label.replace(/FULLHD/gi, '1080P').replace(/MP4HD/gi, '720P').trim();
+  return label
+    .replace(/FULLHD/gi, '1080P')
+    .replace(/MP4HD/gi, '720P')
+    .replace(/Gofle/gi, 'Gofile')
+    .trim();
+}
+
+function getLinkRank(label: string): number {
+  const normalized = label.toLowerCase();
+
+  if (normalized.includes('gofile')) return 0;
+  if (normalized.includes('pixeldrain')) return 1;
+  if (normalized.includes('mega')) return 2;
+  if (normalized.includes('kraken')) return 3;
+  if (normalized.includes('mirrored')) return 4;
+  if (normalized.includes('blogspot')) return 5;
+
+  return 10;
 }
 
 export default function MediaDownloadOptionsPanel({
@@ -85,17 +102,56 @@ export default function MediaDownloadOptionsPanel({
   id = 'downloads',
   normalizeLabel = defaultNormalizeLabel,
 }: MediaDownloadOptionsPanelProps) {
+  const normalizedGroups = React.useMemo(
+    () =>
+      groups
+        .map((group) => {
+          const dedupedLinks = Array.from(
+            new Map(
+              group.links
+                .filter((link) => link.label && link.href)
+                .map((link) => [`${normalizeLabel(link.label)}::${link.href}`, { ...link, label: normalizeLabel(link.label) }])
+            ).values()
+          ).sort((left, right) => {
+            const leftRank = getLinkRank(left.label);
+            const rightRank = getLinkRank(right.label);
+
+            if (leftRank !== rightRank) {
+              return leftRank - rightRank;
+            }
+
+            return left.label.localeCompare(right.label);
+          });
+
+          return {
+            ...group,
+            format: group.format.trim(),
+            quality: normalizeLabel(group.quality),
+            links: dedupedLinks,
+          };
+        })
+        .filter((group) => group.links.length > 0)
+        .sort((left, right) => {
+          const qualityDelta = getQualityRank(right.quality) - getQualityRank(left.quality);
+          if (qualityDelta !== 0) {
+            return qualityDelta;
+          }
+          return left.format.localeCompare(right.format);
+        }),
+    [groups, normalizeLabel]
+  );
+
   const groupedByQuality = React.useMemo(() => {
     const map = new Map<string, MediaDownloadGroup[]>();
 
-    for (const group of groups) {
+    for (const group of normalizedGroups) {
       const bucket = map.get(group.quality) ?? [];
       bucket.push(group);
       map.set(group.quality, bucket);
     }
 
     return map;
-  }, [groups]);
+  }, [normalizedGroups]);
 
   const qualityOptions = React.useMemo(
     () => [...groupedByQuality.keys()].sort((left, right) => getQualityRank(right) - getQualityRank(left)),
@@ -112,7 +168,7 @@ export default function MediaDownloadOptionsPanel({
 
   const activeGroups = groupedByQuality.get(activeQuality) ?? [];
 
-  if (groups.length === 0) {
+  if (normalizedGroups.length === 0) {
     return null;
   }
 
@@ -123,7 +179,7 @@ export default function MediaDownloadOptionsPanel({
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Downloads</p>
           <h2 className="mt-1.5 text-lg font-black tracking-tight text-white md:text-xl">Download Options</h2>
         </div>
-        <Badge variant="outline">{groups.length} Available</Badge>
+        <Badge variant="outline">{normalizedGroups.length} Available</Badge>
       </div>
 
       <div className="space-y-3.5">
