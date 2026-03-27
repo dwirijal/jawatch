@@ -1,6 +1,5 @@
 import AnimePageClient from './AnimePageClient';
-import { getAnimeHubData } from '@/lib/anime-source';
-import { getAnimeSchedule } from '@/lib/api';
+import { getAnimeHubData, getAnimeSchedule } from '@/lib/adapters/anime';
 
 export default async function AnimePage() {
   const [{ ongoing }, schedule] = await Promise.all([

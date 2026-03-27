@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { getDonghuaDetail, AnichinDetail } from '@/lib/api';
 import { incrementInterest } from '@/lib/store';
 import { Play, Calendar, Monitor, Globe, Clock4 } from 'lucide-react';
 import { Badge } from '@/components/atoms/Badge';
@@ -15,10 +14,12 @@ import { ShareButton } from '@/components/molecules/ShareButton';
 import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
-import { CircularLoader } from '@/components/atoms/CircularLoader';
 import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
+import { VideoDetailPageSkeleton } from '@/components/organisms/VideoDetailPageSkeleton';
+import { getDonghuaDetail } from '@/lib/adapters/donghua';
+import type { AnichinDetail } from '@/lib/types';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -36,8 +37,7 @@ export default function DonghuaDetailPage({ params }: PageProps) {
         const data = await getDonghuaDetail(slug);
         setDonghua(data);
         incrementInterest('donghua');
-      } catch (err) {
-        console.error(err);
+      } catch {
         setError(true);
       } finally {
         setLoading(false);
@@ -47,11 +47,7 @@ export default function DonghuaDetailPage({ params }: PageProps) {
   }, [slug]);
 
   if (loading) {
-    return (
-      <div className="app-shell flex min-h-screen items-center justify-center bg-background text-white">
-        <CircularLoader theme="donghua" />
-      </div>
-    );
+    return <VideoDetailPageSkeleton theme="donghua" backLabel="Back to Donghua" />;
   }
 
   if (error || !donghua) {
@@ -73,11 +69,12 @@ export default function DonghuaDetailPage({ params }: PageProps) {
 
   return (
     <DetailPageScaffold
+      theme="donghua"
       hero={
         <VideoDetailHero
           theme="donghua"
           backHref="/donghua"
-          backLabel="Back to Browse"
+          backLabel="Back to Donghua"
           poster={donghua.thumb}
           title={donghua.title}
           subtitle={[donghua.meta.country, donghua.meta.network].filter(Boolean).join(' • ')}
@@ -106,7 +103,7 @@ export default function DonghuaDetailPage({ params }: PageProps) {
           }
           primaryAction={
             watchHref ? (
-              <Button variant="donghua" size="lg" className="h-12 rounded-[var(--radius-sm)] px-8" asChild>
+              <Button variant="donghua" size="lg" className="h-12 rounded-[var(--radius-lg)] px-8" asChild>
                 <Link href={watchHref}>
                   Start Watching
                   <Play className="ml-2 h-4 w-4 fill-current" />

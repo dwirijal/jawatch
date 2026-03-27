@@ -1,4 +1,4 @@
-import { BookMarked, BookOpen, Clapperboard, Compass, FileText, Home, Play, UserRound, Zap } from 'lucide-react';
+import { BookMarked, BookOpen, Clapperboard, FileText, Home, Play, Search, UserRound, Zap } from 'lucide-react';
 
 export type NavigationLeafItem = {
   description: string;
@@ -66,8 +66,7 @@ const NOVEL_GROUP: NavigationGroup = {
   description: 'Novel shelves and long-form reading surfaces.',
   isActive: startsWithPath,
   items: [
-    { label: 'Light Novel', description: 'Coming soon.' },
-    { label: 'Long Novel', description: 'Coming soon.' },
+    { label: 'Novel', href: '/novel', description: 'Readable web novel catalog and chapter flow.' },
   ],
 };
 
@@ -100,7 +99,7 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
     key: 'novel',
     type: 'group',
     group: NOVEL_GROUP,
-    match: () => false,
+    match: (pathname) => startsWithPath(pathname, '/novel'),
   },
   {
     key: 'bookmark',
@@ -114,7 +113,7 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
 
 export const MOBILE_NAV_ITEMS = [
   { key: 'home', label: 'Home', href: '/', icon: Home },
-  { key: 'search', label: 'Search', icon: Compass, action: 'search' as const },
+  { key: 'search', label: 'Search', icon: Search, action: 'search' as const },
   { key: 'bookmark', label: 'Bookmark', href: '/collection', icon: BookMarked },
   { key: 'menu', label: 'Menu', icon: UserRound, action: 'menu' as const },
 ];
@@ -137,4 +136,5 @@ export const CATEGORY_ICON_MAP = {
   drama: Clapperboard,
   drachin: Clapperboard,
   dramabox: Clapperboard,
+  novel: FileText,
 };

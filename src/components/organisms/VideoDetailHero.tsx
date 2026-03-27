@@ -124,7 +124,7 @@ export function VideoDetailHero({
 
         <div className="relative z-10 px-5 py-5 md:px-7 md:py-7">
           <nav className="mb-6">
-            <Button variant="outline" size="sm" asChild className="rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 hover:bg-surface-elevated">
+            <Button variant="outline" size="sm" asChild className="rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 hover:bg-surface-elevated">
               <Link href={backHref}>
                 <ChevronLeft className="h-4 w-4" /> {backLabel}
               </Link>
@@ -153,7 +153,7 @@ export function VideoDetailHero({
                         variant="outline"
                         size="sm"
                         onClick={() => savePreference(!(trailerPreference ?? false))}
-                        className={cn('rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 text-[10px] uppercase tracking-[0.24em] text-zinc-300 hover:bg-surface-elevated hover:text-white')}
+                        className={cn('rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 text-[10px] uppercase tracking-[0.24em] text-zinc-300 hover:bg-surface-elevated hover:text-white')}
                       >
                         <Settings2 className="h-3.5 w-3.5" />
                         Trailer {trailerPreference ? 'On' : 'Off'}
@@ -220,11 +220,11 @@ export function VideoDetailHero({
               </div>
 
               <div className="grid gap-3">
-                <Button variant={theme} className="h-12 rounded-[var(--radius-sm)]" onClick={() => savePreference(true)}>
+                <Button variant={theme} className="h-12 rounded-[var(--radius-lg)]" onClick={() => savePreference(true)}>
                   Play Trailer If Available
                   <Play className="ml-2 h-4 w-4 fill-current" />
                 </Button>
-                <Button variant="outline" className="h-12 rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 hover:bg-surface-elevated" onClick={() => savePreference(false)}>
+                <Button variant="outline" className="h-12 rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 hover:bg-surface-elevated" onClick={() => savePreference(false)}>
                   Keep Hero Static
                 </Button>
               </div>

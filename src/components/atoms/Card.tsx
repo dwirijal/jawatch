@@ -8,7 +8,8 @@ import { ANIMATION_PRESETS } from '@/lib/animations';
 import { Badge } from '@/components/atoms/Badge';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
-import { getMovieMetadata, getHDThumbnail } from '@/lib/api';
+import { getMovieMetadata } from '@/lib/enrichment';
+import { getHDThumbnail } from '@/lib/adapters/comic';
 
 export interface CardProps {
   href: string;
@@ -32,10 +33,13 @@ export function Card({
   const cardRef = React.useRef<HTMLDivElement>(null);
   const [displayImage, setDisplayImage] = React.useState(getHDThumbnail(image));
   const [retryCount, setRetryCount] = React.useState(0);
+  const [imageLoadFailed, setImageLoadFailed] = React.useState(false);
   const config = THEME_CONFIG[theme] || THEME_CONFIG.default;
 
   React.useEffect(() => {
     setDisplayImage(getHDThumbnail(image));
+    setRetryCount(0);
+    setImageLoadFailed(false);
   }, [image]);
 
   const handleImageError = async () => {
@@ -44,8 +48,13 @@ export function Card({
       const meta = await getMovieMetadata(title);
       if (meta.poster) {
         setDisplayImage(meta.poster);
+        setImageLoadFailed(false);
+        return;
       }
     }
+
+    setDisplayImage('');
+    setImageLoadFailed(true);
   };
 
   const onMouseEnter = () => cardRef.current && animate(cardRef.current, ANIMATION_PRESETS.cardHover);
@@ -66,7 +75,7 @@ export function Card({
             config.hoverBorder
           )}
         >
-          {displayImage ? (
+          {displayImage && !imageLoadFailed ? (
             <Image
               src={displayImage}
               alt={title}
@@ -77,8 +86,11 @@ export function Card({
               onError={handleImageError}
             />
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center bg-surface-1 p-4 text-center text-muted-foreground">
-              <span className="text-[9px] font-black uppercase tracking-[0.18em] leading-tight">Poster Missing</span>
+            <div className="flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_52%),linear-gradient(160deg,rgba(32,36,52,0.98),rgba(12,14,21,1))] p-4 text-center text-muted-foreground">
+              <span className="text-[9px] font-black uppercase tracking-[0.18em] leading-tight text-zinc-300">Poster Missing</span>
+              <span className="mt-2 line-clamp-3 text-[11px] font-bold leading-relaxed tracking-tight text-zinc-500">
+                {title}
+              </span>
             </div>
           )}
 

@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { BookOpen, Film, Play, Search, type LucideIcon, Zap } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { AdSection } from '@/components/organisms/AdSection';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/atoms/Card';
 import { Input } from '@/components/atoms/Input';
@@ -12,7 +11,7 @@ import { SectionCard } from '@/components/organisms/SectionCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { Badge } from '@/components/atoms/Badge';
 import type { ThemeType } from '@/lib/utils';
-import type { AnichinDonghua, MangaSearchResult } from '@/lib/api';
+import type { AnichinDonghua, MangaSearchResult } from '@/lib/types';
 
 type SearchDomain = 'all' | 'anime' | 'movies' | 'manga' | 'donghua';
 
@@ -387,8 +386,6 @@ export default function SearchResultsPageClient({
           </Paper>
         </section>
 
-        <AdSection />
-
         {initialQuery.trim().length < 2 ? (
           <StateInfo title="Start a search" description="Use at least 2 characters to search across all supported media domains." />
         ) : activeTab === 'all' ? (
@@ -399,6 +396,7 @@ export default function SearchResultsPageClient({
                 title={DOMAIN_CONFIG[domain].label}
                 subtitle={`Top cached matches for “${initialQuery}”`}
                 icon={DOMAIN_CONFIG[domain].icon}
+                gridDensity="dense"
                 viewAllHref={`/search?q=${encodeURIComponent(initialQuery)}&type=${domain}`}
               >
                 {domainState[domain].loading ? (
@@ -430,6 +428,7 @@ export default function SearchResultsPageClient({
             title={`${DOMAIN_CONFIG[activeTab].label} Results`}
             subtitle={`Showing cached matches for “${initialQuery}” in pages of ${DOMAIN_LIMIT}`}
             icon={DOMAIN_CONFIG[activeTab].icon}
+            gridDensity="default"
           >
             {domainState[activeTab].loading ? (
               Array.from({ length: 12 }).map((_, index) => (

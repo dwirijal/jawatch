@@ -8,11 +8,12 @@ import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { ScrollArea, ScrollBar } from '@/components/atoms/ScrollArea';
 import { getHistory, HistoryItem } from '@/lib/store';
-import { getOngoingAnime, KanataAnime } from '@/lib/api';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StaggerEntry } from '@/components/molecules/StaggerEntry';
-import { CardGrid, CardRail } from '@/components/molecules/card';
+import { CardRail } from '@/components/molecules/card';
+import { getOngoingAnime } from '@/lib/adapters/anime';
+import type { KanataAnime } from '@/lib/types';
 
 interface AnimeDashboardProps {
   initialOngoing?: KanataAnime[];
@@ -54,7 +55,7 @@ export function AnimeDashboard({ initialOngoing }: AnimeDashboardProps) {
         <section className="space-y-4">
           <SectionHeader title="Continue Watching" icon={Clock} />
           <ScrollArea className="w-full">
-            <CardRail>
+            <CardRail variant="compact">
               {history.map((item) => (
                 <Card
                   key={item.id}
@@ -86,11 +87,11 @@ export function AnimeDashboard({ initialOngoing }: AnimeDashboardProps) {
         />
 
         {loading ? (
-          <CardGrid>
+          <div className="media-grid" data-grid-density="default">
             {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
-          </CardGrid>
+          </div>
         ) : (
-          <CardGrid>
+          <div className="media-grid" data-grid-density="default">
             <StaggerEntry className="contents">
               {ongoing.map((item, idx) => (
                 <Card
@@ -104,7 +105,7 @@ export function AnimeDashboard({ initialOngoing }: AnimeDashboardProps) {
                 />
               ))}
             </StaggerEntry>
-          </CardGrid>
+          </div>
         )}
       </section>
 
@@ -113,7 +114,7 @@ export function AnimeDashboard({ initialOngoing }: AnimeDashboardProps) {
         <div className="relative z-10 space-y-4">
           <SectionHeader title="Picked For You" icon={Sparkles} className="pb-0" />
 
-          <CardGrid>
+          <div className="media-grid" data-grid-density="comfortable">
             {ongoing.slice().reverse().slice(0, 6).map((item, idx) => (
               <Card
                 key={`rec-${idx}`}
@@ -124,7 +125,7 @@ export function AnimeDashboard({ initialOngoing }: AnimeDashboardProps) {
                 className="opacity-80 hover:opacity-100"
               />
             ))}
-          </CardGrid>
+          </div>
         </div>
       </Paper>
     </div>

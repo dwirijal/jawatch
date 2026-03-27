@@ -1,4 +1,4 @@
-import { manga } from '@/lib/api';
+import { searchManga } from '@/lib/adapters/comic';
 import { buildEdgeCacheControl } from '@/lib/cloudflare-cache';
 
 export async function GET(request: Request) {
@@ -12,8 +12,7 @@ export async function GET(request: Request) {
     return Response.json([]);
   }
 
-  const results = await manga
-    .search(query, Number.isFinite(page) ? page : 1)
+  const results = await searchManga(query, Number.isFinite(page) ? page : 1)
     .then((response) => (response.data || []).slice(0, limit));
 
   return Response.json(results, {

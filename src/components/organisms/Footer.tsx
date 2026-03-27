@@ -11,9 +11,9 @@ export function Footer() {
   ];
 
   const legalLinks = [
-    { href: '#', label: 'Terms of Service' },
-    { href: '#', label: 'Privacy Policy' },
-    { href: '#', label: 'DMCA' },
+    { label: 'Terms of Service' },
+    { label: 'Privacy Policy' },
+    { label: 'DMCA' },
   ];
 
   return (
@@ -52,9 +52,12 @@ export function Footer() {
               <ul className="space-y-2 text-xs font-bold text-zinc-500">
                 {legalLinks.map((item) => (
                   <li key={item.label}>
-                    <Link href={item.href} className="transition-colors hover:text-white">
+                    <span
+                      aria-disabled="true"
+                      className="cursor-default text-zinc-600"
+                    >
                       {item.label}
-                    </Link>
+                    </span>
                   </li>
                 ))}
               </ul>

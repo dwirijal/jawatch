@@ -1,4 +1,4 @@
-import { searchMovieCatalog } from '@/lib/movie-source';
+import { searchMovieCatalog } from '@/lib/adapters/movie';
 import { buildEdgeCacheControl } from '@/lib/cloudflare-cache';
 
 export async function GET(request: Request) {

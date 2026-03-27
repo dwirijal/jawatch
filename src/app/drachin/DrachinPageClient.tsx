@@ -10,7 +10,7 @@ import { Paper } from '@/components/atoms/Paper';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { AdSection } from '@/components/organisms/AdSection';
-import { getDrachinHome, getDramaboxHome, type DrachinHomeData, type DramaboxHomeData } from '@/lib/drama-source';
+import { getDrachinHome, getDramaboxHome, type DrachinHomeData, type DramaboxHomeData } from '@/lib/adapters/drama';
 import { getDrachinPlaybackHref } from '@/lib/vertical-drama-store';
 
 const EMPTY_HOME: DrachinHomeData = {
@@ -85,7 +85,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
       : 'Vertical short-drama catalog built for fast scrolling, direct playback, and quick continuation.';
 
   const introCopy =
-    'Semua short drama sekarang dikumpulkan di satu hub. Jalur yang sudah siap akan langsung membuka episode awal atau episode terakhir yang tersimpan di browser, sementara judul lain tetap masuk ke alur watch-first yang sama.';
+    'Hub ini hanya menampilkan lane yang benar-benar tersedia dari provider: featured, latest, popular, dan trending. Tidak ada kategori buatan yang mencampur source berbeda ke bucket editorial baru.';
   const buildDramaboxDetailHref = (item: DramaboxHomeData['latest'][number]) => {
     const params = new URLSearchParams();
     params.set('title', item.title);
@@ -129,7 +129,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
         ) : null}
 
         <div className="app-section-stack">
-          <SectionCard title="Featured Stories" subtitle="Pinned vertical dramas ready to open immediately" icon={Sparkles} mode="rail">
+          <SectionCard title="Featured Stories" subtitle="Featured lane from the external short-drama feed" icon={Sparkles} mode="rail" railVariant="compact">
             {loading
               ? Array.from({ length: 6 }).map((_, index) => <SkeletonCard key={`featured-${index}`} />)
               : drachinData.featured.map((item) => (
@@ -144,7 +144,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
               ))}
           </SectionCard>
 
-          <SectionCard title="Continue Watching" subtitle="Fast-entry episodes that resume from where you left off" icon={Clapperboard}>
+          <SectionCard title="Latest Episodes" subtitle="Latest lane from the external Drachin feed" icon={Clapperboard} gridDensity="default">
             {loading
               ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`latest-${index}`} />)
               : drachinData.latest.map((item) => (
@@ -159,7 +159,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
               ))}
           </SectionCard>
 
-          <SectionCard title="Fresh Stories" subtitle="New vertical dramas inside the shared catalog" icon={Clapperboard}>
+          <SectionCard title="DramaBox Latest" subtitle="Latest lane from the external DramaBox feed" icon={Clapperboard} gridDensity="default">
             {loading
               ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`dramabox-latest-${index}`} />)
               : dramaboxData.latest.map((item) => (
@@ -174,30 +174,34 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
               ))}
           </SectionCard>
 
-          <SectionCard title="Moving Fast" subtitle="Short-drama titles with the strongest momentum right now" icon={Flame}>
+          <SectionCard title="Popular Stories" subtitle="Popular lane from the external Drachin feed" icon={Flame} gridDensity="default">
             {loading
-              ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`moving-fast-${index}`} />)
-              : [
-                  ...drachinData.popular.map((item) => ({
-                    ...item,
-                    href: resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`,
-                  })),
-                  ...dramaboxData.trending.map((item) => ({
-                    ...item,
-                    href: buildDramaboxDetailHref(item),
-                  })),
-                ]
-                  .slice(0, 18)
-                  .map((item) => (
-                    <Card
-                      key={`moving-fast-${item.slug}`}
-                      href={item.href}
-                      image={item.image}
-                      title={item.title}
-                      subtitle={item.subtitle}
-                      theme="drama"
-                    />
-                  ))}
+              ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`popular-${index}`} />)
+              : drachinData.popular.map((item) => (
+                  <Card
+                    key={`popular-${item.slug}`}
+                    href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
+                    image={item.image}
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    theme="drama"
+                  />
+                ))}
+          </SectionCard>
+
+          <SectionCard title="DramaBox Trending" subtitle="Trending lane from the external DramaBox feed" icon={Flame} gridDensity="default">
+            {loading
+              ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`dramabox-trending-${index}`} />)
+              : dramaboxData.trending.map((item) => (
+                  <Card
+                    key={`dramabox-trending-${item.slug}`}
+                    href={buildDramaboxDetailHref(item)}
+                    image={item.image}
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    theme="drama"
+                  />
+                ))}
           </SectionCard>
         </div>
       </main>

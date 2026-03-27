@@ -2,20 +2,17 @@ import HomePageClient, { type HomeRecommendationSection } from './HomePageClient
 import type { HeroItem } from '@/components/organisms/HeroCarousel';
 import type { MixedRecommendationItem } from './HomePageClient';
 import {
-  manga,
-  donghua,
   getHDThumbnail,
   extractSlugFromUrl,
   getMangaSubtype,
-  getKanataAnimeByGenre,
-  getMoviesByGenre,
-  getMovieHome,
+  getNewManga,
+  getPopularManga,
   type MangaSearchResult,
-  type MovieCardItem,
-  type KanataAnime,
-} from '@/lib/api';
-import { getAnimeHomeItems } from '@/lib/anime-source';
-import { getMovieHubData } from '@/lib/movie-source';
+} from '@/lib/adapters/comic';
+import { getAnimeHomeItems, getKanataAnimeByGenre } from '@/lib/adapters/anime';
+import { donghua } from '@/lib/adapters/donghua';
+import { getMovieGenreItems, getMovieHomeSection, getMovieHubData } from '@/lib/adapters/movie';
+import type { MovieCardItem, KanataAnime } from '@/lib/types';
 
 const SECTION_LIMIT = 12;
 
@@ -41,21 +38,32 @@ function uniqueById<T extends { id: string }>(items: T[]): T[] {
   return output;
 }
 
-function toAnimeItems(items: Array<Record<string, unknown>>, limit = SECTION_LIMIT): MixedRecommendationItem[] {
+type AnimeLikeItem = {
+  slug?: string;
+  title?: string;
+  thumb?: string;
+  image?: string;
+  status?: string;
+  episode?: string;
+  type?: string;
+  score?: string | number;
+};
+
+function toAnimeItems(items: AnimeLikeItem[], limit = SECTION_LIMIT): MixedRecommendationItem[] {
   return items
     .map<MixedRecommendationItem | null>((item) => {
-      const slug = String(item.slug ?? '');
-      const title = String(item.title ?? '');
+      const slug = String(item.slug || '');
+      const title = String(item.title || '');
       if (!slug || !title) return null;
-      const subtitleParts = [String(item.status ?? ''), String(item.episode ?? '')].filter(Boolean);
+      const subtitleParts = [String(item.status || ''), String(item.episode || '')].filter(Boolean);
       return {
         id: `anime:${slug}`,
         title,
-        image: getHDThumbnail(String(item.thumb ?? item.image ?? '')),
+        image: getHDThumbnail(String(item.thumb || item.image || '')),
         href: `/anime/${slug}`,
         theme: 'anime' as const,
         subtitle: subtitleParts.join(' • ') || undefined,
-        badgeText: String(item.type ?? 'Anime'),
+        badgeText: String(item.type || 'Anime'),
       };
     })
     .filter(notNull)
@@ -156,18 +164,21 @@ function recommendationToHero(item: MixedRecommendationItem): HeroItem | null {
 }
 
 async function getHomeSections(): Promise<{ sections: HomeRecommendationSection[]; heroItems: HeroItem[] }> {
-  const [animeHomeRaw, movieHub, movieTrendingRaw, mangaPopularRaw, mangaLatestRaw, donghuaHomeRaw, animeActionRaw, movieActionRaw] = await Promise.all([
+  const [animeHomeRaw, movieHub, movieTrendingRaw, mangaPopularResponse, mangaLatestResponse, donghuaHomeRaw, animeActionRaw, movieActionRaw] = await Promise.all([
     getAnimeHomeItems(32).catch(() => []),
     getMovieHubData(32).catch(() => ({ popular: [], latest: [] })),
-    getMovieHome('trending').catch(() => []),
-    manga.getPopular().then((result) => result.comics || []).catch(() => []),
-    manga.getNew(1, 40).then((result) => result.comics || []).catch(() => []),
+    getMovieHomeSection('trending', 32).catch(() => []),
+    getPopularManga().catch(() => ({ comics: [] })),
+    getNewManga(1, 40).catch(() => ({ comics: [] })),
     donghua.getHome().catch(() => ({ latest_updates: [], ongoing_series: [] })),
     getKanataAnimeByGenre('action').catch(() => []),
-    getMoviesByGenre('action').catch(() => []),
+    getMovieGenreItems('action', 32).catch(() => []),
   ]);
 
-  const animeHomeItems = toAnimeItems(animeHomeRaw as Array<Record<string, unknown>>, 24);
+  const mangaPopularRaw = mangaPopularResponse.comics || [];
+  const mangaLatestRaw = mangaLatestResponse.comics || [];
+
+  const animeHomeItems = toAnimeItems(animeHomeRaw, 24);
   const movieLatestItems = toMovieItems(movieHub.latest, 24);
   const moviePopularItems = toMovieItems(movieHub.popular, 24);
   const movieTrendingItems = toMovieItems(movieTrendingRaw, 24);
@@ -202,7 +213,7 @@ async function getHomeSections(): Promise<{ sections: HomeRecommendationSection[
   }
 
   const animeScoreSorted = toAnimeItems(
-    [...(animeHomeRaw as Array<Record<string, unknown>>)].sort((left, right) => toNumber(right.score) - toNumber(left.score)),
+    [...animeHomeRaw].sort((left, right) => toNumber(right.score) - toNumber(left.score)),
     SECTION_LIMIT
   );
 

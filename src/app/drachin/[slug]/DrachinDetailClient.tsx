@@ -10,7 +10,7 @@ import { Paper } from '@/components/atoms/Paper';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { AdSection } from '@/components/organisms/AdSection';
-import { getDrachinDetailBySlug, type DrachinDetailData } from '@/lib/drama-source';
+import { getDrachinDetailBySlug, type DrachinDetailData } from '@/lib/adapters/drama';
 import { getDrachinPlaybackHref } from '@/lib/vertical-drama-store';
 
 interface DrachinDetailClientProps {
@@ -114,7 +114,7 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
               </div>
             </Paper>
 
-            <AdSection />
+            <AdSection theme="drama" />
 
             <section className="space-y-4">
               <SectionHeader

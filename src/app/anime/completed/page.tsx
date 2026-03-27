@@ -1,15 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getCompletedAnimePage, KanataCompletedAnime } from '@/lib/api';
 import { Card } from '@/components/atoms/Card';
 import { AdSection } from '@/components/organisms/AdSection';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { Pagination } from '@/components/molecules/Pagination';
 import { StaggerEntry } from '@/components/molecules/StaggerEntry';
-import { CardGrid } from '@/components/molecules/card';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { CheckCircle2 } from 'lucide-react';
+import { getCompletedAnimePage } from '@/lib/adapters/anime';
+import type { KanataCompletedAnime } from '@/lib/types';
 
 export default function CompletedAnimePage() {
   const [data, setData] = useState<KanataCompletedAnime[]>([]);
@@ -51,18 +51,18 @@ export default function CompletedAnimePage() {
           />
         </section>
 
-        <AdSection />
+        <AdSection theme="anime" />
 
         <div className="app-section-stack">
           {loading ? (
-            <CardGrid>
+            <div className="media-grid" data-grid-density="default">
               {Array.from({ length: 12 }).map((_, i) => (
                 <SkeletonCard key={i} />
               ))}
-            </CardGrid>
+            </div>
           ) : (
             <>
-              <CardGrid>
+              <div className="media-grid" data-grid-density="default">
                 <StaggerEntry className="contents">
                   {data.map((anime, index) => (
                     <Card
@@ -76,7 +76,7 @@ export default function CompletedAnimePage() {
                     />
                   ))}
                 </StaggerEntry>
-              </CardGrid>
+              </div>
 
               <Pagination
                 currentPage={page}

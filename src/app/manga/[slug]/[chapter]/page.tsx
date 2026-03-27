@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, use } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { getMangaChapter, ChapterDetail } from "@/lib/api";
+import { getMangaChapter } from "@/lib/adapters/comic";
 import { saveHistory } from "@/lib/store";
 import { ChevronLeft, ChevronRight, LayoutGrid, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
@@ -14,6 +14,7 @@ import { ReadingSettings } from "@/components/molecules/ReadingSettings";
 import { StateInfo } from "@/components/molecules/StateInfo";
 import { useUIStore } from "@/store/useUIStore";
 import { CircularLoader } from "@/components/atoms/CircularLoader";
+import type { ChapterDetail } from '@/lib/types';
 
 interface PageProps {
   params: Promise<{ slug: string; chapter: string }>;
@@ -63,8 +64,8 @@ export default function ChapterPage({ params }: PageProps) {
           lastLink: `/manga/${slug}/${chapterSlug}`,
           timestamp: Date.now()
         });
-      } catch (err) {
-        console.error(err);
+      } catch {
+        setChapter(null);
       } finally {
         setLoading(false);
       }

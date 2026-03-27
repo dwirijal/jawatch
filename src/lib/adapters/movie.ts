@@ -1,13 +1,14 @@
 import 'server-only';
 
-import type { MovieCardItem } from '@/lib/api';
 import { buildGatewayUrl, gatewayFetchJson, unwrapGatewayData } from '@/lib/gateway';
+import { resolveMovieVisuals } from '@/lib/enrichment';
 import {
   readSnapshotDomainFile,
   readSnapshotPlayback,
   readSnapshotTitle,
   searchSnapshotDomain,
 } from '@/lib/runtime-snapshot';
+import type { MovieCardItem } from '@/lib/types';
 
 type JSONRecord = Record<string, unknown>;
 
@@ -74,7 +75,6 @@ const HUB_REVALIDATE_SECONDS = 60 * 10;
 const DETAIL_REVALIDATE_SECONDS = 60 * 30;
 const SEARCH_REVALIDATE_SECONDS = 60;
 
-// Backward-compatible aliases; prefer MovieDetailData/MovieWatchData in new code.
 export type MovieSupabaseDetail = MovieDetailData;
 export type MovieSupabaseWatch = MovieWatchData;
 
@@ -147,20 +147,6 @@ function splitList(value: unknown): string[] {
 
 function buildMovieGatewayUrl(path: string): string {
   return buildGatewayUrl(path);
-}
-
-function buildTMDBImageUrl(path: unknown, size: 'w500' | 'w780' | 'w1280' = 'w500'): string {
-  const trimmed = readText(path);
-  if (!trimmed) {
-    return '/favicon.ico';
-  }
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed;
-  }
-  if (!trimmed.startsWith('/')) {
-    return '/favicon.ico';
-  }
-  return `https://image.tmdb.org/t/p/${size}${trimmed}`;
 }
 
 function formatRating(value: unknown): string {
@@ -248,7 +234,7 @@ function normalizeMovieCard(item: unknown): MovieCardItem | null {
   return {
     slug,
     title,
-    poster: buildTMDBImageUrl(record.poster ?? record.poster_path ?? record.image ?? record.poster_url),
+    poster: resolveMovieVisuals(record).poster,
     year: readText(record.year) || (readNumber(record.year) != null ? String(readNumber(record.year)) : '') || 'N/A',
     type: 'movie',
     rating: formatRating(record.rating ?? record.provider_rating),
@@ -410,6 +396,25 @@ export async function getMovieHomeItems(limit = 6): Promise<MovieCardItem[]> {
   return normalizeMovieList(payload).slice(0, Math.max(limit, 1));
 }
 
+export async function getMovieHomeSection(
+  section: 'popular' | 'latest' | 'trending' = 'latest',
+  limit = 24
+): Promise<MovieCardItem[]> {
+  const normalizedLimit = Math.max(limit, 1);
+  const snapshot = await readSnapshotDomainFile<MovieHomeSnapshot>('movies', 'home.json');
+  const snapshotItems = snapshot?.[section];
+  if (snapshotItems && snapshotItems.length > 0) {
+    return snapshotItems.slice(0, normalizedLimit);
+  }
+
+  const payload = await gatewayFetchJson<unknown>(`/v1/film/home?section=${section}&limit=${normalizedLimit}`, {
+    edgeCacheKey: `home:movie:${section}:${normalizedLimit}`,
+    edgeCacheTtlSeconds: 900,
+    revalidate: HOME_REVALIDATE_SECONDS,
+  });
+  return normalizeMovieList(payload).slice(0, normalizedLimit);
+}
+
 export async function getMovieHubData(limit = 24): Promise<{ popular: MovieCardItem[]; latest: MovieCardItem[] }> {
   const snapshot = await readSnapshotDomainFile<MovieHomeSnapshot>('movies', 'home.json');
   if (snapshot && ((snapshot.popular?.length ?? 0) > 0 || (snapshot.latest?.length ?? 0) > 0)) {
@@ -471,12 +476,13 @@ function normalizeMovieDetail(payload: unknown, slugFallback = ''): MovieDetailD
   }
 
   const recommendations = normalizeMovieList(record.recommendations ?? record.related ?? record.similar_movies ?? []);
+  const visuals = resolveMovieVisuals(record);
 
   return {
     slug,
     title,
-    poster: buildTMDBImageUrl(record.poster ?? record.poster_path ?? record.image ?? record.poster_url),
-    backdrop: buildTMDBImageUrl(record.backdrop ?? record.backdrop_path, 'w1280'),
+    poster: visuals.poster,
+    backdrop: visuals.backdrop,
     year: readText(record.year) || (readNumber(record.year) != null ? String(readNumber(record.year)) : '') || 'N/A',
     rating: formatRating(record.rating ?? record.provider_rating),
     genres: splitList(record.genres ?? record.genre_names),
@@ -514,12 +520,13 @@ function normalizeMovieWatch(payload: unknown, slugFallback = ''): MovieWatchDat
 
   const mirrors = normalizeMovieMirrors(record);
   const defaultUrl = readText(record.defaultUrl) || readText(record.default_url) || mirrors[0]?.embed_url || '';
+  const visuals = resolveMovieVisuals(record);
 
   return {
     slug,
     title,
-    poster: buildTMDBImageUrl(record.poster ?? record.poster_path ?? record.image ?? record.poster_url),
-    backdrop: buildTMDBImageUrl(record.backdrop ?? record.backdrop_path, 'w1280'),
+    poster: visuals.poster,
+    backdrop: visuals.backdrop,
     year: readText(record.year) || (readNumber(record.year) != null ? String(readNumber(record.year)) : '') || 'N/A',
     rating: formatRating(record.rating ?? record.provider_rating),
     quality: readText(record.quality) || qualityLabelFromCode(record.quality_code),

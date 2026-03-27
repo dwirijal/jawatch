@@ -25,6 +25,7 @@ import { Link } from '@/components/atoms/Link';
 import { AdSection } from '@/components/organisms/AdSection';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { type ThemeType } from '@/lib/utils';
+import type { CardRailVariant } from '@/components/molecules/card/CardRail';
 
 type HeroItem = {
   id: string;
@@ -62,6 +63,12 @@ type HomePageClientProps = {
 };
 
 type SectionLayoutMode = 'rail' | 'grid';
+type CardGridDensity = 'dense' | 'default' | 'comfortable';
+type SectionLayoutConfig = {
+  mode: SectionLayoutMode;
+  railVariant: CardRailVariant;
+  gridDensity: CardGridDensity;
+};
 
 const HERO_TITLE_CLAMP_STYLE: React.CSSProperties = {
   display: '-webkit-box',
@@ -99,12 +106,12 @@ const ICON_MAP: Record<string, LucideIcon> = {
 const HOME_SECTION_MAX_ITEMS = 12;
 const HOME_SECTION_MIN_ITEMS = 4;
 
-const RAIL_SECTION_IDS = new Set<string>([
-  'fresh-week',
-  'blockbuster',
-  'popular-media',
-  'community-lovers',
-]);
+const HOMEPAGE_SECTION_LAYOUTS: Partial<Record<string, SectionLayoutConfig>> = {
+  'fresh-week': { mode: 'rail', railVariant: 'default', gridDensity: 'dense' },
+  'blockbuster': { mode: 'rail', railVariant: 'default', gridDensity: 'dense' },
+  'popular-media': { mode: 'rail', railVariant: 'default', gridDensity: 'dense' },
+  'community-lovers': { mode: 'rail', railVariant: 'default', gridDensity: 'dense' },
+};
 
 function getGridColumnsByViewport(viewportWidth: number): number {
   if (viewportWidth >= 1200) return 8;
@@ -149,16 +156,31 @@ function getThemeFromIconKey(iconKey: string): ThemeType {
   }
 }
 
-function getSectionLayoutMode(section: HomeRecommendationSection): SectionLayoutMode {
-  if (RAIL_SECTION_IDS.has(section.id)) return 'rail';
-  if (section.iconKey === 'fresh' || section.iconKey === 'blockbuster' || section.iconKey === 'popular' || section.iconKey === 'community') return 'rail';
-  return 'grid';
+function getSectionLayoutConfig(section: HomeRecommendationSection): SectionLayoutConfig {
+  const explicit = HOMEPAGE_SECTION_LAYOUTS[section.id];
+  if (explicit) {
+    return explicit;
+  }
+
+  if (section.iconKey === 'fresh' || section.iconKey === 'blockbuster' || section.iconKey === 'popular' || section.iconKey === 'community') {
+    return {
+      mode: 'rail',
+      railVariant: 'default',
+      gridDensity: 'dense',
+    };
+  }
+
+  return {
+    mode: 'grid',
+    railVariant: 'default',
+    gridDensity: 'dense',
+  };
 }
 
 function normalizeHomeSections(sections: HomeRecommendationSection[], gridColumns: number): HomeRecommendationSection[] {
   return sections
     .map((section) => {
-      const layoutMode = getSectionLayoutMode(section);
+      const layoutMode = getSectionLayoutConfig(section).mode;
       const cappedItems = section.items.slice(0, HOME_SECTION_MAX_ITEMS);
 
       if (layoutMode === 'rail') {
@@ -280,10 +302,10 @@ function HeroStage({
 
 function RecommendationSection({
   section,
-  layoutMode,
+  layoutConfig,
 }: {
   section: HomeRecommendationSection;
-  layoutMode: SectionLayoutMode;
+  layoutConfig: SectionLayoutConfig;
 }) {
   if (!section.items?.length) return null;
   const Icon = ICON_MAP[section.iconKey] || Sparkles;
@@ -295,7 +317,9 @@ function RecommendationSection({
       subtitle={section.subtitle}
       icon={Icon}
       viewAllHref={section.viewAllHref}
-      mode={layoutMode}
+      mode={layoutConfig.mode}
+      gridDensity={layoutConfig.gridDensity}
+      railVariant={layoutConfig.railVariant}
     >
       {section.items.map((item) => (
         <Card
@@ -319,7 +343,7 @@ function SectionGrid({ sections }: { sections: HomeRecommendationSection[] }) {
         <RecommendationSection
           key={section.id}
           section={section}
-          layoutMode={getSectionLayoutMode(section)}
+          layoutConfig={getSectionLayoutConfig(section)}
         />
       ))}
     </div>
@@ -361,8 +385,8 @@ export function HomePageView({ heroItems, sections }: HomePageClientProps) {
           <section className="surface-panel h-[44vh] animate-pulse" />
         )}
         <AdSection
-          title="Featured Partner"
-          subtitle="Reserved placement that keeps the same compact editorial rhythm as the rest of the homepage."
+          title="Partner Spotlight"
+          subtitle="Featured campaigns and partner placements that keep the same compact editorial rhythm as the rest of the homepage."
         />
         <SectionGrid sections={normalizedSections} />
       </div>

@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { AnimeSchedule, GenericMediaItem, KanataAnime, getKanataAnimeByGenre, getOngoingAnime, searchAnime } from '@/lib/api';
 import { incrementInterest } from '@/lib/store';
 import { Play, CheckCircle2, List, Sparkles, Flame } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
@@ -16,6 +15,8 @@ import { MediaHubFilters } from '@/components/molecules/MediaHubFilters';
 import { SurpriseButton } from '@/components/molecules/SurpriseButton';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { SectionCard } from '@/components/organisms/SectionCard';
+import { getKanataAnimeByGenre, getOngoingAnime, searchAnime } from '@/lib/adapters/anime';
+import type { AnimeSchedule, GenericMediaItem, KanataAnime } from '@/lib/types';
 
 const ANIME_GENRES = ["Action", "Adventure", "Comedy", "Drama", "Ecchi", "Fantasy", "Horror", "Mystery", "Psychological", "Romance", "School", "Sci-fi", "Seinen", "Shoujo", "Shounen", "Slice-of-life", "Sports", "Supernatural", "Thriller"];
 const YEARS = ["2026", "2025", "2024", "2023", "2022", "2021", "2020", "2019", "2018"];
@@ -169,7 +170,7 @@ export default function AnimePageClient({ initialSchedule, initialOngoing, enabl
             <ReleaseCalendar schedule={schedule} theme="anime" />
           </section>
         )}
-        <SectionCard title="Ongoing series" icon={Sparkles} mode="grid">
+        <SectionCard title="Ongoing series" icon={Sparkles} mode="grid" gridDensity="default">
           {ongoingList.map((item, index) => (
             <Card
               key={`${item.slug}-${index}`}

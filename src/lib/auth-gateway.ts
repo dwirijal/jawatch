@@ -29,6 +29,23 @@ function resolveAppOrigin(): string {
   return normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_APP_ORIGIN);
 }
 
+function shouldSkipBrowserSessionBridge(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  if (process.env.NEXT_PUBLIC_ALLOW_CROSS_ORIGIN_AUTH_BRIDGE === 'true') {
+    return false;
+  }
+
+  try {
+    const authOrigin = new URL(resolveAuthOrigin());
+    return authOrigin.origin !== window.location.origin;
+  } catch {
+    return true;
+  }
+}
+
 function sanitizeRelativePath(nextPath: string | undefined): string {
   const candidate = nextPath?.trim();
   if (!candidate || !candidate.startsWith('/') || candidate.startsWith('//')) {
@@ -57,6 +74,10 @@ function buildSessionUrl(): string {
 
 // Browser-facing session bridge. The provider calls this with credentials included.
 export async function getAuthStatus(): Promise<AuthStatus> {
+  if (shouldSkipBrowserSessionBridge()) {
+    return { authenticated: false, user: null };
+  }
+
   const response = await fetch(buildSessionUrl(), {
     credentials: 'include',
     cache: 'no-store',

@@ -2,7 +2,7 @@
 
 import * as Tabs from "@radix-ui/react-tabs"
 import { Calendar, ChevronRight } from "lucide-react"
-import { AnimeSchedule } from "@/lib/api"
+import type { AnimeSchedule } from "@/lib/types"
 import { Paper } from "@/components/atoms/Paper"
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/atoms/Card"
@@ -64,7 +64,7 @@ export function ReleaseCalendar({ schedule, theme = "anime" }: ReleaseCalendarPr
           {schedule.map((day) => (
             <Tabs.Content key={day.day} value={day.day} className="animate-in fade-in slide-in-from-left-2 px-3 pb-3 outline-none duration-500">
               <ScrollArea className="w-full">
-                <CardRail>
+                <CardRail variant="compact">
                   {day.anime_list.map((item, idx) => (
                     <Card
                       key={`${item.slug}-${idx}`}

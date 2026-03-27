@@ -9,7 +9,7 @@ import { Paper } from '@/components/atoms/Paper';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { getDeadMirrors } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import type { AnimeEpisodeServerOption } from '@/lib/anime-source';
+import type { AnimeEpisodeServerOption } from '@/lib/adapters/anime';
 
 interface EpisodePlaybackPanelProps {
   mirrors: Array<{ label: string; embed_url: string }>;

@@ -8,7 +8,6 @@ import { useAuthGate } from '@/components/hooks/useAuthGate';
 import { getBookmarks, BookmarkItem, MediaType } from '@/lib/store';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { THEME_CONFIG } from '@/lib/utils';
-import { CardGrid } from '@/components/molecules/card';
 
 interface SavedContentSectionProps {
   type?: MediaType;
@@ -77,7 +76,7 @@ export function SavedContentSection({ type, title = "Your Collection", limit }: 
         }
       />
 
-      <CardGrid>
+      <div className="media-grid" data-grid-density="default">
         {items.map((item) => (
           <Card
             key={item.id}
@@ -88,7 +87,7 @@ export function SavedContentSection({ type, title = "Your Collection", limit }: 
             theme={item.type}
           />
         ))}
-      </CardGrid>
+      </div>
     </section>
   );
 }

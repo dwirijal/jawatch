@@ -14,7 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Project specific ignores:
     ".open-next/**",
+    ".superpowers/**",
     "public/*.js",
+    "playwright-report/**",
+    "test-results/**",
   ]),
 ]);
 

@@ -11,9 +11,8 @@ import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { StaggerEntry } from '@/components/molecules/StaggerEntry';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
-import { CardGrid } from '@/components/molecules/card';
 import { ThemeType } from '@/lib/utils';
-import type { GenericMediaItem } from '@/lib/api';
+import type { GenericMediaItem } from '@/lib/types';
 
 interface MediaHubTemplateProps {
   title: string;
@@ -30,6 +29,7 @@ interface MediaHubTemplateProps {
   children?: React.ReactNode;
   extraHeaderActions?: React.ReactNode;
   extraFilters?: React.ReactNode;
+  resultHrefBuilder?: (item: GenericMediaItem) => string;
 }
 
 type ViewMode = 'comfortable' | 'compact';
@@ -48,10 +48,12 @@ export function MediaHubTemplate({
   onClearResults,
   children,
   extraHeaderActions,
-  extraFilters
+  extraFilters,
+  resultHrefBuilder,
 }: MediaHubTemplateProps) {
   const [viewMode, setViewMode] = React.useState<ViewMode>('compact');
   const viewModeStorageKey = `dwizzy_view_mode_${theme}`;
+  const gridDensity = viewMode === 'comfortable' ? 'comfortable' : 'dense';
 
   React.useEffect(() => {
     const saved = window.localStorage.getItem(viewModeStorageKey);
@@ -144,26 +146,28 @@ export function MediaHubTemplate({
               {error ? (
                 <StateInfo type="error" title="Search Error" description={error} />
               ) : results.length > 0 ? (
-                <StaggerEntry className="media-grid">
-                  {results.map((item, index) => (
-                    <Card
-                      key={`${item.slug}-${index}`}
-                      href={`/${theme === 'movie' ? 'movies' : theme}/${item.slug || ''}`}
-                      image={item.thumb || item.image || item.thumbnail || item.poster || ''}
-                      title={item.title}
-                      subtitle={item.episode || item.chapter || item.year}
-                      theme={theme}
-                    />
-                  ))}
-                </StaggerEntry>
+                <div className="media-grid" data-grid-density={gridDensity}>
+                  <StaggerEntry className="contents">
+                    {results.map((item, index) => (
+                      <Card
+                        key={`${item.slug}-${index}`}
+                        href={resultHrefBuilder ? resultHrefBuilder(item) : `/${theme === 'movie' ? 'movies' : theme}/${item.slug || ''}`}
+                        image={item.thumb || item.image || item.thumbnail || item.poster || ''}
+                        title={item.title}
+                        subtitle={item.episode || item.chapter || item.year}
+                        theme={theme}
+                      />
+                    ))}
+                  </StaggerEntry>
+                </div>
               ) : (
                 <StateInfo title="No Content Found" description="Try choosing a different genre or filter." />
               )}
             </section>
           ) : loading ? (
-            <CardGrid>
+            <div className="media-grid" data-grid-density={gridDensity}>
               {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
-            </CardGrid>
+            </div>
           ) : (
             children
           )}

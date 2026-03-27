@@ -1,4 +1,4 @@
-import { donghua } from '@/lib/api';
+import { searchDonghua } from '@/lib/adapters/donghua';
 import { buildEdgeCacheControl } from '@/lib/cloudflare-cache';
 
 export async function GET(request: Request) {
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     return Response.json([]);
   }
 
-  const results = await donghua.search(query).then((items) => items.slice(0, limit)).catch(() => []);
+  const results = await searchDonghua(query).then((items) => items.slice(0, limit)).catch(() => []);
 
   return Response.json(results, {
     headers: {

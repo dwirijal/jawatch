@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Download, Info, MessageSquare } from 'lucide-react';
 import { Link } from '@/components/atoms/Link';
-import { getAnimeDetailBySlug, getAnimeEpisodeBySlug, getAnimeHomeItems } from '@/lib/anime-source';
+import { getAnimeDetailBySlug, getAnimeEpisodeBySlug, getAnimeHomeItems } from '@/lib/adapters/anime';
 import { Badge } from '@/components/atoms/Badge';
 import { Paper } from '@/components/atoms/Paper';
 import { Button } from '@/components/atoms/Button';
@@ -13,7 +13,6 @@ import { BookmarkButton } from '@/components/organisms/BookmarkButton';
 import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { ShareButton } from '@/components/molecules/ShareButton';
-import { CardGrid } from '@/components/molecules/card';
 import { CastRail } from '@/components/organisms/CastRail';
 import MediaDownloadOptionsPanel from '@/components/organisms/MediaDownloadOptionsPanel';
 import { VideoPlaybackScaffold } from '@/components/organisms/VideoPlaybackScaffold';
@@ -318,7 +317,7 @@ export default async function EpisodePage({ params }: PageProps) {
               </Button>
             </div>
 
-            <CardGrid>
+            <div className="media-grid" data-grid-density="default">
               {recommendationItems.slice(0, 12).map((item) => (
                 <Card
                   key={item.slug}
@@ -330,11 +329,11 @@ export default async function EpisodePage({ params }: PageProps) {
                   theme="anime"
                 />
               ))}
-            </CardGrid>
+            </div>
           </section>
         ) : null}
 
-        <AdSection />
+        <AdSection theme="anime" />
 
         <CommunityCTA mediaId={slug} title={episode.title} type="anime" theme="anime" />
       </VideoPlaybackScaffold>

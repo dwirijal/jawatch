@@ -5,7 +5,6 @@ import { List } from 'lucide-react';
 import { Card } from '@/components/atoms/Card';
 import { AdSection } from '@/components/organisms/AdSection';
 import { ScrollArea, ScrollBar } from '@/components/atoms/ScrollArea';
-import { CardGrid } from '@/components/molecules/card';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { cn } from '@/lib/utils';
 
@@ -111,7 +110,7 @@ export default function AnimeIndexPageClient({ groups }: AnimeIndexPageClientPro
                   </span>
                 </div>
 
-                <CardGrid>
+                <div className="media-grid" data-grid-density="comfortable">
                   {group.list.map((anime) => (
                     <Card
                       key={anime.slug}
@@ -123,7 +122,7 @@ export default function AnimeIndexPageClient({ groups }: AnimeIndexPageClientPro
                       theme="anime"
                     />
                   ))}
-                </CardGrid>
+                </div>
               </section>
             ))}
           </div>

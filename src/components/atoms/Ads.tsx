@@ -1,11 +1,12 @@
 import { ShieldAlert } from 'lucide-react';
 import { Paper } from '@/components/atoms/Paper';
-import { cn } from '@/lib/utils';
+import { cn, ThemeType } from '@/lib/utils';
 
 interface AdsProps {
   type?: 'horizontal' | 'vertical' | 'square';
   compact?: boolean;
   className?: string;
+  theme?: ThemeType;
 }
 
 const ADS_SIZES = {
@@ -14,9 +15,10 @@ const ADS_SIZES = {
   square: 'aspect-square w-full',
 } as const;
 
-export function Ads({ type = 'horizontal', compact = false, className }: AdsProps) {
+export function Ads({ type = 'horizontal', compact = false, className, theme }: AdsProps) {
   return (
     <Paper
+      data-theme={theme}
       tone="muted"
       shadow="sm"
       className={cn(
@@ -34,16 +36,16 @@ export function Ads({ type = 'horizontal', compact = false, className }: AdsProp
       >
         <div
           className={cn(
-            'inline-flex items-center justify-center border border-border-subtle bg-surface-2 text-zinc-300',
+            'inline-flex items-center justify-center border border-border-subtle bg-accent-soft text-accent',
             compact ? 'h-9 w-9 rounded-xl' : 'h-12 w-12 rounded-2xl'
           )}
         >
           <ShieldAlert className={cn(compact ? 'h-4 w-4' : 'h-5 w-5')} />
         </div>
         <div className="space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Advertisement</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-accent">Partner Spotlight</p>
           <p className={cn('text-zinc-400', compact ? 'max-w-[14rem] text-[11px] leading-4' : 'max-w-xs text-xs leading-5')}>
-            Reserved placement slot for sponsors, campaigns, or network promotions.
+            Active sponsor campaigns and network promotions appear here when available.
           </p>
         </div>
       </div>

@@ -8,7 +8,7 @@ import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StateInfo } from '@/components/molecules/StateInfo';
-import { getDramaboxDetailByBookId, isDramaboxBookId, type DramaboxDetailData } from '@/lib/drama-source';
+import { getDramaboxDetailByBookId, isDramaboxBookId, type DramaboxDetailData } from '@/lib/adapters/drama';
 
 interface DramaboxDetailClientProps {
   bookId: string;

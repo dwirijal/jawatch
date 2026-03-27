@@ -1,4 +1,4 @@
-import { getMovieGenreItems } from '@/lib/movie-source';
+import { getMovieGenreItems } from '@/lib/adapters/movie';
 import { buildEdgeCacheControl } from '@/lib/cloudflare-cache';
 
 export async function GET(request: Request) {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getKanataAnimeByGenre, getKanataGenres, KanataAnime, KanataGenre } from '@/lib/api';
 import { Film, ArrowLeft, Tag } from 'lucide-react';
 import { Card } from '@/components/atoms/Card';
 import { Button } from '@/components/atoms/Button';
@@ -10,9 +9,10 @@ import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { AdSection } from '@/components/organisms/AdSection';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
-import { CardGrid } from '@/components/molecules/card';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { StateInfo } from '@/components/molecules/StateInfo';
+import { getKanataAnimeByGenre, getKanataGenres } from '@/lib/adapters/anime';
+import type { KanataAnime, KanataGenre } from '@/lib/types';
 
 export default function GenrePage() {
   const params = useParams();
@@ -107,7 +107,7 @@ export default function GenrePage() {
           </Paper>
         </section>
 
-        <AdSection />
+        <AdSection theme="anime" />
 
         <section className="space-y-4 sm:space-y-5">
           <SectionHeader
@@ -116,7 +116,7 @@ export default function GenrePage() {
             icon={Film}
           />
 
-          <CardGrid>
+          <div className="media-grid" data-grid-density="default">
             {loading ? (
               Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
             ) : animeList.length > 0 ? (
@@ -138,7 +138,7 @@ export default function GenrePage() {
                 className="col-span-full py-20"
               />
             )}
-          </CardGrid>
+          </div>
         </section>
       </div>
     </main>

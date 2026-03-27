@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
-import { getMangaDetail, getHDThumbnail, MangaDetail, getJikanEnrichment, JikanEnrichment } from '@/lib/api';
+import { getMangaDetail, getHDThumbnail, getJikanEnrichment } from '@/lib/adapters/comic';
 import { saveRecentManga } from '@/lib/store';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
@@ -20,6 +20,7 @@ import { TitleBlock } from '@/components/atoms/TitleBlock';
 import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
 import { MetadataPanel } from '@/components/organisms/MetadataPanel';
 import { User, Activity, Layout, ShieldAlert, ChevronLeft, Play } from 'lucide-react';
+import type { JikanEnrichment, MangaDetail } from '@/lib/types';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -45,8 +46,7 @@ export default function MangaDetailPage({ params }: PageProps) {
           image: getHDThumbnail(data.image),
           lastReadAt: Date.now(),
         });
-      } catch (err) {
-        console.error(err);
+      } catch {
         setError(true);
       } finally {
         setLoading(false);
@@ -65,8 +65,8 @@ export default function MangaDetailPage({ params }: PageProps) {
       try {
         const data = await getJikanEnrichment('manga', mangaTitle);
         if (!cancelled) setEnrichment(data);
-      } catch (err) {
-        console.error('Jikan fetch failed:', err);
+      } catch {
+        if (!cancelled) setEnrichment(null);
       } finally {
         if (!cancelled) setEnrichmentLoading(false);
       }
@@ -106,6 +106,7 @@ export default function MangaDetailPage({ params }: PageProps) {
 
   return (
     <DetailPageScaffold
+      theme="manga"
       hero={
         <section className="surface-panel-elevated relative overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">

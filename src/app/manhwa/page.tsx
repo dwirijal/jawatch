@@ -1,5 +1,6 @@
 import MangaPageClient from '../manga/MangaPageClient';
-import { filterMangaBySubtype, getNewManga, getPopularManga, type MangaSubtype } from '@/lib/api';
+import { filterMangaBySubtype, getNewManga, getPopularManga } from '@/lib/adapters/comic';
+import type { MangaSubtype } from '@/lib/types';
 
 const VARIANT: MangaSubtype = 'manhwa';
 

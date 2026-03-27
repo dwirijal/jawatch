@@ -2,13 +2,14 @@
 
 import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
-import { getAnimeBatch, KanataAnimeBatch } from '@/lib/api';
+import { getAnimeBatch } from '@/lib/adapters/anime';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { AdSection } from '@/components/organisms/AdSection';
 import { Badge } from '@/components/atoms/Badge';
 import { Paper } from '@/components/atoms/Paper';
 import { ChevronLeft, Download, HardDrive } from 'lucide-react';
+import type { KanataAnimeBatch } from '@/lib/types';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -59,9 +60,9 @@ export default function AnimeBatchPage({ params }: PageProps) {
       <header className="relative overflow-hidden py-16 sm:py-18">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-600/10 to-transparent pointer-events-none" />
         <div className="app-container-wide relative z-10 space-y-6 md:space-y-8">
-          <Button variant="outline" size="sm" asChild className="w-fit rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 hover:bg-surface-elevated">
+          <Button variant="outline" size="sm" asChild className="w-fit rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 hover:bg-surface-elevated">
             <Link href="/anime">
-              <ChevronLeft className="mr-2 h-4 w-4" /> Back to Browse
+              <ChevronLeft className="mr-2 h-4 w-4" /> Back to Anime
             </Link>
           </Button>
           
@@ -92,8 +93,8 @@ export default function AnimeBatchPage({ params }: PageProps) {
       </header>
 
       <main className="app-container-wide space-y-12 pb-20 pt-6 md:space-y-14 md:pt-8">
-        <AdSection />
-        {data.download_list.map((section, sectionIdx) => (
+        <AdSection theme="anime" />
+        {data.download_list.map((section: KanataAnimeBatch['download_list'][number], sectionIdx: number) => (
           <section key={sectionIdx} className="space-y-8">
             <div className="flex items-center gap-4">
               <h2 className="text-xl font-black italic text-zinc-300 uppercase tracking-tighter">{section.title}</h2>

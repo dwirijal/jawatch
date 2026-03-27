@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { notFound, redirect } from 'next/navigation';
 import { LayoutGrid } from 'lucide-react';
 import { Link } from '@/components/atoms/Link';
-import { getMovieWatchBySlug } from '@/lib/movie-source';
+import { getMovieWatchBySlug } from '@/lib/adapters/movie';
 import { AdSection } from '@/components/organisms/AdSection';
 import { Button } from '@/components/atoms/Button';
 import { Badge } from '@/components/atoms/Badge';
@@ -133,7 +133,7 @@ export default async function MovieWatchPage({ params }: PageProps) {
           }
         />
 
-        <AdSection />
+        <AdSection theme="movie" />
 
         <CommunityCTA mediaId={movie.slug} title={movie.title} type="movie" theme="movie" />
       </VideoPlaybackScaffold>

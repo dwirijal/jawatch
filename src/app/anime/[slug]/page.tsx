@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation';
 import { Play, Calendar, Monitor, BookOpen } from 'lucide-react';
-import { getAnimeDetailBySlug } from '@/lib/anime-source';
+import { getAnimeDetailBySlug } from '@/lib/adapters/anime';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { Paper } from '@/components/atoms/Paper';
 import { ScrollArea } from '@/components/atoms/ScrollArea';
 import { StatCard } from '@/components/molecules/StatCard';
+import { StateInfo } from '@/components/molecules/StateInfo';
 import { BookmarkButton } from '@/components/organisms/BookmarkButton';
 import { ShareButton } from '@/components/molecules/ShareButton';
 import { CommunityCTA } from '@/components/molecules/CommunityCTA';
@@ -33,11 +34,12 @@ export default async function AnimeDetailPage({ params }: PageProps) {
 
   return (
     <DetailPageScaffold
+      theme="anime"
       hero={
         <VideoDetailHero
           theme="anime"
           backHref="/anime"
-          backLabel="Back to Browse"
+          backLabel="Back to Anime"
           poster={anime.poster}
           title={anime.title}
           subtitle={anime.alternativeTitle}
@@ -66,7 +68,7 @@ export default async function AnimeDetailPage({ params }: PageProps) {
           }
           primaryAction={
             watchHref ? (
-              <Button variant="anime" size="lg" className="h-12 rounded-2xl px-8" asChild>
+              <Button variant="anime" size="lg" className="h-12 rounded-[var(--radius-lg)] px-8" asChild>
                 <Link href={watchHref}>
                   Start Watching
                   <Play className="ml-2 h-4 w-4 fill-current" />
@@ -123,7 +125,7 @@ export default async function AnimeDetailPage({ params }: PageProps) {
         <DetailSectionHeading
           title="Episode Guide"
           theme="anime"
-          aside={<Badge variant="outline">{anime.episodes.length} Available</Badge>}
+          aside={anime.episodes.length > 0 ? <Badge variant="outline">{anime.episodes.length} Available</Badge> : undefined}
         />
 
         {anime.episodes.length > 0 ? (
@@ -165,9 +167,10 @@ export default async function AnimeDetailPage({ params }: PageProps) {
             </ScrollArea>
           </Paper>
         ) : (
-          <Paper tone="muted" shadow="sm" className="p-8 text-sm font-medium text-zinc-500">
-            Episode data is still being backfilled for this title.
-          </Paper>
+          <StateInfo
+            title="Episode guide unavailable"
+            description="Episode data is still being backfilled for this title."
+          />
         )}
       </section>
 

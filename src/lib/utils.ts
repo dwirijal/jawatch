@@ -79,3 +79,29 @@ export const THEME_CONFIG = {
     glow: "shadow-none",
   }
 } as const;
+
+export function resolveThemeFromPathname(pathname?: string | null): ThemeType {
+  if (!pathname) return 'default';
+  if (pathname === '/movies' || pathname.startsWith('/movies/')) return 'movie';
+  if (pathname === '/anime' || pathname.startsWith('/anime/')) return 'anime';
+  if (pathname === '/donghua' || pathname.startsWith('/donghua/')) return 'donghua';
+  if (
+    pathname === '/drachin' ||
+    pathname.startsWith('/drachin/') ||
+    pathname === '/dramabox' ||
+    pathname.startsWith('/dramabox/')
+  ) {
+    return 'drama';
+  }
+  if (
+    pathname === '/manga' ||
+    pathname.startsWith('/manga/') ||
+    pathname === '/manhwa' ||
+    pathname.startsWith('/manhwa/') ||
+    pathname === '/manhua' ||
+    pathname.startsWith('/manhua/')
+  ) {
+    return 'manga';
+  }
+  return 'default';
+}

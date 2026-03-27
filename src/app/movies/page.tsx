@@ -1,5 +1,5 @@
 import MoviesPageClient from './MoviesPageClient';
-import { getMovieHubData } from '@/lib/movie-source';
+import { getMovieHubData } from '@/lib/adapters/movie';
 
 export default async function MoviesPage() {
   const { popular, latest } = await getMovieHubData(24).catch(() => ({

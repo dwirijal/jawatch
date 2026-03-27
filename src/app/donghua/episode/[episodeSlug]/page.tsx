@@ -3,7 +3,6 @@
 import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { getDonghuaEpisode, getDonghuaDetail, KanataEpisodeDetail, AnichinDetail } from '@/lib/api';
 import { ChevronLeft, ChevronRight, Info, Zap } from 'lucide-react';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
@@ -19,6 +18,8 @@ import { VideoPlaybackScaffold } from '@/components/organisms/VideoPlaybackScaff
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { saveHistory } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { getDonghuaDetail, getDonghuaEpisode } from '@/lib/adapters/donghua';
+import type { AnichinDetail, KanataEpisodeDetail } from '@/lib/types';
 
 interface PageProps {
   params: Promise<{ episodeSlug: string }>;
@@ -212,7 +213,7 @@ export default function DonghuaEpisodePage({ params }: PageProps) {
       ) : null}
 
       <div className="pb-2">
-        <AdSection />
+        <AdSection theme="donghua" />
       </div>
 
       {donghua ? <CommunityCTA mediaId={episode.navigation?.anime_info || episodeSlug} title={donghua.title} type="donghua" theme="donghua" /> : null}

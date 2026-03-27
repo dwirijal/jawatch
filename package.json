@@ -8,6 +8,7 @@
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev",
     "build": "next build",
     "start": "next start",
+    "typecheck": "tsc --noEmit",
     "link:vercel": "npm exec --yes -- vercel link",
     "deploy:vercel": "npm exec --yes -- vercel --prod",
     "preview:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
@@ -16,7 +17,8 @@
     "lint": "eslint",
     "test:movie": "node scripts/movie-dataflow-check.mjs",
     "test:anime": "node scripts/anime-dataflow-check.mjs",
-    "test:donghua": "node scripts/donghua-dataflow-check.mjs"
+    "test:donghua": "node scripts/donghua-dataflow-check.mjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.17.1",
@@ -40,6 +42,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

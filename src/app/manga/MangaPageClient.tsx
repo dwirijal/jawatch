@@ -8,9 +8,7 @@ import {
   getMangaByGenre,
   getNewManga,
   getPopularManga,
-  type MangaSearchResult,
-  type MangaSubtype,
-} from "@/lib/api";
+} from "@/lib/adapters/comic";
 import { incrementInterest } from '@/lib/store';
 import { BookOpen, Sparkles } from "lucide-react";
 import { Card } from "@/components/atoms/Card";
@@ -19,6 +17,7 @@ import { SavedContentSection } from '@/components/organisms/SavedContentSection'
 import { SurpriseButton } from '@/components/molecules/SurpriseButton';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { SectionCard } from '@/components/organisms/SectionCard';
+import type { MangaSearchResult, MangaSubtype } from '@/lib/types';
 
 const COMMON_GENRES = [
   "Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Isekai", "Mystery", "Romance", "School", "Sci-fi", "Seinen", "Shoujo", "Shounen", "Slice of Life", "Sports"
@@ -144,8 +143,8 @@ export default function MangaPageClient({ variant, initialPopular, initialNewest
     try {
       const response = await getMangaByGenre(genre.toLowerCase());
       setResults(toSubtypeItems(response.comics || [], variant));
-    } catch (err) {
-      console.error(err);
+    } catch {
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -195,7 +194,7 @@ export default function MangaPageClient({ variant, initialPopular, initialNewest
       extraHeaderActions={extraHeaderActions}
     >
       <div className="app-section-stack">
-        <SectionCard title={config.trendingTitle} subtitle={config.trendingSubtitle} mode="rail" viewAllHref={`/${variant}`}>
+        <SectionCard title={config.trendingTitle} subtitle={config.trendingSubtitle} mode="rail" railVariant="default" viewAllHref={`/${variant}`}>
           {popular.length === 0 && bootstrapping
             ? Array.from({ length: 6 }).map((_, index) => <SkeletonCard key={`popular-skeleton-${index}`} />)
             : popular.map((mangaItem, index) => (
@@ -213,7 +212,7 @@ export default function MangaPageClient({ variant, initialPopular, initialNewest
 
         <SavedContentSection type="manga" title={config.savedTitle} />
 
-        <SectionCard title={config.newestTitle} subtitle={config.newestSubtitle} icon={Sparkles}>
+        <SectionCard title={config.newestTitle} subtitle={config.newestSubtitle} icon={Sparkles} gridDensity="default">
           {newest.length === 0 && bootstrapping
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`newest-skeleton-${index}`} />)
             : newest.map((mangaItem, index) => (

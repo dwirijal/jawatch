@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Calendar, Clapperboard, Clock, Film, Play } from 'lucide-react';
-import { getMovieDetailBySlug } from '@/lib/movie-source';
+import { getMovieDetailBySlug } from '@/lib/adapters/movie';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { Card } from '@/components/atoms/Card';
@@ -12,7 +12,6 @@ import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
 import { ShareButton } from '@/components/molecules/ShareButton';
-import { CardGrid } from '@/components/molecules/card';
 import { CastRail } from '@/components/organisms/CastRail';
 import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
@@ -33,6 +32,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
 
   return (
     <DetailPageScaffold
+      theme="movie"
       hero={
         <VideoDetailHero
           theme="movie"
@@ -65,7 +65,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
             </>
           }
           primaryAction={
-            <Button variant="movie" size="lg" className="h-11 rounded-[var(--radius-sm)] px-5" asChild>
+            <Button variant="movie" size="lg" className="h-11 rounded-[var(--radius-lg)] px-5" asChild>
               <Link href={watchHubHref}>
                 Start Watching
                 <Play className="ml-2 h-4 w-4 fill-current" />
@@ -125,7 +125,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
             theme="movie"
             aside={<Badge variant="outline">{movie.recommendations.length} Available</Badge>}
           />
-          <CardGrid>
+          <div className="media-grid" data-grid-density="default">
             {movie.recommendations.map((item) => (
               <Card
                 key={item.slug}
@@ -137,7 +137,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
                 theme="movie"
               />
             ))}
-          </CardGrid>
+          </div>
         </section>
       ) : null}
     </DetailPageScaffold>

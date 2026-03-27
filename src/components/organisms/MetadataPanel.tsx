@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Star, TrendingUp, Users, ExternalLink, Play } from 'lucide-react';
-import { JikanEnrichment } from '@/lib/api';
+import type { JikanEnrichment } from '@/lib/types';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { Paper } from '@/components/atoms/Paper';

@@ -13,7 +13,7 @@ import { StateInfo } from '@/components/molecules/StateInfo';
 import { AdSection } from '@/components/organisms/AdSection';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { VideoPlaybackScaffold } from '@/components/organisms/VideoPlaybackScaffold';
-import { getDrachinDetailBySlug, getDrachinEpisodeBySlug, type DrachinDetailData, type DrachinEpisodeData } from '@/lib/drama-source';
+import { getDrachinDetailBySlug, getDrachinEpisodeBySlug, type DrachinDetailData, type DrachinEpisodeData } from '@/lib/adapters/drama';
 import { saveVerticalDramaProgress } from '@/lib/vertical-drama-store';
 
 interface DrachinEpisodeClientProps {
@@ -193,7 +193,7 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
         </div>
       }
     >
-      <AdSection />
+      <AdSection theme="drama" />
 
       <section className="space-y-4">
         <div className="flex items-end justify-between gap-3 border-b border-border-subtle pb-3.5 md:pb-4">

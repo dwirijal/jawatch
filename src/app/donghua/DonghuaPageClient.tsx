@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { AnichinHomeResult, AnichinDonghua, GenericMediaItem, getDonghuaHome } from '@/lib/api';
 import { incrementInterest } from '@/lib/store';
 import { Zap } from 'lucide-react';
 import { Card } from '@/components/atoms/Card';
@@ -10,6 +9,8 @@ import { SavedContentSection } from '@/components/organisms/SavedContentSection'
 import { SurpriseButton } from '@/components/molecules/SurpriseButton';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { SectionCard } from '@/components/organisms/SectionCard';
+import { getDonghuaHome } from '@/lib/adapters/donghua';
+import type { AnichinDonghua, AnichinHomeResult, GenericMediaItem } from '@/lib/types';
 
 interface DonghuaPageClientProps {
   initialData: AnichinHomeResult;
@@ -70,7 +71,7 @@ export default function DonghuaPageClient({ initialData }: DonghuaPageClientProp
       extraHeaderActions={<SurpriseButton type="donghua" theme="donghua" />}
     >
       <div className="app-section-stack">
-        <SectionCard title="Latest Updates" subtitle="Freshly cultivated episodes" mode="rail">
+        <SectionCard title="Latest Updates" subtitle="Freshly cultivated episodes" mode="rail" railVariant="default">
           {data.latest_updates.length === 0 && bootstrapping
             ? Array.from({ length: 6 }).map((_, index) => <SkeletonCard key={`latest-skeleton-${index}`} />)
             : data.latest_updates.map((item: AnichinDonghua, index: number) => (
@@ -87,7 +88,7 @@ export default function DonghuaPageClient({ initialData }: DonghuaPageClientProp
 
         <SavedContentSection type="donghua" title="Saved Donghua" />
 
-        <SectionCard title="Ongoing cultivators">
+        <SectionCard title="Ongoing cultivators" gridDensity="default">
           {data.ongoing_series.length === 0 && bootstrapping
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`ongoing-skeleton-${index}`} />)
             : data.ongoing_series.slice(0, 18).map((item: AnichinDonghua, index: number) => (

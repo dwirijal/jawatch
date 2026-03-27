@@ -1,4 +1,4 @@
-import { fetchSankaJson } from './sanka';
+import { fetchSankaJson } from '@/lib/media';
 
 function readObject(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
@@ -127,7 +127,6 @@ function normalizeDrachinCard(item: unknown): DramaCatalogCard | null {
     title,
     image,
     subtitle: subtitle || undefined,
-    badgeText: 'Drachin',
   };
 }
 
@@ -148,7 +147,6 @@ function normalizeDramaBoxCard(item: unknown): DramaCatalogCard | null {
     title,
     image,
     subtitle: readString(record.total_episode) || undefined,
-    badgeText: 'DramaBox',
     bookId: bookId || undefined,
   };
 }
@@ -213,7 +211,7 @@ export async function getDrachinDetailBySlug(slug: string): Promise<DrachinDetai
 
 export async function getDrachinEpisodeBySlug(slug: string, index = 1): Promise<DrachinEpisodeData | null> {
   const payload = await fetchSankaJson<{ data?: Record<string, unknown> }>(
-    `/anime/drachin/episode/${encodeURIComponent(slug)}?index=${encodeURIComponent(String(index))}`
+    `/anime/drachin/episode/${encodeURIComponent(slug)}?index=${encodeURIComponent(String(index))}`,
   );
   const data = readObject(payload.data);
   if (Object.keys(data).length === 0) {
@@ -267,7 +265,7 @@ export async function getDramaboxDetailByBookId(bookId: string): Promise<Dramabo
 
   try {
     const payload = await fetchSankaJson<{ status?: string; data?: Record<string, unknown> }>(
-      `/anime/dramabox/detail?bookId=${encodeURIComponent(bookId)}`
+      `/anime/dramabox/detail?bookId=${encodeURIComponent(bookId)}`,
     );
     if (readString(payload.status).toLowerCase() !== 'success') {
       return null;

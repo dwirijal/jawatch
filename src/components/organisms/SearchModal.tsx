@@ -11,9 +11,9 @@ import { Input } from '@/components/atoms/Input';
 import { Kbd } from '@/components/atoms/Kbd';
 import { ModalContent, ModalRoot, ModalTitle } from '@/components/atoms/Modal';
 import { Paper } from '@/components/atoms/Paper';
-import { MangaSearchResult, AnichinDonghua } from '@/lib/api';
 import { ScrollArea, ScrollBar } from '@/components/atoms/ScrollArea';
 import { useUIStore } from '@/store/useUIStore';
+import type { AnichinDonghua, MangaSearchResult } from '@/lib/types';
 
 type AnimeSearchModalResult = {
   title: string;
@@ -55,6 +55,7 @@ export function SearchModal() {
   const [loading, setLoading] = React.useState(false);
   const router = useRouter();
   const latestRequestId = React.useRef(0);
+  const inputId = React.useId();
 
   const openSearchResults = React.useCallback(() => {
     const trimmed = query.trim();
@@ -191,9 +192,14 @@ export function SearchModal() {
             <Paper tone="muted" shadow="md" padded={false} className="overflow-hidden rounded-[var(--radius-2xl)]">
               <div className="flex items-center border-b border-border-subtle px-4 py-4">
                 <Search className="mr-3 h-5 w-5 text-zinc-500" />
+                <label htmlFor={inputId} className="sr-only">
+                  Search media
+                </label>
                 <Input
+                  id={inputId}
                   autoFocus
                   placeholder="Search Anime, Movies, Manga, Donghua..."
+                  aria-label="Search media"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(event) => {
@@ -212,6 +218,7 @@ export function SearchModal() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setSearchOpen(false)}
+                    aria-label="Close search"
                     className="h-8 w-8 rounded-[var(--radius-xs)] text-zinc-500"
                   >
                     <X className="h-5 w-5 text-zinc-500" />

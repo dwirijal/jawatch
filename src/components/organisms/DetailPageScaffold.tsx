@@ -1,21 +1,23 @@
 import * as React from 'react';
 import { SplitLayout } from '@/components/atoms/SplitLayout';
 import { AdSection } from '@/components/organisms/AdSection';
+import { ThemeType } from '@/lib/utils';
 
 interface DetailPageScaffoldProps {
   hero: React.ReactNode;
   children: React.ReactNode;
   sidebar?: React.ReactNode;
   footer?: React.ReactNode;
+  theme?: ThemeType;
 }
 
-export function DetailPageScaffold({ hero, children, sidebar, footer }: DetailPageScaffoldProps) {
+export function DetailPageScaffold({ hero, children, sidebar, footer, theme }: DetailPageScaffoldProps) {
   return (
-    <div className="app-shell" data-view-mode="comfortable">
+    <div className="app-shell" data-theme={theme} data-view-mode="comfortable">
       <div className="app-container-wide flex flex-col gap-12 pb-6 pt-8 md:gap-16">
         {hero}
 
-        <AdSection />
+        <AdSection theme={theme} />
 
         {sidebar ? (
           <SplitLayout

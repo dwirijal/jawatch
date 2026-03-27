@@ -1,5 +1,5 @@
 import DonghuaPageClient from './DonghuaPageClient';
-import { getDonghuaHome } from '@/lib/api';
+import { getDonghuaHome } from '@/lib/adapters/donghua';
 
 export default async function DonghuaPage() {
   const initialData = await getDonghuaHome().catch(() => ({

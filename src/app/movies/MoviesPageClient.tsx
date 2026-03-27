@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { incrementInterest } from '@/lib/store';
-import { MovieCardItem, GenericMediaItem } from '@/lib/api';
 import { Film } from 'lucide-react';
 import { Card } from '@/components/atoms/Card';
 import { MediaHubTemplate } from '@/components/organisms/MediaHubTemplate';
@@ -10,6 +9,7 @@ import { SavedContentSection } from '@/components/organisms/SavedContentSection'
 import { SurpriseButton } from '@/components/molecules/SurpriseButton';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { SectionCard } from '@/components/organisms/SectionCard';
+import type { GenericMediaItem, MovieCardItem } from '@/lib/types';
 
 const MOVIE_GENRES = [
   "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary",
@@ -69,7 +69,7 @@ export default function MoviesPageClient({ initialPopular, initialLatest }: Movi
       extraHeaderActions={<SurpriseButton type="movie" theme="movie" />}
     >
       <div className="app-section-stack">
-        <SectionCard title="Most popular" subtitle="Top trending this month" mode="grid" viewAllHref="/movies">
+        <SectionCard title="Most popular" subtitle="Top trending this month" mode="grid" gridDensity="default" viewAllHref="/movies">
           {popular.length === 0
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`popular-skeleton-${index}`} />)
             : popular.slice(0, 12).map((item, index) => (
@@ -87,7 +87,7 @@ export default function MoviesPageClient({ initialPopular, initialLatest }: Movi
 
         <SavedContentSection type="movie" title="Saved Movies" />
 
-        <SectionCard title="Latest releases" mode="grid">
+        <SectionCard title="Latest releases" mode="grid" gridDensity="default">
           {latest.length === 0
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`latest-skeleton-${index}`} />)
             : latest.map((item, index) => (

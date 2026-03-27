@@ -1,4 +1,4 @@
-import { searchAnimeCatalog } from '@/lib/anime-source';
+import { searchAnimeCatalog } from '@/lib/adapters/anime';
 import { buildEdgeCacheControl } from '@/lib/cloudflare-cache';
 
 export async function GET(request: Request) {
