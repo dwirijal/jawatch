@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "generatedAt": "2026-03-27T01:28:33.876Z",
+  "generatedAt": "2026-03-27T01:30:41.137Z",
   "domains": {
     "anime": {
       "hotSlugs": [
@@ -35,7 +35,16 @@
         "war-machine-2026",
         "zootopia-2-2025"
       ],
-      "hotPlaybackSlugs": []
+      "hotPlaybackSlugs": [
+        "demon-slayer-kimetsu-no-yaiba-the-movie-infinity-castle-2025",
+        "kraken-2025",
+        "papa-zola-movie-2025",
+        "peaky-blinders-immortal-man-2026",
+        "shelter-2026",
+        "twilight-of-the-warriors-walled-in-2024",
+        "war-machine-2026",
+        "zootopia-2-2025"
+      ]
     },
     "manga": {
       "hotSlugs": [

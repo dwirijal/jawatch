@@ -258,11 +258,12 @@ function animePlaybackFromRaw(payload, detail) {
   };
 }
 
-function movieDetailFromRaw(detail, catalogMap) {
-  const card = catalogMap.get(text(detail.slug)) || {};
+function movieDetailFromRaw(detail, catalogMap, fallbackSlug = '') {
+  const resolvedSlug = text(detail.slug || detail.url || fallbackSlug);
+  const card = catalogMap.get(resolvedSlug) || {};
   const related = ensureArray(detail.related).map(movieCardFromHome);
   return {
-    slug: text(card.slug || detail.slug),
+    slug: text(card.slug || detail.slug || detail.url || fallbackSlug),
     title: text(detail.title || card.title),
     poster: text(detail.poster || card.poster, '/favicon.ico'),
     backdrop: text(detail.poster || card.poster, '/favicon.ico'),
@@ -438,14 +439,15 @@ async function main() {
 
   for (const entry of movieTitleEntries) {
     const payload = await readPayload(entry);
-    const normalized = movieDetailFromRaw(payload, movieCatalogMap);
+    const normalized = movieDetailFromRaw(payload, movieCatalogMap, entry.name);
+    if (!normalized.slug) continue;
     titleLookup.set(`movies:${normalized.slug}`, normalized);
     await writeJson(path.join(outputRoot, 'titles', 'movies', `${normalized.slug}.json`), normalized);
   }
   for (const entry of moviePlaybackEntries) {
     const payload = await readPayload(entry);
     const detail = titleLookup.get(`movies:${entry.name}`);
-    if (!detail) continue;
+    if (!detail?.slug) continue;
     const normalized = moviePlaybackFromRaw(payload, detail);
     playbackSlugsByDomain.movies.push(normalized.slug);
     await writeJson(path.join(outputRoot, 'playback', 'movies', `${normalized.slug}.json`), normalized);
