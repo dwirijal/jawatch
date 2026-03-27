@@ -42,6 +42,17 @@ async function readJson(filePath) {
   return JSON.parse(raw);
 }
 
+async function readJsonIfExists(filePath) {
+  try {
+    return await readJson(filePath);
+  } catch (error) {
+    if (error && typeof error === 'object' && error.code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
+}
+
 async function ensureEmptyDir(dir) {
   await fs.rm(dir, { recursive: true, force: true });
   await fs.mkdir(dir, { recursive: true });
@@ -50,6 +61,28 @@ async function ensureEmptyDir(dir) {
 async function writeJson(filePath, data) {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+}
+
+async function pathExists(target) {
+  try {
+    await fs.access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function seedExistingOutput(outputDir, backupDir) {
+  if (!(await pathExists(outputDir))) {
+    await fs.mkdir(outputDir, { recursive: true });
+    return false;
+  }
+
+  await fs.rm(backupDir, { recursive: true, force: true });
+  await fs.rename(outputDir, backupDir);
+  await fs.mkdir(outputDir, { recursive: true });
+  await fs.cp(backupDir, outputDir, { recursive: true });
+  return true;
 }
 
 function movieCardFromHome(item) {
@@ -356,6 +389,8 @@ function readingPlaybackFromRaw(chapter) {
 async function main() {
   const manifestPath = path.join(rawRoot, 'manifest.json');
   const rawManifest = await readJson(manifestPath);
+  const previousRoot = path.join(path.dirname(outputRoot), `.${path.basename(outputRoot)}-previous`);
+  const previousManifest = await readJsonIfExists(path.join(outputRoot, 'manifest.json'));
 
   const readPayload = async (entry) => {
     const doc = await readJson(path.join(rawRoot, entry.path));
@@ -379,6 +414,7 @@ async function main() {
   const donghuaTitleEntries = entriesBy('donghua', 'title');
   const donghuaPlaybackEntries = entriesBy('donghua', 'playback');
   const readingDomains = ['manhwaindo', 'komiku'];
+  const hasRawEntriesForDomain = (domain) => rawManifest.entries.some((entry) => entry.domain === domain);
 
   const movieHomeDocs = (await Promise.all(movieHomeEntries.map(readPayload))).flat().map(movieCardFromHome);
   const movieCatalogDocs = (
@@ -416,7 +452,7 @@ async function main() {
     readingPlaybackDocs.push(...(await Promise.all(entriesBy(domain, 'playback').map(readPayload))).flat());
   }
 
-  await ensureEmptyDir(outputRoot);
+  await seedExistingOutput(outputRoot, previousRoot);
 
   const titleLookup = new Map();
   const playbackSlugsByDomain = {
@@ -583,7 +619,17 @@ async function main() {
     },
   };
 
+  if (previousManifest?.domains && typeof previousManifest.domains === 'object') {
+    for (const domain of ['anime', 'movies', 'manga', 'manhwa', 'manhua', 'donghua']) {
+      const rawDomain = domain === 'movies' ? 'movie' : domain;
+      if (!hasRawEntriesForDomain(rawDomain) && previousManifest.domains[domain]) {
+        manifest.domains[domain] = previousManifest.domains[domain];
+      }
+    }
+  }
+
   await writeJson(path.join(outputRoot, 'manifest.json'), manifest);
+  await fs.rm(previousRoot, { recursive: true, force: true });
   console.log(`snapshot bundle written to ${outputRoot}`);
 }
 
