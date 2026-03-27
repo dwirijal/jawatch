@@ -75,7 +75,13 @@ function toSubtypeItems(items: MangaSearchResult[], subtype: MangaSubtype): Mang
 export default function MangaPageClient({ variant, initialPopular, initialNewest }: MangaPageClientProps) {
   const config = VARIANT_CONFIG[variant];
   const [results, setResults] = React.useState<MangaSearchResult[] | null>(null);
-  const [popular, setPopular] = React.useState(() => toSubtypeItems(initialPopular, variant));
+  const [popular, setPopular] = React.useState(() => {
+    const subtypePopular = toSubtypeItems(initialPopular, variant);
+    if (subtypePopular.length > 0 || variant === 'manga') {
+      return subtypePopular;
+    }
+    return toSubtypeItems(initialNewest, variant);
+  });
   const [newest, setNewest] = React.useState(() => toSubtypeItems(initialNewest, variant));
   const [loading, setLoading] = React.useState(false);
   const [bootstrapping, setBootstrapping] = React.useState(popular.length === 0 || newest.length === 0);
@@ -105,11 +111,21 @@ export default function MangaPageClient({ variant, initialPopular, initialNewest
       }
 
       if (popularResult.status === 'fulfilled' && popularResult.value?.comics?.length) {
-        setPopular(toSubtypeItems(popularResult.value.comics, variant));
+        const subtypePopular = toSubtypeItems(popularResult.value.comics, variant);
+        if (subtypePopular.length > 0 || variant === 'manga') {
+          setPopular(subtypePopular);
+        }
       }
 
       if (newestResult.status === 'fulfilled' && newestResult.value?.comics?.length) {
-        setNewest(toSubtypeItems(newestResult.value.comics, variant));
+        const subtypeNewest = toSubtypeItems(newestResult.value.comics, variant);
+        setNewest(subtypeNewest);
+        setPopular((current) => {
+          if (current.length > 0 || variant === 'manga') {
+            return current;
+          }
+          return subtypeNewest;
+        });
       }
     }).finally(() => {
       if (!cancelled) {

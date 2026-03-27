@@ -320,87 +320,64 @@ function normalizeComicList(payload: unknown, forcedType?: MangaSubtype): MangaS
 }
 
 async function getComicDetailFromSanka(slug: string): Promise<MangaDetail> {
-  const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/comic/${encodeURIComponent(slug)}`);
-  const metadata = readObject(payload.metadata);
+  return withRuntimeCache(`comic:detail:live:${slug}`, CACHE_TTL.medium, async () => {
+    const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/comic/${encodeURIComponent(slug)}`);
+    const metadata = readObject(payload.metadata);
 
-  return {
-    creator: readString(payload.creator) || 'Sanka Vollerei',
-    slug: readString(payload.slug) || slug,
-    title: readString(payload.title) || slug,
-    title_indonesian: readString(payload.title_indonesian),
-    image: normalizeSankaAssetUrl(readString(payload.image)),
-    synopsis: readString(payload.synopsis),
-    synopsis_full: readString(payload.synopsis_full) || readString(payload.synopsis),
-    summary: readString(payload.summary),
-    background_story: readString(payload.background_story),
-    metadata: {
-      type: normalizeComicType(metadata.type),
-      author: readString(metadata.author),
-      status: readString(metadata.status),
-      concept: readString(metadata.concept),
-      age_rating: readString(metadata.age_rating),
-      reading_direction: readString(metadata.reading_direction),
-    },
-    genres: (Array.isArray(payload.genres) ? payload.genres : [])
-      .map((genre) => {
-        const record = readObject(genre);
-        return {
-          name: readString(record.name),
-          slug: readString(record.slug) || extractSlugFromUrl(readString(record.link)),
-          link: readString(record.link),
-        };
-      })
-      .filter((genre) => genre.name && genre.slug),
-    chapters: (Array.isArray(payload.chapters) ? payload.chapters : [])
-      .map((chapter) => {
-        const record = readObject(chapter);
-        return {
-          chapter: readString(record.chapter),
-          slug: readString(record.slug) || extractSlugFromUrl(readString(record.link)),
-          link: readString(record.link),
-          date: readString(record.date),
-        };
-      })
-      .filter((chapter) => chapter.chapter && chapter.slug),
-    similar_manga: (Array.isArray(payload.similar_manga) ? payload.similar_manga : [])
-      .map((item) => {
-        const record = readObject(item);
-        const similarSlug = readString(record.slug) || extractSlugFromUrl(readString(record.link));
-        return {
-          title: readString(record.title),
-          slug: similarSlug,
-          link: readString(record.link) || (similarSlug ? `/manga/${similarSlug}/` : ''),
-          image: normalizeSankaAssetUrl(readString(record.image)),
-          type: normalizeComicType(record.type),
-          description: readString(record.description),
-        };
-      })
-      .filter((item) => item.title && item.slug),
-  };
-}
-
-async function getComicTypeLookup(): Promise<Map<string, string>> {
-  return withRuntimeCache('comic:type-lookup', CACHE_TTL.medium, async () => {
-    const lists = await Promise.all(
-      COMIC_SUBTYPES.map(async (subtype) => {
-        try {
-          const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/type/${subtype}?page=1`);
-          return normalizeComicList(payload, subtype);
-        } catch {
-          return [];
-        }
-      })
-    );
-
-    const lookup = new Map<string, string>();
-    for (const item of lists.flat()) {
-      lookup.set(item.slug, item.type);
-      lookup.set(item.link, item.type);
-      if (item.href) {
-        lookup.set(item.href, item.type);
-      }
-    }
-    return lookup;
+    return {
+      creator: readString(payload.creator) || 'Sanka Vollerei',
+      slug: readString(payload.slug) || slug,
+      title: readString(payload.title) || slug,
+      title_indonesian: readString(payload.title_indonesian),
+      image: normalizeSankaAssetUrl(readString(payload.image)),
+      synopsis: readString(payload.synopsis),
+      synopsis_full: readString(payload.synopsis_full) || readString(payload.synopsis),
+      summary: readString(payload.summary),
+      background_story: readString(payload.background_story),
+      metadata: {
+        type: normalizeComicType(metadata.type),
+        author: readString(metadata.author),
+        status: readString(metadata.status),
+        concept: readString(metadata.concept),
+        age_rating: readString(metadata.age_rating),
+        reading_direction: readString(metadata.reading_direction),
+      },
+      genres: (Array.isArray(payload.genres) ? payload.genres : [])
+        .map((genre) => {
+          const record = readObject(genre);
+          return {
+            name: readString(record.name),
+            slug: readString(record.slug) || extractSlugFromUrl(readString(record.link)),
+            link: readString(record.link),
+          };
+        })
+        .filter((genre) => genre.name && genre.slug),
+      chapters: (Array.isArray(payload.chapters) ? payload.chapters : [])
+        .map((chapter) => {
+          const record = readObject(chapter);
+          return {
+            chapter: readString(record.chapter),
+            slug: readString(record.slug) || extractSlugFromUrl(readString(record.link)),
+            link: readString(record.link),
+            date: readString(record.date),
+          };
+        })
+        .filter((chapter) => chapter.chapter && chapter.slug),
+      similar_manga: (Array.isArray(payload.similar_manga) ? payload.similar_manga : [])
+        .map((item) => {
+          const record = readObject(item);
+          const similarSlug = readString(record.slug) || extractSlugFromUrl(readString(record.link));
+          return {
+            title: readString(record.title),
+            slug: similarSlug,
+            link: readString(record.link) || (similarSlug ? `/manga/${similarSlug}/` : ''),
+            image: normalizeSankaAssetUrl(readString(record.image)),
+            type: normalizeComicType(record.type),
+            description: readString(record.description),
+          };
+        })
+        .filter((item) => item.title && item.slug),
+    };
   });
 }
 
@@ -408,16 +385,18 @@ async function applyComicTypeHints(
   items: MangaSearchResult[],
   options: { detailLookupLimit?: number } = {},
 ): Promise<MangaSearchResult[]> {
-  const lookup = await getComicTypeLookup().catch(() => new Map<string, string>());
-  const hinted = items.map((item) => ({
-    ...item,
-    type: lookup.get(item.slug) || lookup.get(item.link) || lookup.get(item.href) || item.type || 'Manga',
-  }));
-
   const detailLookupLimit = options.detailLookupLimit ?? 0;
   if (detailLookupLimit <= 0) {
-    return hinted;
+    return items.map((item) => ({
+      ...item,
+      type: item.type || 'Manga',
+    }));
   }
+
+  const hinted = items.map((item) => ({
+    ...item,
+    type: item.type || 'Manga',
+  }));
 
   const missing = hinted.filter((item) => !item.type || item.type === 'Manga');
   if (missing.length === 0) {
@@ -440,22 +419,6 @@ async function applyComicTypeHints(
     ...item,
     type: resolved.get(item.slug) || item.type || 'Manga',
   }));
-}
-
-function mergeUniqueComicCards(items: MangaSearchResult[]): MangaSearchResult[] {
-  const seen = new Set<string>();
-  const output: MangaSearchResult[] = [];
-
-  for (const item of items) {
-    const key = item.slug || extractSlugFromUrl(item.link) || extractSlugFromUrl(item.href);
-    if (!key || seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    output.push(item);
-  }
-
-  return output;
 }
 
 // --- CORE OBJECTS ---
@@ -785,19 +748,9 @@ export const manga = {
     if (snapshotResults.length > 0) {
       return { comics: snapshotResults };
     }
-    const typedLists = await Promise.all(
-      COMIC_SUBTYPES.map(async (subtype) => {
-        try {
-          const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/type/${subtype}?page=1`);
-          return normalizeComicList(payload, subtype);
-        } catch {
-          return [];
-        }
-      })
-    );
-
+    const payload = await fetchSankaJson<Record<string, unknown>>('/comic/populer');
     return {
-      comics: mergeUniqueComicCards(typedLists.flat()),
+      comics: await applyComicTypeHints(normalizeComicList(payload), { detailLookupLimit: 12 }),
     };
   }),
   getNew: (p = 1, l = 10) => withRuntimeCache(`manga:new:${p}:${l}`, CACHE_TTL.medium, async () => {
@@ -817,7 +770,7 @@ export const manga = {
     const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/terbaru?page=${p}&limit=${l}`);
     const normalized = normalizeComicList(payload);
     return {
-      comics: (await applyComicTypeHints(normalized, { detailLookupLimit: p === 1 ? Math.min(l, 8) : 0 })).slice(0, l),
+      comics: (await applyComicTypeHints(normalized, { detailLookupLimit: normalized.length })).slice(0, l),
     };
   }),
   getRecommendations: (slug: string) => withRuntimeCache(`manga:recommendations:${slug}`, CACHE_TTL.medium, async () => {
