@@ -39,12 +39,12 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
         if (!cancelled) {
           setDetail(detailData);
           setEpisode(episodeData);
-          setError(detailData && episodeData ? null : 'Drachin playback data is unavailable for this episode.');
+          setError(detailData && episodeData ? null : 'Playback data is unavailable for this episode.');
         }
       })
       .catch((cause) => {
         if (!cancelled) {
-          setError(cause instanceof Error ? cause.message : 'Failed to load Drachin playback.');
+          setError(cause instanceof Error ? cause.message : 'Failed to load playback.');
         }
       })
       .finally(() => {
@@ -83,7 +83,7 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
     return (
       <div className="app-shell bg-background text-white">
         <main className="app-container-immersive py-6">
-          <StateInfo type="error" title="Playback unavailable" description={error || 'This Drachin episode could not be loaded.'} />
+          <StateInfo type="error" title="Playback unavailable" description={error || 'This episode could not be loaded.'} />
         </main>
       </div>
     );
@@ -103,7 +103,7 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
       subtitle={
         <>
           <Badge variant="drama" className="px-2 py-0.5 text-[10px]">Episode {episode.episode}</Badge>
-          <p className="text-[10px] md:text-xs">Vertical drama flow with auto-resume and auto-next</p>
+          <p className="text-[10px] md:text-xs">Scroll-first playback with auto-resume and auto-next</p>
         </>
       }
       headerActions={
@@ -144,8 +144,7 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
 
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="drama">Drachin</Badge>
-                  <Badge variant="outline">{detail.totalEpisodes} Episodes</Badge>
+                  <Badge variant="drama">{detail.totalEpisodes} Episodes</Badge>
                   <Badge variant="outline">EP {episode.episode}</Badge>
                 </div>
                 <h2 className="text-lg font-semibold tracking-tight text-white">{detail.title}</h2>

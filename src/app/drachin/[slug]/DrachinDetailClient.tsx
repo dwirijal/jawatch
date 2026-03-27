@@ -30,12 +30,12 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
       .then((nextData) => {
         if (!cancelled) {
           setDetail(nextData);
-          setError(nextData ? null : 'Drachin detail is unavailable for this title.');
+          setError(nextData ? null : 'Story detail is unavailable for this title.');
         }
       })
       .catch((cause) => {
         if (!cancelled) {
-          setError(cause instanceof Error ? cause.message : 'Failed to load Drachin detail.');
+          setError(cause instanceof Error ? cause.message : 'Failed to load story detail.');
         }
       })
       .finally(() => {
@@ -72,7 +72,7 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
             </div>
           </Paper>
         ) : error || !detail ? (
-          <StateInfo type="error" title="Drachin detail unavailable" description={error || 'The requested Drachin title could not be loaded.'} />
+          <StateInfo type="error" title="Story detail unavailable" description={error || 'The requested story could not be loaded.'} />
         ) : (
           <>
             <Paper tone="muted" shadow="sm" className="overflow-hidden p-5 md:p-6">
@@ -92,8 +92,7 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
 
                 <div className="space-y-4 md:space-y-5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="drama">Drachin</Badge>
-                    <Badge variant="outline">{detail.totalEpisodes} Episodes</Badge>
+                    <Badge variant="drama">{detail.totalEpisodes} Episodes</Badge>
                     {detail.tags.slice(0, 3).map((tag) => (
                       <Badge key={tag} variant="outline">{tag}</Badge>
                     ))}

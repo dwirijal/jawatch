@@ -68,7 +68,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
       <main className="app-container-wide app-section-stack py-6 md:py-8">
         <div className="flex items-center gap-3">
           <Button variant="outline" asChild>
-            <Link href="/dramabox">Back to DramaBox</Link>
+            <Link href="/drachin">Back to Drama China</Link>
           </Button>
         </div>
 
@@ -98,14 +98,13 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
                 </div>
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="drama">DramaBox</Badge>
-                    {fallbackSubtitle ? <Badge variant="outline">{fallbackSubtitle}</Badge> : null}
+                    {fallbackSubtitle ? <Badge variant="drama">{fallbackSubtitle}</Badge> : null}
                   </div>
                   <div className="space-y-2">
                     <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">{fallbackTitle}</h1>
                     <p className="max-w-3xl text-sm leading-7 text-zinc-400 md:text-base">
-                      This story is already part of the shared drama catalog. Full episode playback for this title is still being prepared, so
-                      use the hub for now while this page fills in.
+                      This story is already part of Drama China. Episode playback for this title is still being prepared, so keep exploring the
+                      shared catalog while this page fills in.
                     </p>
                   </div>
                 </div>
@@ -135,8 +134,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
               </div>
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="drama">DramaBox</Badge>
-                  {detail.totalEpisodes ? <Badge variant="outline">{detail.totalEpisodes}</Badge> : null}
+                  {detail.totalEpisodes ? <Badge variant="drama">{detail.totalEpisodes}</Badge> : null}
                 </div>
                 <div className="space-y-2">
                   <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">{detail.title}</h1>

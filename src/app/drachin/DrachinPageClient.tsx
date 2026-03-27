@@ -81,15 +81,11 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
 
   const description =
     entry === 'dramabox'
-      ? 'DramaBox entry into the shared vertical-drama catalog, alongside fast-resume Drachin playback lanes.'
+      ? 'Alias route for the unified vertical-drama catalog.'
       : 'Vertical short-drama catalog built for fast scrolling, direct playback, and quick continuation.';
 
   const introCopy =
-    entry === 'dramabox'
-      ? 'DramaBox dan Drachin sekarang hidup di satu hub. Jalur ini tetap mengakui konteks DramaBox, tapi seluruh catalog short drama dibaca sebagai satu permukaan watch-first yang sama.'
-      : 'Semua short drama sekarang dikumpulkan di satu hub. Judul Drachin langsung membuka episode 1 atau episode terakhir yang tersimpan di browser, sementara lane DramaBox tetap ikut masuk ke alur discovery yang sama.';
-
-  const badgeLabel = entry === 'dramabox' ? 'DramaBox Entry' : 'Vertical Drama';
+    'Semua short drama sekarang dikumpulkan di satu hub. Jalur yang sudah siap akan langsung membuka episode awal atau episode terakhir yang tersimpan di browser, sementara judul lain tetap masuk ke alur watch-first yang sama.';
   const buildDramaboxDetailHref = (item: DramaboxHomeData['latest'][number]) => {
     const params = new URLSearchParams();
     params.set('title', item.title);
@@ -114,7 +110,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
         theme="drama"
         containerClassName="app-container-wide"
       >
-        <Badge variant="drama">{badgeLabel}</Badge>
+        <Badge variant="drama">Vertical Drama</Badge>
       </MediaHubHeader>
 
       <main className="app-container-wide mt-8 space-y-10 sm:mt-10 md:space-y-12">
@@ -148,7 +144,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
               ))}
           </SectionCard>
 
-          <SectionCard title="Drachin Episodes" subtitle="Fast-entry episodes that resume from where you left off" icon={Clapperboard}>
+          <SectionCard title="Continue Watching" subtitle="Fast-entry episodes that resume from where you left off" icon={Clapperboard}>
             {loading
               ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`latest-${index}`} />)
               : drachinData.latest.map((item) => (
@@ -163,7 +159,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
               ))}
           </SectionCard>
 
-          <SectionCard title="DramaBox Latest" subtitle="Fresh vertical-drama titles inside the shared catalog" icon={Clapperboard}>
+          <SectionCard title="Fresh Stories" subtitle="New vertical dramas inside the shared catalog" icon={Clapperboard}>
             {loading
               ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`dramabox-latest-${index}`} />)
               : dramaboxData.latest.map((item) => (

@@ -46,6 +46,21 @@ function isDirectMediaUrl(url: string): boolean {
   return /\.(mp4|webm|ogg)(?:[?#]|$)/i.test(url);
 }
 
+function presentMirrorLabel(label: string, index: number): string {
+  const trimmed = label.trim();
+  const qualityMatch = trimmed.match(/\b(\d{3,4}p)\b/i);
+  if (qualityMatch) {
+    return qualityMatch[1].toUpperCase();
+  }
+
+  const genericMatch = trimmed.match(/\b(4k|uhd|fhd|hd|sd|hls|mp4)\b/i);
+  if (genericMatch) {
+    return genericMatch[1].toUpperCase();
+  }
+
+  return `Option ${index + 1}`;
+}
+
 export function VideoPlayer({
   mirrors,
   defaultUrl,
@@ -221,7 +236,7 @@ export function VideoPlayer({
               <div className={cn("rounded-lg p-2", accent.panel)}>
                 <Layers className="w-4 h-4" />
               </div>
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Source</h2>
+              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Watch Options</h2>
             </div>
             <div className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-2">
                 <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Auto Play</span>
@@ -236,7 +251,7 @@ export function VideoPlayer({
                 <Button key={idx} variant={isActive ? theme as ThemeType : "outline"} onClick={() => handleMirrorChange(mirror.embed_url, mirror.label)} className={cn("relative overflow-hidden rounded-[var(--radius-sm)] px-6 text-[10px] uppercase tracking-[0.1em]", !isActive && "border-border-subtle bg-surface-1 hover:bg-surface-elevated", isDead && !isActive && "opacity-40 grayscale")}>
                   <div className="flex items-center gap-2 relative z-10">
                     {isDead ? <AlertCircle className="w-3 h-3 text-red-500" /> : <Play className={cn("w-3 h-3", isActive ? "fill-white" : "fill-zinc-500")} />}
-                    {mirror.label}
+                    {presentMirrorLabel(mirror.label, idx)}
                   </div>
                 </Button>
               );

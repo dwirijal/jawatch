@@ -42,7 +42,6 @@ const VIDEO_GROUP: NavigationGroup = {
     { label: 'Anime', href: '/anime', description: 'Anime discovery and episodes.' },
     { label: 'Donghua', href: '/donghua', description: 'Chinese animation hub.' },
     { label: 'Drama China', href: '/drachin', description: 'Unified vertical short-drama hub.' },
-    { label: 'DramaBox', href: '/dramabox', description: 'DramaBox entry into the shared drama hub.' },
   ],
 };
 
