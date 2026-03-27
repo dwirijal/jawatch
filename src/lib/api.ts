@@ -5,6 +5,7 @@ import {
   readSnapshotTitle,
   searchSnapshotDomain,
 } from './runtime-snapshot';
+import { fetchSankaJson } from './sanka';
 
 /**
  * Secure & Standardized API Engine.
@@ -302,40 +303,160 @@ export const donghua = {
     if (snapshot) {
       return snapshot;
     }
-    return fetchJson<AnichinHomeResult>(`${API_CONFIG.D}/home`, {
-      edgeCacheKey: 'home:donghua',
-      edgeCacheTtlSeconds: 900,
-    });
+    const payload = await fetchSankaJson<{
+      latest_release?: Array<{
+        title?: string;
+        slug?: string;
+        poster?: string;
+        current_episode?: string;
+        status?: string;
+        type?: string;
+      }>;
+      ongoing_series?: Array<{
+        title?: string;
+        slug?: string;
+        poster?: string;
+        current_episode?: string;
+        episode?: string;
+        status?: string;
+        type?: string;
+      }>;
+    }>('/anime/donghua/home/1');
+
+    const latestUpdates = (payload.latest_release || []).map((item) => ({
+      title: item.title || '',
+      slug: extractSlugFromUrl(item.slug || ''),
+      thumb: item.poster || '',
+      episode: item.current_episode || '',
+      image: item.poster || '',
+      status: item.status || '',
+      type: item.type || 'Donghua',
+    })).filter((item) => item.slug && item.title);
+
+    const ongoingSeries = (payload.ongoing_series || []).map((item) => ({
+      title: item.title || '',
+      slug: extractSlugFromUrl(item.slug || ''),
+      thumb: item.poster || '',
+      episode: item.episode || item.current_episode || '',
+      image: item.poster || '',
+      status: item.status || '',
+      type: item.type || 'Donghua',
+    })).filter((item) => item.slug && item.title);
+
+    return {
+      latest_updates: latestUpdates,
+      ongoing_series: ongoingSeries,
+    };
   }),
   getDetail: async (slug: string) => {
     const snapshot = await readSnapshotTitle<AnichinDetail>('donghua', slug);
     if (snapshot) {
       return snapshot;
     }
-    return fetchJson<AnichinDetail>(`${API_CONFIG.D}/detail/${slug}`, {
-      edgeCacheKey: `detail:donghua:${slug}`,
-      edgeCacheTtlSeconds: 1800,
-    });
+    const payload = await fetchSankaJson<{
+      title?: string;
+      poster?: string;
+      synopsis?: string;
+      genres?: Array<{ name?: string }>;
+      episodes_list?: Array<{ slug?: string; title?: string; episode?: string; date?: string }>;
+      studio?: string;
+      status?: string;
+      episodes_count?: string;
+      season?: string;
+      country?: string;
+      network?: string;
+      duration?: string;
+      released?: string;
+      updated_on?: string;
+    }>(`/anime/donghua/detail/${encodeURIComponent(slug)}`);
+
+    return {
+      title: payload.title || slug,
+      meta: {
+        studio: payload.studio || 'Unknown',
+        status: payload.status || 'Unknown',
+        episodes: payload.episodes_count || String(payload.episodes_list?.length || 0) || 'Unknown',
+        season: payload.season || 'Unknown',
+        country: payload.country || 'China',
+        network: payload.network || 'Unknown',
+        duration: payload.duration || 'Unknown',
+        released: payload.released || 'Unknown',
+        updated_on: payload.updated_on || 'Unknown',
+      },
+      episodes: (payload.episodes_list || []).map((entry) => ({
+        slug: extractSlugFromUrl(entry.slug || ''),
+        title: entry.title || entry.episode || '',
+        episode: entry.episode || '',
+        date: entry.date || '',
+      })).filter((entry) => entry.slug && entry.title),
+      synopsis: payload.synopsis || '',
+      thumb: payload.poster || '',
+      genres: (payload.genres || []).map((genre) => genre.name || '').filter(Boolean),
+    };
   },
   search: async (q: string) => {
     const snapshot = await searchSnapshotDomain<AnichinDonghua>('donghua', q, 24);
     if (snapshot.length > 0) {
       return snapshot;
     }
-    return fetchJson<AnichinDonghua[] | { data?: AnichinDonghua[] }>(`${API_CONFIG.D}/search?q=${encodeURIComponent(q)}`, {
-      edgeCacheKey: `search:donghua:${q.trim().toLowerCase()}`,
-      edgeCacheTtlSeconds: 300,
-    }).then((response) => Array.isArray(response) ? response : response.data || []);
+    const payload = await fetchSankaJson<{ data?: Array<{
+      title?: string;
+      slug?: string;
+      poster?: string;
+      status?: string;
+      type?: string;
+    }> }>(`/anime/donghua/search/${encodeURIComponent(q)}/1`);
+    return (payload.data || []).map((item) => ({
+      title: item.title || '',
+      slug: extractSlugFromUrl(item.slug || ''),
+      thumb: item.poster || '',
+      episode: '',
+      image: item.poster || '',
+      status: item.status || '',
+      type: item.type || 'Donghua',
+    })).filter((item) => item.slug && item.title);
   },
   getEpisode: async (slug: string) => {
     const snapshot = await readSnapshotPlayback<KanataEpisodeDetail>('donghua', slug);
     if (snapshot) {
       return snapshot;
     }
-    return fetchJson<KanataEpisodeDetail>(`${API_CONFIG.D}/episode/${slug}`, {
-      edgeCacheKey: `playback:donghua:${slug}`,
-      edgeCacheTtlSeconds: 300,
-    });
+    const payload = await fetchSankaJson<{
+      episode?: string;
+      streaming?: {
+        main_url?: string;
+        servers?: Array<{ name?: string; url?: string }>;
+      };
+      navigation?: {
+        previous_episode?: string | null;
+        next_episode?: string | null;
+        all_episodes?: string | null;
+      };
+      donghua_details?: {
+        title?: string;
+        slug?: string;
+      };
+    }>(`/anime/donghua/episode/${encodeURIComponent(slug)}`);
+
+    const mirrors = (payload.streaming?.servers || [])
+      .map((server) => ({
+        label: server.name || 'Source',
+        embed_url: server.url || '',
+      }))
+      .filter((server) => server.embed_url);
+
+    const defaultEmbed = payload.streaming?.main_url || mirrors[0]?.embed_url || '';
+    return {
+      title: payload.episode || slug,
+      default_embed: defaultEmbed,
+      mirrors,
+      slug,
+      navigation: {
+        next: extractSlugFromUrl(payload.navigation?.next_episode || ''),
+        prev: extractSlugFromUrl(payload.navigation?.previous_episode || ''),
+        anime_info: extractSlugFromUrl(payload.donghua_details?.slug || payload.navigation?.all_episodes || ''),
+      },
+    };
   },
 };
 
