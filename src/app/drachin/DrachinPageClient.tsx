@@ -24,7 +24,11 @@ const EMPTY_DRAMABOX_HOME: DramaboxHomeData = {
   trending: [],
 };
 
-export default function DrachinPageClient() {
+interface DrachinPageClientProps {
+  entry?: 'drachin' | 'dramabox';
+}
+
+export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClientProps) {
   const [drachinData, setDrachinData] = React.useState<DrachinHomeData>(EMPTY_HOME);
   const [dramaboxData, setDramaboxData] = React.useState<DramaboxHomeData>(EMPTY_DRAMABOX_HOME);
   const [loading, setLoading] = React.useState(true);
@@ -75,24 +79,33 @@ export default function DrachinPageClient() {
     setResumeReady(true);
   }, []);
 
+  const description =
+    entry === 'dramabox'
+      ? 'DramaBox entry into the shared vertical-drama catalog, alongside fast-resume Drachin playback lanes.'
+      : 'Vertical short-drama catalog built for fast scrolling, direct playback, and quick continuation.';
+
+  const introCopy =
+    entry === 'dramabox'
+      ? 'DramaBox dan Drachin sekarang hidup di satu hub. Jalur ini tetap mengakui konteks DramaBox, tapi seluruh catalog short drama dibaca sebagai satu permukaan watch-first yang sama.'
+      : 'Semua short drama sekarang dikumpulkan di satu hub. Judul Drachin langsung membuka episode 1 atau episode terakhir yang tersimpan di browser, sementara lane DramaBox tetap ikut masuk ke alur discovery yang sama.';
+
+  const badgeLabel = entry === 'dramabox' ? 'DramaBox Entry' : 'Vertical Drama';
+
   return (
     <div className="app-shell" data-theme="drama">
       <MediaHubHeader
         title="Drama China"
-        description="Vertical short-drama catalog built for fast scrolling, direct playback, and quick continuation."
+        description={description}
         icon={Clapperboard}
         theme="drama"
         containerClassName="app-container-wide"
       >
-        <Badge variant="drama">Vertical Drama</Badge>
+        <Badge variant="drama">{badgeLabel}</Badge>
       </MediaHubHeader>
 
       <main className="app-container-wide mt-8 space-y-10 sm:mt-10 md:space-y-12">
         <Paper tone="muted" shadow="sm" className="p-4 md:p-5">
-          <p className="text-sm leading-6 text-zinc-400">
-            Semua short drama sekarang dikumpulkan di satu hub. Judul Drachin langsung membuka episode 1 atau episode terakhir
-            yang tersimpan di browser, sementara lane DramaBox tetap ikut masuk ke alur discovery yang sama.
-          </p>
+          <p className="text-sm leading-6 text-zinc-400">{introCopy}</p>
         </Paper>
 
         <AdSection />

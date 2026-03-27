@@ -42,7 +42,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
       <main className="app-container-wide app-section-stack py-6 md:py-8">
         <div className="flex items-center gap-3">
           <Button variant="outline" asChild>
-            <Link href="/drachin">Back to Drama China</Link>
+            <Link href="/dramabox">Back to DramaBox</Link>
           </Button>
         </div>
 

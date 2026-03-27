@@ -3,5 +3,5 @@
 import DrachinPageClient from '../drachin/DrachinPageClient';
 
 export default function DramaboxPageClient() {
-  return <DrachinPageClient />;
+  return <DrachinPageClient entry="dramabox" />;
 }
