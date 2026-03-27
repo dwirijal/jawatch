@@ -415,6 +415,7 @@ async function main() {
   const donghuaPlaybackEntries = entriesBy('donghua', 'playback');
   const readingDomains = ['manhwaindo', 'komiku'];
   const hasRawEntriesForDomain = (domain) => rawManifest.entries.some((entry) => entry.domain === domain);
+  const hasPreservedDomain = (domain) => Boolean(previousManifest?.domains?.[domain]);
 
   const movieHomeDocs = (await Promise.all(movieHomeEntries.map(readPayload))).flat().map(movieCardFromHome);
   const movieCatalogDocs = (
@@ -464,14 +465,17 @@ async function main() {
     donghua: [],
   };
 
-  await writeJson(path.join(outputRoot, 'domains', 'movies', 'home.json'), {
-    popular: allMovieCards.slice(0, 24),
-    latest: allMovieCards.slice(0, 24),
-    trending: allMovieCards.slice(0, 24),
-    items: allMovieCards.slice(0, 24),
-  });
-  await writeJson(path.join(outputRoot, 'domains', 'movies', 'catalog.json'), { items: allMovieCards });
-  await writeJson(path.join(outputRoot, 'domains', 'movies', 'search.json'), { items: allMovieCards });
+  const canRewriteMovieSummaries = allMovieCards.length > 0 || !hasPreservedDomain('movies');
+  if (canRewriteMovieSummaries) {
+    await writeJson(path.join(outputRoot, 'domains', 'movies', 'home.json'), {
+      popular: allMovieCards.slice(0, 24),
+      latest: allMovieCards.slice(0, 24),
+      trending: allMovieCards.slice(0, 24),
+      items: allMovieCards.slice(0, 24),
+    });
+    await writeJson(path.join(outputRoot, 'domains', 'movies', 'catalog.json'), { items: allMovieCards });
+    await writeJson(path.join(outputRoot, 'domains', 'movies', 'search.json'), { items: allMovieCards });
+  }
 
   for (const entry of movieTitleEntries) {
     const payload = await readPayload(entry);
