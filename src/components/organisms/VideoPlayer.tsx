@@ -16,7 +16,7 @@ interface VideoPlayerProps {
   onMirrorChange?: (url: string, label: string) => void;
   showMirrorPanel?: boolean;
   title?: string;
-  theme?: 'anime' | 'donghua' | 'movie';
+  theme?: 'anime' | 'donghua' | 'movie' | 'drama';
   onNext?: () => void;
   hasNext?: boolean;
 }
@@ -34,7 +34,15 @@ const THEME_ACCENT = {
     spinner: 'border-indigo-600',
     panel: 'bg-indigo-600/15 text-indigo-300',
   },
+  drama: {
+    spinner: 'border-rose-600',
+    panel: 'bg-rose-600/15 text-rose-300',
+  },
 } as const;
+
+function isDirectMediaUrl(url: string): boolean {
+  return /\.(mp4|webm|ogg)(?:[?#]|$)/i.test(url);
+}
 
 export function VideoPlayer({
   mirrors,
@@ -56,6 +64,7 @@ export function VideoPlayer({
   const { isTheaterMode, setTheaterMode, isLightsDimmed, setLightsDimmed, device } = useUIStore();
   const activeUrl = isControlled ? currentUrl : internalUrl;
   const accent = THEME_ACCENT[theme];
+  const useNativePlayer = isDirectMediaUrl(activeUrl || '');
 
   React.useEffect(() => {
     setDeadMirrors(getDeadMirrors());
@@ -107,8 +116,8 @@ export function VideoPlayer({
       switch(e.key.toLowerCase()) {
         case 't': toggleTheater(); break;
         case 'l': toggleLights(); break;
-        case 'f': 
-          document.querySelector('iframe')?.requestFullscreen();
+        case 'f':
+          (document.querySelector('iframe, video') as HTMLElement | null)?.requestFullscreen();
           break;
       }
     };
@@ -134,15 +143,27 @@ export function VideoPlayer({
         isLightsDimmed && !isTheaterMode && "ring-4 ring-zinc-100/10"
       )}>
         {activeUrl ? (
-          <iframe
-            key={key}
-            src={activeUrl}
-            className="w-full h-full"
-            allowFullScreen
-            scrolling="no"
-            allow="autoplay; encrypted-media"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-presentation"
-          />
+          useNativePlayer ? (
+            <video
+              key={key}
+              src={activeUrl}
+              className="h-full w-full bg-black object-contain"
+              controls
+              autoPlay={autoPlay}
+              playsInline
+              preload="metadata"
+            />
+          ) : (
+            <iframe
+              key={key}
+              src={activeUrl}
+              className="w-full h-full"
+              allowFullScreen
+              scrolling="no"
+              allow="autoplay; encrypted-media"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-presentation"
+            />
+          )
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center bg-surface-1">
              <div className={cn("mb-4 h-12 w-12 animate-spin rounded-full border-4 border-t-transparent", accent.spinner)} />

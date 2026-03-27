@@ -41,6 +41,8 @@ const VIDEO_GROUP: NavigationGroup = {
     { label: 'Film', href: '/movies', description: 'Movies and watch pages.' },
     { label: 'Anime', href: '/anime', description: 'Anime discovery and episodes.' },
     { label: 'Donghua', href: '/donghua', description: 'Chinese animation hub.' },
+    { label: 'Drachin', href: '/drachin', description: 'Short-form dubbed drama episodes.' },
+    { label: 'DramaBox', href: '/dramabox', description: 'Short drama discovery feed.' },
   ],
 };
 
@@ -87,7 +89,7 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
     key: 'video',
     type: 'group',
     group: VIDEO_GROUP,
-    match: (pathname) => ['/movies', '/anime', '/donghua'].some((href) => startsWithPath(pathname, href)),
+    match: (pathname) => ['/movies', '/anime', '/donghua', '/drachin', '/dramabox'].some((href) => startsWithPath(pathname, href)),
   },
   {
     key: 'komik',
@@ -133,4 +135,7 @@ export const CATEGORY_ICON_MAP = {
   manhwa: BookOpen,
   manhua: BookOpen,
   movie: Clapperboard,
+  drama: Clapperboard,
+  drachin: Clapperboard,
+  dramabox: Clapperboard,
 };

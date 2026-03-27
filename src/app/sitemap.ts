@@ -9,6 +9,8 @@ const staticRoutes = [
   { path: "/anime/completed", priority: 0.8, changeFrequency: "daily" },
   { path: "/anime/list", priority: 0.7, changeFrequency: "weekly" },
   { path: "/donghua", priority: 0.9, changeFrequency: "hourly" },
+  { path: "/drachin", priority: 0.8, changeFrequency: "daily" },
+  { path: "/dramabox", priority: 0.8, changeFrequency: "daily" },
   { path: "/manga", priority: 0.9, changeFrequency: "daily" },
   { path: "/manhwa", priority: 0.9, changeFrequency: "daily" },
   { path: "/manhua", priority: 0.9, changeFrequency: "daily" },

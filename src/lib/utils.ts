@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export type ThemeType = 'anime' | 'manga' | 'donghua' | 'movie' | 'default';
+export type ThemeType = 'anime' | 'manga' | 'donghua' | 'movie' | 'drama' | 'default';
 
 /**
  * Centralized theme configuration with full Tailwind class names
@@ -55,6 +55,17 @@ export const THEME_CONFIG = {
     bg: "bg-indigo-600/10",
     shadow: "shadow-indigo-600/20",
     glow: "shadow-[0_0_20px_rgba(99,102,241,0.3)]",
+  },
+  drama: {
+    primary: "bg-rose-600",
+    text: "text-rose-400",
+    hoverText: "group-hover:text-rose-300",
+    border: "border-rose-500/30",
+    hoverBorder: "group-hover:border-rose-500/50",
+    ring: "focus:ring-rose-500",
+    bg: "bg-rose-600/10",
+    shadow: "shadow-rose-600/20",
+    glow: "shadow-[0_0_20px_rgba(244,63,94,0.28)]",
   },
   default: {
     primary: "bg-zinc-100",

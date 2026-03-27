@@ -3,6 +3,8 @@ import { Link } from '@/components/atoms/Link';
 export function Footer() {
   const navLinks = [
     { href: '/anime', label: 'Anime' },
+    { href: '/drachin', label: 'Drachin' },
+    { href: '/dramabox', label: 'DramaBox' },
     { href: '/manga', label: 'Manga' },
     { href: '/manhwa', label: 'Manhwa' },
     { href: '/manhua', label: 'Manhua' },
@@ -29,7 +31,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="max-w-xs text-center text-xs leading-6 text-zinc-500 md:text-left">
-              Your premium destination for high-quality Anime, Manga, Manhwa, Manhua, and Donghua content.
+              Your premium destination for Anime, Donghua, short drama, Manga, Manhwa, and Manhua content.
             </p>
           </div>
 
