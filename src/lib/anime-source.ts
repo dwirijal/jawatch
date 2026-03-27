@@ -1,7 +1,7 @@
 import 'server-only';
 
 import type { JikanEnrichment, KanataAnime } from '@/lib/api';
-import { buildGatewayUrl, gatewayFetchJson, unwrapGatewayData } from '@/lib/gateway';
+import { buildSankaUrl, fetchSankaJson } from '@/lib/sanka';
 import {
   readSnapshotDomainFile,
   readSnapshotPlayback,
@@ -105,17 +105,21 @@ type AnimeHomeSnapshot = {
   items?: AnimeCatalogCard[];
 };
 
-const HOME_REVALIDATE_SECONDS = 60 * 10;
-const HUB_REVALIDATE_SECONDS = 60 * 10;
-const DETAIL_REVALIDATE_SECONDS = 60 * 30;
-const SEARCH_REVALIDATE_SECONDS = 60;
-
 function readRecord(value: unknown): JSONRecord {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as JSONRecord) : {};
 }
 
 function readArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
+}
+
+function unwrapAnimePayload(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return value;
+  }
+
+  const record = value as JSONRecord;
+  return record.data ?? value;
 }
 
 function readText(value: unknown): string {
@@ -178,8 +182,15 @@ function splitList(value: unknown): string[] {
   );
 }
 
-function buildAnimeGatewayUrl(path: string): string {
-  return buildGatewayUrl(path);
+function buildAnimeSlug(value: unknown): string {
+  const record = readRecord(value);
+  return (
+    readText(value) ||
+    readText(record.slug) ||
+    readText(record.animeId) ||
+    readText(record.episode_slug) ||
+    readText(record.episodeId)
+  );
 }
 
 function buildAnimePosterUrl(value: unknown): string {
@@ -251,7 +262,7 @@ function buildEpisodeCountLabel(payload: JSONRecord): string {
 
 function normalizeAnimeCard(item: unknown): AnimeCatalogCard | null {
   const record = readRecord(item);
-  const slug = readText(record.slug);
+  const slug = buildAnimeSlug(record);
   const title = readText(record.title) || readText(record.name) || slug;
   if (!slug || !title) {
     return null;
@@ -261,7 +272,12 @@ function normalizeAnimeCard(item: unknown): AnimeCatalogCard | null {
     slug,
     title,
     thumb: buildAnimePosterUrl(record.thumb ?? record.poster ?? record.image ?? record.poster_url),
-    episode: readText(record.episode) || buildAnimeStatusLabel(record.status ?? record.status_label) || 'Unknown',
+    episode:
+      readText(record.episode) ||
+      readText(record.episodes) ||
+      readText(record.releasedOn) ||
+      buildAnimeStatusLabel(record.status ?? record.status_label) ||
+      'Unknown',
     type: buildAnimeTypeLabel(record.type ?? record.anime_type),
     status: buildAnimeStatusLabel(record.status ?? record.status_label),
     synopsis_excerpt: readText(record.synopsis_excerpt) || readText(record.synopsis) || '',
@@ -271,14 +287,22 @@ function normalizeAnimeCard(item: unknown): AnimeCatalogCard | null {
 }
 
 function normalizeAnimeCardList(payload: unknown): AnimeCatalogCard[] {
-  const data = unwrapGatewayData(payload);
+  const data = unwrapAnimePayload(payload);
   if (Array.isArray(data)) {
     return data.map(normalizeAnimeCard).filter((item): item is AnimeCatalogCard => item !== null);
   }
 
   if (data && typeof data === 'object') {
     const record = data as JSONRecord;
-    const candidateList = record.items ?? record.ongoing ?? record.list ?? record.results;
+    const homeSections = ['recent', 'batch', 'movie', 'top10']
+      .flatMap((key) => readArray(readRecord(record[key]).animeList));
+    const candidateList =
+      record.items ??
+      record.ongoing ??
+      record.list ??
+      record.results ??
+      record.animeList ??
+      (homeSections.length > 0 ? homeSections : undefined);
     if (Array.isArray(candidateList)) {
       return candidateList.map(normalizeAnimeCard).filter((item): item is AnimeCatalogCard => item !== null);
     }
@@ -288,7 +312,23 @@ function normalizeAnimeCardList(payload: unknown): AnimeCatalogCard[] {
 }
 
 function normalizeAnimeIndexGroups(payload: unknown): AnimeIndexGroup[] {
-  const data = unwrapGatewayData(payload);
+  const data = unwrapAnimePayload(payload);
+  if (data && typeof data === 'object') {
+    const record = data as JSONRecord;
+    const groups = readArray(record.list);
+    if (groups.length > 0) {
+      return groups
+        .map((group) => {
+          const groupRecord = readRecord(group);
+          return {
+            letter: readText(groupRecord.startWith) || '#',
+            list: normalizeAnimeCardList(groupRecord.animeList),
+          };
+        })
+        .filter((group) => group.list.length > 0);
+    }
+  }
+
   if (Array.isArray(data) && data.length > 0 && data.every((item) => readRecord(item).letter)) {
     return data
       .map((group) => {
@@ -364,18 +404,25 @@ function normalizeAnimeEpisodes(payload: unknown): AnimeEpisodeListItem[] {
   return readArray(payload)
     .map((item) => {
       const record = readRecord(item);
-      const slug = readText(record.episode_slug) || readText(record.slug);
+      const slug = readText(record.episode_slug) || readText(record.episodeId) || readText(record.slug);
       const title = readText(record.title) || slug;
       if (!slug || !title) {
         return null;
       }
 
       const episodeNumber = readNumber(record.episode_number);
+      const fallbackEpisodeNumber = Number.parseFloat(slug.match(/episode-(\d+(?:\.\d+)?)/i)?.[1] || '');
       return {
         episode_slug: slug,
         title,
-        episode_number: episodeNumber ?? 0,
-        release_label: readText(record.release_label) || readText(record.release_at) || '',
+        episode_number:
+          episodeNumber ??
+          (Number.isFinite(fallbackEpisodeNumber) ? fallbackEpisodeNumber : 0),
+        release_label:
+          readText(record.release_label) ||
+          readText(record.release_at) ||
+          readText(record.releasedOn) ||
+          '',
       } satisfies AnimeEpisodeListItem;
     })
     .filter((item): item is AnimeEpisodeListItem => item !== null)
@@ -407,8 +454,34 @@ function normalizeMirrors(payload: unknown): { defaultUrl: string; mirrors: Arra
     });
   }
 
+  const serverQualities = readArray(readRecord(record.server).qualities);
+  for (const quality of serverQualities) {
+    const qualityRecord = readRecord(quality);
+    const qualityTitle = readText(qualityRecord.title);
+    const serverList = readArray(qualityRecord.serverList);
+
+    for (const server of serverList) {
+      const serverRecord = readRecord(server);
+      const href = readText(serverRecord.href);
+      if (!href) {
+        continue;
+      }
+
+      const embedUrl = buildSankaUrl(href);
+      if (seen.has(embedUrl)) {
+        continue;
+      }
+
+      seen.add(embedUrl);
+      mirrors.push({
+        label: readText(serverRecord.title) || qualityTitle || 'Mirror',
+        embed_url: embedUrl,
+      });
+    }
+  }
+
   return {
-    defaultUrl: primary || mirrors[0]?.embed_url || '',
+    defaultUrl: primary || readText(record.defaultStreamingUrl) || mirrors[0]?.embed_url || '',
     mirrors,
   };
 }
@@ -416,6 +489,31 @@ function normalizeMirrors(payload: unknown): { defaultUrl: string; mirrors: Arra
 function normalizeServerOptions(payload: unknown): AnimeEpisodeServerOption[] {
   const record = readRecord(payload);
   const source = Array.isArray(record.server_options) ? record.server_options : [];
+
+  if (source.length === 0) {
+    return readArray(readRecord(record.server).qualities)
+      .flatMap((quality) => {
+        const qualityRecord = readRecord(quality);
+        const qualityTitle = readText(qualityRecord.title);
+        return readArray(qualityRecord.serverList)
+          .map((item) => {
+            const option = readRecord(item);
+            const label = readText(option.title);
+            const postId = readText(option.serverId);
+            if (!label || !postId) {
+              return null;
+            }
+
+            return {
+              label,
+              postId,
+              number: qualityTitle,
+              type: 'samehadaku',
+            } satisfies AnimeEpisodeServerOption;
+          })
+          .filter((item): item is AnimeEpisodeServerOption => item !== null);
+      });
+  }
 
   return source
     .map((item) => {
@@ -456,6 +554,31 @@ function normalizeDownloadGroups(payload: unknown): AnimeEpisodeDownloadGroup[] 
         return format && quality && links.length > 0 ? { format, quality, links } : null;
       })
       .filter((item): item is AnimeEpisodeDownloadGroup => item !== null);
+  }
+
+  const sankaFormats = readArray(readRecord(record.downloadUrl).formats);
+  if (sankaFormats.length > 0) {
+    return sankaFormats
+      .flatMap((formatItem) => {
+        const formatRecord = readRecord(formatItem);
+        const format = readText(formatRecord.title) || 'Unknown';
+        return readArray(formatRecord.qualities)
+          .map((qualityItem) => {
+            const qualityRecord = readRecord(qualityItem);
+            const quality = readText(qualityRecord.title) || 'Unknown';
+            const links = readArray(qualityRecord.urls)
+              .map((linkItem) => {
+                const linkRecord = readRecord(linkItem);
+                const label = readText(linkRecord.title);
+                const href = readText(linkRecord.url);
+                return label && href ? { label, href } : null;
+              })
+              .filter((item): item is { label: string; href: string } => item !== null);
+
+            return links.length > 0 ? { format, quality, links } : null;
+          })
+          .filter((item): item is AnimeEpisodeDownloadGroup => item !== null);
+      });
   }
 
   const grouped: AnimeEpisodeDownloadGroup[] = [];
@@ -540,11 +663,7 @@ function formatEpisodeNumber(value: unknown): string {
 }
 
 function buildPath(path: string): string {
-  return buildAnimeGatewayUrl(path);
-}
-
-function buildAnimeSearchPath(query: string, limit: number): string {
-  return `/v1/anime/search?q=${encodeURIComponent(query)}&limit=${limit}`;
+  return buildSankaUrl(path);
 }
 
 export async function getAnimeHomeItems(limit = 6): Promise<AnimeCatalogCard[]> {
@@ -561,11 +680,7 @@ export async function getAnimeHomeItems(limit = 6): Promise<AnimeCatalogCard[]> 
       return snapshotItems.slice(0, Math.max(limit, 1));
     }
   }
-  const payload = await gatewayFetchJson<unknown>(`/v1/anime/home?limit=${Math.max(limit, 1)}`, {
-    edgeCacheKey: `home:anime:items:${Math.max(limit, 1)}`,
-    edgeCacheTtlSeconds: 900,
-    revalidate: HOME_REVALIDATE_SECONDS,
-  });
+  const payload = await fetchSankaJson<unknown>('/anime/samehadaku/popular?page=1');
   return normalizeAnimeCardList(payload).slice(0, Math.max(limit, 1));
 }
 
@@ -576,21 +691,13 @@ export async function getAnimeHubData(limit = 36): Promise<{ ongoing: AnimeCatal
       ongoing: snapshot.ongoing.slice(0, Math.max(limit, 1)),
     };
   }
-  const payload = await gatewayFetchJson<unknown>(`/v1/anime/hub?limit=${Math.max(limit, 1)}`, {
-    edgeCacheKey: `home:anime:hub:${Math.max(limit, 1)}`,
-    edgeCacheTtlSeconds: 900,
-    revalidate: HUB_REVALIDATE_SECONDS,
-  });
+  const payload = await fetchSankaJson<unknown>('/anime/samehadaku/ongoing?page=1');
   const cards = normalizeAnimeCardList(payload);
   return { ongoing: cards.slice(0, Math.max(limit, 1)) };
 }
 
 export async function getAnimeIndexData(): Promise<AnimeIndexGroup[]> {
-  const payload = await gatewayFetchJson<unknown>('/v1/anime/index', {
-    edgeCacheKey: 'home:anime:index',
-    edgeCacheTtlSeconds: 1800,
-    revalidate: HUB_REVALIDATE_SECONDS,
-  });
+  const payload = await fetchSankaJson<unknown>('/anime/samehadaku/list');
   return normalizeAnimeIndexGroups(payload);
 }
 
@@ -605,18 +712,19 @@ export async function searchAnimeCatalog(query: string, limit = 8): Promise<Anim
     return snapshot.slice(0, Math.min(Math.max(limit, 1), 12));
   }
 
-  const payload = await gatewayFetchJson<unknown>(buildAnimeSearchPath(trimmed, Math.max(limit, 1)), {
-    edgeCacheKey: `search:anime:catalog:${trimmed.toLowerCase()}:${Math.max(limit, 1)}`,
-    edgeCacheTtlSeconds: 300,
-    revalidate: SEARCH_REVALIDATE_SECONDS,
-  });
+  const payload = await fetchSankaJson<unknown>(`/anime/samehadaku/search?q=${encodeURIComponent(trimmed)}`);
   return normalizeAnimeCardList(payload).slice(0, Math.min(Math.max(limit, 1), 12));
 }
 
 function normalizeAnimeDetail(payload: unknown, slugFallback = ''): AnimeDetailData | null {
-  const record = readRecord(unwrapGatewayData(payload));
-  const slug = readText(record.slug) || slugFallback;
-  const title = readText(record.title) || slug;
+  const record = readRecord(unwrapAnimePayload(payload));
+  const slug = buildAnimeSlug(record) || slugFallback;
+  const title =
+    readText(record.title) ||
+    readText(record.english) ||
+    readText(record.synonyms) ||
+    readText(record.japanese) ||
+    slug;
 
   if (!slug || !title) {
     return null;
@@ -629,7 +737,9 @@ function normalizeAnimeDetail(payload: unknown, slugFallback = ''): AnimeDetailD
   const type = buildAnimeTypeLabel(record.type ?? record.anime_type);
   const poster = buildAnimePosterUrl(record.poster ?? record.thumb ?? record.image ?? record.poster_url);
   const ratingValue = readText(record.rating) || (readNumber(record.score) != null ? String(readNumber(record.score)) : '');
-  const totalEpisodes = buildEpisodeCountLabel(record);
+  const totalEpisodes = buildEpisodeCountLabel(record) !== 'Unknown'
+    ? buildEpisodeCountLabel(record)
+    : String(episodes.length || 'Unknown');
   const genres = splitList(record.genres ?? record.genre_names);
   const studio = splitList(record.studio ?? record.studios).join(', ');
 
@@ -651,7 +761,7 @@ function normalizeAnimeDetail(payload: unknown, slugFallback = ''): AnimeDetailD
     totalEpisodes,
     cast,
     episodes,
-    externalUrl: readText(record.externalUrl) || buildPath(`/v1/anime/${slug}`),
+    externalUrl: readText(record.samehadakuUrl) || readText(record.externalUrl) || buildPath(`/anime/samehadaku/anime/${slug}`),
     trailerUrl: readText(record.trailerUrl) || readText(record.trailer_url) || null,
     enrichment,
   };
@@ -662,18 +772,18 @@ export async function getAnimeDetailBySlug(slug: string): Promise<AnimeDetailDat
   if (snapshot) {
     return snapshot;
   }
-  const payload = await gatewayFetchJson<unknown>(`/v1/anime/${encodeURIComponent(slug)}`, {
-    edgeCacheKey: `detail:anime:${slug}`,
-    edgeCacheTtlSeconds: 1800,
-    revalidate: DETAIL_REVALIDATE_SECONDS,
-  });
+  const payload = await fetchSankaJson<unknown>(`/anime/samehadaku/anime/${encodeURIComponent(slug)}`);
   return normalizeAnimeDetail(payload, slug);
 }
 
 function normalizeEpisodeDetail(payload: unknown, slugFallback = ''): AnimeEpisodeData | null {
-  const record = readRecord(unwrapGatewayData(payload));
-  const episodeSlug = readText(record.episodeSlug) || readText(record.episode_slug) || slugFallback;
-  const animeSlug = readText(record.animeSlug) || readText(record.anime_slug);
+  const record = readRecord(unwrapAnimePayload(payload));
+  const episodeSlug =
+    readText(record.episodeSlug) ||
+    readText(record.episode_slug) ||
+    readText(record.episodeId) ||
+    slugFallback;
+  const animeSlug = readText(record.animeSlug) || readText(record.anime_slug) || readText(record.animeId);
   const title = readText(record.title) || episodeSlug;
 
   if (!episodeSlug || !animeSlug || !title) {
@@ -699,12 +809,20 @@ function normalizeEpisodeDetail(payload: unknown, slugFallback = ''): AnimeEpiso
     defaultUrl: mirrorState.defaultUrl,
     serverOptions: normalizeServerOptions(record),
     downloadGroups: normalizeDownloadGroups(record),
-    playlist,
-    prevEpisodeSlug: readText(record.prevEpisodeSlug) || readText(record.prev_episode_slug) || null,
-    nextEpisodeSlug: readText(record.nextEpisodeSlug) || readText(record.next_episode_slug) || null,
-    externalUrl: readText(record.externalUrl) || buildPath(`/v1/anime/episodes/${episodeSlug}`),
-    animeExternalUrl: readText(record.animeExternalUrl) || buildPath(`/v1/anime/${animeSlug}`),
-    fetchStatus: readText(record.fetchStatus) || readText(record.fetch_status) || 'Unknown',
+    playlist: playlist.length > 0 ? playlist : normalizeAnimeEpisodes(record.recommendedEpisodeList),
+    prevEpisodeSlug:
+      readText(record.prevEpisodeSlug) ||
+      readText(record.prev_episode_slug) ||
+      readText(readRecord(record.prevEpisode).episodeId) ||
+      null,
+    nextEpisodeSlug:
+      readText(record.nextEpisodeSlug) ||
+      readText(record.next_episode_slug) ||
+      readText(readRecord(record.nextEpisode).episodeId) ||
+      null,
+    externalUrl: readText(record.samehadakuUrl) || readText(record.externalUrl) || buildPath(`/anime/samehadaku/episode/${episodeSlug}`),
+    animeExternalUrl: readText(record.animeExternalUrl) || buildPath(`/anime/samehadaku/anime/${animeSlug}`),
+    fetchStatus: readText(record.fetchStatus) || readText(record.fetch_status) || 'Ready',
   };
 }
 
@@ -713,10 +831,6 @@ export async function getAnimeEpisodeBySlug(slug: string): Promise<AnimeEpisodeD
   if (snapshot) {
     return snapshot;
   }
-  const payload = await gatewayFetchJson<unknown>(`/v1/anime/episodes/${encodeURIComponent(slug)}`, {
-    edgeCacheKey: `playback:anime:${slug}`,
-    edgeCacheTtlSeconds: 300,
-    revalidate: DETAIL_REVALIDATE_SECONDS,
-  });
+  const payload = await fetchSankaJson<unknown>(`/anime/samehadaku/episode/${encodeURIComponent(slug)}`);
   return normalizeEpisodeDetail(payload, slug);
 }

@@ -136,45 +136,313 @@ export async function getMovieMetadata(title: string): Promise<{ poster?: string
   });
 }
 
+function readObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function readString(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function readStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => {
+      if (typeof item === 'string') {
+        return item.trim();
+      }
+
+      const record = readObject(item);
+      return readString(record.name) || readString(record.title);
+    })
+    .filter(Boolean);
+}
+
+function normalizeSankaAnimeSlug(value: unknown): string {
+  const record = readObject(value);
+  return (
+    readString(value) ||
+    readString(record.slug) ||
+    readString(record.animeId) ||
+    extractSlugFromUrl(readString(record.href)) ||
+    extractSlugFromUrl(readString(record.samehadakuUrl))
+  );
+}
+
+function normalizeSankaAnimeCard(item: unknown): KanataAnime | null {
+  const record = readObject(item);
+  const slug = normalizeSankaAnimeSlug(record);
+  const title = readString(record.title);
+
+  if (!slug || !title) {
+    return null;
+  }
+
+  return {
+    title,
+    slug,
+    thumb: readString(record.poster) || '/favicon.ico',
+    episode: readString(record.episodes) || readString(record.releasedOn) || readString(record.status) || 'Unknown',
+    type: readString(record.type) || 'Anime',
+    status: readString(record.status) || 'Unknown',
+  };
+}
+
+function normalizeSankaAnimeList(items: unknown): KanataAnime[] {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items
+    .map((item) => normalizeSankaAnimeCard(item))
+    .filter((item): item is KanataAnime => item !== null);
+}
+
+function normalizeSankaGenre(item: unknown): KanataGenre | null {
+  const record = readObject(item);
+  const slug = readString(record.genreId) || extractSlugFromUrl(readString(record.href));
+  const name = readString(record.title);
+
+  if (!slug || !name) {
+    return null;
+  }
+
+  return {
+    name,
+    slug,
+    url: readString(record.samehadakuUrl) || readString(record.href),
+  };
+}
+
 // --- CORE OBJECTS ---
 
 export const anime = {
   getDetail: async (slug: string): Promise<KanataAnimeDetail> => {
-    try {
-      const data = await fetchJson<KanataAnimeDetail>(`${API_CONFIG.A}/anime/${slug}`, {
-        edgeCacheKey: `detail:anime:legacy:${slug}:animasu`,
-        edgeCacheTtlSeconds: 1800,
-      });
-      if (data && data.title) return { ...data, provider: 'animasu' };
-      throw new Error();
-    } catch {
-      const data = await fetchJson<KanataAnimeDetail>(`${API_CONFIG.O}/anime/${slug}`, {
-        edgeCacheKey: `detail:anime:legacy:${slug}:otakudesu`,
-        edgeCacheTtlSeconds: 1800,
-      });
-      return { ...data, provider: 'otakudesu' };
-    }
+    const payload = await fetchSankaJson<{
+      data?: {
+        title?: string;
+        japanese?: string;
+        synonyms?: string;
+        english?: string;
+        status?: string;
+        type?: string;
+        synopsis?: string;
+        poster?: string;
+        genreList?: Array<{ title?: string }>;
+        episodeList?: Array<{ title?: string; episodeId?: string; releasedOn?: string }>;
+        studios?: string | Array<{ title?: string; name?: string }>;
+        score?: string;
+        episodes?: string | number;
+      };
+    }>(`/anime/samehadaku/anime/${encodeURIComponent(slug)}`);
+
+    const data = readObject(payload.data);
+    const episodeList = Array.isArray(data.episodeList) ? data.episodeList : [];
+
+    return {
+      title: readString(data.title) || readString(data.english) || readString(data.synonyms) || readString(data.japanese) || slug,
+      alternative_title:
+        readString(data.english) || readString(data.synonyms) || readString(data.japanese),
+      status: readString(data.status) || 'Unknown',
+      type: readString(data.type) || 'Anime',
+      synopsis: readString(data.synopsis),
+      thumb: readString(data.poster) || '/favicon.ico',
+      genres: readStringArray(data.genreList),
+      episodes: episodeList
+        ? episodeList
+            .map((item) => {
+              const record = readObject(item);
+              const episodeSlug = readString(record.episodeId);
+              return episodeSlug
+                ? {
+                    title: readString(record.title) || episodeSlug,
+                    slug: episodeSlug,
+                    date: readString(record.releasedOn),
+                  }
+                : null;
+            })
+            .filter((item): item is { title: string; slug: string; date: string } => item !== null)
+        : [],
+      studio: Array.isArray(data.studios)
+        ? readStringArray(data.studios).join(', ')
+        : readString(data.studios),
+      rating: readString(data.score) || 'N/A',
+      total_episodes: readString(data.episodes) || String(episodeList.length || 'Unknown'),
+      provider: 'animasu',
+    };
   },
-  getEpisode: (slug: string, p: 'animasu' | 'otakudesu' = 'animasu') => fetchJson<KanataEpisodeDetail>(`${p === 'otakudesu' ? API_CONFIG.O : API_CONFIG.A}/episode/${slug}`, {
-    edgeCacheKey: `playback:anime:legacy:${slug}:${p}`,
-    edgeCacheTtlSeconds: 300,
-  }),
+  getEpisode: async (slug: string): Promise<KanataEpisodeDetail> => {
+    const payload = await fetchSankaJson<{
+      data?: {
+        title?: string;
+        defaultStreamingUrl?: string;
+        server?: { qualities?: Array<{ title?: string; serverList?: Array<{ title?: string; serverId?: string; href?: string }> }> };
+        prevEpisode?: { episodeId?: string };
+        nextEpisode?: { episodeId?: string };
+        animeId?: string;
+      };
+    }>(`/anime/samehadaku/episode/${encodeURIComponent(slug)}`);
+
+    const data = readObject(payload.data);
+    const qualities = Array.isArray(readObject(data.server).qualities) ? (readObject(data.server).qualities as unknown[]) : [];
+    const mirrors = qualities.flatMap((quality) => {
+      const qualityRecord = readObject(quality);
+      const qualityLabel = readString(qualityRecord.title);
+      const serverList = Array.isArray(qualityRecord.serverList) ? qualityRecord.serverList : [];
+      return serverList
+        .map((server) => {
+          const serverRecord = readObject(server);
+          const href = readString(serverRecord.href);
+          return href
+            ? {
+                label: readString(serverRecord.title) || qualityLabel || 'Mirror',
+                embed_url: `https://www.sankavollerei.com${href}`,
+              }
+            : null;
+        })
+        .filter((item): item is { label: string; embed_url: string } => item !== null);
+    });
+
+    return {
+      title: readString(data.title) || slug,
+      default_embed: readString(data.defaultStreamingUrl) || mirrors[0]?.embed_url || '',
+      mirrors,
+      slug,
+      navigation: {
+        next: readString(readObject(data.nextEpisode).episodeId) || null,
+        prev: readString(readObject(data.prevEpisode).episodeId) || null,
+        anime_info: readString(data.animeId),
+      },
+    };
+  },
   search: async (query: string) => {
     const trimmed = query.trim().toLowerCase();
-    return (await fetchJson<{result?: KanataAnime[]}>(`${API_CONFIG.S}?query=${encodeURIComponent(query)}`, {
-      edgeCacheKey: `search:anime:${trimmed}`,
-      edgeCacheTtlSeconds: 300,
-    })).result || [];
+    if (!trimmed) {
+      return [];
+    }
+
+    const payload = await fetchSankaJson<{
+      data?: {
+        animeList?: unknown[];
+      };
+    }>(`/anime/samehadaku/search?q=${encodeURIComponent(query)}`);
+
+    return normalizeSankaAnimeList(readObject(payload.data).animeList);
   },
   getSchedule: () => withRuntimeCache('anime:schedule', CACHE_TTL.medium, () => fetchJson<AnimeSchedule[]>(`${API_CONFIG.A}/schedule`, {
     edgeCacheKey: 'home:anime:schedule',
     edgeCacheTtlSeconds: 900,
   })),
-  getCompleted: (page = 1) => fetchJson<KanataCompletedAnime[]>(`${API_CONFIG.O}/complete?page=${page}`),
-  getList: () => fetchJson<AnimeListGroup[]>(`${API_CONFIG.O}/anime-list`),
-  getBatch: (slug: string) => fetchJson<KanataAnimeBatch>(`${API_CONFIG.O}/batch/${slug}`),
-  getGenres: () => fetchJson<KanataGenre[]>(`${API_CONFIG.A}/genres`),
-  getGenre: (g: string, p = 1) => fetchJson<KanataAnime[]>(`${API_CONFIG.A}/genres/${g}?page=${p}`),
+  getCompleted: async (page = 1) => {
+    const payload = await fetchSankaJson<{
+      data?: {
+        animeList?: unknown[];
+      };
+    }>(`/anime/samehadaku/completed?page=${page}`);
+
+    return normalizeSankaAnimeList(readObject(payload.data).animeList).map((item) => ({
+      ...item,
+      date: '',
+    }));
+  },
+  getList: async () => {
+    const payload = await fetchSankaJson<{
+      data?: {
+        list?: Array<{ startWith?: string; animeList?: Array<{ title?: string; animeId?: string }> }>;
+      };
+    }>('/anime/samehadaku/list');
+
+    return (readObject(payload.data).list as AnimeListGroup[] | undefined)?.map?.((group) => group) ||
+      (Array.isArray(readObject(payload.data).list)
+        ? (readObject(payload.data).list as Array<{ startWith?: string; animeList?: Array<{ title?: string; animeId?: string }> }>).map((group) => ({
+            letter: readString(group.startWith) || '#',
+            list: Array.isArray(group.animeList)
+              ? group.animeList
+                  .map((item) => {
+                    const record = readObject(item);
+                    const title = readString(record.title);
+                    const animeSlug = readString(record.animeId);
+                    return title && animeSlug ? { title, slug: animeSlug } : null;
+                  })
+                  .filter((item): item is { title: string; slug: string } => item !== null)
+              : [],
+          }))
+        : []);
+  },
+  getBatch: async (slug: string) => {
+    const payload = await fetchSankaJson<{
+      data?: {
+        title?: string;
+        poster?: string;
+        downloadUrl?: {
+          formats?: Array<{
+            title?: string;
+            qualities?: Array<{
+              title?: string;
+              urls?: Array<{ title?: string; url?: string }>;
+            }>;
+          }>;
+        };
+      };
+    }>(`/anime/samehadaku/batch/${encodeURIComponent(slug)}`);
+
+    const data = readObject(payload.data);
+    const formats = Array.isArray(readObject(data.downloadUrl).formats)
+      ? (readObject(data.downloadUrl).formats as unknown[])
+      : [];
+
+    return {
+      title: readString(data.title) || slug,
+      thumb: readString(data.poster) || '/favicon.ico',
+      download_list: formats.map((formatItem) => {
+        const formatRecord = readObject(formatItem);
+        const qualities = Array.isArray(formatRecord.qualities) ? formatRecord.qualities : [];
+        return {
+          title: readString(formatRecord.title) || 'Batch Downloads',
+          links: qualities
+            .map((qualityItem) => {
+              const qualityRecord = readObject(qualityItem);
+              const urls = Array.isArray(qualityRecord.urls) ? qualityRecord.urls : [];
+              return {
+                quality: readString(qualityRecord.title) || 'Unknown',
+                size: '',
+                links: urls
+                  .map((urlItem) => {
+                    const urlRecord = readObject(urlItem);
+                    const name = readString(urlRecord.title);
+                    const url = readString(urlRecord.url);
+                    return name && url ? { name, url } : null;
+                  })
+                  .filter((item): item is { name: string; url: string } => item !== null),
+              };
+            })
+            .filter((item) => item.links.length > 0),
+        };
+      }).filter((item) => item.links.length > 0),
+    };
+  },
+  getGenres: async () => {
+    const payload = await fetchSankaJson<{
+      data?: { genreList?: unknown[] };
+    }>('/anime/samehadaku/genres');
+    const genreList = Array.isArray(readObject(payload.data).genreList)
+      ? (readObject(payload.data).genreList as unknown[])
+      : [];
+
+    return genreList
+      .map((item) => normalizeSankaGenre(item))
+      .filter((item): item is KanataGenre => item !== null);
+  },
+  getGenre: async (g: string, p = 1) => {
+    const payload = await fetchSankaJson<{
+      data?: { animeList?: unknown[] };
+    }>(`/anime/samehadaku/genres/${encodeURIComponent(g)}?page=${p}`);
+
+    return normalizeSankaAnimeList(readObject(payload.data).animeList);
+  },
 };
 
 export const movie = {
@@ -492,8 +760,11 @@ export const getMovieStream = movie.getStream;
 export const getMoviesByGenre = movie.getByGenre;
 
 export const getOngoingAnime = async (page = 1): Promise<KanataAnime[]> => {
-  const schedule = await anime.getSchedule();
-  return schedule.flatMap((day) => day.anime_list ?? []).slice((page - 1) * 12, page * 12 || undefined);
+  const payload = await fetchSankaJson<{
+    data?: { animeList?: unknown[] };
+  }>(`/anime/samehadaku/ongoing?page=${page}`);
+
+  return normalizeSankaAnimeList(readObject(payload.data).animeList);
 };
 
 // --- INTERFACES ---

@@ -23,6 +23,24 @@ type SankaProviderContract = {
 
 const SANKA_BASE_URL = 'https://www.sankavollerei.com';
 
+function buildSankaHeaders(): HeadersInit {
+  const baseHeaders: HeadersInit = {
+    Accept: 'application/json, text/plain, */*',
+  };
+
+  if (typeof window !== 'undefined') {
+    return baseHeaders;
+  }
+
+  return {
+    ...baseHeaders,
+    'Accept-Language': 'en-US,en;q=0.9',
+    Referer: `${SANKA_BASE_URL}/anime/`,
+    'User-Agent':
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+  };
+}
+
 export const SANKA_PROVIDER_MATRIX: Record<SankaUseCase, SankaProviderContract> = {
   anime_home: {
     useCase: 'anime_home',
@@ -116,9 +134,7 @@ export function buildSankaUrl(path: string): string {
 
 export async function fetchSankaJson<T>(path: string): Promise<T> {
   const response = await fetch(buildSankaUrl(path), {
-    headers: {
-      Accept: 'application/json, text/plain, */*',
-    },
+    headers: buildSankaHeaders(),
   });
 
   if (!response.ok) {
@@ -127,4 +143,3 @@ export async function fetchSankaJson<T>(path: string): Promise<T> {
 
   return response.json() as Promise<T>;
 }
-
