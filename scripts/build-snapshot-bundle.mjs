@@ -3,6 +3,9 @@ import path from 'node:path';
 
 const rawRoot = path.resolve(process.argv[2] || '../dwizzySCRAPE/.snapshots/raw');
 const outputRoot = path.resolve(process.argv[3] || 'public/snapshots/current');
+const tmdbBaseUrl = (process.env.TMDB_BASE_URL || 'https://api.themoviedb.org/3').replace(/\/+$/, '');
+const tmdbReadToken = (process.env.TMDB_READ_TOKEN || '').trim();
+const tmdbApiKey = (process.env.TMDB_API_KEY || '').trim();
 
 function toSlugFromUrl(value) {
   if (!value || typeof value !== 'string') return '';
@@ -23,6 +26,13 @@ function numberText(value, fallback = 'N/A') {
   }
   const normalized = text(value);
   return normalized || fallback;
+}
+
+function buildTMDBImageUrl(imagePath, size = 'w500') {
+  const value = text(imagePath);
+  if (!value) return '';
+  if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  return `https://image.tmdb.org/t/p/${size}${value.startsWith('/') ? value : `/${value}`}`;
 }
 
 function uniqBy(items, keyFn) {
@@ -90,6 +100,7 @@ function movieCardFromHome(item) {
     slug: text(item.slug),
     title: text(item.title),
     poster: text(item.poster),
+    backdrop: text(item.backdrop),
     year: text(item.year, 'N/A'),
     type: text(item.type, 'movie'),
     rating: typeof item.rating === 'number' && item.rating > 0 ? item.rating.toFixed(1) : undefined,
@@ -298,8 +309,8 @@ function movieDetailFromRaw(detail, catalogMap, fallbackSlug = '') {
   return {
     slug: text(card.slug || detail.slug || detail.url || fallbackSlug),
     title: text(detail.title || card.title),
-    poster: text(detail.poster || card.poster, '/favicon.ico'),
-    backdrop: text(detail.poster || card.poster, '/favicon.ico'),
+    poster: text(card.poster || detail.poster, '/favicon.ico'),
+    backdrop: text(card.backdrop || card.poster || detail.poster, '/favicon.ico'),
     year: text(card.year, 'N/A'),
     rating: text(card.rating, 'N/A'),
     genres: uniqBy([...(text(card.genres) ? text(card.genres).split(',').map((item) => item.trim()) : []), ...ensureArray(detail.tags)], (item) => item),
@@ -312,6 +323,65 @@ function movieDetailFromRaw(detail, catalogMap, fallbackSlug = '') {
     externalUrl: text(detail.url),
     recommendations: related,
   };
+}
+
+function movieAssetCacheKey(item) {
+  return `${text(item.title).toLowerCase()}#${text(item.year)}`;
+}
+
+async function resolveTMDBMovieAsset(item, cache) {
+  const key = movieAssetCacheKey(item);
+  if (!key || !text(item.title) || (!tmdbReadToken && !tmdbApiKey)) {
+    return null;
+  }
+  if (cache.has(key)) {
+    return cache.get(key);
+  }
+  const endpoint = new URL(`${tmdbBaseUrl}/search/movie`);
+  endpoint.searchParams.set('query', text(item.title));
+  endpoint.searchParams.set('include_adult', 'false');
+  const year = text(item.year);
+  if (year) {
+    endpoint.searchParams.set('year', year);
+  }
+  if (!tmdbReadToken && tmdbApiKey) {
+    endpoint.searchParams.set('api_key', tmdbApiKey);
+  }
+  const headers = { Accept: 'application/json' };
+  if (tmdbReadToken) {
+    headers.Authorization = `Bearer ${tmdbReadToken}`;
+  }
+  try {
+    const response = await fetch(endpoint, { headers });
+    if (!response.ok) {
+      cache.set(key, null);
+      return null;
+    }
+    const payload = await response.json();
+    const result = Array.isArray(payload.results) ? payload.results[0] : null;
+    const asset = result ? {
+      poster: buildTMDBImageUrl(result.poster_path),
+      backdrop: buildTMDBImageUrl(result.backdrop_path, 'w780'),
+    } : null;
+    cache.set(key, asset);
+    return asset;
+  } catch {
+    cache.set(key, null);
+    return null;
+  }
+}
+
+async function enrichMovieCardsWithTMDB(items) {
+  const cache = new Map();
+  return Promise.all(items.map(async (item) => {
+    const asset = await resolveTMDBMovieAsset(item, cache);
+    if (!asset) return item;
+    return {
+      ...item,
+      poster: asset.poster || item.poster,
+      backdrop: asset.backdrop || item.backdrop || asset.poster || item.poster,
+    };
+  }));
 }
 
 function moviePlaybackFromRaw(stream, detailData) {
@@ -417,13 +487,13 @@ async function main() {
   const hasRawEntriesForDomain = (domain) => rawManifest.entries.some((entry) => entry.domain === domain);
   const hasPreservedDomain = (domain) => Boolean(previousManifest?.domains?.[domain]);
 
-  const movieHomeDocs = (await Promise.all(movieHomeEntries.map(readPayload))).flat().map(movieCardFromHome);
-  const movieCatalogDocs = (
+  const movieHomeDocs = await enrichMovieCardsWithTMDB((await Promise.all(movieHomeEntries.map(readPayload))).flat().map(movieCardFromHome));
+  const movieCatalogDocs = await enrichMovieCardsWithTMDB((
     await Promise.all(movieCatalogEntries.map(readPayload))
-  ).flat().map(movieCardFromHome);
-  const movieSearchDocs = (
+  ).flat().map(movieCardFromHome));
+  const movieSearchDocs = await enrichMovieCardsWithTMDB((
     await Promise.all(movieSearchEntries.map(readPayload))
-  ).flat().map(movieCardFromHome);
+  ).flat().map(movieCardFromHome));
   const allMovieCards = uniqBy([...movieHomeDocs, ...movieCatalogDocs, ...movieSearchDocs], (item) => item.slug);
   const movieCatalogMap = new Map(allMovieCards.map((item) => [item.slug, item]));
 
