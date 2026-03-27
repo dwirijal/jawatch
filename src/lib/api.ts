@@ -5,7 +5,7 @@ import {
   readSnapshotTitle,
   searchSnapshotDomain,
 } from './runtime-snapshot';
-import { fetchSankaJson } from './sanka';
+import { buildSankaUrl, fetchSankaJson } from './sanka';
 
 /**
  * Secure & Standardized API Engine.
@@ -47,6 +47,8 @@ type DonghuaHomeSnapshot = {
   latest_updates: AnichinDonghua[];
   ongoing_series: AnichinDonghua[];
 };
+
+const COMIC_SUBTYPES = ['manga', 'manhwa', 'manhua'] as const;
 
 async function withRuntimeCache<T>(key: string, ttlMs: number, loader: () => Promise<T>): Promise<T> {
   const now = Date.now();
@@ -236,6 +238,224 @@ function normalizeSankaSchedule(payload: unknown): AnimeSchedule[] {
       return day && animeList.length > 0 ? { day, anime_list: animeList } : null;
     })
     .filter((item): item is AnimeSchedule => item !== null);
+}
+
+function normalizeSankaAssetUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('//')) return `https:${url}`;
+  if (url.startsWith('/')) return buildSankaUrl(url);
+  return url;
+}
+
+function normalizeComicType(value: unknown): string {
+  const type = readString(value).toLowerCase();
+  if (type.includes('manhwa')) return 'Manhwa';
+  if (type.includes('manhua')) return 'Manhua';
+  if (type.includes('comic')) return 'Comic';
+  if (type.includes('novel')) return 'Novel';
+  return 'Manga';
+}
+
+function readComicEntries(payload: unknown): Record<string, unknown>[] {
+  const record = readObject(payload);
+
+  if (Array.isArray(record.data)) {
+    return record.data.map((item) => readObject(item)).filter((item) => Object.keys(item).length > 0);
+  }
+
+  if (Array.isArray(record.comics)) {
+    return record.comics.map((item) => readObject(item)).filter((item) => Object.keys(item).length > 0);
+  }
+
+  if (Array.isArray(record.results)) {
+    return record.results.map((item) => readObject(item)).filter((item) => Object.keys(item).length > 0);
+  }
+
+  return Object.entries(record)
+    .filter(([key, value]) => /^\d+$/.test(key) && value && typeof value === 'object' && !Array.isArray(value))
+    .map(([, value]) => readObject(value));
+}
+
+function extractComicSlug(record: Record<string, unknown>): string {
+  return (
+    readString(record.slug) ||
+    extractSlugFromUrl(readString(record.link)) ||
+    extractSlugFromUrl(readString(record.href))
+  );
+}
+
+function normalizeComicCard(item: unknown, forcedType?: MangaSubtype): MangaSearchResult | null {
+  const record = readObject(item);
+  const title = readString(record.title);
+  const slug = extractComicSlug(record);
+  const href = readString(record.href);
+  const link = readString(record.link) || href || (slug ? `/manga/${slug}/` : '');
+
+  if (!title || !slug || link === '/plus/') {
+    return null;
+  }
+
+  const inferredType = normalizeComicType(forcedType || record.type);
+
+  return {
+    title,
+    altTitle: readString(record.altTitle) || null,
+    slug,
+    href: href || link,
+    thumbnail: normalizeSankaAssetUrl(readString(record.thumbnail) || readString(record.image)),
+    type: inferredType,
+    genre: readString(record.genre),
+    description: readString(record.description) || readString(record.note),
+    chapter: readString(record.chapter),
+    time_ago: readString(record.time_ago),
+    link,
+    image: normalizeSankaAssetUrl(readString(record.image) || readString(record.thumbnail)),
+  };
+}
+
+function normalizeComicList(payload: unknown, forcedType?: MangaSubtype): MangaSearchResult[] {
+  return readComicEntries(payload)
+    .map((item) => normalizeComicCard(item, forcedType))
+    .filter((item): item is MangaSearchResult => item !== null);
+}
+
+async function getComicDetailFromSanka(slug: string): Promise<MangaDetail> {
+  const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/comic/${encodeURIComponent(slug)}`);
+  const metadata = readObject(payload.metadata);
+
+  return {
+    creator: readString(payload.creator) || 'Sanka Vollerei',
+    slug: readString(payload.slug) || slug,
+    title: readString(payload.title) || slug,
+    title_indonesian: readString(payload.title_indonesian),
+    image: normalizeSankaAssetUrl(readString(payload.image)),
+    synopsis: readString(payload.synopsis),
+    synopsis_full: readString(payload.synopsis_full) || readString(payload.synopsis),
+    summary: readString(payload.summary),
+    background_story: readString(payload.background_story),
+    metadata: {
+      type: normalizeComicType(metadata.type),
+      author: readString(metadata.author),
+      status: readString(metadata.status),
+      concept: readString(metadata.concept),
+      age_rating: readString(metadata.age_rating),
+      reading_direction: readString(metadata.reading_direction),
+    },
+    genres: (Array.isArray(payload.genres) ? payload.genres : [])
+      .map((genre) => {
+        const record = readObject(genre);
+        return {
+          name: readString(record.name),
+          slug: readString(record.slug) || extractSlugFromUrl(readString(record.link)),
+          link: readString(record.link),
+        };
+      })
+      .filter((genre) => genre.name && genre.slug),
+    chapters: (Array.isArray(payload.chapters) ? payload.chapters : [])
+      .map((chapter) => {
+        const record = readObject(chapter);
+        return {
+          chapter: readString(record.chapter),
+          slug: readString(record.slug) || extractSlugFromUrl(readString(record.link)),
+          link: readString(record.link),
+          date: readString(record.date),
+        };
+      })
+      .filter((chapter) => chapter.chapter && chapter.slug),
+    similar_manga: (Array.isArray(payload.similar_manga) ? payload.similar_manga : [])
+      .map((item) => {
+        const record = readObject(item);
+        const similarSlug = readString(record.slug) || extractSlugFromUrl(readString(record.link));
+        return {
+          title: readString(record.title),
+          slug: similarSlug,
+          link: readString(record.link) || (similarSlug ? `/manga/${similarSlug}/` : ''),
+          image: normalizeSankaAssetUrl(readString(record.image)),
+          type: normalizeComicType(record.type),
+          description: readString(record.description),
+        };
+      })
+      .filter((item) => item.title && item.slug),
+  };
+}
+
+async function getComicTypeLookup(): Promise<Map<string, string>> {
+  return withRuntimeCache('comic:type-lookup', CACHE_TTL.medium, async () => {
+    const lists = await Promise.all(
+      COMIC_SUBTYPES.map(async (subtype) => {
+        try {
+          const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/type/${subtype}?page=1`);
+          return normalizeComicList(payload, subtype);
+        } catch {
+          return [];
+        }
+      })
+    );
+
+    const lookup = new Map<string, string>();
+    for (const item of lists.flat()) {
+      lookup.set(item.slug, item.type);
+      lookup.set(item.link, item.type);
+      if (item.href) {
+        lookup.set(item.href, item.type);
+      }
+    }
+    return lookup;
+  });
+}
+
+async function applyComicTypeHints(
+  items: MangaSearchResult[],
+  options: { detailLookupLimit?: number } = {},
+): Promise<MangaSearchResult[]> {
+  const lookup = await getComicTypeLookup().catch(() => new Map<string, string>());
+  const hinted = items.map((item) => ({
+    ...item,
+    type: lookup.get(item.slug) || lookup.get(item.link) || lookup.get(item.href) || item.type || 'Manga',
+  }));
+
+  const detailLookupLimit = options.detailLookupLimit ?? 0;
+  if (detailLookupLimit <= 0) {
+    return hinted;
+  }
+
+  const missing = hinted.filter((item) => !item.type || item.type === 'Manga');
+  if (missing.length === 0) {
+    return hinted;
+  }
+
+  const resolved = new Map<string, string>();
+  await Promise.all(
+    missing.slice(0, detailLookupLimit).map(async (item) => {
+      try {
+        const detail = await getComicDetailFromSanka(item.slug);
+        resolved.set(item.slug, normalizeComicType(detail.metadata.type));
+      } catch {
+        // Best-effort only.
+      }
+    })
+  );
+
+  return hinted.map((item) => ({
+    ...item,
+    type: resolved.get(item.slug) || item.type || 'Manga',
+  }));
+}
+
+function mergeUniqueComicCards(items: MangaSearchResult[]): MangaSearchResult[] {
+  const seen = new Set<string>();
+  const output: MangaSearchResult[] = [];
+
+  for (const item of items) {
+    const key = item.slug || extractSlugFromUrl(item.link) || extractSlugFromUrl(item.href);
+    if (!key || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    output.push(item);
+  }
+
+  return output;
 }
 
 // --- CORE OBJECTS ---
@@ -503,7 +723,7 @@ export const manga = {
     if (p === 1) {
       const snapshotResults = (
         await Promise.all(
-          (['manga', 'manhwa', 'manhua'] as const).map((domain) =>
+          (COMIC_SUBTYPES as readonly MangaSubtype[]).map((domain) =>
             searchSnapshotDomain<MangaSearchResult>(domain, q, 24)
           )
         )
@@ -512,39 +732,51 @@ export const manga = {
         return { data: snapshotResults };
       }
     }
-    return fetchJson<{data: MangaSearchResult[]}>(`${API_CONFIG.M}/search?q=${encodeURIComponent(q)}&page=${p}`, {
-      edgeCacheKey: `search:manga:${q.trim().toLowerCase()}:${p}`,
-      edgeCacheTtlSeconds: 300,
+    return withRuntimeCache(`manga:search:${q.trim().toLowerCase()}:${p}`, CACHE_TTL.short, async () => {
+      const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/search?q=${encodeURIComponent(q)}&page=${p}`);
+      return { data: normalizeComicList(payload) };
     });
   },
   getDetail: async (slug: string) => {
-    for (const domain of ['manga', 'manhwa', 'manhua'] as const) {
+    for (const domain of COMIC_SUBTYPES) {
       const snapshot = await readSnapshotTitle<MangaDetail>(domain, slug);
       if (snapshot) {
         return snapshot;
       }
     }
-    return fetchJson<MangaDetail>(`${API_CONFIG.M}/detail?slug=${slug}`, {
-      edgeCacheKey: `detail:manga:${slug}`,
-      edgeCacheTtlSeconds: 1800,
-    });
+    return withRuntimeCache(`manga:detail:${slug}`, CACHE_TTL.medium, () => getComicDetailFromSanka(slug));
   },
   getChapter: async (seg: string) => {
-    for (const domain of ['manga', 'manhwa', 'manhua'] as const) {
+    for (const domain of COMIC_SUBTYPES) {
       const snapshot = await readSnapshotPlayback<ChapterDetail>(domain, seg);
       if (snapshot) {
         return snapshot;
       }
     }
-    return fetchJson<ChapterDetail>(`${API_CONFIG.M}/chapter?segment=${seg}`, {
-      edgeCacheKey: `playback:manga:${seg}`,
-      edgeCacheTtlSeconds: 300,
+    return withRuntimeCache(`manga:chapter:${seg}`, CACHE_TTL.short, async () => {
+      const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/chapter/${encodeURIComponent(seg)}`);
+      const navigation = readObject(payload.navigation);
+      const next = readString(navigation.nextChapter || payload.nextChapter);
+      const prev = readString(navigation.previousChapter || payload.previousChapter);
+
+      return {
+        title: readString(payload.chapter_title) || readString(payload.title) || seg,
+        manga_title: readString(payload.manga_title),
+        chapter_title: readString(payload.chapter_title),
+        images: (Array.isArray(payload.images) ? payload.images : []).map((image) => normalizeSankaAssetUrl(readString(image))).filter(Boolean),
+        navigation: {
+          next,
+          prev,
+          nextChapter: next,
+          previousChapter: prev,
+        },
+      };
     });
   },
   getPopular: () => withRuntimeCache('manga:popular', CACHE_TTL.medium, async () => {
     const snapshotResults = (
       await Promise.all(
-        (['manga', 'manhwa', 'manhua'] as const).map(async (domain) => {
+        COMIC_SUBTYPES.map(async (domain) => {
           const snapshot = await readSnapshotDomainFile<ReadingHomeSnapshot>(domain, 'home.json');
           return snapshot?.popular || [];
         })
@@ -553,16 +785,26 @@ export const manga = {
     if (snapshotResults.length > 0) {
       return { comics: snapshotResults };
     }
-    return fetchJson<{comics: MangaSearchResult[]}>(`${API_CONFIG.M}/populer`, {
-      edgeCacheKey: 'home:manga:popular',
-      edgeCacheTtlSeconds: 900,
-    });
+    const typedLists = await Promise.all(
+      COMIC_SUBTYPES.map(async (subtype) => {
+        try {
+          const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/type/${subtype}?page=1`);
+          return normalizeComicList(payload, subtype);
+        } catch {
+          return [];
+        }
+      })
+    );
+
+    return {
+      comics: mergeUniqueComicCards(typedLists.flat()),
+    };
   }),
   getNew: (p = 1, l = 10) => withRuntimeCache(`manga:new:${p}:${l}`, CACHE_TTL.medium, async () => {
     if (p === 1) {
       const snapshotResults = (
         await Promise.all(
-          (['manga', 'manhwa', 'manhua'] as const).map(async (domain) => {
+          COMIC_SUBTYPES.map(async (domain) => {
             const snapshot = await readSnapshotDomainFile<ReadingHomeSnapshot>(domain, 'home.json');
             return snapshot?.newest || [];
           })
@@ -572,18 +814,35 @@ export const manga = {
         return { comics: snapshotResults.slice(0, l) };
       }
     }
-    return fetchJson<{comics: MangaSearchResult[]}>(`${API_CONFIG.M}/terbaru?page=${p}&limit=${l}`, {
-      edgeCacheKey: `home:manga:new:${p}:${l}`,
-      edgeCacheTtlSeconds: 900,
-    });
+    const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/terbaru?page=${p}&limit=${l}`);
+    const normalized = normalizeComicList(payload);
+    return {
+      comics: (await applyComicTypeHints(normalized, { detailLookupLimit: p === 1 ? Math.min(l, 8) : 0 })).slice(0, l),
+    };
   }),
-  getRecommendations: (slug: string) => fetchJson<{recommendations: MangaSearchResult[]}>(`${API_CONFIG.M}/rekomendasi?based_on=${slug}`, {
-    edgeCacheKey: `detail:manga:recommendations:${slug}`,
-    edgeCacheTtlSeconds: 1800,
+  getRecommendations: (slug: string) => withRuntimeCache(`manga:recommendations:${slug}`, CACHE_TTL.medium, async () => {
+    const detail = await manga.getDetail(slug);
+    return {
+      recommendations: detail.similar_manga.map((item) => ({
+        title: item.title,
+        altTitle: null,
+        slug: item.slug,
+        href: item.link,
+        thumbnail: item.image,
+        type: item.type || 'Manga',
+        genre: '',
+        description: item.description || '',
+        link: item.link,
+        image: item.image,
+      })),
+    };
   }),
-  getByGenre: (g: string, p = 1) => fetchJson<{comics: MangaSearchResult[]}>(`${API_CONFIG.M}/genre?genre=${g}&page=${p}`, {
-    edgeCacheKey: `home:manga:genre:${g.trim().toLowerCase()}:${p}`,
-    edgeCacheTtlSeconds: 900,
+  getByGenre: (g: string, p = 1) => withRuntimeCache(`manga:genre:${g.trim().toLowerCase()}:${p}`, CACHE_TTL.medium, async () => {
+    const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/genre/${encodeURIComponent(g)}?page=${p}`);
+    const normalized = normalizeComicList(payload);
+    return {
+      comics: await applyComicTypeHints(normalized, { detailLookupLimit: p === 1 ? 10 : 0 }),
+    };
   }),
 };
 
