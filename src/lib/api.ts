@@ -217,6 +217,27 @@ function normalizeSankaGenre(item: unknown): KanataGenre | null {
   };
 }
 
+function normalizeSankaSchedule(payload: unknown): AnimeSchedule[] {
+  const days = Array.isArray(readObject(readObject(payload).data).days)
+    ? (readObject(readObject(payload).data).days as unknown[])
+    : [];
+
+  return days
+    .map((dayItem) => {
+      const dayRecord = readObject(dayItem);
+      const day = readString(dayRecord.day);
+      const animeList = normalizeSankaAnimeList(dayRecord.animeList).map((item) => ({
+        ...item,
+        episode: readString(readObject(
+          (Array.isArray(dayRecord.animeList) ? dayRecord.animeList : []).find((entry) => normalizeSankaAnimeSlug(entry) === item.slug)
+        ).estimation) || item.episode,
+      }));
+
+      return day && animeList.length > 0 ? { day, anime_list: animeList } : null;
+    })
+    .filter((item): item is AnimeSchedule => item !== null);
+}
+
 // --- CORE OBJECTS ---
 
 export const anime = {
@@ -271,7 +292,7 @@ export const anime = {
         : readString(data.studios),
       rating: readString(data.score) || 'N/A',
       total_episodes: readString(data.episodes) || String(episodeList.length || 'Unknown'),
-      provider: 'animasu',
+      provider: 'samehadaku',
     };
   },
   getEpisode: async (slug: string): Promise<KanataEpisodeDetail> => {
@@ -332,10 +353,11 @@ export const anime = {
 
     return normalizeSankaAnimeList(readObject(payload.data).animeList);
   },
-  getSchedule: () => withRuntimeCache('anime:schedule', CACHE_TTL.medium, () => fetchJson<AnimeSchedule[]>(`${API_CONFIG.A}/schedule`, {
-    edgeCacheKey: 'home:anime:schedule',
-    edgeCacheTtlSeconds: 900,
-  })),
+  getSchedule: () =>
+    withRuntimeCache('anime:schedule', CACHE_TTL.medium, async () => {
+      const payload = await fetchSankaJson<unknown>('/anime/samehadaku/schedule');
+      return normalizeSankaSchedule(payload);
+    }),
   getCompleted: async (page = 1) => {
     const payload = await fetchSankaJson<{
       data?: {
@@ -794,7 +816,7 @@ export interface MangaSearchResult { title: string; altTitle: string | null; slu
 export interface MangaChapter { chapter: string; slug: string; link: string; date: string; }
 export interface MangaDetail { creator: string; slug: string; title: string; title_indonesian: string; image: string; synopsis: string; synopsis_full: string; summary: string; background_story: string; metadata: { type: string; author: string; status: string; concept: string; age_rating: string; reading_direction: string; }; genres: Array<{ name: string; slug: string; link: string }>; chapters: MangaChapter[]; similar_manga: Array<{ title: string; slug: string; link: string; image: string; type: string; description: string }>; }
 export interface ChapterDetail { title: string; manga_title?: string; chapter_title?: string; images: string[]; navigation: { next: string | null; prev: string | null; nextChapter?: string | null; previousChapter?: string | null; }; }
-export interface KanataAnimeDetail { title: string; alternative_title: string; status: string; type: string; synopsis: string; thumb: string; genres: string[]; episodes: Array<{ title: string; slug: string; date: string }>; studio: string; rating: string; total_episodes: string; download?: Array<{ quality: string; url: string[] }>; provider?: 'animasu' | 'otakudesu'; }
+export interface KanataAnimeDetail { title: string; alternative_title: string; status: string; type: string; synopsis: string; thumb: string; genres: string[]; episodes: Array<{ title: string; slug: string; date: string }>; studio: string; rating: string; total_episodes: string; download?: Array<{ quality: string; url: string[] }>; provider?: 'samehadaku' | 'animasu' | 'otakudesu'; }
 export interface KanataEpisodeDetail { title: string; default_embed: string; mirrors: Array<{ label: string; embed_url: string }>; slug: string; navigation: { next: string | null; prev: string | null; anime_info: string }; }
 export interface AnimeSchedule { day: string; anime_list: KanataAnime[]; }
 export interface AnimeListGroup { letter: string; list: Array<{ title: string; slug: string }>; }
@@ -843,7 +865,11 @@ export const getSafeEmbedUrl = (url: string) => !url ? '' : url.startsWith('//')
 export async function getRandomMedia(type: 'anime' | 'manga' | 'movie' | 'donghua'): Promise<{ slug: string }> {
   try {
     let items: GenericMediaItem[] = [];
-    if (type === 'anime') items = (await anime.getSchedule())[0].anime_list;
+    if (type === 'anime') {
+      const [schedule, ongoing] = await Promise.all([anime.getSchedule(), getOngoingAnime(1)]);
+      const scheduledItems = schedule.flatMap((day) => day.anime_list ?? []);
+      items = scheduledItems.length > 0 ? scheduledItems : ongoing;
+    }
     else if (type === 'manga') items = (await manga.getPopular()).comics;
     else if (type === 'movie') items = await movie.getHome('popular');
     else items = (await donghua.getHome()).ongoing_series;
