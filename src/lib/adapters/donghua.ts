@@ -1,4 +1,4 @@
-import { KANATA_ANICHIN_BASE_URL, fetchKanataAnichinJson } from '@/lib/media';
+import { fetchKanataAnichinJson } from '@/lib/media';
 import type {
   AnichinDetail,
   AnichinDonghua,
@@ -365,16 +365,10 @@ export async function getDonghuaSchedule(): Promise<AnimeSchedule[]> {
     .filter((item): item is AnimeSchedule => item !== null);
 }
 
-export const getDonghuaWatch = getDonghuaEpisode;
-
 export const donghua = {
   getHome: getDonghuaHome,
   getSchedule: getDonghuaSchedule,
   getDetail: getDonghuaDetail,
   search: searchDonghua,
   getEpisode: getDonghuaEpisode,
-  getWatch: getDonghuaWatch,
 };
-
-export const getSafeEmbedUrl = (url: string) => (!url ? '' : url.startsWith('//') ? `https:${url}` : url);
-export const getDonghuaExternalUrl = (slug: string) => `${KANATA_ANICHIN_BASE_URL}/detail/${slug}`;

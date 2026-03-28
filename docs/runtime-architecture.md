@@ -154,7 +154,7 @@ Shared shell:
 
 ### Donghua
 
-- content source: Sanka donghua
+- content source: Kanata Anichin
 - poster ratio: `3:4`
 
 ### Vertical Drama
