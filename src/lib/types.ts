@@ -160,11 +160,13 @@ export interface AnichinDonghua {
   image?: string;
   status?: string;
   type?: string;
+  link?: string;
 }
 
 export interface AnichinHomeResult {
   latest_updates: AnichinDonghua[];
   ongoing_series: AnichinDonghua[];
+  completed_series: AnichinDonghua[];
 }
 
 export interface AnichinDetail {

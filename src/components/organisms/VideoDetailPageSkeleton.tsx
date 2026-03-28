@@ -2,7 +2,7 @@ import { Button } from '@/components/atoms/Button';
 import { Paper } from '@/components/atoms/Paper';
 import { Skeleton } from '@/components/atoms/Skeleton';
 import { SplitLayout } from '@/components/atoms/SplitLayout';
-import { ThemeType } from '@/lib/utils';
+import { getMediaPosterAspectClass, ThemeType } from '@/lib/utils';
 
 interface VideoDetailPageSkeletonProps {
   theme: Extract<ThemeType, 'anime' | 'donghua' | 'movie'>;
@@ -10,6 +10,8 @@ interface VideoDetailPageSkeletonProps {
 }
 
 export function VideoDetailPageSkeleton({ theme, backLabel }: VideoDetailPageSkeletonProps) {
+  const posterAspectClass = getMediaPosterAspectClass(theme);
+
   return (
     <div className="app-shell" data-theme={theme} data-view-mode="comfortable">
       <div className="app-container-wide flex flex-col gap-12 pb-6 pt-8 md:gap-16">
@@ -47,7 +49,7 @@ export function VideoDetailPageSkeleton({ theme, backLabel }: VideoDetailPageSke
               gallery={
                 <div className="space-y-3.5">
                   <Paper tone="muted" shadow="sm" padded={false} className="overflow-hidden">
-                    <div className="mx-auto aspect-[2/3] w-40 md:w-48">
+                    <div className={`mx-auto w-40 md:w-48 ${posterAspectClass}`}>
                       <Skeleton className="h-full w-full rounded-none" />
                     </div>
                   </Paper>

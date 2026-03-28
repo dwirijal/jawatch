@@ -1,9 +1,3 @@
-import {
-  readSnapshotDomainFile,
-  readSnapshotPlayback,
-  readSnapshotTitle,
-  searchSnapshotDomain,
-} from '@/lib/runtime-snapshot';
 import { buildSankaUrl, fetchSankaJson } from '@/lib/media';
 import { getJikanEnrichment } from '@/lib/enrichment';
 import type {
@@ -19,19 +13,12 @@ type CacheEntry = {
   value: unknown;
 };
 
-type ReadingHomeSnapshot = {
-  popular?: MangaSearchResult[];
-  newest?: MangaSearchResult[];
-};
-
 const runtimeCache = new Map<string, CacheEntry>();
 const inflightCache = new Map<string, Promise<unknown>>();
 const CACHE_TTL = {
   short: 1000 * 60 * 5,
   medium: 1000 * 60 * 15,
 } as const;
-
-const COMIC_SUBTYPES = ['manga', 'manhwa', 'manhua'] as const;
 
 async function withRuntimeCache<T>(key: string, ttlMs: number, loader: () => Promise<T>): Promise<T> {
   const now = Date.now();
@@ -193,21 +180,6 @@ function buildMinimalComicDetail(slug: string, item?: MangaSearchResult | null):
   };
 }
 
-async function findSnapshotComicBySlug(slug: string): Promise<MangaSearchResult | null> {
-  for (const domain of COMIC_SUBTYPES) {
-    const catalog =
-      (await readSnapshotDomainFile<MangaSearchResult[] | { items?: MangaSearchResult[] }>(domain, 'catalog.json')) ??
-      (await readSnapshotDomainFile<MangaSearchResult[] | { items?: MangaSearchResult[] }>(domain, 'search.json'));
-    const items = Array.isArray(catalog) ? catalog : catalog?.items || [];
-    const match = items.find((item) => item.slug === slug);
-    if (match) {
-      return match;
-    }
-  }
-
-  return null;
-}
-
 async function findLiveComicBySlug(slug: string): Promise<MangaSearchResult | null> {
   const query = slug.replace(/-/g, ' ').trim();
   if (!query) {
@@ -288,7 +260,7 @@ async function getComicDetailFromSanka(slug: string): Promise<MangaDetail> {
         throw error;
       }
 
-      const fallbackItem = (await findSnapshotComicBySlug(slug)) || (await findLiveComicBySlug(slug));
+      const fallbackItem = await findLiveComicBySlug(slug);
       if (fallbackItem) {
         return buildMinimalComicDetail(slug, fallbackItem);
       }
@@ -339,19 +311,6 @@ async function applyComicTypeHints(
 }
 
 export const searchManga = async (q: string, p = 1) => {
-  if (p === 1) {
-    const snapshotResults = (
-      await Promise.all(
-        (COMIC_SUBTYPES as readonly MangaSubtype[]).map((domain) =>
-          searchSnapshotDomain<MangaSearchResult>(domain, q, 24),
-        ),
-      )
-    ).flat();
-    if (snapshotResults.length > 0) {
-      return { data: snapshotResults };
-    }
-  }
-
   return withRuntimeCache(`manga:search:${q.trim().toLowerCase()}:${p}`, CACHE_TTL.short, async () => {
     const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/search?q=${encodeURIComponent(q)}&page=${p}`);
     return { data: normalizeComicList(payload) };
@@ -359,23 +318,10 @@ export const searchManga = async (q: string, p = 1) => {
 };
 
 export async function getMangaDetail(slug: string): Promise<MangaDetail> {
-  for (const domain of COMIC_SUBTYPES) {
-    const snapshot = await readSnapshotTitle<MangaDetail>(domain, slug);
-    if (snapshot) {
-      return snapshot;
-    }
-  }
   return withRuntimeCache(`manga:detail:${slug}`, CACHE_TTL.medium, () => getComicDetailFromSanka(slug));
 }
 
 export async function getMangaChapter(seg: string): Promise<ChapterDetail> {
-  for (const domain of COMIC_SUBTYPES) {
-    const snapshot = await readSnapshotPlayback<ChapterDetail>(domain, seg);
-    if (snapshot) {
-      return snapshot;
-    }
-  }
-
   return withRuntimeCache(`manga:chapter:${seg}`, CACHE_TTL.short, async () => {
     const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/chapter/${encodeURIComponent(seg)}`);
     const navigation = readObject(payload.navigation);
@@ -401,19 +347,6 @@ export async function getMangaChapter(seg: string): Promise<ChapterDetail> {
 
 export const getPopularManga = () =>
   withRuntimeCache('manga:popular', CACHE_TTL.medium, async () => {
-    const snapshotResults = (
-      await Promise.all(
-        COMIC_SUBTYPES.map(async (domain) => {
-          const snapshot = await readSnapshotDomainFile<ReadingHomeSnapshot>(domain, 'home.json');
-          return snapshot?.popular || [];
-        }),
-      )
-    ).flat();
-
-    if (snapshotResults.length > 0) {
-      return { comics: snapshotResults };
-    }
-
     const payload = await fetchSankaJson<Record<string, unknown>>('/comic/populer');
     return {
       comics: await applyComicTypeHints(normalizeComicList(payload), { detailLookupLimit: 12 }),
@@ -422,20 +355,6 @@ export const getPopularManga = () =>
 
 export const getNewManga = (p = 1, l = 10) =>
   withRuntimeCache(`manga:new:${p}:${l}`, CACHE_TTL.medium, async () => {
-    if (p === 1) {
-      const snapshotResults = (
-        await Promise.all(
-          COMIC_SUBTYPES.map(async (domain) => {
-            const snapshot = await readSnapshotDomainFile<ReadingHomeSnapshot>(domain, 'home.json');
-            return snapshot?.newest || [];
-          }),
-        )
-      ).flat();
-      if (snapshotResults.length > 0) {
-        return { comics: snapshotResults.slice(0, l) };
-      }
-    }
-
     const payload = await fetchSankaJson<Record<string, unknown>>(`/comic/terbaru?page=${p}&limit=${l}`);
     const normalized = normalizeComicList(payload);
     return {

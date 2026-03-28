@@ -30,22 +30,21 @@ export const Typography = React.forwardRef<HTMLElement, TypographyProps>(({
     xs: "text-[10px] leading-tight",
     sm: "text-xs leading-tight",
     base: "text-sm leading-snug",
-    lg: "text-lg tracking-[-0.018em] leading-snug",
-    xl: "text-xl tracking-[-0.02em] leading-[1.04]",
-    "2xl": "text-2xl tracking-[-0.022em] leading-[1.02]",
-    "3xl": "text-3xl tracking-[-0.025em] leading-none",
-    "4xl": "text-4xl md:text-5xl tracking-[-0.03em] leading-none",
-    "5xl": "text-5xl md:text-7xl tracking-[-0.032em] leading-[0.94]",
-    "6xl": "text-6xl md:text-8xl tracking-[-0.05em] leading-[0.9]",
+    lg: "text-lg tracking-[-0.012em] leading-[1.2]",
+    xl: "text-xl tracking-[-0.016em] leading-[1.12]",
+    "2xl": "text-2xl tracking-[-0.02em] leading-[1.08]",
+    "3xl": "text-3xl tracking-[-0.024em] leading-[1.02]",
+    "4xl": "text-4xl md:text-5xl tracking-[-0.028em] leading-[0.98]",
+    "5xl": "text-5xl md:text-7xl tracking-[-0.03em] leading-[0.95]",
+    "6xl": "text-6xl md:text-8xl tracking-[-0.036em] leading-[0.92]",
   };
 
   const baseStyles = cn(
     "transition-colors duration-300",
-    isHeading ? "font-black tracking-tight text-white" : "font-medium text-zinc-300"
+    isHeading ? "font-extrabold text-white/95" : "font-medium text-zinc-300"
   );
-  
   // Handle gradient logic
-  const gradientStyles = gradient 
+  const gradientStyles = gradient
     ? `bg-gradient-to-b ${config.primary.replace('bg-', 'from-')} to-white/20 bg-clip-text text-transparent`
     : config.text;
 

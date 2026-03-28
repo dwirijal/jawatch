@@ -9,19 +9,30 @@ interface DetailPageScaffoldProps {
   sidebar?: React.ReactNode;
   footer?: React.ReactNode;
   theme?: ThemeType;
+  showAdSection?: boolean;
+  desktopColumnsClassName?: string;
 }
 
-export function DetailPageScaffold({ hero, children, sidebar, footer, theme }: DetailPageScaffoldProps) {
+export function DetailPageScaffold({
+  hero,
+  children,
+  sidebar,
+  footer,
+  theme,
+  showAdSection = true,
+  desktopColumnsClassName,
+}: DetailPageScaffoldProps) {
   return (
     <div className="app-shell" data-theme={theme} data-view-mode="comfortable">
       <div className="app-container-wide flex flex-col gap-12 pb-6 pt-8 md:gap-16">
         {hero}
 
-        <AdSection theme={theme} />
+        {showAdSection ? <AdSection theme={theme} /> : null}
 
         {sidebar ? (
           <SplitLayout
             breakpoint="xl"
+            desktopColumnsClassName={desktopColumnsClassName}
             className="items-start gap-12 xl:gap-16"
             stage={<div className="app-section-stack">{children}</div>}
             gallery={<div className="space-y-8">{sidebar}</div>}

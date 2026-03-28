@@ -5,13 +5,14 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { getMangaChapter } from "@/lib/adapters/comic";
 import { saveHistory } from "@/lib/store";
-import { ChevronLeft, ChevronRight, LayoutGrid, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
 import { Link } from "@/components/atoms/Link";
 import { Ads } from "@/components/atoms/Ads";
 import { Paper } from "@/components/atoms/Paper";
 import { ReadingSettings } from "@/components/molecules/ReadingSettings";
 import { StateInfo } from "@/components/molecules/StateInfo";
+import { ImageReaderScaffold } from "@/components/organisms/ImageReaderScaffold";
 import { useUIStore } from "@/store/useUIStore";
 import { CircularLoader } from "@/components/atoms/CircularLoader";
 import type { ChapterDetail } from '@/lib/types';
@@ -161,68 +162,55 @@ export default function ChapterPage({ params }: PageProps) {
   }
 
   return (
-    <div className="app-shell bg-background text-white">
-      <header className="sticky top-0 z-[160] border-b border-border-subtle bg-surface-1/95 backdrop-blur-xl transition-all">
-        <div className="app-container flex items-center justify-between gap-3 py-2.5 sm:py-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <Button variant="ghost" size="icon" asChild className="h-9 w-9 shrink-0 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1">
-              <Link href={`/manga/${slug}`}>
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <div className="min-w-0">
-              <h1 className="line-clamp-1 text-sm font-semibold tracking-tight text-white md:text-base">
-                {chapter.manga_title || chapter.title}
-              </h1>
-              <p className="text-xs text-zinc-500">
-                {chapter.chapter_title || chapterSlug}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              disabled={!previousChapterHref}
-              asChild={!!previousChapterHref}
-              className="h-9 w-9 rounded-[var(--radius-sm)] border-border-subtle"
-            >
-              {previousChapterHref ? (
-                <Link href={previousChapterHref}><ChevronLeft className="h-4 w-4" /></Link>
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-            </Button>
-
-            <ReadingSettings autoNext={autoNext} setAutoNext={setAutoNext} />
-
-            <Button 
-              variant="manga" 
-              size="icon" 
-              disabled={!nextChapterHref}
-              asChild={!!nextChapterHref}
-              className="h-9 w-9 rounded-[var(--radius-sm)]"
-            >
-              {nextChapterHref ? (
-                <Link href={nextChapterHref}><ChevronRight className="h-4 w-4" /></Link>
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+    <ImageReaderScaffold
+      backHref={`/manga/${slug}`}
+      title={chapter.manga_title || chapter.title}
+      subtitle={chapter.chapter_title || chapterSlug}
+      leftAside={
+        <div className="sticky top-24">
+          <Ads type="vertical" className="h-[560px] max-w-none" />
         </div>
-      </header>
+      }
+      rightAside={
+        <div className="sticky top-24">
+          <Ads type="vertical" className="h-[560px] max-w-none" />
+        </div>
+      }
+      headerActions={
+        <>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            disabled={!previousChapterHref}
+            asChild={!!previousChapterHref}
+            className="h-9 w-9 rounded-[var(--radius-sm)] border-border-subtle"
+          >
+            {previousChapterHref ? (
+              <Link href={previousChapterHref}><ChevronLeft className="h-4 w-4" /></Link>
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
 
-      <main className="app-container-wide min-h-screen py-5 md:py-7">
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(150px,190px)_minmax(0,1fr)_minmax(150px,190px)] xl:gap-6">
-          <aside className="hidden xl:block">
-            <div className="sticky top-24">
-              <Ads type="vertical" className="h-[560px] max-w-none" />
-            </div>
-          </aside>
+          <ReadingSettings autoNext={autoNext} setAutoNext={setAutoNext} />
 
-          <div className="flex min-w-0 flex-col items-center">
+          <Button 
+            variant="manga" 
+            size="icon" 
+            disabled={!nextChapterHref}
+            asChild={!!nextChapterHref}
+            className="h-9 w-9 rounded-[var(--radius-sm)]"
+          >
+            {nextChapterHref ? (
+              <Link href={nextChapterHref}><ChevronRight className="h-4 w-4" /></Link>
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+        </>
+      }
+    >
+      <div className="flex min-w-0 flex-col items-center">
             <div
               className="w-full transition-all duration-500 ease-in-out"
               style={{
@@ -285,15 +273,7 @@ export default function ChapterPage({ params }: PageProps) {
                 </div>
               </Paper>
             </div>
-          </div>
-
-          <aside className="hidden xl:block">
-            <div className="sticky top-24">
-              <Ads type="vertical" className="h-[560px] max-w-none" />
-            </div>
-          </aside>
-        </div>
-      </main>
-    </div>
+      </div>
+    </ImageReaderScaffold>
   );
 }

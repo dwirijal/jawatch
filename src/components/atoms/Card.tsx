@@ -2,12 +2,9 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { animate } from 'animejs';
-import { cn, THEME_CONFIG, ThemeType } from '@/lib/utils';
-import { ANIMATION_PRESETS } from '@/lib/animations';
-import { Badge } from '@/components/atoms/Badge';
+import { BookCoverArt } from '@/components/atoms/BookCoverArt';
+import { cn, getMediaPosterAspectClass, THEME_CONFIG, ThemeType } from '@/lib/utils';
 import { Link } from '@/components/atoms/Link';
-import { Paper } from '@/components/atoms/Paper';
 import { getMovieMetadata } from '@/lib/enrichment';
 import { getHDThumbnail } from '@/lib/adapters/comic';
 
@@ -21,6 +18,50 @@ export interface CardProps {
   className?: string;
 }
 
+function normalizeCardImage(image: string, theme: ThemeType): string {
+  const trimmed = image.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  if (theme === 'movie') {
+    return trimmed;
+  }
+
+  return getHDThumbnail(trimmed);
+}
+
+function shouldUseCompactCopy(title: string): boolean {
+  const normalized = title.trim();
+  if (!normalized) {
+    return false;
+  }
+
+  const wordCount = normalized.split(/\s+/).length;
+  return normalized.length > 28 || wordCount > 5;
+}
+
+function splitCardTitle(title: string): { title: string; derivedSubtitle?: string } {
+  const normalized = title.trim();
+  const separatorIndex = normalized.indexOf(':');
+
+  if (separatorIndex <= 0 || separatorIndex >= normalized.length - 1) {
+    return { title: normalized };
+  }
+
+  const primary = normalized.slice(0, separatorIndex).trim();
+  const secondary = normalized.slice(separatorIndex + 1).trim();
+
+  if (!primary || !secondary || secondary.length > 60) {
+    return { title: normalized };
+  }
+
+  return {
+    title: primary,
+    derivedSubtitle: secondary,
+  };
+}
+
 export function Card({
   href,
   image,
@@ -30,17 +71,39 @@ export function Card({
   theme = 'default',
   className,
 }: CardProps) {
-  const cardRef = React.useRef<HTMLDivElement>(null);
-  const [displayImage, setDisplayImage] = React.useState(getHDThumbnail(image));
+  const [displayImage, setDisplayImage] = React.useState(normalizeCardImage(image, theme));
   const [retryCount, setRetryCount] = React.useState(0);
   const [imageLoadFailed, setImageLoadFailed] = React.useState(false);
-  const config = THEME_CONFIG[theme] || THEME_CONFIG.default;
+  const splitTitle = React.useMemo(() => splitCardTitle(title), [title]);
+  const displayTitle = splitTitle.title || title;
+  const effectiveSubtitle = subtitle || splitTitle.derivedSubtitle;
+  const compactCopy = shouldUseCompactCopy(displayTitle);
+  const isNovelCard = theme === 'novel';
+  const accentPalette = React.useMemo(() => {
+    const config = THEME_CONFIG[theme] || THEME_CONFIG.default;
+    const themedPalette = {
+      anime: [config.bg.replace('bg-', '').includes('blue') ? 'rgba(59, 130, 246, 0.24)' : 'rgba(59, 130, 246, 0.24)', 'rgba(96, 165, 250, 0.18)'],
+      manga: ['rgba(234, 88, 12, 0.22)', 'rgba(251, 146, 60, 0.18)'],
+      donghua: ['rgba(239, 68, 68, 0.22)', 'rgba(248, 113, 113, 0.18)'],
+      movie: ['rgba(99, 102, 241, 0.22)', 'rgba(129, 140, 248, 0.18)'],
+      drama: ['rgba(244, 63, 94, 0.22)', 'rgba(251, 113, 133, 0.18)'],
+      novel: ['rgba(180, 83, 9, 0.24)', 'rgba(245, 158, 11, 0.18)'],
+      default: ['rgba(168, 85, 247, 0.24)', 'rgba(56, 189, 248, 0.22)', 'rgba(251, 191, 36, 0.18)'],
+    } as const;
+
+    return themedPalette[theme] ?? themedPalette.default;
+  }, [theme]);
+
+  const accent = React.useMemo(() => {
+    const seed = `${href}:${title}`.split('').reduce((total, char) => total + char.charCodeAt(0), 0);
+    return accentPalette[seed % accentPalette.length];
+  }, [accentPalette, href, title]);
 
   React.useEffect(() => {
-    setDisplayImage(getHDThumbnail(image));
+    setDisplayImage(normalizeCardImage(image, theme));
     setRetryCount(0);
     setImageLoadFailed(false);
-  }, [image]);
+  }, [image, theme]);
 
   const handleImageError = async () => {
     if (theme === 'movie' && retryCount === 0) {
@@ -57,30 +120,24 @@ export function Card({
     setImageLoadFailed(true);
   };
 
-  const onMouseEnter = () => cardRef.current && animate(cardRef.current, ANIMATION_PRESETS.cardHover);
-  const onMouseLeave = () => cardRef.current && animate(cardRef.current, ANIMATION_PRESETS.cardSettle);
-
   return (
-    <Paper asChild shadow="none" padded={false} interactive className={className}>
-      <Link
-        href={href}
-        className="focus-tv group flex w-full flex-col overflow-hidden"
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-      >
-        <div
-          ref={cardRef}
-          className={cn(
-            'relative aspect-[3/4] overflow-hidden border-b border-border-subtle bg-surface-2 transition-colors',
-            config.hoverBorder
-          )}
-        >
-          {displayImage && !imageLoadFailed ? (
+    <Link href={href} className={cn('focus-tv group relative block', getMediaPosterAspectClass(theme), className)}>
+      <div className="relative h-full overflow-hidden rounded-[18px] border border-white/10 bg-[#0a0a0f] shadow-[0_10px_28px_rgba(0,0,0,0.22)] transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-0.5 hover:border-white/15 hover:shadow-[0_16px_36px_rgba(0,0,0,0.28)]">
+        <div className="relative h-full overflow-hidden">
+          {theme === 'novel' ? (
+            <BookCoverArt
+              src={displayImage}
+              title={title}
+              subtitle={effectiveSubtitle}
+              sizes="(max-width: 500px) 48vw, (max-width: 768px) 33vw, (max-width: 1200px) 20vw, 12vw"
+              imageClassName="transition-transform duration-700 ease-out group-hover:scale-[1.028]"
+            />
+          ) : displayImage && !imageLoadFailed ? (
             <Image
               src={displayImage}
               alt={title}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.028]"
               sizes="(max-width: 500px) 48vw, (max-width: 768px) 33vw, (max-width: 1200px) 20vw, 12vw"
               unoptimized
               onError={handleImageError}
@@ -94,35 +151,49 @@ export function Card({
             </div>
           )}
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent transition-opacity duration-300 group-hover:opacity-35" />
+          {!isNovelCard ? <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(4,4,8,0.96)_0%,rgba(4,4,8,0.62)_26%,rgba(4,4,8,0.18)_48%,rgba(4,4,8,0.2)_100%)]" /> : null}
+          <div
+            className={cn('absolute inset-0', isNovelCard ? 'opacity-35' : 'opacity-78')}
+            style={{ background: `linear-gradient(180deg, ${accent} 0%, transparent 40%)` }}
+          />
+          <div className="absolute inset-x-0 top-0 h-px bg-white/12" />
+          <div className="absolute inset-0 bg-white/[0.02] opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100" />
+
           {badgeText && (
-            <div className="absolute left-1.5 top-1.5">
-              <Badge variant={theme} className="px-1.5 py-0.5 text-[9px] tracking-[0.14em]">
-                {badgeText}
-              </Badge>
+            <div className="absolute left-4 top-4 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/68">
+              <span>{badgeText}</span>
+              {!isNovelCard ? (
+                <>
+                  <span className="h-[3px] w-[3px] rounded-full bg-white/35" />
+                  <span>Curated</span>
+                </>
+              ) : null}
             </div>
           )}
-        </div>
+          {!isNovelCard ? (
+            <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+              <div className={cn('max-w-[82%] sm:max-w-[78%]', compactCopy && 'sm:max-w-[84%]')}>
+                <h3
+                  className={cn(
+                    'line-clamp-2 text-balance font-extrabold tracking-[-0.026em] text-white/95 drop-shadow-[0_4px_18px_rgba(0,0,0,0.42)] transition-colors duration-500 ease-out group-hover:text-white',
+                    compactCopy
+                      ? 'text-[20px] leading-[1.06] sm:text-[24px]'
+                      : 'text-[22px] leading-[1.03] sm:text-[27px]'
+                  )}
+                >
+                  {displayTitle}
+                </h3>
 
-        <div className="flex min-h-[2.9rem] flex-col gap-0.5 bg-surface-1 px-2.5 py-2 sm:min-h-[3.15rem] sm:px-3 sm:py-2">
-          <h3
-            className={cn(
-              'line-clamp-2 text-xs font-black leading-snug tracking-tight text-zinc-100 transition-colors sm:text-sm',
-              config.hoverText
-            )}
-          >
-            {title}
-          </h3>
-          <p
-            className={cn(
-              'line-clamp-1 text-[10px] font-semibold text-muted-foreground sm:text-[11px]',
-              !subtitle && 'select-none text-transparent'
-            )}
-          >
-            {subtitle || '\u00A0'}
-          </p>
+                {effectiveSubtitle && !compactCopy ? (
+                  <p className="mt-2 max-w-[33ch] line-clamp-2 text-[12px] leading-[1.54] text-white/58 transition-colors duration-500 ease-out group-hover:text-white/68 sm:text-[13px]">
+                    {effectiveSubtitle}
+                  </p>
+                ) : <p className="mt-2 select-none text-[12px] leading-[1.54] text-transparent sm:text-[13px]">{'\u00A0'}</p>}
+              </div>
+            </div>
+          ) : null}
         </div>
-      </Link>
-    </Paper>
+      </div>
+    </Link>
   );
 }

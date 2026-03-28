@@ -10,7 +10,7 @@ import { ModalContent, ModalDescription, ModalRoot, ModalTitle } from '@/compone
 import { Paper } from '@/components/atoms/Paper';
 import { SplitLayout } from '@/components/atoms/SplitLayout';
 import { TitleBlock } from '@/components/atoms/TitleBlock';
-import { ThemeType, cn } from '@/lib/utils';
+import { getMediaPosterAspectClass, ThemeType, cn } from '@/lib/utils';
 import { getVideoTrailerPreference, setVideoTrailerPreference } from '@/lib/store';
 
 interface VideoHeroMetaItem {
@@ -32,6 +32,7 @@ interface VideoDetailHeroProps {
   primaryAction?: React.ReactNode;
   secondaryAction?: React.ReactNode;
   trailerUrl?: string | null;
+  galleryVariant?: 'default' | 'compact';
 }
 
 function getYouTubeEmbedUrl(url: string | null | undefined): string | null {
@@ -73,6 +74,7 @@ export function VideoDetailHero({
   primaryAction,
   secondaryAction,
   trailerUrl,
+  galleryVariant = 'default',
 }: VideoDetailHeroProps) {
   const [trailerPreference, setTrailerPreferenceState] = React.useState<boolean | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -89,6 +91,8 @@ export function VideoDetailHero({
   }, [canPlayTrailer]);
 
   const shouldPlayTrailer = Boolean(canPlayTrailer && trailerPreference);
+  const isCompactGallery = galleryVariant === 'compact';
+  const posterAspectClass = getMediaPosterAspectClass(theme);
 
   const savePreference = (value: boolean) => {
     setVideoTrailerPreference(value);
@@ -177,9 +181,9 @@ export function VideoDetailHero({
               </div>
             }
             gallery={
-              <div className="space-y-3.5">
+              <div className={cn('space-y-3.5', isCompactGallery && 'space-y-3')}>
                 <Paper tone="muted" shadow="sm" padded={false} className="overflow-hidden">
-                  <div className="relative mx-auto aspect-[2/3] w-40 md:w-48">
+                  <div className={cn('relative mx-auto w-40 md:w-48', posterAspectClass, isCompactGallery && 'w-36 md:w-40')}>
                     <Image
                       src={poster || '/favicon.ico'}
                       alt={title}
@@ -190,11 +194,18 @@ export function VideoDetailHero({
                     />
                   </div>
                 </Paper>
-                <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1">
+                <div className={cn('grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1', isCompactGallery && 'lg:grid-cols-2')}>
                   {metadata.map((item) => (
-                    <Paper key={item.label} tone="muted" shadow="sm" className="px-3.5 py-3">
+                    <Paper
+                      key={item.label}
+                      tone="muted"
+                      shadow="sm"
+                      className={cn('px-3.5 py-3', isCompactGallery && 'rounded-[var(--radius-md)] px-3 py-2.5')}
+                    >
                       <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{item.label}</p>
-                      <p className="mt-1.5 text-sm font-bold text-zinc-100">{item.value}</p>
+                      <p className={cn('mt-1.5 text-sm font-bold text-zinc-100', isCompactGallery && 'mt-1 text-[13px] leading-5')}>
+                        {item.value}
+                      </p>
                     </Paper>
                   ))}
                 </div>

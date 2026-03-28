@@ -50,7 +50,7 @@ export default function NovelPageClient({ initialFeatured, initialLatest, genres
       title="Novel Library"
       description="Read long-form stories from a readable source with chapter detail and in-app reader flow."
       icon={FileText}
-      theme="default"
+      theme="novel"
       genres={genres.map((genre) => genre.name)}
       results={results}
       loading={loading}
@@ -75,6 +75,7 @@ export default function NovelPageClient({ initialFeatured, initialLatest, genres
                 title={item.title}
                 subtitle={item.type}
                 badgeText={item.rating ? `★ ${item.rating}` : item.type}
+                theme="novel"
               />
             ))}
         </SectionCard>
@@ -90,6 +91,7 @@ export default function NovelPageClient({ initialFeatured, initialLatest, genres
                 title={item.title}
                 subtitle={item.latestChapter}
                 badgeText={item.type}
+                theme="novel"
               />
             ))}
         </SectionCard>

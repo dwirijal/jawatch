@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, LoaderCircle } from 'lucide-react';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
@@ -22,7 +22,8 @@ interface EpisodePlaybackPanelProps {
 type SourceButton = {
   id: string;
   label: string;
-  url: string;
+  url?: string;
+  postId?: string;
   qualityRank: number;
   hostRank: number;
   dead: boolean;
@@ -62,6 +63,27 @@ function buildSourceButtons(
   serverOptions: AnimeEpisodeServerOption[],
   deadMirrors: string[]
 ): SourceButton[] {
+  if (serverOptions.length > 0) {
+    return serverOptions
+      .map((option) => ({
+        id: `${option.postId}-${option.number}-${option.label}`,
+        label: option.number ? `${option.label} ${option.number}` : option.label,
+        postId: option.postId,
+        qualityRank: getQualityRank(`${option.label} ${option.number}`),
+        hostRank: getHostRank(option.label),
+        dead: false,
+      }))
+      .sort((left, right) => {
+        if (left.qualityRank !== right.qualityRank) {
+          return right.qualityRank - left.qualityRank;
+        }
+        if (left.hostRank !== right.hostRank) {
+          return left.hostRank - right.hostRank;
+        }
+        return left.label.localeCompare(right.label);
+      });
+  }
+
   const seen = new Set<string>();
   const options: SourceButton[] = mirrors.flatMap((mirror, index) => {
     const url = mirror.embed_url;
@@ -122,15 +144,29 @@ export default function EpisodePlaybackPanel({
   downloadHref,
   serverOptions,
 }: EpisodePlaybackPanelProps) {
-  const hasPlayableStream = defaultUrl !== '' && mirrors.length > 0;
   const [deadMirrors, setDeadMirrors] = React.useState<string[]>([]);
+  const [resolvedSourceUrls, setResolvedSourceUrls] = React.useState<Record<string, string>>({});
+  const [resolveError, setResolveError] = React.useState('');
+  const [resolvingSourceId, setResolvingSourceId] = React.useState('');
   const sourceButtons = React.useMemo(
     () => buildSourceButtons(mirrors, serverOptions, deadMirrors),
     [deadMirrors, mirrors, serverOptions]
   );
   const sortedMirrors = React.useMemo(() => {
+    const allMirrors = [
+      ...mirrors,
+      ...sourceButtons
+        .map((button) => {
+          const url = resolvedSourceUrls[button.id];
+          return url ? { label: button.label, embed_url: url } : null;
+        })
+        .filter((item): item is { label: string; embed_url: string } => item !== null),
+    ];
+    const dedupedMirrors = Array.from(
+      new Map(allMirrors.filter((mirror) => mirror.embed_url).map((mirror) => [mirror.embed_url, mirror])).values()
+    );
     const buttonMap = new Map(sourceButtons.filter((button) => button.url).map((button) => [button.url, button]));
-    return [...mirrors].sort((left, right) => {
+    return dedupedMirrors.sort((left, right) => {
       const leftButton = buttonMap.get(left.embed_url);
       const rightButton = buttonMap.get(right.embed_url);
       if (!leftButton || !rightButton) {
@@ -147,14 +183,76 @@ export default function EpisodePlaybackPanel({
       }
       return left.label.localeCompare(right.label);
     });
-  }, [mirrors, sourceButtons]);
+  }, [mirrors, resolvedSourceUrls, sourceButtons]);
   const [selectedUrl, setSelectedUrl] = React.useState(defaultUrl);
+  const [selectedSourceId, setSelectedSourceId] = React.useState('');
+  const hasPlayableStream = selectedUrl !== '' || sortedMirrors.length > 0;
 
   React.useEffect(() => {
     setDeadMirrors(getDeadMirrors());
   }, []);
 
+  const resolveServerOption = React.useCallback(async (source: SourceButton) => {
+    if (!source.postId) {
+      return source.url || '';
+    }
+
+    const cachedUrl = resolvedSourceUrls[source.id];
+    if (cachedUrl) {
+      return cachedUrl;
+    }
+
+    setResolvingSourceId(source.id);
+    setResolveError('');
+
+    try {
+      const response = await fetch(`/api/anime/server/${encodeURIComponent(source.postId)}`, {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+      });
+
+      const payload = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.error || 'Resolved stream URL unavailable');
+      }
+
+      setResolvedSourceUrls((current) => ({
+        ...current,
+        [source.id]: payload.url!,
+      }));
+
+      return payload.url;
+    } finally {
+      setResolvingSourceId('');
+    }
+  }, [resolvedSourceUrls]);
+
+  const handleSourceSelect = React.useCallback(async (source: SourceButton) => {
+    setSelectedSourceId(source.id);
+
+    try {
+      const nextUrl = await resolveServerOption(source);
+      if (nextUrl) {
+        setSelectedUrl(nextUrl);
+        localStorage.setItem('dwizzy_preferred_mirror', source.label);
+        setResolveError('');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to resolve stream URL';
+      setResolveError(message);
+    }
+  }, [resolveServerOption]);
+
   React.useEffect(() => {
+    if (sourceButtons.length > 0 && sourceButtons[0]?.postId) {
+      const preferredLabel = localStorage.getItem('dwizzy_preferred_mirror');
+      const preferredSource = sourceButtons.find((source) => source.label === preferredLabel) || sourceButtons[0];
+      if (preferredSource && preferredSource.id !== selectedSourceId && !resolvingSourceId) {
+        void handleSourceSelect(preferredSource);
+      }
+      return;
+    }
+
     if (!hasPlayableStream) {
       setSelectedUrl(defaultUrl);
       return;
@@ -174,14 +272,14 @@ export default function EpisodePlaybackPanel({
     }
 
     setSelectedUrl(sortedMirrors.find((mirror) => !deadMirrors.includes(mirror.embed_url))?.embed_url || defaultUrl);
-  }, [deadMirrors, defaultUrl, hasPlayableStream, sortedMirrors]);
+  }, [deadMirrors, defaultUrl, handleSourceSelect, hasPlayableStream, resolvingSourceId, selectedSourceId, sortedMirrors, sourceButtons]);
 
   return (
     <section className="space-y-4">
       {hasPlayableStream ? (
         <VideoPlayer
           mirrors={sortedMirrors}
-          defaultUrl={defaultUrl}
+          defaultUrl={selectedUrl || defaultUrl}
           currentUrl={selectedUrl}
           onMirrorChange={(url) => {
             setSelectedUrl(url);
@@ -189,6 +287,7 @@ export default function EpisodePlaybackPanel({
           }}
           showMirrorPanel={false}
           title={title}
+          showTitleOverlay={false}
           theme="anime"
         />
       ) : (
@@ -212,7 +311,7 @@ export default function EpisodePlaybackPanel({
                   Inline playback is not ready yet
                 </h2>
                 <p className="max-w-3xl text-sm leading-7 text-zinc-400">
-                  Source Samehadaku untuk episode ini belum memberi embed yang bisa diputar inline. Kamu masih bisa lanjut lewat daftar source atau panel download di bawah.
+                  Stream inline belum aktif. Coba resolve salah satu source di bawah atau lanjut ke panel download.
                 </p>
               </div>
             </div>
@@ -244,15 +343,24 @@ export default function EpisodePlaybackPanel({
           <Badge variant="outline">{sourceButtons.length} Options</Badge>
         </div>
 
+        {resolveError ? (
+          <Paper tone="outline" className="mb-4 border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-200">
+            {resolveError}
+          </Paper>
+        ) : null}
+
         <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex w-max items-center gap-2 pb-1">
             {sourceButtons.map((source, index) => {
-              const isActive = hasPlayableStream && selectedUrl === source.url;
+              const resolvedUrl = source.url || resolvedSourceUrls[source.id] || '';
+              const isActive = selectedSourceId
+                ? selectedSourceId === source.id
+                : hasPlayableStream && resolvedUrl !== '' && selectedUrl === resolvedUrl;
               return hasPlayableStream ? (
                 <Button
                   key={source.id}
                   type="button"
-                  onClick={() => setSelectedUrl(source.url)}
+                  onClick={() => void handleSourceSelect(source)}
                   variant={isActive ? 'anime' : 'outline'}
                   size="sm"
                   className={cn(
@@ -261,6 +369,7 @@ export default function EpisodePlaybackPanel({
                     source.dead && !isActive && 'border-red-500/20 text-zinc-500 opacity-60'
                   )}
                 >
+                  {resolvingSourceId === source.id ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
                   {source.label}
                   {source.dead ? ' Dead' : ''}
                 </Button>

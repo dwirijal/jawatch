@@ -93,12 +93,13 @@ function toDonghuaItems(items: Array<Record<string, unknown>>, limit = SECTION_L
     .map<MixedRecommendationItem | null>((item) => {
       const slug = String(item.slug ?? '');
       const title = String(item.title ?? '');
+      const href = String(item.link ?? '') || `/donghua/${slug}`;
       if (!slug || !title) return null;
       return {
         id: `donghua:${slug}`,
         title,
         image: getHDThumbnail(String(item.thumb ?? item.image ?? '')),
-        href: `/donghua/${slug}`,
+        href,
         theme: 'donghua' as const,
         subtitle: String(item.episode ?? '') || undefined,
         badgeText: String(item.status ?? 'Donghua') || undefined,
@@ -170,7 +171,7 @@ async function getHomeSections(): Promise<{ sections: HomeRecommendationSection[
     getMovieHomeSection('trending', 32).catch(() => []),
     getPopularManga().catch(() => ({ comics: [] })),
     getNewManga(1, 40).catch(() => ({ comics: [] })),
-    donghua.getHome().catch(() => ({ latest_updates: [], ongoing_series: [] })),
+    donghua.getHome().catch(() => ({ latest_updates: [], ongoing_series: [], completed_series: [] })),
     getKanataAnimeByGenre('action').catch(() => []),
     getMovieGenreItems('action', 32).catch(() => []),
   ]);

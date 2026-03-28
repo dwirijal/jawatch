@@ -9,18 +9,23 @@ import { SavedContentSection } from '@/components/organisms/SavedContentSection'
 import { SurpriseButton } from '@/components/molecules/SurpriseButton';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { SectionCard } from '@/components/organisms/SectionCard';
-import { getDonghuaHome } from '@/lib/adapters/donghua';
-import type { AnichinDonghua, AnichinHomeResult, GenericMediaItem } from '@/lib/types';
+import { ReleaseCalendar } from '@/components/organisms/ReleaseCalendar';
+import { getDonghuaHome, getDonghuaSchedule } from '@/lib/adapters/donghua';
+import type { AnichinDonghua, AnichinHomeResult, AnimeSchedule, GenericMediaItem } from '@/lib/types';
 
 interface DonghuaPageClientProps {
   initialData: AnichinHomeResult;
+  initialSchedule: AnimeSchedule[];
 }
 
-export default function DonghuaPageClient({ initialData }: DonghuaPageClientProps) {
+export default function DonghuaPageClient({ initialData, initialSchedule }: DonghuaPageClientProps) {
   const [data, setData] = React.useState(initialData);
+  const [schedule, setSchedule] = React.useState(initialSchedule);
   const [results, setResults] = React.useState<AnichinDonghua[] | null>(null);
   const [bootstrapping, setBootstrapping] = React.useState(
-    initialData.latest_updates.length === 0 || initialData.ongoing_series.length === 0
+    initialData.latest_updates.length === 0 ||
+      initialData.ongoing_series.length === 0 ||
+      initialData.completed_series.length === 0
   );
   const [loading] = React.useState(false);
 
@@ -29,7 +34,10 @@ export default function DonghuaPageClient({ initialData }: DonghuaPageClientProp
   }, []);
 
   React.useEffect(() => {
-    const needsBootstrap = initialData.latest_updates.length === 0 || initialData.ongoing_series.length === 0;
+    const needsBootstrap =
+      initialData.latest_updates.length === 0 ||
+      initialData.ongoing_series.length === 0 ||
+      initialData.completed_series.length === 0;
 
     if (!needsBootstrap) {
       setBootstrapping(false);
@@ -53,7 +61,26 @@ export default function DonghuaPageClient({ initialData }: DonghuaPageClientProp
     return () => {
       cancelled = true;
     };
-  }, [initialData.latest_updates.length, initialData.ongoing_series.length]);
+  }, [initialData.completed_series.length, initialData.latest_updates.length, initialData.ongoing_series.length]);
+
+  React.useEffect(() => {
+    if (initialSchedule.length > 0) {
+      return;
+    }
+
+    let cancelled = false;
+    getDonghuaSchedule()
+      .then((nextSchedule) => {
+        if (!cancelled) {
+          setSchedule(nextSchedule);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialSchedule.length]);
 
   return (
     <MediaHubTemplate
@@ -77,16 +104,19 @@ export default function DonghuaPageClient({ initialData }: DonghuaPageClientProp
             : data.latest_updates.map((item: AnichinDonghua, index: number) => (
               <Card
                 key={index}
-                href={`/donghua/${item.slug}`}
+                href={item.link || `/donghua/${item.slug}`}
                 image={item.thumb}
                 title={item.title}
-                badgeText={item.status || ''}
+                subtitle={item.episode || undefined}
+                badgeText={item.status || item.type || ''}
                 theme="donghua"
               />
             ))}
         </SectionCard>
 
         <SavedContentSection type="donghua" title="Saved Donghua" />
+
+        {schedule.length > 0 ? <ReleaseCalendar schedule={schedule} theme="donghua" /> : null}
 
         <SectionCard title="Ongoing cultivators" gridDensity="default">
           {data.ongoing_series.length === 0 && bootstrapping
@@ -98,6 +128,22 @@ export default function DonghuaPageClient({ initialData }: DonghuaPageClientProp
                 image={item.thumb || ''}
                 title={item.title}
                 subtitle={item.episode}
+                theme="donghua"
+              />
+            ))}
+        </SectionCard>
+
+        <SectionCard title="Completed Realm" subtitle="Finished series ready for a full binge" mode="rail" railVariant="default">
+          {data.completed_series.length === 0 && bootstrapping
+            ? Array.from({ length: 6 }).map((_, index) => <SkeletonCard key={`completed-skeleton-${index}`} />)
+            : data.completed_series.slice(0, 18).map((item: AnichinDonghua, index: number) => (
+              <Card
+                key={`completed-${index}-${item.slug}`}
+                href={`/donghua/${item.slug}`}
+                image={item.thumb || ''}
+                title={item.title}
+                subtitle={item.episode || undefined}
+                badgeText={item.status || 'Completed'}
                 theme="donghua"
               />
             ))}

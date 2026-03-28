@@ -17,7 +17,7 @@ import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
 import { TitleBlock } from '@/components/atoms/TitleBlock';
-import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
+import { ReaderMediaDetailPage } from '@/components/organisms/ReaderMediaDetailPage';
 import { MetadataPanel } from '@/components/organisms/MetadataPanel';
 import { User, Activity, Layout, ShieldAlert, ChevronLeft, Play } from 'lucide-react';
 import type { JikanEnrichment, MangaDetail } from '@/lib/types';
@@ -105,7 +105,7 @@ export default function MangaDetailPage({ params }: PageProps) {
   const latestChapter = manga.chapters[0];
 
   return (
-    <DetailPageScaffold
+    <ReaderMediaDetailPage
       theme="manga"
       hero={
         <section className="surface-panel-elevated relative overflow-hidden">
@@ -129,7 +129,7 @@ export default function MangaDetailPage({ params }: PageProps) {
             </nav>
 
             <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:items-end">
-              <div className="relative mx-auto aspect-[2/3] w-44 overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2 hard-shadow-md md:mx-0 md:w-52">
+              <div className="relative mx-auto aspect-[3/4] w-44 overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2 hard-shadow-md md:mx-0 md:w-52">
                 <Image
                   src={hdImage || '/favicon.ico'}
                   alt={manga.title}
@@ -217,7 +217,7 @@ export default function MangaDetailPage({ params }: PageProps) {
                 {manga.similar_manga.map((similar) => (
                   <Paper key={similar.slug} tone="muted" shadow="sm" padded={false} asChild>
                     <Link href={`/manga/${similar.slug}`} className="group flex gap-4 p-4 transition-colors hover:bg-surface-elevated">
-                      <div className="relative aspect-[2/3] w-24 overflow-hidden rounded-[var(--radius-md)] border border-border-subtle bg-surface-2 transition-all group-hover:border-white/20">
+                      <div className="relative aspect-[3/4] w-24 overflow-hidden rounded-[var(--radius-md)] border border-border-subtle bg-surface-2 transition-all group-hover:border-white/20">
                         <Image
                           src={getHDThumbnail(similar.image) || '/favicon.ico'}
                           alt={similar.title}
@@ -289,6 +289,6 @@ export default function MangaDetailPage({ params }: PageProps) {
           </ScrollArea>
         </Paper>
       </section>
-    </DetailPageScaffold>
+    </ReaderMediaDetailPage>
   );
 }

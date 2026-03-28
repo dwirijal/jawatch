@@ -1,4 +1,4 @@
-type MediaProvider = 'sanka' | 'kanata-movie';
+type MediaProvider = 'sanka' | 'kanata-movie' | 'kanata-anichin';
 
 export type SankaUseCase =
   | 'anime_home'
@@ -44,6 +44,15 @@ export type KanataMovieUseCase =
   | 'movie_stream'
   | 'movie_genre';
 
+export type KanataAnichinUseCase =
+  | 'donghua_home'
+  | 'donghua_ongoing'
+  | 'donghua_completed'
+  | 'donghua_schedule'
+  | 'donghua_detail'
+  | 'donghua_episode'
+  | 'donghua_search';
+
 type MediaContract<TUseCase extends string> = {
   provider: MediaProvider;
   useCase: TUseCase;
@@ -60,8 +69,13 @@ export type KanataMovieProviderContract = MediaContract<KanataMovieUseCase> & {
   provider: 'kanata-movie';
 };
 
+export type KanataAnichinProviderContract = MediaContract<KanataAnichinUseCase> & {
+  provider: 'kanata-anichin';
+};
+
 export const SANKA_BASE_URL = 'https://www.sankavollerei.com';
 export const KANATA_MOVIE_BASE_URL = 'https://api.kanata.web.id/movietube';
+export const KANATA_ANICHIN_BASE_URL = 'https://api.kanata.web.id/anichin';
 
 function buildSankaHeaders(): HeadersInit {
   const baseHeaders: HeadersInit = {
@@ -373,6 +387,58 @@ export const KANATA_MOVIE_PROVIDER_MATRIX: Record<KanataMovieUseCase, KanataMovi
   },
 };
 
+export const KANATA_ANICHIN_PROVIDER_MATRIX: Record<KanataAnichinUseCase, KanataAnichinProviderContract> = {
+  donghua_home: {
+    provider: 'kanata-anichin',
+    useCase: 'donghua_home',
+    endpoint: '/home',
+    payload: 'Donghua home rails from Anichin.',
+    notes: 'Primary donghua latest feed.',
+  },
+  donghua_ongoing: {
+    provider: 'kanata-anichin',
+    useCase: 'donghua_ongoing',
+    endpoint: '/ongoing?page=:page',
+    payload: 'Ongoing donghua series cards.',
+    notes: 'Primary ongoing donghua feed.',
+  },
+  donghua_completed: {
+    provider: 'kanata-anichin',
+    useCase: 'donghua_completed',
+    endpoint: '/completed?page=:page',
+    payload: 'Completed donghua series cards.',
+    notes: 'Secondary donghua catalog feed.',
+  },
+  donghua_schedule: {
+    provider: 'kanata-anichin',
+    useCase: 'donghua_schedule',
+    endpoint: '/schedule',
+    payload: 'Donghua release schedule.',
+    notes: 'Optional schedule feed.',
+  },
+  donghua_detail: {
+    provider: 'kanata-anichin',
+    useCase: 'donghua_detail',
+    endpoint: '/detail/:slug',
+    payload: 'Donghua detail with metadata and episode guide.',
+    notes: 'Primary donghua detail contract.',
+  },
+  donghua_episode: {
+    provider: 'kanata-anichin',
+    useCase: 'donghua_episode',
+    endpoint: '/episode/:slug',
+    payload: 'Donghua playback payload with hls and server mirrors.',
+    notes: 'Primary donghua playback contract.',
+  },
+  donghua_search: {
+    provider: 'kanata-anichin',
+    useCase: 'donghua_search',
+    endpoint: '/search?q=:query',
+    payload: 'Donghua search results.',
+    notes: 'Primary donghua search feed.',
+  },
+};
+
 export function buildSankaUrl(path: string): string {
   return `${SANKA_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
 }
@@ -381,12 +447,33 @@ export function buildKanataMovieUrl(path: string): string {
   return `${KANATA_MOVIE_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+export function buildKanataAnichinUrl(path: string): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  if (typeof window !== 'undefined') {
+    const [pathname, query = ''] = normalizedPath.split('?');
+    const suffix = query ? `?${query}` : '';
+
+    if (pathname === '/home') return `/api/anichin/home${suffix}`;
+    if (pathname === '/schedule') return `/api/anichin/schedule${suffix}`;
+    if (pathname === '/ongoing') return `/api/anichin/ongoing${suffix}`;
+    if (pathname === '/completed') return `/api/anichin/completed${suffix}`;
+    if (pathname.startsWith('/detail/')) return `/api/anichin/detail/${pathname.slice('/detail/'.length)}${suffix}`;
+    if (pathname.startsWith('/episode/')) return `/api/anichin/episode/${pathname.slice('/episode/'.length)}${suffix}`;
+    if (pathname === '/search') return `/api/anichin/search${suffix}`;
+  }
+
+  return `${KANATA_ANICHIN_BASE_URL}${normalizedPath}`;
+}
+
 export function buildMediaUrl(provider: MediaProvider, path: string): string {
   switch (provider) {
     case 'sanka':
       return buildSankaUrl(path);
     case 'kanata-movie':
       return buildKanataMovieUrl(path);
+    case 'kanata-anichin':
+      return buildKanataAnichinUrl(path);
     default:
       return path;
   }
@@ -397,6 +484,7 @@ function buildMediaHeaders(provider: MediaProvider): HeadersInit {
     case 'sanka':
       return buildSankaHeaders();
     case 'kanata-movie':
+    case 'kanata-anichin':
       return buildKanataHeaders();
     default:
       return { Accept: 'application/json, text/plain, */*' };
@@ -421,4 +509,8 @@ export async function fetchSankaJson<T>(path: string): Promise<T> {
 
 export async function fetchKanataMovieJson<T>(path: string): Promise<T> {
   return fetchMediaJson<T>('kanata-movie', path);
+}
+
+export async function fetchKanataAnichinJson<T>(path: string): Promise<T> {
+  return fetchMediaJson<T>('kanata-anichin', path);
 }

@@ -13,7 +13,7 @@ import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
 import { ShareButton } from '@/components/molecules/ShareButton';
 import { CastRail } from '@/components/organisms/CastRail';
-import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
+import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
 
 interface PageProps {
@@ -29,9 +29,14 @@ export default async function MovieDetailPage({ params }: PageProps) {
   }
 
   const watchHubHref = `/movies/watch/${slug}`;
+  const quickLinks = [
+    { href: '#overview', label: 'Overview' },
+    ...(movie.cast.length > 0 ? [{ href: '#cast', label: 'Cast' }] : []),
+    ...(movie.recommendations.length > 0 ? [{ href: '#related', label: 'More Like This' }] : []),
+  ];
 
   return (
-    <DetailPageScaffold
+    <HorizontalMediaDetailPage
       theme="movie"
       hero={
         <VideoDetailHero
@@ -73,6 +78,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
             </Button>
           }
           trailerUrl={movie.trailerUrl}
+          galleryVariant="compact"
         />
       }
       sidebar={
@@ -87,7 +93,24 @@ export default async function MovieDetailPage({ params }: PageProps) {
           />
 
           <Paper tone="muted" shadow="sm" className="space-y-4 p-5 md:p-6">
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Quick Stats</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Jump Around</p>
+            <div className="grid grid-cols-2 gap-2">
+              {quickLinks.map((item) => (
+                <Button
+                  key={item.href}
+                  variant="outline"
+                  size="sm"
+                  className="h-11 justify-center rounded-[var(--radius-md)] border-border-subtle bg-surface-1 px-3 text-[11px] font-black tracking-[0.16em] hover:bg-surface-elevated"
+                  asChild
+                >
+                  <Link href={item.href}>{item.label}</Link>
+                </Button>
+              ))}
+            </div>
+          </Paper>
+
+          <Paper tone="muted" shadow="sm" className="space-y-4 p-5 md:p-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">At A Glance</p>
             <div className="grid gap-2.5">
               <StatCard label="Year" value={movie.year || 'N/A'} icon={Calendar} />
               <StatCard label="Runtime" value={movie.duration || 'N/A'} icon={Clock} />
@@ -100,7 +123,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
       }
       footer={<CommunityCTA mediaId={slug} title={movie.title} type="movie" theme="movie" />}
     >
-      <section className="space-y-8">
+      <section id="overview" className="space-y-8">
         <DetailSectionHeading title="Overview" theme="movie" />
         <Paper tone="muted" shadow="sm" className="p-5 md:p-6">
           <p className="text-sm leading-7 text-zinc-400 md:text-base">{movie.synopsis}</p>
@@ -108,7 +131,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
       </section>
 
       {movie.cast.length > 0 ? (
-        <section className="space-y-8">
+        <section id="cast" className="space-y-8">
           <DetailSectionHeading
             title="Cast"
             theme="movie"
@@ -119,7 +142,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
       ) : null}
 
       {movie.recommendations.length > 0 ? (
-        <section className="space-y-8">
+        <section id="related" className="space-y-8">
           <DetailSectionHeading
             title="More Like This"
             theme="movie"
@@ -140,6 +163,6 @@ export default async function MovieDetailPage({ params }: PageProps) {
           </div>
         </section>
       ) : null}
-    </DetailPageScaffold>
+    </HorizontalMediaDetailPage>
   );
 }

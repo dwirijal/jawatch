@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { LayoutGrid } from 'lucide-react';
+import { Check, LayoutGrid, Play, TimerReset } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/atoms/Badge';
@@ -11,8 +11,9 @@ import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { AdSection } from '@/components/organisms/AdSection';
+import { PageStateScaffold } from '@/components/organisms/PageStateScaffold';
+import { VerticalPlayerPage } from '@/components/organisms/VerticalPlayerPage';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
-import { VideoPlaybackScaffold } from '@/components/organisms/VideoPlaybackScaffold';
 import { getDrachinDetailBySlug, getDrachinEpisodeBySlug, type DrachinDetailData, type DrachinEpisodeData } from '@/lib/adapters/drama';
 import { saveVerticalDramaProgress } from '@/lib/vertical-drama-store';
 
@@ -30,6 +31,7 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
   const [episode, setEpisode] = React.useState<DrachinEpisodeData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [autoNextCountdown, setAutoNextCountdown] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -64,39 +66,62 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
     }
   }, [episode, episodeIndex, loading, slug]);
 
+  const currentIndex = detail?.episodes.findIndex((item) => item.index === String(episodeIndex)) ?? -1;
+  const previousEpisode = currentIndex > 0 && detail ? detail.episodes[currentIndex - 1] : null;
+  const nextEpisode = currentIndex >= 0 && detail && currentIndex < detail.episodes.length - 1 ? detail.episodes[currentIndex + 1] : null;
+  const nextEpisodeHref = nextEpisode ? `/drachin/episode/${nextEpisode.slug}?index=${nextEpisode.index}` : null;
+  const followingEpisodes =
+    currentIndex >= 0 && detail
+      ? detail.episodes.slice(currentIndex + 1, currentIndex + 9)
+      : detail?.episodes.slice(0, 8) ?? [];
+  const watchedUntilIndex = episodeIndex;
+
+  React.useEffect(() => {
+    setAutoNextCountdown(null);
+  }, [slug, episodeIndex]);
+
+  React.useEffect(() => {
+    if (autoNextCountdown === null || !nextEpisodeHref) {
+      return;
+    }
+
+    if (autoNextCountdown <= 0) {
+      router.push(nextEpisodeHref);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setAutoNextCountdown((current) => (current === null ? null : current - 1));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [autoNextCountdown, nextEpisodeHref, router]);
+
   if (loading) {
     return (
-      <div className="app-shell bg-background text-white">
-        <main className="app-container-immersive py-6">
+      <PageStateScaffold>
           <Paper tone="muted" shadow="sm" className="p-6 md:p-8">
             <div className="animate-pulse space-y-4">
               <div className="h-5 w-32 rounded-full bg-white/10" />
               <div className="aspect-video rounded-[var(--radius-lg)] bg-white/10" />
             </div>
           </Paper>
-        </main>
-      </div>
+      </PageStateScaffold>
     );
   }
 
   if (!detail || !episode || error) {
     return (
-      <div className="app-shell bg-background text-white">
-        <main className="app-container-immersive py-6">
+      <PageStateScaffold>
           <StateInfo type="error" title="Playback unavailable" description={error || 'This episode could not be loaded.'} />
-        </main>
-      </div>
+      </PageStateScaffold>
     );
   }
 
-  const currentIndex = detail.episodes.findIndex((item) => item.index === String(episodeIndex));
-  const previousEpisode = currentIndex > 0 ? detail.episodes[currentIndex - 1] : null;
-  const nextEpisode = currentIndex >= 0 && currentIndex < detail.episodes.length - 1 ? detail.episodes[currentIndex + 1] : null;
-  const nextEpisodeHref = nextEpisode ? `/drachin/episode/${nextEpisode.slug}?index=${nextEpisode.index}` : null;
-  const followingEpisodes = currentIndex >= 0 ? detail.episodes.slice(currentIndex + 1, currentIndex + 9) : detail.episodes.slice(0, 8);
-
   return (
-    <VideoPlaybackScaffold
+    <VerticalPlayerPage
       backHref="/drachin"
       eyebrow="Now Watching"
       title={detail.title}
@@ -122,7 +147,7 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
           format="vertical"
           hasNext={Boolean(nextEpisode)}
           onNext={nextEpisodeHref ? () => router.push(nextEpisodeHref) : undefined}
-          onEnded={nextEpisodeHref ? () => router.push(nextEpisodeHref) : undefined}
+          onEnded={nextEpisodeHref ? () => setAutoNextCountdown(6) : undefined}
         />
       }
       sidebar={
@@ -146,10 +171,11 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="drama">{detail.totalEpisodes} Episodes</Badge>
                   <Badge variant="outline">EP {episode.episode}</Badge>
+                  {nextEpisode ? <Badge variant="outline">Auto-next ready</Badge> : null}
                 </div>
                 <h2 className="text-lg font-semibold tracking-tight text-white">{detail.title}</h2>
                 <p className="text-sm leading-6 text-zinc-400">
-                  Progress is saved in your browser, so opening this title again will continue from the last viewed episode.
+                  Progress is saved in your browser, and when this episode ends you can roll straight into the next one without leaving the vertical flow.
                 </p>
 
                 <div className="flex flex-wrap gap-2">
@@ -181,9 +207,20 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
               <div className="grid max-h-[28rem] grid-cols-3 gap-2 overflow-auto pr-1">
                 {detail.episodes.slice(Math.max(0, episodeIndex - 4), Math.min(detail.totalEpisodes, episodeIndex + 11)).map((item) => {
                   const isActive = item.index === String(episodeIndex);
+                  const numericIndex = Number.parseInt(item.index, 10) || 0;
+                  const isWatched = numericIndex > 0 && numericIndex <= watchedUntilIndex;
                   return (
-                    <Button key={`${item.slug}:${item.index}`} variant={isActive ? 'drama' : 'outline'} size="sm" asChild className="w-full">
-                      <Link href={`/drachin/episode/${item.slug}?index=${item.index}`}>EP {item.episode}</Link>
+                    <Button
+                      key={`${item.slug}:${item.index}`}
+                      variant={isActive ? 'drama' : 'outline'}
+                      size="sm"
+                      asChild
+                      className={`w-full ${isWatched && !isActive ? 'opacity-75' : ''}`}
+                    >
+                      <Link href={`/drachin/episode/${item.slug}?index=${item.index}`}>
+                        {isWatched && !isActive ? <Check className="h-3.5 w-3.5" /> : null}
+                        EP {item.episode}
+                      </Link>
                     </Button>
                   );
                 })}
@@ -193,6 +230,34 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
         </div>
       }
     >
+      {autoNextCountdown !== null && nextEpisode && nextEpisodeHref ? (
+        <Paper tone="muted" shadow="sm" className="border border-rose-500/20 bg-rose-500/8 p-4 md:p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="drama">Up Next</Badge>
+                <Badge variant="outline">Episode {nextEpisode.episode}</Badge>
+              </div>
+              <h2 className="text-lg font-semibold tracking-tight text-white">Continue to Episode {nextEpisode.episode}</h2>
+              <p className="text-sm leading-6 text-zinc-400">
+                Auto-next is armed for this short-drama flow. The next episode will start in {autoNextCountdown}s unless you stay here.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button variant="drama" onClick={() => router.push(nextEpisodeHref)}>
+                <Play className="h-4 w-4 fill-current" />
+                Play Next Now
+              </Button>
+              <Button variant="outline" onClick={() => setAutoNextCountdown(null)}>
+                <TimerReset className="h-4 w-4" />
+                Stay Here
+              </Button>
+            </div>
+          </div>
+        </Paper>
+      ) : null}
+
       <AdSection theme="drama" />
 
       <section className="space-y-4">
@@ -226,6 +291,6 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
           ))}
         </div>
       </section>
-    </VideoPlaybackScaffold>
+    </VerticalPlayerPage>
   );
 }

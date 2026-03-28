@@ -104,8 +104,8 @@ export default function MediaDownloadOptionsPanel({
 }: MediaDownloadOptionsPanelProps) {
   const normalizedGroups = React.useMemo(
     () =>
-      groups
-        .map((group) => {
+      Array.from(
+        groups.reduce((map, group) => {
           const dedupedLinks = Array.from(
             new Map(
               group.links
@@ -120,16 +120,40 @@ export default function MediaDownloadOptionsPanel({
               return leftRank - rightRank;
             }
 
-            return left.label.localeCompare(right.label);
-          });
+              return left.label.localeCompare(right.label);
+            });
 
-          return {
-            ...group,
+          const normalizedGroup = {
             format: group.format.trim(),
             quality: normalizeLabel(group.quality),
             links: dedupedLinks,
           };
-        })
+          const key = `${normalizedGroup.quality}::${normalizedGroup.format.toLowerCase()}`;
+          const existing = map.get(key);
+
+          if (existing) {
+            existing.links = Array.from(
+              new Map(
+                [...existing.links, ...normalizedGroup.links].map((link) => [`${link.label}::${link.href}`, link])
+              ).values()
+            ).sort((left, right) => {
+              const leftRank = getLinkRank(left.label);
+              const rightRank = getLinkRank(right.label);
+
+              if (leftRank !== rightRank) {
+                return leftRank - rightRank;
+              }
+
+              return left.label.localeCompare(right.label);
+            });
+          } else {
+            map.set(key, normalizedGroup);
+          }
+
+          return map;
+        }, new Map<string, MediaDownloadGroup>())
+      )
+        .map(([, group]) => group)
         .filter((group) => group.links.length > 0)
         .sort((left, right) => {
           const qualityDelta = getQualityRank(right.quality) - getQualityRank(left.quality);
@@ -226,13 +250,13 @@ export default function MediaDownloadOptionsPanel({
                       <Download className="h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Format</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Method</p>
                       <p className="mt-1 text-sm font-black tracking-[0.08em] text-white/90">{group.format}</p>
                     </div>
                   </div>
 
                   <span className={cn('rounded-[var(--radius-sm)] border px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.18em]', tone.label)}>
-                    {group.quality}
+                    Method
                   </span>
                 </div>
 

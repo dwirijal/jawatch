@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { CssBaseline } from "@/components/atoms/CssBaseline";
 import { Navbar } from "@/components/organisms/Navbar";
 import { Footer } from "@/components/organisms/Footer";
 import { MobileNav } from "@/components/organisms/MobileNav";
 import { DeviceListener } from "@/components/atoms/DeviceListener";
-import { InitColorSchemeScript } from "@/components/atoms/InitColorSchemeScript";
 import { NoSsr } from "@/components/atoms/NoSsr";
 import { PWAInstallPrompt } from "@/components/molecules/PWAInstallPrompt";
 import { AuthSessionProvider } from "@/components/providers/AuthSessionProvider";
@@ -77,12 +77,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-color-scheme="dark"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${plusJakartaSans.variable} ${bricolageGrotesque.variable} h-full antialiased`}
     >
       <head>
-        <InitColorSchemeScript />
         <CssBaseline />
         <meta name="google-adsense-account" content="ca-pub-8868090753979495" />
         <Script
@@ -101,6 +99,7 @@ export default function RootLayout({
           <NoSsr>
             <PWAInstallPrompt />
           </NoSsr>
+          <Analytics />
           <MobileNav />
           <Footer />
         </AuthSessionProvider>

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { Clapperboard, Play } from 'lucide-react';
+import { Check, Clapperboard, Play, Smartphone } from 'lucide-react';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
@@ -10,18 +10,23 @@ import { Paper } from '@/components/atoms/Paper';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { AdSection } from '@/components/organisms/AdSection';
+import { VerticalSeriesDetailScaffold } from '@/components/organisms/VerticalSeriesDetailScaffold';
 import { getDrachinDetailBySlug, type DrachinDetailData } from '@/lib/adapters/drama';
-import { getDrachinPlaybackHref } from '@/lib/vertical-drama-store';
+import { getDrachinPlaybackTarget, getVerticalDramaChunkIndex } from '@/lib/vertical-drama-store';
 
 interface DrachinDetailClientProps {
   slug: string;
 }
+
+const EPISODE_CHUNK_SIZE = 20;
 
 export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) {
   const [detail, setDetail] = React.useState<DrachinDetailData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [playHref, setPlayHref] = React.useState(`/drachin/episode/${slug}?index=1`);
+  const [resumeEpisodeIndex, setResumeEpisodeIndex] = React.useState(1);
+  const [activeChunkIndex, setActiveChunkIndex] = React.useState(0);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -49,19 +54,65 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
     };
   }, [slug]);
 
-  React.useEffect(() => {
-    setPlayHref(getDrachinPlaybackHref(slug));
+  const syncResumeTarget = React.useCallback(() => {
+    const target = getDrachinPlaybackTarget(slug);
+    setPlayHref(target.href);
+    setResumeEpisodeIndex(target.episodeIndex);
   }, [slug]);
 
-  return (
-    <div className="app-shell bg-background text-white">
-      <main className="app-container-wide app-section-stack py-6 md:py-8">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" asChild>
-            <Link href="/drachin">Back to Drama China</Link>
-          </Button>
-        </div>
+  React.useEffect(() => {
+    syncResumeTarget();
+    window.addEventListener('focus', syncResumeTarget);
+    window.addEventListener('storage', syncResumeTarget);
+    return () => {
+      window.removeEventListener('focus', syncResumeTarget);
+      window.removeEventListener('storage', syncResumeTarget);
+    };
+  }, [syncResumeTarget]);
 
+  const episodeChunks = React.useMemo(() => {
+    if (!detail) {
+      return [];
+    }
+
+    const chunks: Array<{
+      key: string;
+      label: string;
+      items: DrachinDetailData['episodes'];
+    }> = [];
+
+    for (let start = 0; start < detail.episodes.length; start += EPISODE_CHUNK_SIZE) {
+      const items = detail.episodes.slice(start, start + EPISODE_CHUNK_SIZE);
+      const first = items[0];
+      const last = items[items.length - 1];
+      chunks.push({
+        key: `${first?.index ?? start}-${last?.index ?? start + items.length}`,
+        label: `${first?.episode ?? start + 1}-${last?.episode ?? start + items.length}`,
+        items,
+      });
+    }
+
+    return chunks;
+  }, [detail]);
+
+  React.useEffect(() => {
+    if (!episodeChunks.length) {
+      setActiveChunkIndex(0);
+      return;
+    }
+
+    const nextChunk = Math.min(
+      episodeChunks.length - 1,
+      getVerticalDramaChunkIndex(resumeEpisodeIndex, EPISODE_CHUNK_SIZE)
+    );
+    setActiveChunkIndex(nextChunk);
+  }, [episodeChunks, resumeEpisodeIndex]);
+
+  const activeChunk = episodeChunks[activeChunkIndex] ?? episodeChunks[0] ?? null;
+  const resumeLabel = resumeEpisodeIndex > 1 ? `Resume Episode ${resumeEpisodeIndex}` : 'Start Episode 1';
+
+  return (
+    <VerticalSeriesDetailScaffold backHref="/drachin" backLabel="Back to Drama China">
         {loading ? (
           <Paper tone="muted" shadow="sm" className="p-6 md:p-8">
             <div className="animate-pulse space-y-4">
@@ -76,8 +127,8 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
         ) : (
           <>
             <Paper tone="muted" shadow="sm" className="overflow-hidden p-5 md:p-6">
-              <div className="grid gap-6 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-8">
-                <div className="relative aspect-[3/4] overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2">
+              <div className="grid gap-6 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-8">
+                <div className="relative aspect-[9/16] overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2">
                   {detail.poster ? (
                     <Image
                       src={detail.poster}
@@ -88,6 +139,10 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
                       unoptimized
                     />
                   ) : null}
+                  <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white backdrop-blur-md">
+                    <Smartphone className="h-3.5 w-3.5 text-rose-300" />
+                    Vertical Series
+                  </div>
                 </div>
 
                 <div className="space-y-4 md:space-y-5">
@@ -106,9 +161,12 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
                   <div className="flex flex-wrap gap-3">
                     <Button variant="drama" asChild>
                       <Link href={playHref}>
-                        <Play className="h-4 w-4 fill-current" /> Resume Watching
+                        <Play className="h-4 w-4 fill-current" /> {resumeLabel}
                       </Link>
                     </Button>
+                    {resumeEpisodeIndex > 1 ? (
+                      <Badge variant="outline">Last watched: EP {resumeEpisodeIndex}</Badge>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -119,27 +177,60 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
             <section className="space-y-4">
               <SectionHeader
                 title="Episode Guide"
-                subtitle={`${detail.totalEpisodes} short episodes available. Use this page to jump into any part of the story quickly.`}
+                subtitle={`${detail.totalEpisodes} short episodes available. The list opens on the chunk that matches your last watched episode.`}
                 icon={Clapperboard}
               />
 
+              {episodeChunks.length > 1 ? (
+                <div className="flex flex-wrap gap-2">
+                  {episodeChunks.map((chunk, chunkIndex) => {
+                    const isActive = chunkIndex === activeChunkIndex;
+                    return (
+                      <Button
+                        key={chunk.key}
+                        type="button"
+                        variant={isActive ? 'drama' : 'outline'}
+                        size="sm"
+                        onClick={() => setActiveChunkIndex(chunkIndex)}
+                        className="rounded-[var(--radius-lg)]"
+                      >
+                        {chunk.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+              ) : null}
+
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                {detail.episodes.map((episode) => (
+                {activeChunk?.items.map((episode) => {
+                  const numericIndex = Number.parseInt(episode.index, 10) || 0;
+                  const isWatched = numericIndex > 0 && numericIndex <= resumeEpisodeIndex;
+                  const isResumeTarget = numericIndex === resumeEpisodeIndex;
+                  return (
                   <Paper key={`${episode.slug}:${episode.index}`} asChild tone="muted" shadow="sm" padded={false}>
                     <Link
                       href={`/drachin/episode/${episode.slug}?index=${episode.index}`}
-                      className="flex min-h-[5rem] flex-col justify-between gap-2 p-4 transition-colors hover:bg-surface-elevated"
+                      className={`flex min-h-[5rem] flex-col justify-between gap-2 p-4 transition-colors hover:bg-surface-elevated ${
+                        isWatched ? 'opacity-80' : ''
+                      } ${isResumeTarget ? 'ring-1 ring-rose-500/35' : ''}`}
                     >
-                      <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Episode</span>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Episode</span>
+                        {isWatched ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.16em] text-rose-300">
+                            <Check className="h-3.5 w-3.5" />
+                            Watched
+                          </span>
+                        ) : null}
+                      </div>
                       <span className="text-lg font-semibold tracking-tight text-white">{episode.episode}</span>
                     </Link>
                   </Paper>
-                ))}
+                )})}
               </div>
             </section>
           </>
         )}
-      </main>
-    </div>
+    </VerticalSeriesDetailScaffold>
   );
 }

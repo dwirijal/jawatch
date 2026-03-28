@@ -1,10 +1,4 @@
 import { buildSankaUrl, fetchSankaJson } from '@/lib/media';
-import {
-  readSnapshotDomainFile,
-  readSnapshotPlayback,
-  readSnapshotTitle,
-  searchSnapshotDomain,
-} from '@/lib/runtime-snapshot';
 import type {
   AnimePaginationResult,
   AnimeSchedule,
@@ -103,14 +97,6 @@ export type AnimeIndexGroup = {
   list: AnimeCatalogCard[];
 };
 
-type AnimeHomeSnapshot = {
-  ongoing?: AnimeCatalogCard[];
-  popular?: AnimeCatalogCard[];
-  trending?: AnimeCatalogCard[];
-  latest?: AnimeCatalogCard[];
-  items?: AnimeCatalogCard[];
-};
-
 function readRecord(value: unknown): JSONRecord {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as JSONRecord) : {};
 }
@@ -130,6 +116,18 @@ function unwrapAnimePayload(value: unknown): unknown {
 
 function readText(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function readTextOrNumber(value: unknown): string {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  return '';
 }
 
 function readNumber(value: unknown): number | null {
@@ -407,31 +405,39 @@ function normalizeAnimeCast(payload: unknown): AnimeCastItem[] {
 }
 
 function normalizeAnimeEpisodes(payload: unknown): AnimeEpisodeListItem[] {
-  return readArray(payload)
-    .map((item) => {
-      const record = readRecord(item);
-      const slug = readText(record.episode_slug) || readText(record.episodeId) || readText(record.slug);
-      const title = readText(record.title) || slug;
-      if (!slug || !title) {
-        return null;
-      }
+  const deduped = new Map<string, AnimeEpisodeListItem>();
 
-      const episodeNumber = readNumber(record.episode_number);
-      const fallbackEpisodeNumber = Number.parseFloat(slug.match(/episode-(\d+(?:\.\d+)?)/i)?.[1] || '');
-      return {
-        episode_slug: slug,
-        title,
-        episode_number:
-          episodeNumber ??
-          (Number.isFinite(fallbackEpisodeNumber) ? fallbackEpisodeNumber : 0),
-        release_label:
-          readText(record.release_label) ||
-          readText(record.release_at) ||
-          readText(record.releasedOn) ||
-          '',
-      } satisfies AnimeEpisodeListItem;
-    })
-    .filter((item): item is AnimeEpisodeListItem => item !== null)
+  for (const item of readArray(payload)) {
+    const record = readRecord(item);
+    const slug =
+      readText(record.episode_slug) ||
+      readText(record.slug) ||
+      readText(record.href).split('/').filter(Boolean).pop() ||
+      readText(record.samehadakuUrl).split('/').filter(Boolean).pop() ||
+      readText(record.episodeId) ||
+      '';
+    const title = readTextOrNumber(record.title) || readTextOrNumber(record.episode) || slug;
+    if (!slug || !title) {
+      continue;
+    }
+
+    const episodeNumber = readNumber(record.episode_number) ?? readNumber(record.title) ?? readNumber(record.episode);
+    const fallbackEpisodeNumber = Number.parseFloat(slug.match(/episode-(\d+(?:\.\d+)?)/i)?.[1] || '');
+    deduped.set(slug, {
+      episode_slug: slug,
+      title,
+      episode_number:
+        episodeNumber ??
+        (Number.isFinite(fallbackEpisodeNumber) ? fallbackEpisodeNumber : 0),
+      release_label:
+        readText(record.release_label) ||
+        readText(record.release_at) ||
+        readText(record.releasedOn) ||
+        '',
+    } satisfies AnimeEpisodeListItem);
+  }
+
+  return Array.from(deduped.values())
     .sort((left, right) => left.episode_number - right.episode_number);
 }
 
@@ -673,30 +679,11 @@ function buildPath(path: string): string {
 }
 
 export async function getAnimeHomeItems(limit = 6): Promise<AnimeCatalogCard[]> {
-  const snapshot = await readSnapshotDomainFile<AnimeHomeSnapshot>('anime', 'home.json');
-  if (snapshot) {
-    const snapshotItems =
-      snapshot.popular ||
-      snapshot.trending ||
-      snapshot.ongoing ||
-      snapshot.latest ||
-      snapshot.items ||
-      [];
-    if (snapshotItems.length > 0) {
-      return snapshotItems.slice(0, Math.max(limit, 1));
-    }
-  }
   const payload = await fetchSankaJson<unknown>('/anime/samehadaku/popular?page=1');
   return normalizeAnimeCardList(payload).slice(0, Math.max(limit, 1));
 }
 
 export async function getAnimeHubData(limit = 36): Promise<{ ongoing: AnimeCatalogCard[] }> {
-  const snapshot = await readSnapshotDomainFile<AnimeHomeSnapshot>('anime', 'home.json');
-  if (snapshot?.ongoing?.length) {
-    return {
-      ongoing: snapshot.ongoing.slice(0, Math.max(limit, 1)),
-    };
-  }
   const payload = await fetchSankaJson<unknown>('/anime/samehadaku/ongoing?page=1');
   const cards = normalizeAnimeCardList(payload);
   return { ongoing: cards.slice(0, Math.max(limit, 1)) };
@@ -711,11 +698,6 @@ export async function searchAnimeCatalog(query: string, limit = 8): Promise<Anim
   const trimmed = query.trim();
   if (trimmed.length < 2) {
     return [];
-  }
-
-  const snapshot = await searchSnapshotDomain<AnimeCatalogCard>('anime', trimmed, limit);
-  if (snapshot.length > 0) {
-    return snapshot.slice(0, Math.min(Math.max(limit, 1), 12));
   }
 
   const payload = await fetchSankaJson<unknown>(`/anime/samehadaku/search?q=${encodeURIComponent(trimmed)}`);
@@ -736,7 +718,7 @@ function normalizeAnimeDetail(payload: unknown, slugFallback = ''): AnimeDetailD
     return null;
   }
 
-  const episodes = normalizeAnimeEpisodes(record.episodes ?? record.playlist ?? record.chapter_list);
+  const episodes = normalizeAnimeEpisodes(record.episodeList ?? record.episodes ?? record.playlist ?? record.chapter_list);
   const cast = normalizeAnimeCast(record.cast ?? record.cast_json);
   const enrichment = normalizeJikanEnrichment(record.enrichment);
   const status = buildAnimeStatusLabel(record.status ?? record.status_label);
@@ -774,10 +756,6 @@ function normalizeAnimeDetail(payload: unknown, slugFallback = ''): AnimeDetailD
 }
 
 export async function getAnimeDetailBySlug(slug: string): Promise<AnimeDetailData | null> {
-  const snapshot = await readSnapshotTitle<AnimeDetailData>('anime', slug);
-  if (snapshot) {
-    return snapshot;
-  }
   const payload = await fetchSankaJson<unknown>(`/anime/samehadaku/anime/${encodeURIComponent(slug)}`);
   return normalizeAnimeDetail(payload, slug);
 }
@@ -833,12 +811,12 @@ function normalizeEpisodeDetail(payload: unknown, slugFallback = ''): AnimeEpiso
 }
 
 export async function getAnimeEpisodeBySlug(slug: string): Promise<AnimeEpisodeData | null> {
-  const snapshot = await readSnapshotPlayback<AnimeEpisodeData>('anime', slug);
-  if (snapshot) {
-    return snapshot;
+  try {
+    const payload = await fetchSankaJson<unknown>(`/anime/samehadaku/episode/${encodeURIComponent(slug)}`);
+    return normalizeEpisodeDetail(payload, slug);
+  } catch {
+    return null;
   }
-  const payload = await fetchSankaJson<unknown>(`/anime/samehadaku/episode/${encodeURIComponent(slug)}`);
-  return normalizeEpisodeDetail(payload, slug);
 }
 
 function normalizeSankaGenre(item: unknown): KanataGenre | null {

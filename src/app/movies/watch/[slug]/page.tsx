@@ -1,6 +1,5 @@
-import Image from 'next/image';
 import { notFound, redirect } from 'next/navigation';
-import { LayoutGrid } from 'lucide-react';
+import { Info, LayoutGrid } from 'lucide-react';
 import { Link } from '@/components/atoms/Link';
 import { getMovieWatchBySlug } from '@/lib/adapters/movie';
 import { AdSection } from '@/components/organisms/AdSection';
@@ -10,7 +9,7 @@ import { Paper } from '@/components/atoms/Paper';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import MediaDownloadOptionsPanel from '@/components/organisms/MediaDownloadOptionsPanel';
-import { VideoPlaybackScaffold } from '@/components/organisms/VideoPlaybackScaffold';
+import { HorizontalPlayerPage } from '@/components/organisms/HorizontalPlayerPage';
 import MovieWatchHistoryTracker from './MovieWatchHistoryTracker';
 
 interface PageProps {
@@ -41,7 +40,7 @@ export default async function MovieWatchPage({ params }: PageProps) {
         quality={movie.quality}
       />
 
-      <VideoPlaybackScaffold
+      <HorizontalPlayerPage
         backHref={movie.detailHref}
         eyebrow="Now Watching"
         title={movie.title}
@@ -60,6 +59,8 @@ export default async function MovieWatchPage({ params }: PageProps) {
             </Link>
           </Button>
         }
+        desktopColumnsClassName="xl:grid-cols-[minmax(0,3fr)_minmax(18rem,1fr)] xl:grid-rows-1"
+        stretchSidebarToStage
         stage={
           movie.canInlinePlayback && movie.defaultUrl ? (
             <VideoPlayer
@@ -85,38 +86,38 @@ export default async function MovieWatchPage({ params }: PageProps) {
           )
         }
         sidebar={
-          <Paper tone="muted" shadow="sm" className="p-4 md:p-5">
-            <div className="flex flex-col gap-4">
-              <div className="flex gap-4">
-                <div className="relative hidden aspect-[2/3] w-24 shrink-0 overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle md:block md:w-28">
-                  <Image
-                    src={movie.poster}
-                    alt={movie.title}
-                    fill
-                    sizes="128px"
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-                <div className="flex-1 space-y-2.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="movie" className="px-2 py-0.5 text-[10px]">{movie.year}</Badge>
-                    <Badge variant="outline" className="px-2 py-0.5 text-[10px]">{movie.duration}</Badge>
-                    <Badge variant="outline" className="px-2 py-0.5 text-[10px]">{movie.quality}</Badge>
-                  </div>
-                  <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">{movie.title}</h2>
-                  <p className="max-w-3xl text-sm leading-6 text-zinc-400">{movie.synopsis}</p>
-
-                  <div className="flex flex-wrap gap-3 pt-1">
-                    <Button variant="outline" asChild>
-                      <Link href={movie.detailHref}>View Details</Link>
-                    </Button>
-                  </div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
-                    Source access is handled automatically when inline playback is unavailable.
-                  </p>
-                </div>
+          <Paper tone="muted" shadow="sm" className="flex h-full min-h-0 flex-col gap-4 p-4 md:p-5">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="movie" className="px-2 py-0.5 text-[10px]">{movie.year}</Badge>
+                <Badge variant="outline" className="px-2 py-0.5 text-[10px]">{movie.duration}</Badge>
+                <Badge variant="outline" className="px-2 py-0.5 text-[10px]">{movie.quality}</Badge>
               </div>
+              <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">{movie.title}</h2>
+              <p className="line-clamp-5 text-sm leading-6 text-zinc-400">{movie.synopsis}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-[var(--radius-md)] border border-border-subtle bg-surface-2 px-3.5 py-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Playback</p>
+                <p className="mt-1.5 text-sm font-bold text-white">{movie.canInlinePlayback ? 'Inline Ready' : 'External Source'}</p>
+              </div>
+              <div className="rounded-[var(--radius-md)] border border-border-subtle bg-surface-2 px-3.5 py-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Downloads</p>
+                <p className="mt-1.5 text-sm font-bold text-white">{movie.downloadGroups.length} Packs</p>
+              </div>
+            </div>
+
+            <div className="mt-auto flex flex-col gap-2.5">
+              <Button variant="outline" className="h-11 w-full justify-center rounded-[var(--radius-md)] border-border-subtle bg-surface-1 hover:bg-surface-elevated" asChild>
+                <Link href={movie.detailHref}>
+                  View Details
+                  <Info className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
+                Source access is handled automatically when inline playback is unavailable.
+              </p>
             </div>
           </Paper>
         }
@@ -136,7 +137,7 @@ export default async function MovieWatchPage({ params }: PageProps) {
         <AdSection theme="movie" />
 
         <CommunityCTA mediaId={movie.slug} title={movie.title} type="movie" theme="movie" />
-      </VideoPlaybackScaffold>
+      </HorizontalPlayerPage>
     </>
   );
 }

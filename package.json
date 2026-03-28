@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "postinstall": "node scripts/patch-opennext-load-manifest.mjs",
-    "snapshots:build": "node scripts/build-snapshot-bundle.mjs",
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev",
     "build": "next build",
     "start": "next start",
@@ -21,8 +20,8 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@opennextjs/cloudflare": "^1.17.1",
     "@ducanh2912/next-pwa": "^10.2.9",
+    "@opennextjs/cloudflare": "^1.17.1",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-popover": "^1.1.15",
@@ -31,6 +30,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@vercel/analytics": "^2.0.1",
     "animejs": "^4.3.6",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",

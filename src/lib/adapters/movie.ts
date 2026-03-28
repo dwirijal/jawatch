@@ -1,13 +1,8 @@
 import 'server-only';
 
-import { buildGatewayUrl, gatewayFetchJson, unwrapGatewayData } from '@/lib/gateway';
-import { resolveMovieVisuals } from '@/lib/enrichment';
-import {
-  readSnapshotDomainFile,
-  readSnapshotPlayback,
-  readSnapshotTitle,
-  searchSnapshotDomain,
-} from '@/lib/runtime-snapshot';
+import { withCloudflareEdgeCache } from '@/lib/cloudflare-cache';
+import { enrichMovieVisuals } from '@/lib/enrichment';
+import { buildKanataMovieUrl } from '@/lib/media';
 import type { MovieCardItem } from '@/lib/types';
 
 type JSONRecord = Record<string, unknown>;
@@ -74,16 +69,57 @@ const HOME_REVALIDATE_SECONDS = 60 * 10;
 const HUB_REVALIDATE_SECONDS = 60 * 10;
 const DETAIL_REVALIDATE_SECONDS = 60 * 30;
 const SEARCH_REVALIDATE_SECONDS = 60;
+const KANATA_TYPE = 'movie';
 
 export type MovieSupabaseDetail = MovieDetailData;
 export type MovieSupabaseWatch = MovieWatchData;
 
-type MovieHomeSnapshot = {
-  popular?: MovieCardItem[];
-  latest?: MovieCardItem[];
-  trending?: MovieCardItem[];
-  items?: MovieCardItem[];
-};
+async function fetchKanataMovieJson<T>(
+  path: string,
+  options: {
+    revalidate?: number;
+    timeoutMs?: number;
+    edgeCacheKey?: string;
+    edgeCacheTtlSeconds?: number;
+  } = {}
+): Promise<T> {
+  const loader = async () => {
+    const controller = new AbortController();
+    const timeoutMs = options.timeoutMs ?? 10000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(buildKanataMovieUrl(path), {
+        headers: {
+          Accept: 'application/json, text/plain, */*',
+        },
+        next: {
+          revalidate: options.revalidate ?? 3600,
+        },
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Kanata movie ${response.status}`);
+      }
+
+      return response.json() as Promise<T>;
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Kanata movie timeout');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
+
+  if (options.edgeCacheKey && options.edgeCacheTtlSeconds) {
+    return withCloudflareEdgeCache(options.edgeCacheKey, options.edgeCacheTtlSeconds, loader);
+  }
+
+  return loader();
+}
 
 function readRecord(value: unknown): JSONRecord {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as JSONRecord) : {};
@@ -145,8 +181,20 @@ function splitList(value: unknown): string[] {
   );
 }
 
-function buildMovieGatewayUrl(path: string): string {
-  return buildGatewayUrl(path);
+function unwrapMoviePayload<T>(payload: T | { data?: T; result?: T } | null | undefined): T | null {
+  if (payload == null) {
+    return null;
+  }
+  if (typeof payload === 'object' && !Array.isArray(payload)) {
+    const record = payload as { data?: T; result?: T };
+    if (record.data !== undefined) {
+      return record.data ?? null;
+    }
+    if (record.result !== undefined) {
+      return record.result ?? null;
+    }
+  }
+  return payload as T;
 }
 
 function formatRating(value: unknown): string {
@@ -223,7 +271,7 @@ function hostLabelFromCode(value: unknown): string {
   }
 }
 
-function normalizeMovieCard(item: unknown): MovieCardItem | null {
+async function normalizeMovieCard(item: unknown): Promise<MovieCardItem | null> {
   const record = readRecord(item);
   const slug = readText(record.slug) || readText(record.provider_movie_slug);
   const title = readText(record.title) || readText(record.provider_title) || slug;
@@ -231,10 +279,15 @@ function normalizeMovieCard(item: unknown): MovieCardItem | null {
     return null;
   }
 
+  const visuals = await enrichMovieVisuals(record, {
+    title,
+    year: record.year,
+  });
+
   return {
     slug,
     title,
-    poster: resolveMovieVisuals(record).poster,
+    poster: visuals.poster,
     year: readText(record.year) || (readNumber(record.year) != null ? String(readNumber(record.year)) : '') || 'N/A',
     type: 'movie',
     rating: formatRating(record.rating ?? record.provider_rating),
@@ -243,17 +296,19 @@ function normalizeMovieCard(item: unknown): MovieCardItem | null {
   };
 }
 
-function normalizeMovieList(payload: unknown): MovieCardItem[] {
-  const data = unwrapGatewayData(payload);
+async function normalizeMovieList(payload: unknown): Promise<MovieCardItem[]> {
+  const data = unwrapMoviePayload(payload);
   if (Array.isArray(data)) {
-    return data.map(normalizeMovieCard).filter((item): item is MovieCardItem => item !== null);
+    const items = await Promise.all(data.map(normalizeMovieCard));
+    return items.filter((item): item is MovieCardItem => item !== null);
   }
 
   if (data && typeof data === 'object') {
     const record = data as JSONRecord;
     const candidateList = record.items ?? record.latest ?? record.popular ?? record.results ?? record.data;
     if (Array.isArray(candidateList)) {
-      return candidateList.map(normalizeMovieCard).filter((item): item is MovieCardItem => item !== null);
+      const items = await Promise.all(candidateList.map(normalizeMovieCard));
+      return items.filter((item): item is MovieCardItem => item !== null);
     }
   }
 
@@ -373,27 +428,21 @@ function canInlinePlayback(url: string): boolean {
 }
 
 function getMovieRoutePath(slug: string): string {
-  return `/v1/film/${encodeURIComponent(slug)}`;
+  return `/detail/${encodeURIComponent(slug)}?type=${KANATA_TYPE}`;
 }
 
 function getMovieWatchRoutePath(slug: string): string {
-  return `/v1/film/watch/${encodeURIComponent(slug)}`;
+  return `/stream?id=${encodeURIComponent(slug)}&type=${KANATA_TYPE}`;
 }
 
 export async function getMovieHomeItems(limit = 6): Promise<MovieCardItem[]> {
-  const snapshot = await readSnapshotDomainFile<MovieHomeSnapshot>('movies', 'home.json');
-  if (snapshot) {
-    const snapshotItems = snapshot.trending || snapshot.popular || snapshot.latest || snapshot.items || [];
-    if (snapshotItems.length > 0) {
-      return snapshotItems.slice(0, Math.max(limit, 1));
-    }
-  }
-  const payload = await gatewayFetchJson<unknown>(`/v1/film/home?limit=${Math.max(limit, 1)}`, {
+  const payload = await fetchKanataMovieJson<unknown>(`/home?limit=${Math.max(limit, 1)}`, {
     edgeCacheKey: `home:movie:items:${Math.max(limit, 1)}`,
     edgeCacheTtlSeconds: 900,
     revalidate: HOME_REVALIDATE_SECONDS,
   });
-  return normalizeMovieList(payload).slice(0, Math.max(limit, 1));
+  const items = await normalizeMovieList(payload);
+  return items.slice(0, Math.max(limit, 1));
 }
 
 export async function getMovieHomeSection(
@@ -401,36 +450,21 @@ export async function getMovieHomeSection(
   limit = 24
 ): Promise<MovieCardItem[]> {
   const normalizedLimit = Math.max(limit, 1);
-  const snapshot = await readSnapshotDomainFile<MovieHomeSnapshot>('movies', 'home.json');
-  const snapshotItems = snapshot?.[section];
-  if (snapshotItems && snapshotItems.length > 0) {
-    return snapshotItems.slice(0, normalizedLimit);
-  }
-
-  const payload = await gatewayFetchJson<unknown>(`/v1/film/home?section=${section}&limit=${normalizedLimit}`, {
+  const payload = await fetchKanataMovieJson<unknown>(`/home?section=${section}&limit=${normalizedLimit}`, {
     edgeCacheKey: `home:movie:${section}:${normalizedLimit}`,
     edgeCacheTtlSeconds: 900,
     revalidate: HOME_REVALIDATE_SECONDS,
   });
-  return normalizeMovieList(payload).slice(0, normalizedLimit);
+  const items = await normalizeMovieList(payload);
+  return items.slice(0, normalizedLimit);
 }
 
 export async function getMovieHubData(limit = 24): Promise<{ popular: MovieCardItem[]; latest: MovieCardItem[] }> {
-  const snapshot = await readSnapshotDomainFile<MovieHomeSnapshot>('movies', 'home.json');
-  if (snapshot && ((snapshot.popular?.length ?? 0) > 0 || (snapshot.latest?.length ?? 0) > 0)) {
-    return {
-      popular: (snapshot.popular || snapshot.trending || []).slice(0, Math.max(limit, 1)),
-      latest: (snapshot.latest || snapshot.items || snapshot.popular || []).slice(0, Math.max(limit, 1)),
-    };
-  }
-  const payload = await gatewayFetchJson<unknown>(`/v1/film/hub?limit=${Math.max(limit, 1)}`, {
-    edgeCacheKey: `home:movie:hub:${Math.max(limit, 1)}`,
-    edgeCacheTtlSeconds: 900,
-    revalidate: HUB_REVALIDATE_SECONDS,
-  });
-  const record = readRecord(unwrapGatewayData(payload));
-  const latest = normalizeMovieList(record.latest ?? record.items ?? record.data ?? payload).slice(0, Math.max(limit, 1));
-  const popular = normalizeMovieList(record.popular ?? record.trending ?? record.items ?? payload).slice(0, Math.max(limit, 1));
+  const normalizedLimit = Math.max(limit, 1);
+  const [popular, latest] = await Promise.all([
+    getMovieHomeSection('popular', normalizedLimit),
+    getMovieHomeSection('latest', normalizedLimit),
+  ]);
   return { popular, latest };
 }
 
@@ -440,12 +474,13 @@ export async function getMovieGenreItems(genre: string, limit = 24): Promise<Mov
     return [];
   }
 
-  const payload = await gatewayFetchJson<unknown>(`/v1/film/genre/${encodeURIComponent(trimmed)}?limit=${Math.max(limit, 1)}`, {
+  const payload = await fetchKanataMovieJson<unknown>(`/genre/${encodeURIComponent(trimmed)}?page=1&limit=${Math.max(limit, 1)}`, {
     edgeCacheKey: `home:movie:genre:${trimmed.toLowerCase()}:${Math.max(limit, 1)}`,
     edgeCacheTtlSeconds: 900,
     revalidate: HUB_REVALIDATE_SECONDS,
   });
-  return normalizeMovieList(payload).slice(0, Math.max(limit, 1));
+  const items = await normalizeMovieList(payload);
+  return items.slice(0, Math.max(limit, 1));
 }
 
 export async function searchMovieCatalog(query: string, limit = 8): Promise<MovieCardItem[]> {
@@ -454,29 +489,30 @@ export async function searchMovieCatalog(query: string, limit = 8): Promise<Movi
     return [];
   }
 
-  const snapshot = await searchSnapshotDomain<MovieCardItem>('movies', trimmed, limit);
-  if (snapshot.length > 0) {
-    return snapshot.slice(0, Math.min(Math.max(limit, 1), 12));
-  }
-
-  const payload = await gatewayFetchJson<unknown>(`/v1/film/search?q=${encodeURIComponent(trimmed)}&limit=${Math.max(limit, 1)}`, {
+  const payload = await fetchKanataMovieJson<unknown>(`/search?q=${encodeURIComponent(trimmed)}&page=1&limit=${Math.max(limit, 1)}`, {
     edgeCacheKey: `search:movie:catalog:${trimmed.toLowerCase()}:${Math.max(limit, 1)}`,
     edgeCacheTtlSeconds: 300,
     revalidate: SEARCH_REVALIDATE_SECONDS,
   });
-  return normalizeMovieList(payload).slice(0, Math.min(Math.max(limit, 1), 12));
+  const items = await normalizeMovieList(payload);
+  return items.slice(0, Math.min(Math.max(limit, 1), 12));
 }
 
-function normalizeMovieDetail(payload: unknown, slugFallback = ''): MovieDetailData | null {
-  const record = readRecord(unwrapGatewayData(payload));
+async function normalizeMovieDetail(payload: unknown, slugFallback = ''): Promise<MovieDetailData | null> {
+  const record = readRecord(unwrapMoviePayload(payload));
   const slug = readText(record.slug) || slugFallback;
   const title = readText(record.title) || readText(record.provider_title) || slug;
   if (!slug || !title) {
     return null;
   }
 
-  const recommendations = normalizeMovieList(record.recommendations ?? record.related ?? record.similar_movies ?? []);
-  const visuals = resolveMovieVisuals(record);
+  const [recommendations, visuals] = await Promise.all([
+    normalizeMovieList(record.recommendations ?? record.related ?? record.similar_movies ?? []),
+    enrichMovieVisuals(record, {
+      title,
+      year: record.year,
+    }),
+  ]);
 
   return {
     slug,
@@ -492,17 +528,13 @@ function normalizeMovieDetail(payload: unknown, slugFallback = ''): MovieDetailD
     cast: normalizeMovieCast(record.cast ?? record.cast_json),
     director: uniqueStrings(splitList(record.director ?? record.director_names)).join(', '),
     trailerUrl: readText(record.trailerUrl) || readText(record.trailer_url) || null,
-    externalUrl: readText(record.externalUrl) || buildMovieGatewayUrl(getMovieRoutePath(slug)),
+    externalUrl: readText(record.externalUrl) || buildKanataMovieUrl(getMovieRoutePath(slug)),
     recommendations,
   };
 }
 
 export async function getMovieDetailBySlug(slug: string): Promise<MovieDetailData | null> {
-  const snapshot = await readSnapshotTitle<MovieDetailData>('movies', slug);
-  if (snapshot) {
-    return snapshot;
-  }
-  const payload = await gatewayFetchJson<unknown>(getMovieRoutePath(slug), {
+  const payload = await fetchKanataMovieJson<unknown>(getMovieRoutePath(slug), {
     edgeCacheKey: `detail:movie:${slug}`,
     edgeCacheTtlSeconds: 1800,
     revalidate: DETAIL_REVALIDATE_SECONDS,
@@ -510,8 +542,8 @@ export async function getMovieDetailBySlug(slug: string): Promise<MovieDetailDat
   return normalizeMovieDetail(payload, slug);
 }
 
-function normalizeMovieWatch(payload: unknown, slugFallback = ''): MovieWatchData | null {
-  const record = readRecord(unwrapGatewayData(payload));
+async function normalizeMovieWatch(payload: unknown, slugFallback = ''): Promise<MovieWatchData | null> {
+  const record = readRecord(unwrapMoviePayload(payload));
   const slug = readText(record.slug) || slugFallback;
   const title = readText(record.title) || readText(record.provider_title) || slug;
   if (!slug || !title) {
@@ -520,7 +552,10 @@ function normalizeMovieWatch(payload: unknown, slugFallback = ''): MovieWatchDat
 
   const mirrors = normalizeMovieMirrors(record);
   const defaultUrl = readText(record.defaultUrl) || readText(record.default_url) || mirrors[0]?.embed_url || '';
-  const visuals = resolveMovieVisuals(record);
+  const visuals = await enrichMovieVisuals(record, {
+    title,
+    year: record.year,
+  });
 
   return {
     slug,
@@ -535,18 +570,14 @@ function normalizeMovieWatch(payload: unknown, slugFallback = ''): MovieWatchDat
     mirrors,
     defaultUrl,
     canInlinePlayback: canInlinePlayback(defaultUrl),
-    externalUrl: readText(record.externalUrl) || defaultUrl || buildMovieGatewayUrl(getMovieWatchRoutePath(slug)),
+    externalUrl: readText(record.externalUrl) || defaultUrl || buildKanataMovieUrl(getMovieWatchRoutePath(slug)),
     detailHref: readText(record.detailHref) || `/movies/${slug}`,
     downloadGroups: normalizeMovieDownloadGroups(record),
   };
 }
 
 export async function getMovieWatchBySlug(slug: string): Promise<MovieWatchData | null> {
-  const snapshot = await readSnapshotPlayback<MovieWatchData>('movies', slug);
-  if (snapshot) {
-    return snapshot;
-  }
-  const payload = await gatewayFetchJson<unknown>(getMovieWatchRoutePath(slug), {
+  const payload = await fetchKanataMovieJson<unknown>(getMovieWatchRoutePath(slug), {
     edgeCacheKey: `playback:movie:${slug}`,
     edgeCacheTtlSeconds: 300,
     revalidate: DETAIL_REVALIDATE_SECONDS,

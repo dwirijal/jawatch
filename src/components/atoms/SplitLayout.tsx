@@ -10,6 +10,7 @@ interface SplitLayoutProps {
   stageClassName?: string;
   galleryClassName?: string;
   breakpoint?: SplitLayoutBreakpoint;
+  desktopColumnsClassName?: string;
   mobileGoldenRows?: boolean;
 }
 
@@ -25,6 +26,7 @@ export function SplitLayout({
   stageClassName,
   galleryClassName,
   breakpoint = 'lg',
+  desktopColumnsClassName,
   mobileGoldenRows = false,
 }: SplitLayoutProps) {
   if (!gallery) {
@@ -36,7 +38,7 @@ export function SplitLayout({
       className={cn(
         'grid grid-cols-1 gap-6',
         mobileGoldenRows && 'grid-rows-[minmax(0,1.618fr)_minmax(0,1fr)]',
-        BREAKPOINT_CLASS[breakpoint],
+        desktopColumnsClassName || BREAKPOINT_CLASS[breakpoint],
         className
       )}
     >

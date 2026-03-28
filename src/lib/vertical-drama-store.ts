@@ -57,8 +57,36 @@ export function getVerticalDramaProgress(provider: VerticalDramaProvider, id: st
   return current[getResumeKey(provider, id)] ?? null;
 }
 
-export function getDrachinPlaybackHref(slug: string, fallbackIndex = 1): string {
+export function getVerticalDramaChunkIndex(episodeIndex: number, chunkSize = 20): number {
+  if (!Number.isFinite(episodeIndex) || episodeIndex <= 0) {
+    return 0;
+  }
+
+  return Math.floor((episodeIndex - 1) / chunkSize);
+}
+
+export function isVerticalDramaEpisodeWatched(
+  provider: VerticalDramaProvider,
+  id: string,
+  episodeIndex: number
+): boolean {
+  const resume = getVerticalDramaProgress(provider, id);
+  if (!resume || !Number.isFinite(episodeIndex) || episodeIndex <= 0) {
+    return false;
+  }
+
+  return episodeIndex <= resume.episodeIndex;
+}
+
+export function getDrachinPlaybackTarget(slug: string, fallbackIndex = 1): { href: string; episodeIndex: number } {
   const resume = getVerticalDramaProgress('drachin', slug);
-  const index = resume?.episodeIndex ?? fallbackIndex;
-  return `/drachin/episode/${slug}?index=${index}`;
+  const episodeIndex = resume?.episodeIndex ?? fallbackIndex;
+  return {
+    href: `/drachin/episode/${slug}?index=${episodeIndex}`,
+    episodeIndex,
+  };
+}
+
+export function getDrachinPlaybackHref(slug: string, fallbackIndex = 1): string {
+  return getDrachinPlaybackTarget(slug, fallbackIndex).href;
 }

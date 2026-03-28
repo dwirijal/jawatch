@@ -7,14 +7,21 @@ import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StatCard } from '@/components/molecules/StatCard';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
-import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
+import { ReaderMediaDetailPage } from '@/components/organisms/ReaderMediaDetailPage';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
 import { ShareButton } from '@/components/molecules/ShareButton';
 import { TitleBlock } from '@/components/atoms/TitleBlock';
+import { BookCoverArt } from '@/components/atoms/BookCoverArt';
 import Image from 'next/image';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+function extractNovelChapterNumber(title: string): string | null {
+  const normalized = title.trim();
+  const match = normalized.match(/(?:chapter|ch|bab)\s*([0-9]+(?:\.[0-9]+)?)/i);
+  return match?.[1] ?? null;
 }
 
 export default async function NovelDetailPage({ params }: PageProps) {
@@ -28,8 +35,8 @@ export default async function NovelDetailPage({ params }: PageProps) {
   const latestChapter = novel.chapters[0];
 
   return (
-    <DetailPageScaffold
-      theme="default"
+    <ReaderMediaDetailPage
+      theme="novel"
       hero={
         <section className="surface-panel-elevated relative overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
@@ -52,15 +59,8 @@ export default async function NovelDetailPage({ params }: PageProps) {
             </nav>
 
             <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:items-end">
-              <div className="relative mx-auto aspect-[2/3] w-44 overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2 hard-shadow-md md:mx-0 md:w-52">
-                <Image
-                  src={novel.poster || '/favicon.ico'}
-                  alt={novel.title}
-                  fill
-                  sizes="208px"
-                  className="object-cover"
-                  unoptimized
-                />
+              <div className="relative mx-auto aspect-[210/297] w-44 overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2 hard-shadow-md md:mx-0 md:w-52">
+                <BookCoverArt src={novel.poster} title={novel.title} subtitle={novel.altTitle} sizes="208px" />
               </div>
 
               <div className="space-y-5">
@@ -77,7 +77,7 @@ export default async function NovelDetailPage({ params }: PageProps) {
                   </div>
                 </div>
 
-                <TitleBlock title={novel.title} subtitle={novel.altTitle} eyebrow={novel.type} theme="default" />
+                <TitleBlock title={novel.title} subtitle={novel.altTitle} eyebrow={novel.type} theme="novel" />
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   <StatCard label="Author" value={novel.info.author || 'Unknown'} icon={User} />
@@ -109,7 +109,7 @@ export default async function NovelDetailPage({ params }: PageProps) {
           <DetailActionCard
             title="Ready to read?"
             description="Novel detail stays metadata-first, while the chapter flow stays inside the app reader."
-            theme="default"
+            theme="novel"
             actions={[
               { href: `/novel/${slug}/read/${latestChapter.slug}`, label: 'Read Latest Chapter' },
               { href: '#chapters', label: 'Open Chapter Index', variant: 'outline' },
@@ -119,14 +119,14 @@ export default async function NovelDetailPage({ params }: PageProps) {
       }
     >
       <section className="space-y-8">
-        <DetailSectionHeading title="Overview" theme="default" />
+        <DetailSectionHeading title="Overview" theme="novel" />
         <Paper tone="muted" shadow="sm" className="p-5 md:p-6">
           <p className="text-sm leading-7 text-zinc-400 md:text-base">{novel.synopsis}</p>
         </Paper>
       </section>
 
       <section className="space-y-8">
-        <DetailSectionHeading title="Metadata" theme="default" />
+        <DetailSectionHeading title="Metadata" theme="novel" />
         <Paper tone="muted" shadow="sm" className="space-y-4 p-5 md:p-6">
           <div className="grid gap-4 md:grid-cols-2">
             <StatCard label="Published" value={novel.info.published || 'Unknown'} icon={LibraryBig} />
@@ -141,7 +141,7 @@ export default async function NovelDetailPage({ params }: PageProps) {
       <section id="chapters" className="space-y-8">
         <DetailSectionHeading
           title="Chapter Guide"
-          theme="default"
+          theme="novel"
           aside={novel.chapters.length > 0 ? <Badge variant="outline">{novel.chapters.length} Available</Badge> : undefined}
         />
 
@@ -156,7 +156,9 @@ export default async function NovelDetailPage({ params }: PageProps) {
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center justify-between gap-4">
                       <p className="line-clamp-1 text-sm font-black tracking-wide text-white">{chapter.title}</p>
-                      <Badge variant="outline">Read</Badge>
+                      <Badge variant="outline">
+                        {extractNovelChapterNumber(chapter.title) ? `Ch ${extractNovelChapterNumber(chapter.title)}` : 'Special'}
+                      </Badge>
                     </div>
                     {chapter.date ? (
                       <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-600">{chapter.date}</p>
@@ -168,6 +170,6 @@ export default async function NovelDetailPage({ params }: PageProps) {
           </div>
         </Paper>
       </section>
-    </DetailPageScaffold>
+    </ReaderMediaDetailPage>
   );
 }

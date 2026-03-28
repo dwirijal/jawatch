@@ -43,7 +43,7 @@ type MixedRecommendationItem = {
   title: string;
   image: string;
   href: string;
-  theme: 'anime' | 'movie' | 'manga' | 'donghua';
+  theme: 'anime' | 'movie' | 'manga' | 'donghua' | 'novel';
   subtitle?: string;
   badgeText?: string;
 };
@@ -114,8 +114,8 @@ const HOMEPAGE_SECTION_LAYOUTS: Partial<Record<string, SectionLayoutConfig>> = {
 };
 
 function getGridColumnsByViewport(viewportWidth: number): number {
-  if (viewportWidth >= 1200) return 8;
-  if (viewportWidth >= 500) return 4;
+  if (viewportWidth >= 1200) return 6;
+  if (viewportWidth >= 768) return 4;
   return 2;
 }
 
@@ -129,6 +129,8 @@ function getThemeLabel(theme: MixedRecommendationItem['theme'] | HeroItem['type'
       return 'Manga';
     case 'donghua':
       return 'Donghua';
+    case 'novel':
+      return 'Novel';
     default:
       return 'Media';
   }

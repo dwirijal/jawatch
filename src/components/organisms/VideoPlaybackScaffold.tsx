@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { SplitLayout } from '@/components/atoms/SplitLayout';
+import { cn } from '@/lib/utils';
 
 interface VideoPlaybackScaffoldProps {
   backHref: string;
@@ -12,6 +13,8 @@ interface VideoPlaybackScaffoldProps {
   headerActions?: React.ReactNode;
   stage: React.ReactNode;
   sidebar?: React.ReactNode;
+  desktopColumnsClassName?: string;
+  stretchSidebarToStage?: boolean;
   children?: React.ReactNode;
 }
 
@@ -23,6 +26,8 @@ export function VideoPlaybackScaffold({
   headerActions,
   stage,
   sidebar,
+  desktopColumnsClassName,
+  stretchSidebarToStage = false,
   children,
 }: VideoPlaybackScaffoldProps) {
   return (
@@ -59,9 +64,16 @@ export function VideoPlaybackScaffold({
       <main className="app-container-immersive app-section-stack py-4 md:py-5">
         <SplitLayout
           breakpoint="xl"
-          className="items-start gap-6 xl:gap-8"
+          desktopColumnsClassName={desktopColumnsClassName}
+          className={cn(stretchSidebarToStage ? 'items-stretch' : 'items-start', 'gap-6 xl:gap-8')}
           stage={<div className="space-y-5">{stage}</div>}
-          gallery={sidebar ? <div className="space-y-5 xl:sticky xl:top-5">{sidebar}</div> : undefined}
+          gallery={
+            sidebar ? (
+              <div className={cn('space-y-5 xl:sticky xl:top-5', stretchSidebarToStage && 'xl:h-full')}>
+                {sidebar}
+              </div>
+            ) : undefined
+          }
         />
 
         {children ? <div className="app-section-stack">{children}</div> : null}

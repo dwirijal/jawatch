@@ -4,10 +4,9 @@ import * as React from 'react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/atoms/Badge';
-import { Button } from '@/components/atoms/Button';
-import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StateInfo } from '@/components/molecules/StateInfo';
+import { VerticalSeriesDetailScaffold } from '@/components/organisms/VerticalSeriesDetailScaffold';
 import { getDramaboxDetailByBookId, isDramaboxBookId, type DramaboxDetailData } from '@/lib/adapters/drama';
 
 interface DramaboxDetailClientProps {
@@ -73,14 +72,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
   }, [resolvedBookId]);
 
   return (
-    <div className="app-shell bg-background text-white">
-      <main className="app-container-wide app-section-stack py-6 md:py-8">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" asChild>
-            <Link href="/drachin">Back to Drama China</Link>
-          </Button>
-        </div>
-
+    <VerticalSeriesDetailScaffold backHref="/drachin" backLabel="Back to Drama China">
         {loading ? (
           <Paper tone="muted" shadow="sm" className="p-6 md:p-8">
             <div className="animate-pulse space-y-4">
@@ -93,7 +85,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
           fallbackTitle ? (
             <Paper tone="muted" shadow="sm" className="overflow-hidden p-5 md:p-6">
               <div className="grid gap-6 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-8">
-                <div className="relative aspect-[3/4] overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2">
+                <div className="relative aspect-[9/16] overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2">
                   {fallbackCover ? (
                     <Image
                       src={fallbackCover}
@@ -130,7 +122,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
         ) : (
           <Paper tone="muted" shadow="sm" className="overflow-hidden p-5 md:p-6">
             <div className="grid gap-6 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-8">
-              <div className="relative aspect-[3/4] overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2">
+              <div className="relative aspect-[9/16] overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2">
                 {detail.cover ? (
                   <Image
                     src={detail.cover}
@@ -156,7 +148,6 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
             </div>
           </Paper>
         )}
-      </main>
-    </div>
+    </VerticalSeriesDetailScaffold>
   );
 }

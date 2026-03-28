@@ -1,11 +1,9 @@
 import { notFound } from 'next/navigation';
-import { Play, Calendar, Monitor, BookOpen } from 'lucide-react';
+import { Play, BookOpen } from 'lucide-react';
 import { getAnimeDetailBySlug } from '@/lib/adapters/anime';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { Paper } from '@/components/atoms/Paper';
-import { ScrollArea } from '@/components/atoms/ScrollArea';
-import { StatCard } from '@/components/molecules/StatCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { BookmarkButton } from '@/components/organisms/BookmarkButton';
 import { ShareButton } from '@/components/molecules/ShareButton';
@@ -13,7 +11,7 @@ import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
 import { CastRail } from '@/components/organisms/CastRail';
-import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
+import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
 import { MetadataPanel } from '@/components/organisms/MetadataPanel';
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
 import { Link } from '@/components/atoms/Link';
@@ -31,9 +29,21 @@ export default async function AnimeDetailPage({ params }: PageProps) {
   }
 
   const watchHref = anime.episodes[0]?.episode_slug ? `/anime/episode/${anime.episodes[0].episode_slug}` : '';
+  const quickLinks = [
+    { href: '#episodes', label: 'Episode Guide' },
+    { href: '#overview', label: 'Overview' },
+    ...(anime.cast.length > 0 ? [{ href: '#cast', label: 'Cast' }] : []),
+    ...(anime.enrichment ? [{ href: '#insights', label: 'Insights' }] : []),
+  ];
+  const utilityStats = [
+    { label: 'Available Now', value: `${anime.episodes.length || Number(anime.totalEpisodes) || 0} Episodes` },
+    { label: 'Genres', value: `${anime.genres.length} Tags` },
+    { label: 'Cast', value: anime.cast.length ? `${anime.cast.length} Credits` : 'Unavailable' },
+    { label: 'Trailer', value: anime.trailerUrl ? 'Available' : 'Unavailable' },
+  ];
 
   return (
-    <DetailPageScaffold
+    <HorizontalMediaDetailPage
       theme="anime"
       hero={
         <VideoDetailHero
@@ -76,7 +86,16 @@ export default async function AnimeDetailPage({ params }: PageProps) {
               </Button>
             ) : null
           }
+          secondaryAction={
+            <Button variant="outline" size="lg" className="h-12 rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 px-6 hover:bg-surface-elevated" asChild>
+              <Link href="#episodes">
+                Episode Guide
+                <BookOpen className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          }
           trailerUrl={anime.trailerUrl}
+          galleryVariant="compact"
         />
       }
       sidebar={
@@ -84,24 +103,120 @@ export default async function AnimeDetailPage({ params }: PageProps) {
           <DetailActionCard
             theme="anime"
             title="Ready to watch"
-            description="Episode guide and playback links are synced from Samehadaku. Start from the list below to stay in the same video flow."
-            actions={watchHref ? [{ href: watchHref, label: 'Start Watching' }] : []}
+            description="Start instantly, or jump straight to the episode guide if you want to pick manually."
+            actions={[
+              ...(watchHref ? [{ href: watchHref, label: 'Start Watching', icon: Play }] : []),
+              { href: '#episodes', label: 'Open Episode Guide', icon: BookOpen, variant: 'outline' },
+            ]}
           />
 
           <Paper tone="muted" shadow="sm" className="space-y-4 p-5 md:p-6">
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Quick Stats</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Jump Around</p>
+            <div className="grid grid-cols-2 gap-2">
+              {quickLinks.map((item) => (
+                <Button
+                  key={item.href}
+                  variant="outline"
+                  size="sm"
+                  className="h-11 justify-center rounded-[var(--radius-md)] border-border-subtle bg-surface-1 px-3 text-[11px] font-black tracking-[0.16em] hover:bg-surface-elevated"
+                  asChild
+                >
+                  <Link href={item.href}>{item.label}</Link>
+                </Button>
+              ))}
+            </div>
+          </Paper>
+
+          <Paper tone="muted" shadow="sm" className="space-y-4 p-5 md:p-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">At A Glance</p>
             <div className="grid gap-2.5">
-              <StatCard label="Type" value={anime.type} icon={Play} />
-              <StatCard label="Studio" value={anime.studio || 'Unknown'} icon={Monitor} />
-              <StatCard label="Status" value={anime.status} icon={Calendar} />
-              <StatCard label="Episodes" value={anime.totalEpisodes} icon={BookOpen} />
+              {utilityStats.map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-[var(--radius-md)] border border-border-subtle bg-surface-2 px-3.5 py-3"
+                >
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">{item.label}</p>
+                  <p className="mt-1.5 text-sm font-bold text-white">{item.value}</p>
+                </div>
+              ))}
             </div>
           </Paper>
         </>
       }
       footer={<CommunityCTA mediaId={slug} title={anime.title} type="anime" theme="anime" />}
     >
-      <section className="space-y-8">
+      <section id="episodes" className="space-y-8">
+        <DetailSectionHeading
+          title="Episode Guide"
+          theme="anime"
+          aside={
+            <div className="flex items-center gap-2">
+              {anime.episodes.length > 0 ? <Badge variant="outline">{anime.episodes.length} Available</Badge> : undefined}
+              {watchHref ? (
+                <Button variant="outline" size="sm" className="h-10 rounded-[var(--radius-md)] border-border-subtle bg-surface-1 px-4 hover:bg-surface-elevated" asChild>
+                  <Link href={watchHref}>Start Watching</Link>
+                </Button>
+              ) : null}
+            </div>
+          }
+        />
+
+        {anime.episodes.length > 0 ? (
+          <Paper tone="muted" shadow="sm" className="space-y-4 p-4 md:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm leading-6 text-zinc-400">
+                Start from the beginning or jump straight to the episode you want. The guide stays compact even for longer series.
+              </p>
+              <Badge variant="outline">Latest First</Badge>
+            </div>
+
+            <div className="max-h-[760px] overflow-y-auto pr-1 [scrollbar-width:thin]">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {anime.episodes.map((episode) => (
+                  <Link key={episode.episode_slug} href={`/anime/episode/${episode.episode_slug}`} className="group block">
+                    <Paper
+                      tone="muted"
+                      padded={false}
+                      interactive
+                      className="overflow-hidden rounded-[var(--radius-xl)] border border-border-subtle bg-surface-1 p-4 transition-colors group-hover:bg-surface-elevated"
+                    >
+                      <div className="flex items-start gap-3.5">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-blue-600/10 text-sm font-black tracking-[0.08em] text-blue-300 transition-colors group-hover:bg-blue-600 group-hover:text-white">
+                          {episode.episode_number || '?'}
+                        </div>
+
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="truncate text-sm font-black uppercase tracking-[0.14em] text-white">
+                              Episode {episode.episode_number || '?'}
+                            </p>
+                            <Badge variant="outline">Watch</Badge>
+                          </div>
+
+                          <p className="line-clamp-2 text-sm leading-relaxed text-zinc-400">{episode.title}</p>
+
+                          {episode.release_label ? (
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-600">
+                              {episode.release_label}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </Paper>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </Paper>
+        ) : (
+          <StateInfo
+            title="Episode guide unavailable"
+            description="Episode data is unavailable for this title right now."
+          />
+        )}
+      </section>
+
+      <section id="overview" className="space-y-8">
         <DetailSectionHeading title="Overview" theme="anime" />
         <Paper tone="muted" shadow="sm" className="p-5 md:p-6">
           <p className="text-sm leading-7 text-zinc-400 md:text-base">
@@ -111,7 +226,7 @@ export default async function AnimeDetailPage({ params }: PageProps) {
       </section>
 
       {anime.cast.length > 0 ? (
-        <section className="space-y-8">
+        <section id="cast" className="space-y-8">
           <DetailSectionHeading
             title="Cast"
             theme="anime"
@@ -121,80 +236,12 @@ export default async function AnimeDetailPage({ params }: PageProps) {
         </section>
       ) : null}
 
-      <section id="episodes" className="space-y-8">
-        <DetailSectionHeading
-          title="Episode Guide"
-          theme="anime"
-          aside={anime.episodes.length > 0 ? <Badge variant="outline">{anime.episodes.length} Available</Badge> : undefined}
-        />
-
-        {anime.episodes.length > 0 ? (
-          <Paper tone="muted" shadow="sm" padded={false} className="overflow-hidden">
-            <ScrollArea className="h-[600px] w-full">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {anime.episodes.map((episode) => (
-                  <Paper
-                    key={episode.episode_slug}
-                    asChild
-                    tone="muted"
-                    padded={false}
-                    interactive
-                    className="group overflow-hidden p-4"
-                  >
-                    <Link href={`/anime/episode/${episode.episode_slug}`} className="flex items-center gap-4">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/10 transition-colors group-hover:bg-blue-600">
-                        <Play className="h-4 w-4 text-blue-400 transition-colors group-hover:text-white group-hover:fill-white" />
-                      </div>
-
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex items-center justify-between gap-4">
-                          <p className="truncate text-sm font-black uppercase tracking-wide text-white">
-                            Episode {episode.episode_number || '?'}
-                          </p>
-                          <Badge variant="outline">Watch</Badge>
-                        </div>
-                        <p className="line-clamp-2 text-sm font-medium leading-relaxed text-zinc-400">{episode.title}</p>
-                        {episode.release_label ? (
-                          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-600">
-                            {episode.release_label}
-                          </p>
-                        ) : null}
-                      </div>
-                    </Link>
-                  </Paper>
-                ))}
-              </div>
-            </ScrollArea>
-          </Paper>
-        ) : (
-          <StateInfo
-            title="Episode guide unavailable"
-            description="Episode data is still being backfilled for this title."
-          />
-        )}
-      </section>
-
       {anime.enrichment ? (
-        <section className="space-y-8">
+        <section id="insights" className="space-y-8">
           <DetailSectionHeading title="Insights" theme="anime" />
           <MetadataPanel data={anime.enrichment} loading={false} />
         </section>
       ) : null}
-
-      {anime.externalUrl ? (
-        <section className="space-y-8">
-          <DetailSectionHeading title="Source" theme="anime" />
-          <Paper tone="muted" shadow="sm" className="space-y-3 p-5 md:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <Badge variant="anime">Samehadaku</Badge>
-              <span className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Canonical</span>
-            </div>
-            <p className="max-w-3xl text-sm leading-7 text-zinc-400">
-              Samehadaku is treated as the canonical anime source here, so you can keep moving through episodes without leaving the app flow.
-            </p>
-          </Paper>
-        </section>
-      ) : null}
-    </DetailPageScaffold>
+    </HorizontalMediaDetailPage>
   );
 }

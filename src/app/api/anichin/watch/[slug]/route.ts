@@ -8,7 +8,7 @@ interface RouteContext {
 export async function GET(_: Request, { params }: RouteContext) {
   try {
     const { slug } = await params;
-    const response = await fetch(`https://api.kanata.web.id/anichin/watch/${slug}`, {
+    const response = await fetch(`https://api.kanata.web.id/anichin/episode/${slug}`, {
       headers: {
         accept: '*/*',
       },

@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export type ThemeType = 'anime' | 'manga' | 'donghua' | 'movie' | 'drama' | 'default';
+export type ThemeType = 'anime' | 'manga' | 'donghua' | 'movie' | 'drama' | 'novel' | 'default';
 
 /**
  * Centralized theme configuration with full Tailwind class names
@@ -67,6 +67,17 @@ export const THEME_CONFIG = {
     shadow: "shadow-rose-600/20",
     glow: "shadow-[0_0_20px_rgba(244,63,94,0.28)]",
   },
+  novel: {
+    primary: "bg-amber-700",
+    text: "text-amber-300",
+    hoverText: "group-hover:text-amber-200",
+    border: "border-amber-500/30",
+    hoverBorder: "group-hover:border-amber-500/50",
+    ring: "focus:ring-amber-500",
+    bg: "bg-amber-700/10",
+    shadow: "shadow-amber-700/20",
+    glow: "shadow-[0_0_20px_rgba(180,83,9,0.26)]",
+  },
   default: {
     primary: "bg-zinc-100",
     text: "text-zinc-100",
@@ -103,5 +114,23 @@ export function resolveThemeFromPathname(pathname?: string | null): ThemeType {
   ) {
     return 'manga';
   }
+  if (pathname === '/novel' || pathname.startsWith('/novel/')) return 'novel';
   return 'default';
+}
+
+export function getMediaPosterAspectClass(theme: ThemeType): string {
+  switch (theme) {
+    case 'movie':
+      return 'aspect-[2/3]';
+    case 'drama':
+      return 'aspect-[9/16]';
+    case 'novel':
+      return 'aspect-[210/297]';
+    case 'anime':
+    case 'manga':
+    case 'donghua':
+    case 'default':
+    default:
+      return 'aspect-[3/4]';
+  }
 }

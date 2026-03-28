@@ -16,6 +16,7 @@ interface VideoPlayerProps {
   onMirrorChange?: (url: string, label: string) => void;
   showMirrorPanel?: boolean;
   title?: string;
+  showTitleOverlay?: boolean;
   theme?: 'anime' | 'donghua' | 'movie' | 'drama';
   format?: 'landscape' | 'vertical';
   onNext?: () => void;
@@ -68,6 +69,7 @@ export function VideoPlayer({
   onMirrorChange,
   showMirrorPanel = true,
   title,
+  showTitleOverlay = true,
   theme = 'anime',
   format = 'landscape',
   onNext,
@@ -201,10 +203,14 @@ export function VideoPlayer({
           "absolute top-4 left-4 right-4 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20",
           isTheaterMode && "top-8 left-8 right-8"
         )}>
-          <div className="pointer-events-auto flex items-center gap-3 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/90 px-4 py-2 backdrop-blur-md">
-            <p className="text-xs font-black tracking-[0.08em] text-white">{title || 'Streaming Now'}</p>
-          </div>
-          
+          {showTitleOverlay ? (
+            <div className="pointer-events-auto flex items-center gap-3 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/90 px-4 py-2 backdrop-blur-md">
+              <p className="text-xs font-black tracking-[0.08em] text-white">{title || 'Streaming Now'}</p>
+            </div>
+          ) : (
+            <div />
+          )}
+
           <div className="flex items-center gap-2 pointer-events-auto">
             {hasNext && onNext && (
               <Button variant={theme} size="icon" onClick={onNext} className="h-11 w-11 rounded-[var(--radius-sm)]" title="Next Episode">

@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ChevronLeft, ChevronRight, LibraryBig } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LibraryBig } from 'lucide-react';
 import { getNovelDetail, getNovelRead } from '@/lib/adapters/novel';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StateInfo } from '@/components/molecules/StateInfo';
+import { TextReaderScaffold } from '@/components/organisms/TextReaderScaffold';
 
 interface PageProps {
   params: Promise<{ slug: string; chapter: string }>;
@@ -37,45 +38,33 @@ export default async function NovelReadPage({ params }: PageProps) {
   const sanitizedContent = sanitizeNovelHtml(reading.content);
 
   return (
-    <div className="app-shell bg-background text-white">
-      <header className="sticky top-0 z-[160] border-b border-border-subtle bg-surface-1/95 backdrop-blur-xl transition-all">
-        <div className="app-container flex items-center justify-between gap-3 py-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <Button variant="ghost" size="icon" asChild className="h-9 w-9 shrink-0 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1">
-              <Link href={`/novel/${slug}`}>
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <div className="min-w-0">
-              <h1 className="line-clamp-1 text-sm font-semibold tracking-tight text-white md:text-base">{novel.title}</h1>
-              <p className="line-clamp-1 text-xs text-zinc-500">{reading.title}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" disabled={!previousChapter} asChild={!!previousChapter} className="h-9 w-9 rounded-[var(--radius-sm)] border-border-subtle">
-              {previousChapter ? (
-                <Link href={`/novel/${slug}/read/${previousChapter.slug}`}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Link>
-              ) : (
+    <TextReaderScaffold
+      backHref={`/novel/${slug}`}
+      title={novel.title}
+      subtitle={reading.title}
+      headerActions={
+        <>
+          <Button variant="outline" size="icon" disabled={!previousChapter} asChild={!!previousChapter} className="h-9 w-9 rounded-[var(--radius-sm)] border-border-subtle">
+            {previousChapter ? (
+              <Link href={`/novel/${slug}/read/${previousChapter.slug}`}>
                 <ChevronLeft className="h-4 w-4" />
-              )}
-            </Button>
-            <Button variant="outline" size="icon" disabled={!nextChapter} asChild={!!nextChapter} className="h-9 w-9 rounded-[var(--radius-sm)] border-border-subtle">
-              {nextChapter ? (
-                <Link href={`/novel/${slug}/read/${nextChapter.slug}`}>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              ) : (
+              </Link>
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
+          <Button variant="outline" size="icon" disabled={!nextChapter} asChild={!!nextChapter} className="h-9 w-9 rounded-[var(--radius-sm)] border-border-subtle">
+            {nextChapter ? (
+              <Link href={`/novel/${slug}/read/${nextChapter.slug}`}>
                 <ChevronRight className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="app-container max-w-4xl py-6 md:py-8">
+              </Link>
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+        </>
+      }
+    >
         {sanitizedContent ? (
           <Paper tone="muted" shadow="sm" className="p-6 md:p-8">
             <article
@@ -103,7 +92,6 @@ export default async function NovelReadPage({ params }: PageProps) {
             </Link>
           </Paper>
         </div>
-      </main>
-    </div>
+    </TextReaderScaffold>
   );
 }
