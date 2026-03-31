@@ -11,6 +11,7 @@ import { DeviceListener } from "@/components/atoms/DeviceListener";
 import { NoSsr } from "@/components/atoms/NoSsr";
 import { PWAInstallPrompt } from "@/components/molecules/PWAInstallPrompt";
 import { AuthSessionProvider } from "@/components/providers/AuthSessionProvider";
+import { getServerAuthStatus } from "@/lib/server/auth-session";
 import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
@@ -69,11 +70,13 @@ export const viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const authSession = await getServerAuthStatus();
+
   return (
     <html
       lang="en"
@@ -92,7 +95,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col text-foreground font-sans">
-        <AuthSessionProvider>
+        <AuthSessionProvider initialState={authSession}>
           <DeviceListener />
           <Navbar />
           <main className="flex-1 min-h-screen pb-20 md:pb-0">{children}</main>

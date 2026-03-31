@@ -1,6 +1,7 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import * as React from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { LogOut, UserRound } from 'lucide-react';
 import { Avatar } from '@/components/atoms/Avatar';
 import { Link } from '@/components/atoms/Link';
@@ -15,7 +16,12 @@ function compactDisplayName(displayName: string) {
 
 export function AuthMobileEntry() {
   const pathname = usePathname() || '/';
+  const searchParams = useSearchParams();
   const session = useAuthSession();
+  const redirectTarget = React.useMemo(() => {
+    const query = searchParams.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
 
   if (session.loading) {
     return <div className="h-11 w-14 animate-pulse rounded-[var(--radius-sm)] bg-surface-1/80" />;
@@ -24,7 +30,7 @@ export function AuthMobileEntry() {
   if (!session.authenticated || !session.user) {
     return (
       <Link
-        href={buildLoginUrl(pathname)}
+        href={buildLoginUrl(redirectTarget)}
         className="focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-zinc-500 transition-colors hover:bg-surface-1 hover:text-white"
       >
         <UserRound className="h-5 w-5" />
@@ -33,7 +39,7 @@ export function AuthMobileEntry() {
     );
   }
 
-  const logoutRequest = buildLogoutRequest(pathname);
+  const logoutRequest = buildLogoutRequest(redirectTarget);
   const returnTo = logoutRequest.body.get('returnTo') ?? '/';
   const origin = logoutRequest.body.get('origin') ?? '';
 

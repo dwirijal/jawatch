@@ -2,6 +2,7 @@ import 'server-only';
 
 import { buildComicCacheKey, rememberComicCacheValue } from '@/lib/server/comic-cache';
 import { getComicDb } from '@/lib/server/comic-db';
+import { hasNsfwLabel } from '@/lib/media-safety';
 import {
   buildVisibilityCondition,
   getVisibilityCacheSegment,
@@ -19,6 +20,7 @@ import {
   type VideoMirror,
   type VisibilityOptions,
 } from './video-db-common';
+import { readStringArray } from './video-db';
 import {
   getSeriesCanonicalFilters,
   getSeriesReleaseDayLabel,
@@ -53,6 +55,39 @@ type SeriesRow = {
   release_timezone?: string | null;
   cadence?: string | null;
   next_release_at?: string | null;
+};
+
+type SeriesCatalogRow = {
+  item_key: string;
+  media_type: SeriesMediaType;
+  surface_type: string | null;
+  presentation_type: string | null;
+  origin_type: string | null;
+  release_country: string | null;
+  is_nsfw: boolean | null;
+  source: string;
+  slug: string;
+  title: string;
+  cover_url: string;
+  status: string;
+  release_year: number | null;
+  score: number | null;
+  updated_at: string;
+  episode_count?: number | null;
+  release_day?: string | null;
+  release_window?: string | null;
+  release_timezone?: string | null;
+  cadence?: string | null;
+  next_release_at?: string | null;
+  poster_url?: string | null;
+  detail_year?: string | null;
+  detail_rating?: string | null;
+  latest_episode?: string | null;
+  detail_country?: string | null;
+  genres?: unknown;
+  genre_names?: unknown;
+  canonical_genre_names?: unknown;
+  category_names?: unknown;
 };
 
 type SeriesEpisodeRow = {
@@ -133,7 +168,7 @@ export type SeriesEpisodeData = {
 const HUB_CACHE_TTL_SECONDS = 60 * 10;
 const DETAIL_CACHE_TTL_SECONDS = 60 * 30;
 const SEARCH_CACHE_TTL_SECONDS = 60 * 3;
-const SERIES_CACHE_NAMESPACE = 'series-v5';
+const SERIES_CACHE_NAMESPACE = 'series-v7';
 
 function formatRating(value: unknown): string {
   const numeric = readNumber(value);
@@ -277,20 +312,81 @@ function readFirstString(value: unknown): string {
   return '';
 }
 
-function mapSeriesCard(row: SeriesRow): SeriesCardItem {
-  const detail = getSeriesDetailRecord(row);
+function mergeCatalogLabels(...values: unknown[]): string[] {
+  const seen = new Set<string>();
+  const labels: string[] = [];
+
+  for (const value of values) {
+    for (const label of readStringArray(value)) {
+      if (/\bviews?\b/i.test(label) || /\bloves?\b/i.test(label)) {
+        continue;
+      }
+
+      const key = label.toLowerCase();
+      if (seen.has(key)) {
+        continue;
+      }
+
+      seen.add(key);
+      labels.push(label);
+    }
+  }
+
+  return labels;
+}
+
+function getSeriesCatalogGenres(row: Pick<SeriesCatalogRow, 'genres' | 'genre_names' | 'canonical_genre_names' | 'category_names'>): string[] {
+  const labels = mergeCatalogLabels(row.genres, row.genre_names, row.canonical_genre_names, row.category_names);
+  if (labels.length > 0) {
+    return labels;
+  }
+
+  return normalizeGenreList({
+    genres: row.genres,
+    genre_names: row.genre_names,
+    category_names: row.category_names,
+  });
+}
+
+function isSeriesCatalogNsfw(row: Pick<SeriesCatalogRow, 'is_nsfw' | 'genres' | 'genre_names' | 'canonical_genre_names' | 'category_names'>): boolean {
+  return Boolean(row.is_nsfw) || hasNsfwLabel(row.genres, row.genre_names, row.canonical_genre_names, row.category_names);
+}
+
+function formatCatalogYear(row: Pick<SeriesCatalogRow, 'release_year' | 'detail_year'>): string {
+  if (row.release_year && row.release_year > 0) {
+    return String(row.release_year);
+  }
+  const detailYear = readNumber(row.detail_year);
+  if (detailYear && detailYear > 0) {
+    return String(Math.round(detailYear));
+  }
+  return readText(row.detail_year);
+}
+
+function getCatalogCountry(row: Pick<SeriesCatalogRow, 'detail_country' | 'release_country'>): string {
+  const raw = readText(row.detail_country);
+  if (raw) {
+    if (raw.toLowerCase() === 'korea') {
+      return 'South Korea';
+    }
+    return raw;
+  }
+  return formatCountryCode(row.release_country);
+}
+
+function mapSeriesCard(row: SeriesCatalogRow): SeriesCardItem {
   const type = getSeriesType(row);
   return {
     slug: readText(row.slug),
     title: readText(row.title),
-    poster: normalizePosterUrl(detail.poster_url, row.cover_url),
-    year: formatDetailYear(row.release_year, detail),
+    poster: normalizePosterUrl(row.poster_url, row.cover_url),
+    year: formatCatalogYear(row),
     type,
-    rating: formatRating((row.score && row.score > 0) ? row.score : detail.rating),
+    rating: formatRating((row.score && row.score > 0) ? row.score : row.detail_rating),
     status: readText(row.status),
-    genres: getSeriesGenres(detail).join(', '),
-    latestEpisode: getLatestEpisodeLabel(row),
-    country: normalizeCountry(detail) || formatCountryCode(row.release_country),
+    genres: getSeriesCatalogGenres(row).join(', '),
+    latestEpisode: readText(row.latest_episode),
+    country: getCatalogCountry(row),
     releaseWindow: readText(row.release_window),
     nextReleaseAt: readText(row.next_release_at),
   };
@@ -318,8 +414,8 @@ function getScheduleReferenceDay(): SeriesReleaseDay {
   return days[(dayIndex + 6) % 7];
 }
 
-function getUpcomingScheduleDays(rows: SeriesRow[], dayCount: number, limitPerDay: number): SeriesScheduleLane[] {
-  const grouped = new Map<SeriesReleaseDay, SeriesRow[]>();
+function getUpcomingScheduleDays(rows: SeriesCatalogRow[], dayCount: number, limitPerDay: number): SeriesScheduleLane[] {
+  const grouped = new Map<SeriesReleaseDay, SeriesCatalogRow[]>();
 
   for (const row of rows) {
     const cadence = readText(row.cadence).toLowerCase();
@@ -375,13 +471,13 @@ function getUpcomingScheduleDays(rows: SeriesRow[], dayCount: number, limitPerDa
     });
 }
 
-async function loadSeriesRows(includeNsfw: boolean): Promise<SeriesRow[]> {
+async function loadSeriesRows(includeNsfw: boolean): Promise<SeriesCatalogRow[]> {
   const sql = getComicDb();
   if (!sql) {
     return [];
   }
 
-  return sql.unsafe<SeriesRow[]>(`
+  return sql.unsafe<SeriesCatalogRow[]>(`
     select
       i.item_key,
       i.media_type,
@@ -397,14 +493,29 @@ async function loadSeriesRows(includeNsfw: boolean): Promise<SeriesRow[]> {
       i.status,
       i.release_year,
       i.score,
-      i.detail,
-      e.payload as tmdb_payload,
       i.updated_at,
       i.release_day,
       i.release_window,
       i.release_timezone,
       i.cadence,
       i.next_release_at,
+      i.detail ->> 'poster_url' as poster_url,
+      coalesce(i.detail ->> 'release_year', i.detail ->> 'year') as detail_year,
+      i.detail ->> 'rating' as detail_rating,
+      coalesce(
+        i.detail ->> 'latest_episode',
+        i.detail ->> 'latest_label',
+        i.detail ->> 'latest_chapter_label'
+      ) as latest_episode,
+      coalesce(
+        i.detail ->> 'country',
+        i.detail ->> 'region',
+        i.detail -> 'country_names' ->> 0
+      ) as detail_country,
+      i.detail -> 'genres' as genres,
+      i.detail -> 'genre_names' as genre_names,
+      to_jsonb(i.genre_names) as canonical_genre_names,
+      i.detail -> 'category_names' as category_names,
       (
         select count(*)
         from public.media_units u
@@ -412,10 +523,6 @@ async function loadSeriesRows(includeNsfw: boolean): Promise<SeriesRow[]> {
           and u.unit_type = 'episode'
       )::int as episode_count
     from public.media_items i
-    left join public.media_item_enrichments e
-      on e.item_key = i.item_key
-     and e.provider = 'tmdb'
-     and e.match_status = 'matched'
     where (
       i.surface_type = 'series'
       or (i.surface_type = 'unknown' and i.media_type in ('anime', 'drama'))
@@ -425,13 +532,13 @@ async function loadSeriesRows(includeNsfw: boolean): Promise<SeriesRow[]> {
   `);
 }
 
-function getSeriesCatalog(includeNsfw: boolean): Promise<SeriesRow[]> {
+function getSeriesCatalog(includeNsfw: boolean): Promise<SeriesCatalogRow[]> {
   const visibility = getVisibilityCacheSegment(includeNsfw);
   const key = buildComicCacheKey(SERIES_CACHE_NAMESPACE, visibility, 'catalog');
   return rememberComicCacheValue(key, HUB_CACHE_TTL_SECONDS, () => loadSeriesRows(includeNsfw));
 }
 
-function getSeriesFilters(rows: SeriesRow[]): string[] {
+function getSeriesFilters(rows: SeriesCatalogRow[]): string[] {
   const available = new Set<string>();
   for (const row of rows) {
     switch (getSeriesType(row)) {
@@ -446,7 +553,7 @@ function getSeriesFilters(rows: SeriesRow[]): string[] {
         break;
     }
 
-    const country = getRowCountry(row);
+    const country = getCatalogCountry(row);
     if (country) {
       available.add(country);
     }
@@ -455,17 +562,16 @@ function getSeriesFilters(rows: SeriesRow[]): string[] {
   return getSeriesCanonicalFilters(available);
 }
 
-function matchesBrowseToken(row: SeriesRow, kind: SeriesBrowseKind, rawValue: string): boolean {
+function matchesBrowseToken(row: SeriesCatalogRow, kind: SeriesBrowseKind, rawValue: string): boolean {
   const value = normalizeBrowseToken(rawValue);
   if (!value) {
     return false;
   }
 
-  const detail = getSeriesDetailRecord(row);
   const type = getSeriesType(row);
-  const country = getRowCountry(row).toLowerCase();
-  const year = formatDetailYear(row.release_year, detail).toLowerCase();
-  const genres = getSeriesGenres(detail).map((genre) => genre.toLowerCase());
+  const country = getCatalogCountry(row).toLowerCase();
+  const year = formatCatalogYear(row).toLowerCase();
+  const genres = getSeriesCatalogGenres(row).map((genre) => genre.toLowerCase());
   const slugValue = slugify(value);
 
   if (kind === 'type') {
@@ -503,20 +609,18 @@ export async function getSeriesHubData(limit = 24, options: VisibilityOptions = 
   const rows = await getSeriesCatalog(Boolean(options.includeNsfw));
   const normalizedLimit = Math.max(1, limit);
   const popularRows = [...rows].sort((left, right) => {
-    const leftDetail = getSeriesDetailRecord(left);
-    const rightDetail = getSeriesDetailRecord(right);
     const leftScore = getSeriesType(left) === 'drama'
-      ? getDramaPopularity(leftDetail)
+      ? getDramaPopularity({ category_names: left.category_names })
       : (readNumber(left.score) ?? 0) * 1000 + (left.episode_count ?? 0);
     const rightScore = getSeriesType(right) === 'drama'
-      ? getDramaPopularity(rightDetail)
+      ? getDramaPopularity({ category_names: right.category_names })
       : (readNumber(right.score) ?? 0) * 1000 + (right.episode_count ?? 0);
     return rightScore - leftScore;
   });
 
   const dramaSpotlight = rows
     .filter((row) => getSeriesType(row) === 'drama')
-    .sort((left, right) => getDramaPopularity(getSeriesDetailRecord(right)) - getDramaPopularity(getSeriesDetailRecord(left)))
+    .sort((left, right) => getDramaPopularity({ category_names: right.category_names }) - getDramaPopularity({ category_names: left.category_names }))
     .slice(0, normalizedLimit)
     .map(mapSeriesCard);
 
@@ -541,8 +645,16 @@ export async function getSeriesFilteredItems(filter: string, limit = 24, options
       if (normalizedFilter === 'anime' || normalizedFilter === 'drama' || normalizedFilter === 'donghua') {
         return getSeriesType(row) === normalizedFilter;
       }
-      return getRowCountry(row).toLowerCase() === normalizedFilter;
+      return getCatalogCountry(row).toLowerCase() === normalizedFilter;
     })
+    .slice(0, Math.max(1, limit))
+    .map(mapSeriesCard);
+}
+
+export async function getNsfwSeriesItems(limit = 24): Promise<SeriesCardItem[]> {
+  const rows = await getSeriesCatalog(true);
+  return rows
+    .filter(isSeriesCatalogNsfw)
     .slice(0, Math.max(1, limit))
     .map(mapSeriesCard);
 }
@@ -561,7 +673,7 @@ export async function searchSeriesCatalog(query: string, limit = 8, options: Vis
       return [];
     }
 
-    const rows = await sql.unsafe<SeriesRow[]>(`
+    const rows = await sql.unsafe<SeriesCatalogRow[]>(`
       select
         i.item_key,
         i.media_type,
@@ -577,14 +689,27 @@ export async function searchSeriesCatalog(query: string, limit = 8, options: Vis
         i.status,
         i.release_year,
         i.score,
-        i.detail,
-        e.payload as tmdb_payload,
-        i.updated_at
+        i.updated_at,
+        i.release_window,
+        i.next_release_at,
+        i.detail ->> 'poster_url' as poster_url,
+        coalesce(i.detail ->> 'release_year', i.detail ->> 'year') as detail_year,
+        i.detail ->> 'rating' as detail_rating,
+        coalesce(
+          i.detail ->> 'latest_episode',
+          i.detail ->> 'latest_label',
+          i.detail ->> 'latest_chapter_label'
+        ) as latest_episode,
+        coalesce(
+          i.detail ->> 'country',
+          i.detail ->> 'region',
+          i.detail -> 'country_names' ->> 0
+        ) as detail_country,
+        i.detail -> 'genres' as genres,
+        i.detail -> 'genre_names' as genre_names,
+        to_jsonb(i.genre_names) as canonical_genre_names,
+        i.detail -> 'category_names' as category_names
       from public.media_items i
-      left join public.media_item_enrichments e
-        on e.item_key = i.item_key
-       and e.provider = 'tmdb'
-       and e.match_status = 'matched'
       where (
         i.surface_type = 'series'
         or (i.surface_type = 'unknown' and i.media_type in ('anime', 'drama'))
@@ -674,9 +799,8 @@ export async function getSeriesDetailBySlug(slug: string, options: VisibilityOpt
     const recommendations = (await getSeriesCatalog(Boolean(options.includeNsfw)))
       .filter((item) => item.slug !== row.slug)
       .map((item) => {
-        const candidateDetail = getSeriesDetailRecord(item);
-        const overlap = getSeriesGenres(candidateDetail).filter((genre) => genres.includes(genre)).length;
-        const countryBoost = getRowCountry(item) === country ? 1 : 0;
+        const overlap = getSeriesCatalogGenres(item).filter((genre) => genres.includes(genre)).length;
+        const countryBoost = getCatalogCountry(item) === country ? 1 : 0;
         return { item, rank: overlap * 10 + countryBoost };
       })
       .sort((left, right) => right.rank - left.rank)

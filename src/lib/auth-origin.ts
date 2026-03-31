@@ -1,6 +1,8 @@
 const DEFAULT_AUTH_ORIGIN = 'https://auth.dwizzy.my.id';
 const ALLOWED_AUTH_HOSTS = new Set(['auth.dwizzy.my.id', 'localhost', '127.0.0.1']);
-const ALLOWED_APP_HOSTS = new Set(['weebs.dwizzy.my.id', 'localhost', '127.0.0.1']);
+const CANONICAL_APP_HOST = 'weebs.dwizzy.my.id';
+const ALIAS_APP_HOST = 'weeb.dwizzy.my.id';
+const ALLOWED_APP_HOSTS = new Set([CANONICAL_APP_HOST, ALIAS_APP_HOST, 'localhost', '127.0.0.1']);
 
 function normalizeOrigin(value: string | undefined): string {
   const candidate = value?.trim();
@@ -54,7 +56,7 @@ export function canUseBrowserAuthBridge(currentOrigin: string): boolean {
       return true;
     }
 
-    return authOrigin.hostname === 'auth.dwizzy.my.id' && current.hostname === 'weebs.dwizzy.my.id';
+    return authOrigin.hostname === 'auth.dwizzy.my.id' && ALLOWED_APP_HOSTS.has(current.hostname);
   } catch {
     return false;
   }

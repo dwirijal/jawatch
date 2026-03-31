@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Check, X, LogOut, UserRound } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { BadgeAlert, Check, X, LogOut, UserRound } from 'lucide-react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Link } from '@/components/atoms/Link';
 import { ModalClose, ModalContent, ModalRoot, ModalTitle } from '@/components/atoms/Modal';
 import { useUIStore } from '@/store/useUIStore';
@@ -13,9 +13,14 @@ import { buildLoginUrl, buildLogoutRequest } from '@/lib/auth-gateway';
 
 export function MobileMenuPanel() {
   const pathname = usePathname() || '/';
+  const searchParams = useSearchParams();
   const { isSidebarOpen, setSidebarOpen } = useUIStore();
   const session = useAuthSession();
-  const logoutRequest = buildLogoutRequest(pathname);
+  const redirectTarget = React.useMemo(() => {
+    const query = searchParams.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
+  const logoutRequest = buildLogoutRequest(redirectTarget);
   const returnTo = logoutRequest.body.get('returnTo') ?? '/';
   const origin = logoutRequest.body.get('origin') ?? '';
   const previousPathname = React.useRef(pathname);
@@ -94,6 +99,27 @@ export function MobileMenuPanel() {
                 </section>
               ))}
 
+              {session.authenticated && session.user ? (
+                <section className="space-y-3 border-t border-border-subtle pt-6">
+                  <div className="flex items-center gap-2">
+                    <BadgeAlert className="h-4 w-4 text-zinc-400" />
+                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">NSFW</h2>
+                  </div>
+                  <p className="text-xs text-zinc-500">Adult-tagged titles across series, movies, and comics.</p>
+                  <ModalClose asChild>
+                    <Link
+                      href="/nsfw"
+                      className="block rounded-[var(--radius-sm)] border border-transparent px-4 py-3 transition-colors hover:border-border-subtle hover:bg-surface-1"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-black uppercase tracking-[0.16em] text-white">Open NSFW hub</p>
+                      </div>
+                      <p className="mt-1 text-xs text-zinc-500">Visible only while you are signed in.</p>
+                    </Link>
+                  </ModalClose>
+                </section>
+              ) : null}
+
               <section className="space-y-3 border-t border-border-subtle pt-6">
                 <div className="flex items-center gap-2">
                   <ACCOUNT_PANEL_META.icon className="h-4 w-4 text-zinc-400" />
@@ -106,7 +132,7 @@ export function MobileMenuPanel() {
                 ) : !session.authenticated || !session.user ? (
                   <ModalClose asChild>
                     <Link
-                      href={buildLoginUrl(pathname)}
+                      href={buildLoginUrl(redirectTarget)}
                       className="flex items-center justify-between rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-4 transition-colors hover:bg-surface-elevated"
                     >
                       <div>

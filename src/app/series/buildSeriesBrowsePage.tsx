@@ -22,12 +22,12 @@ export function buildSeriesBrowsePage({
     <MediaHubTemplate
       title={title}
       description={description}
-      icon={icon}
+      iconName={icon.name}
       theme={theme}
       results={results}
       loading={false}
       error={null}
-      resultHrefBuilder={(item) => `/series/${item.slug}`}
+      resultHrefPrefix="/series"
     />
   );
 }
@@ -41,4 +41,3 @@ export function formatSeriesBrowseLabel(value: string): string {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 }
-

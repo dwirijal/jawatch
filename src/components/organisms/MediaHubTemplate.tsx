@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Grid3X3, LayoutGrid, LucideIcon } from 'lucide-react';
+import { Clapperboard, CalendarDays, Globe2, Grid3X3, LayoutGrid, Tag, Tv, Zap, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { AdSection } from '@/components/organisms/AdSection';
 import { MediaHubHeader } from './MediaHubHeader';
@@ -14,10 +14,21 @@ import { StateInfo } from '@/components/molecules/StateInfo';
 import { ThemeType } from '@/lib/utils';
 import type { GenericMediaItem } from '@/lib/types';
 
+const MEDIA_HUB_ICONS = {
+  CalendarDays,
+  Clapperboard,
+  Globe2,
+  Grid3X3,
+  Tag,
+  Tv,
+  Zap,
+} satisfies Record<string, LucideIcon>;
+
 interface MediaHubTemplateProps {
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  iconName?: string;
   theme: ThemeType;
   genres?: string[];
   results: GenericMediaItem[] | null;
@@ -30,6 +41,7 @@ interface MediaHubTemplateProps {
   extraHeaderActions?: React.ReactNode;
   extraFilters?: React.ReactNode;
   resultHrefBuilder?: (item: GenericMediaItem) => string;
+  resultHrefPrefix?: string;
 }
 
 type ViewMode = 'comfortable' | 'compact';
@@ -46,6 +58,7 @@ export function MediaHubTemplate({
   title,
   description,
   icon,
+  iconName,
   theme,
   genres,
   results,
@@ -58,10 +71,12 @@ export function MediaHubTemplate({
   extraHeaderActions,
   extraFilters,
   resultHrefBuilder,
+  resultHrefPrefix,
 }: MediaHubTemplateProps) {
   const [viewMode, setViewMode] = React.useState<ViewMode>('compact');
   const viewModeStorageKey = `dwizzy_view_mode_${theme}`;
   const gridDensity = viewMode === 'comfortable' ? 'comfortable' : 'dense';
+  const resolvedIcon = icon ?? MEDIA_HUB_ICONS[iconName as keyof typeof MEDIA_HUB_ICONS] ?? Grid3X3;
 
   React.useEffect(() => {
     const saved = window.localStorage.getItem(viewModeStorageKey);
@@ -79,7 +94,7 @@ export function MediaHubTemplate({
       <MediaHubHeader
         title={title}
         description={description}
-        icon={icon}
+        icon={resolvedIcon}
         theme={theme}
         containerClassName="app-container-wide"
       >
@@ -161,7 +176,11 @@ export function MediaHubTemplate({
                     {results.map((item, index) => (
                       <MediaCard
                         key={`${item.slug}-${index}`}
-                        href={resultHrefBuilder ? resultHrefBuilder(item) : `/${theme === 'movie' ? 'movies' : theme}/${item.slug || ''}`}
+                        href={
+                          resultHrefBuilder
+                            ? resultHrefBuilder(item)
+                            : `${resultHrefPrefix ?? `/${theme === 'movie' ? 'movies' : theme}`}/${item.slug || ''}`
+                        }
                         image={item.thumb || item.image || item.thumbnail || item.poster || ''}
                         title={item.title}
                         subtitle={getResultSubtitle(item)}

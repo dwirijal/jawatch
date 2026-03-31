@@ -2,7 +2,9 @@ import 'server-only';
 
 import { buildComicCacheKey, rememberComicCacheValue } from '@/lib/server/comic-cache';
 import { getComicDb } from '@/lib/server/comic-db';
+import { hasNsfwLabel } from '@/lib/media-safety';
 import type { MovieCardItem } from '@/lib/types';
+import { buildVisibilityCondition } from '@/lib/adapters/video-db-common';
 import {
   buildDownloadGroups,
   buildMirrorEntries,
@@ -24,6 +26,30 @@ type MovieCastItem = {
   id: string | number;
   name: string;
   role?: string;
+};
+
+type MovieCatalogRow = {
+  item_key: string;
+  source: string;
+  media_type: string;
+  is_nsfw?: boolean | null;
+  slug: string;
+  title: string;
+  cover_url: string;
+  status: string;
+  release_year: number | null;
+  score: number;
+  updated_at: string;
+  unit_count?: number | null;
+  poster_url?: string | null;
+  detail_year?: string | null;
+  detail_rating?: string | null;
+  overview?: string | null;
+  synopsis?: string | null;
+  genres?: unknown;
+  genre_names?: unknown;
+  canonical_genre_names?: unknown;
+  category_names?: unknown;
 };
 
 export type MovieMirror = {
@@ -84,7 +110,7 @@ export type MovieSupabaseWatch = MovieWatchData;
 const LIST_CACHE_TTL_SECONDS = 60 * 10;
 const DETAIL_CACHE_TTL_SECONDS = 60 * 30;
 const SEARCH_CACHE_TTL_SECONDS = 60 * 3;
-const MOVIE_CACHE_NAMESPACE = 'video-movie-v4';
+const MOVIE_CACHE_NAMESPACE = 'video-movie-v6';
 
 function visibilitySegment(options: VisibilityOptions): 'auth' | 'public' {
   return options.includeNsfw ? 'auth' : 'public';
@@ -102,6 +128,59 @@ function getMovieItemDetailRecord(row: Pick<VideoUnitRow, 'item_detail' | 'item_
     ...readRecord(row.item_detail),
     ...readRecord(row.item_tmdb_payload),
   };
+}
+
+function mergeMovieCatalogLabels(...values: unknown[]): string[] {
+  const seen = new Set<string>();
+  const labels: string[] = [];
+
+  for (const value of values) {
+    for (const label of readStringArray(value)) {
+      if (/\bviews?\b/i.test(label) || /\bloves?\b/i.test(label)) {
+        continue;
+      }
+
+      const key = label.toLowerCase();
+      if (seen.has(key)) {
+        continue;
+      }
+
+      seen.add(key);
+      labels.push(label);
+    }
+  }
+
+  return labels;
+}
+
+function getMovieCatalogGenres(row: Pick<MovieCatalogRow, 'genres' | 'genre_names' | 'canonical_genre_names' | 'category_names'>): string[] {
+  const labels = mergeMovieCatalogLabels(row.genres, row.genre_names, row.canonical_genre_names, row.category_names);
+  if (labels.length > 0) {
+    return labels;
+  }
+
+  return getVideoGenres({
+    genres: row.genres,
+    genre_names: row.genre_names,
+    category_names: row.category_names,
+  });
+}
+
+function isMovieCatalogNsfw(row: Pick<MovieCatalogRow, 'is_nsfw' | 'genres' | 'genre_names' | 'canonical_genre_names' | 'category_names'>): boolean {
+  return Boolean(row.is_nsfw) || hasNsfwLabel(row.genres, row.genre_names, row.canonical_genre_names, row.category_names);
+}
+
+function formatCatalogYear(row: Pick<MovieCatalogRow, 'release_year' | 'detail_year'>): string {
+  if (row.release_year) {
+    return String(row.release_year);
+  }
+
+  const detailYear = readNumber(row.detail_year);
+  if (detailYear && detailYear > 0) {
+    return String(Math.round(detailYear));
+  }
+
+  return readText(row.detail_year) || 'N/A';
 }
 
 function formatYear(row: VideoItemRow): string {
@@ -141,18 +220,21 @@ function formatRating(row: VideoItemRow): string {
   return rating && rating > 0 ? rating.toFixed(1) : 'N/A';
 }
 
-function mapMovieCard(row: VideoItemRow): MovieCardItem {
-  const detail = getMovieDetailRecord(row);
+function formatCatalogRating(row: Pick<MovieCatalogRow, 'detail_rating' | 'score'>): string {
+  const rating = readNumber(row.detail_rating) ?? (row.score > 0 ? row.score : null);
+  return rating && rating > 0 ? rating.toFixed(1) : 'N/A';
+}
 
+function mapMovieCard(row: MovieCatalogRow): MovieCardItem {
   return {
     slug: row.slug,
     title: row.title,
-    poster: normalizePosterUrl(readText(detail.poster_url) || readText(row.cover_url)),
-    year: formatYear(row),
+    poster: normalizePosterUrl(readText(row.poster_url) || readText(row.cover_url)),
+    year: formatCatalogYear(row),
     type: 'movie',
-    rating: formatRating(row),
+    rating: formatCatalogRating(row),
     status: readText(row.status),
-    genres: getVideoGenres(detail).join(', '),
+    genres: getMovieCatalogGenres(row).join(', '),
   };
 }
 
@@ -176,7 +258,7 @@ function mapMovieCast(detail: Record<string, unknown>): MovieCastItem[] {
   return items;
 }
 
-async function getMovieCatalogRows(options: VisibilityOptions = {}): Promise<VideoItemRow[]> {
+async function getMovieCatalogRows(options: VisibilityOptions = {}): Promise<MovieCatalogRow[]> {
   const cacheKey = buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'catalog', visibilitySegment(options));
   return rememberComicCacheValue(cacheKey, LIST_CACHE_TTL_SECONDS, async () => {
     const sql = getComicDb();
@@ -184,20 +266,28 @@ async function getMovieCatalogRows(options: VisibilityOptions = {}): Promise<Vid
       return [];
     }
 
-    const rows = await sql<VideoItemRow[]>`
+    const rows = await sql.unsafe<MovieCatalogRow[]>(`
       select
         i.item_key,
         i.source,
         i.media_type,
+        i.is_nsfw,
         i.slug,
         i.title,
         i.cover_url,
         i.status,
         i.release_year,
         i.score,
-        i.detail,
-        e.payload as tmdb_payload,
         i.updated_at,
+        i.detail ->> 'poster_url' as poster_url,
+        coalesce(i.detail ->> 'release_year', i.detail ->> 'year') as detail_year,
+        i.detail ->> 'rating' as detail_rating,
+        coalesce(i.detail ->> 'overview', e.payload ->> 'overview') as overview,
+        coalesce(i.detail ->> 'synopsis', e.payload ->> 'synopsis') as synopsis,
+        i.detail -> 'genres' as genres,
+        i.detail -> 'genre_names' as genre_names,
+        to_jsonb(i.genre_names) as canonical_genre_names,
+        i.detail -> 'category_names' as category_names,
         (
           select count(*)
           from public.media_units u
@@ -205,22 +295,19 @@ async function getMovieCatalogRows(options: VisibilityOptions = {}): Promise<Vid
             and u.unit_type = 'episode'
         )::int as unit_count
       from public.media_items i
-      left join public.media_item_enrichments e
-        on e.item_key = i.item_key
-       and e.provider = 'tmdb'
-       and e.match_status = 'matched'
       where (
         i.surface_type = 'movie'
         or (i.surface_type = 'unknown' and i.media_type = 'movie')
       )
+        ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}
       order by i.updated_at desc
-    `;
+    `);
 
-    return rows.filter((row) => options.includeNsfw || !isVideoNsfw(getMovieDetailRecord(row)));
+    return rows;
   });
 }
 
-function sortMovieRows(rows: VideoItemRow[], section: 'popular' | 'latest' | 'trending'): VideoItemRow[] {
+function sortMovieRows(rows: MovieCatalogRow[], section: 'popular' | 'latest' | 'trending'): MovieCatalogRow[] {
   const nextRows = [...rows];
 
   if (section === 'latest') {
@@ -228,8 +315,16 @@ function sortMovieRows(rows: VideoItemRow[], section: 'popular' | 'latest' | 'tr
   }
 
   return nextRows.sort((left, right) => {
-    const leftScore = extractPopularityScore(getMovieDetailRecord(left)) + (left.score || 0) * 100 + (left.unit_count || 0) * 10;
-    const rightScore = extractPopularityScore(getMovieDetailRecord(right)) + (right.score || 0) * 100 + (right.unit_count || 0) * 10;
+    const leftScore = extractPopularityScore({
+      genres: left.genres,
+      genre_names: left.genre_names,
+      category_names: left.category_names,
+    }) + (left.score || 0) * 100 + (left.unit_count || 0) * 10;
+    const rightScore = extractPopularityScore({
+      genres: right.genres,
+      genre_names: right.genre_names,
+      category_names: right.category_names,
+    }) + (right.score || 0) * 100 + (right.unit_count || 0) * 10;
     return rightScore - leftScore || right.updated_at.localeCompare(left.updated_at);
   });
 }
@@ -276,12 +371,19 @@ export async function getMovieGenreItems(
 
   const rows = sortMovieRows(
     (await getMovieCatalogRows(options)).filter((row) =>
-      getVideoGenres(getMovieDetailRecord(row)).some((entry) => entry.toLowerCase() === needle)
+      getMovieCatalogGenres(row).some((entry) => entry.toLowerCase() === needle)
     ),
     'popular',
   );
 
   return rows.slice(0, Math.max(1, limit)).map(mapMovieCard);
+}
+
+export async function getNsfwMovieItems(limit = 24): Promise<MovieCardItem[]> {
+  const rows = await getMovieCatalogRows({ includeNsfw: true });
+  return sortMovieRows(rows.filter(isMovieCatalogNsfw), 'popular')
+    .slice(0, Math.max(1, limit))
+    .map(mapMovieCard);
 }
 
 export async function searchMovieCatalog(
@@ -296,20 +398,62 @@ export async function searchMovieCatalog(
 
   const cacheKey = buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'search', visibilitySegment(options), normalizedQuery, limit);
   return rememberComicCacheValue(cacheKey, SEARCH_CACHE_TTL_SECONDS, async () => {
-    const rows = await getMovieCatalogRows(options);
-    const filtered = rows.filter((row) => {
-      const detail = getMovieDetailRecord(row);
-      const haystack = [
-        row.title,
-        readText(detail.overview),
-        readText(detail.synopsis),
-        getVideoGenres(detail).join(' '),
-      ].join(' ').toLowerCase();
+    const sql = getComicDb();
+    if (!sql) {
+      return [];
+    }
 
-      return haystack.includes(normalizedQuery);
-    });
+    const rows = await sql.unsafe<MovieCatalogRow[]>(`
+      select
+        i.item_key,
+        i.source,
+        i.media_type,
+        i.is_nsfw,
+        i.slug,
+        i.title,
+        i.cover_url,
+        i.status,
+        i.release_year,
+        i.score,
+        i.updated_at,
+        i.detail ->> 'poster_url' as poster_url,
+        coalesce(i.detail ->> 'release_year', i.detail ->> 'year') as detail_year,
+        i.detail ->> 'rating' as detail_rating,
+        i.detail ->> 'overview' as overview,
+        i.detail ->> 'synopsis' as synopsis,
+        i.detail -> 'genres' as genres,
+        i.detail -> 'genre_names' as genre_names,
+        to_jsonb(i.genre_names) as canonical_genre_names,
+        i.detail -> 'category_names' as category_names,
+        (
+          select count(*)
+          from public.media_units u
+          where u.item_key = i.item_key
+            and u.unit_type = 'episode'
+        )::int as unit_count
+      from public.media_items i
+      left join public.media_item_enrichments e
+        on e.item_key = i.item_key
+       and e.provider = 'tmdb'
+       and e.match_status = 'matched'
+      where (
+        i.surface_type = 'movie'
+        or (i.surface_type = 'unknown' and i.media_type = 'movie')
+      )
+        ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}
+        and (
+          search_vec @@ plainto_tsquery('simple', $1)
+          or title ilike $2
+          or coalesce(i.detail ->> 'overview', i.detail ->> 'synopsis', e.payload ->> 'overview', e.payload ->> 'synopsis', '') ilike $2
+        )
+      order by
+        ts_rank_cd(search_vec, plainto_tsquery('simple', $1)) desc,
+        score desc nulls last,
+        updated_at desc
+      limit $3
+    `, [normalizedQuery, `%${normalizedQuery}%`, Math.max(1, limit)]);
 
-    return sortMovieRows(filtered, 'popular').slice(0, Math.max(1, limit)).map(mapMovieCard);
+    return rows.map(mapMovieCard);
   });
 }
 

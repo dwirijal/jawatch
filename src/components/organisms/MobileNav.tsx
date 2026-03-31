@@ -9,13 +9,11 @@ import { MobileMenuPanel } from './MobileMenuPanel';
 
 export function MobileNav() {
   const pathname = usePathname() || '/';
-  const { device, setSearchOpen, setSidebarOpen } = useUIStore();
-
-  if (device !== 'mobile') return null;
+  const { setSearchOpen, setSidebarOpen } = useUIStore();
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-[100] border-t border-border-subtle bg-background/95 pb-safe backdrop-blur-xl">
+      <div className="fixed bottom-0 left-0 right-0 z-[100] border-t border-border-subtle bg-background/95 pb-safe backdrop-blur-xl md:hidden">
         <div className="app-container flex h-16 items-center justify-around gap-1">
           {MOBILE_NAV_ITEMS.map((item) => {
             if ('action' in item && item.action === 'search') {

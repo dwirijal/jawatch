@@ -9,6 +9,7 @@ const staticRoutes = [
   { path: "/series/list", priority: 0.85, changeFrequency: "hourly" },
   { path: "/series/anime", priority: 0.85, changeFrequency: "hourly" },
   { path: "/series/donghua", priority: 0.85, changeFrequency: "hourly" },
+  { path: "/series/drama", priority: 0.85, changeFrequency: "hourly" },
   { path: "/drachin", priority: 0.8, changeFrequency: "daily" },
   { path: "/dramabox", priority: 0.8, changeFrequency: "daily" },
   { path: "/comic", priority: 0.9, changeFrequency: "daily" },

@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { getAuthStatus } from '@/lib/auth-gateway';
-import type { AuthSessionState } from '@/lib/auth-types';
+import type { AuthSessionState, AuthStatus } from '@/lib/auth-types';
 
 const INITIAL_STATE: AuthSessionState = {
   loading: true,
@@ -14,8 +14,26 @@ const INITIAL_STATE: AuthSessionState = {
 
 const AuthSessionContext = React.createContext<AuthSessionState | null>(null);
 
-export function AuthSessionProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = React.useState<AuthSessionState>(INITIAL_STATE);
+function toSessionState(status?: AuthStatus | null): AuthSessionState {
+  if (!status) {
+    return INITIAL_STATE;
+  }
+
+  return {
+    loading: false,
+    authenticated: status.authenticated,
+    user: status.user,
+  };
+}
+
+export function AuthSessionProvider({
+  children,
+  initialState,
+}: {
+  children: React.ReactNode;
+  initialState?: AuthStatus | null;
+}) {
+  const [state, setState] = React.useState<AuthSessionState>(() => toSessionState(initialState));
 
   React.useEffect(() => {
     let cancelled = false;

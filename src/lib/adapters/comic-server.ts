@@ -212,8 +212,38 @@ function mapComicGenres(detail: JsonRecord): MangaDetail['genres'] {
   }));
 }
 
+function compareTimestampDesc(left: string | null | undefined, right: string | null | undefined): number {
+  const leftValue = readText(left);
+  const rightValue = readText(right);
+
+  if (leftValue && rightValue) {
+    return rightValue.localeCompare(leftValue);
+  }
+  if (leftValue) return -1;
+  if (rightValue) return 1;
+  return 0;
+}
+
+function sortComicChapterRows(rows: ComicChapterRow[]): ComicChapterRow[] {
+  return [...rows].sort((left, right) => {
+    const leftNumber = left.number ?? Number.NEGATIVE_INFINITY;
+    const rightNumber = right.number ?? Number.NEGATIVE_INFINITY;
+
+    if (leftNumber !== rightNumber) {
+      return rightNumber - leftNumber;
+    }
+
+    const publishedAtDiff = compareTimestampDesc(left.published_at, right.published_at);
+    if (publishedAtDiff !== 0) {
+      return publishedAtDiff;
+    }
+
+    return readText(right.slug).localeCompare(readText(left.slug));
+  });
+}
+
 function mapComicChapters(rows: ComicChapterRow[]): MangaDetail['chapters'] {
-  return rows.map((row) => ({
+  return sortComicChapterRows(rows).map((row) => ({
     chapter: readText(row.label) || readText(row.title),
     slug: readText(row.slug),
     link: `/comic/${readText(row.slug)}`,
@@ -384,6 +414,23 @@ async function queryPopularComics(limit = 24, includeNsfw = false): Promise<Mang
   return fallbackRows.map(mapComicCard);
 }
 
+async function queryNsfwComics(limit = 24): Promise<MangaSearchResult[]> {
+  const sql = await getSql();
+  const rows = await sql.unsafe<ComicItemRow[]>(
+    `
+    select item_key, source, media_type, slug, title, cover_url, status, release_year, score, detail, updated_at
+    from public.media_items
+    where media_type in ('manga', 'manhwa', 'manhua')
+      and (${NSFW_SQL_CONDITION})
+    order by updated_at desc
+    limit $1
+  `,
+    [Math.max(limit, 1)],
+  );
+
+  return rows.map(mapComicCard);
+}
+
 async function queryComicSearch(query: string, page = 1, limit = 24, includeNsfw = false): Promise<MangaSearchResult[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) {
@@ -469,7 +516,7 @@ async function queryComicDetail(slug: string, includeNsfw = false): Promise<Mang
     select slug, title, label, number, prev_slug, next_slug, published_at, detail
     from public.media_units
     where item_key = ${currentRow.item_key} and unit_type = 'chapter'
-    order by number desc nulls last, updated_at desc
+    order by number desc nulls last, published_at desc nulls last, slug desc
   `;
 
   const currentGenres = readStringArray(detail.genres);
@@ -609,6 +656,14 @@ export async function getPopularManga(
   );
 
   return { comics };
+}
+
+export async function getNsfwComics(limit = 24): Promise<MangaSearchResult[]> {
+  return rememberComicCacheValue(
+    buildComicCacheKey('list', 'nsfw', limit),
+    LIST_CACHE_TTL_SECONDS,
+    () => queryNsfwComics(limit),
+  );
 }
 
 export async function getNewManga(

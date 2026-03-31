@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { Calendar, Clapperboard, Flame, Sparkles, Timer } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Paper } from '@/components/atoms/Paper';
 import { MediaCard } from '@/components/atoms/Card';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
@@ -34,6 +35,25 @@ function getCardTheme(item: SeriesCardItem): 'anime' | 'donghua' | 'drama' {
   return getSeriesTheme(item.type);
 }
 
+function buildSeriesFilterHref(filter: string): string {
+  switch (filter.toLowerCase()) {
+    case 'anime':
+      return '/series/anime';
+    case 'donghua':
+      return '/series/donghua';
+    case 'drama':
+      return '/series/drama';
+    case 'japan':
+      return '/series/country/japan';
+    case 'china':
+      return '/series/country/china';
+    case 'south korea':
+      return '/series/country/south-korea';
+    default:
+      return '/series';
+  }
+}
+
 export default function SeriesPageClient({
   initialPopular,
   initialLatest,
@@ -41,32 +61,14 @@ export default function SeriesPageClient({
   initialWeeklySchedule,
   filters,
 }: SeriesPageClientProps) {
-  const [results, setResults] = React.useState<SeriesCardItem[] | null>(null);
-  const [loading, setLoading] = React.useState(false);
-  const [activeFilter, setActiveFilter] = React.useState<string | null>(null);
+  const router = useRouter();
   const today = React.useMemo(() => getCurrentReleaseDay(), []);
   const [activeRadarDay, setActiveRadarDay] = React.useState<string | null>(today);
   const initialDonghuaSpotlight = initialLatest.filter((item) => item.type === 'donghua').slice(0, 8);
   const activeRadarLane = initialWeeklySchedule.find((lane) => lane.day === activeRadarDay) ?? initialWeeklySchedule[0] ?? null;
 
-  const handleFilterClick = async (filter: string) => {
-    setLoading(true);
-    setActiveFilter(filter);
-
-    try {
-      const response = await fetch(`/api/series/filter?value=${encodeURIComponent(filter)}&limit=24`);
-      if (!response.ok) {
-        throw new Error(`Series filter request failed with status ${response.status}`);
-      }
-
-      const data = (await response.json()) as SeriesCardItem[];
-      setResults(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error(error);
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
+  const handleFilterClick = (filter: string) => {
+    router.push(buildSeriesFilterHref(filter));
   };
 
   return (
@@ -76,15 +78,12 @@ export default function SeriesPageClient({
       icon={Clapperboard}
       theme="drama"
       genres={filters}
-      results={results as GenericMediaItem[] | null}
-      loading={loading}
+      results={null as GenericMediaItem[] | null}
+      loading={false}
       error={null}
-      activeGenre={activeFilter}
+      activeGenre={null}
       onGenreClick={handleFilterClick}
-      onClearResults={() => {
-        setResults(null);
-        setActiveFilter(null);
-      }}
+      onClearResults={undefined}
       resultHrefBuilder={(item) => `/series/${item.slug}`}
     >
       <div className="app-section-stack">

@@ -2,19 +2,20 @@
 
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { BadgeAlert, Search } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { cn } from '@/lib/utils';
 import { SearchModal } from './SearchModal';
-import { useUIStore } from '@/store/useUIStore';
 import { AuthNavEntry } from './AuthNavEntry';
 import { DESKTOP_NAV_ITEMS } from '@/lib/navigation';
 import { DesktopNavGroup } from './DesktopNavGroup';
+import { useAuthSession } from '@/components/hooks/useAuthSession';
+import { useUIStore } from '@/store/useUIStore';
 
 export function Navbar() {
   const pathname = usePathname() || '/';
-  const { device } = useUIStore();
+  const session = useAuthSession();
   const [isSolid, setIsSolid] = React.useState(false);
 
   React.useEffect(() => {
@@ -27,13 +28,11 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  if (device === 'mobile') return null;
-
   return (
     <nav
       data-scrolled={isSolid ? 'true' : 'false'}
       className={cn(
-        'sticky top-0 z-[160] w-full border-b transition-all duration-500 ease-in-out',
+        'sticky top-0 z-[160] hidden w-full border-b transition-all duration-500 ease-in-out md:block',
         isSolid 
           ? 'border-border-subtle bg-background/80 backdrop-blur-2xl py-0' 
           : 'border-transparent bg-transparent py-2'
@@ -70,6 +69,20 @@ export function Navbar() {
                 </Link>
               )
             )}
+            {session.authenticated && session.user ? (
+              <Link
+                href="/nsfw"
+                className={cn(
+                  'focus-tv relative flex items-center gap-2 rounded-[var(--radius-sm)] px-4 py-2 text-[11px] font-black uppercase tracking-[0.15em] transition-all',
+                  pathname === '/nsfw'
+                    ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                    : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                )}
+              >
+                <BadgeAlert className={cn('h-3.5 w-3.5', pathname === '/nsfw' ? 'text-black' : 'text-zinc-500')} />
+                NSFW
+              </Link>
+            ) : null}
           </div>
         </div>
 

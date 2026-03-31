@@ -93,7 +93,7 @@ export function SearchModal() {
   }, [isSearchOpen, setSearchOpen]);
 
   React.useEffect(() => {
-    if (query.length < 3) {
+    if (query.length < 2) {
       latestRequestId.current += 1;
       setLoading(false);
       setResults([]);
@@ -301,7 +301,7 @@ export function SearchModal() {
                         );
                       })}
                     </div>
-                  ) : query.length >= 3 && !loading ? (
+                  ) : query.length >= 2 && !loading ? (
                     <div className="py-20 text-center">
                       <Typography as="p" size="lg" className="font-bold text-zinc-500">No results found for &quot;{query}&quot;</Typography>
                       <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 italic">Try searching for something else</p>
@@ -313,7 +313,7 @@ export function SearchModal() {
                       </div>
                       <div className="space-y-1">
                         <Typography as="p" size="xl" uppercase className="font-black tracking-[-0.04em] text-white/40">Enter Search</Typography>
-                        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">MINIMUM 3 CHARACTERS</p>
+                        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">MINIMUM 2 CHARACTERS</p>
                       </div>
                     </div>
                   )}

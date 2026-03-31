@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const CANONICAL_APP_ORIGIN = 'https://weebs.dwizzy.my.id';
+const LEGACY_APP_HOST = 'weeb.dwizzy.my.id';
+
 const BLOCKED_EXACT_PATHS = new Set([
   "/@vite/env",
   "/api/gql",
@@ -47,6 +50,11 @@ function isScannerPath(pathname: string) {
 }
 
 export function proxy(request: NextRequest) {
+  if (request.nextUrl.hostname === LEGACY_APP_HOST) {
+    const redirectUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, CANONICAL_APP_ORIGIN);
+    return NextResponse.redirect(redirectUrl, 308);
+  }
+
   if (!isScannerPath(request.nextUrl.pathname)) {
     return NextResponse.next();
   }

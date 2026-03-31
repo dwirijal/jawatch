@@ -11,34 +11,9 @@ import { Paper } from '@/components/atoms/Paper';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import type { ThemeType } from '@/lib/utils';
-import type { MangaSearchResult } from '@/lib/types';
-import {
-  formatSeriesCardSubtitle,
-  getSeriesBadgeText,
-  getSeriesTheme,
-  type SeriesMediaType,
-} from '@/lib/series-presentation';
+import type { SeriesMediaType } from '@/lib/series-presentation';
 
 type SearchDomain = 'all' | 'series' | 'movies' | 'comic';
-
-type SeriesResult = {
-  title: string;
-  slug: string;
-  poster: string;
-  type?: SeriesMediaType;
-  latestEpisode?: string;
-  country?: string;
-  year?: string;
-};
-
-type MovieResult = {
-  title: string;
-  slug: string;
-  poster: string;
-  year?: string;
-  type?: string;
-  rating?: string;
-};
 
 type SearchCardItem = {
   id: string;
@@ -56,6 +31,8 @@ type DomainState = {
   items: SearchCardItem[];
 };
 
+type SearchDomainStateMap = Record<Exclude<SearchDomain, 'all'>, DomainState>;
+
 const DOMAIN_CONFIG: Record<Exclude<SearchDomain, 'all'>, {
   label: string;
   icon: LucideIcon;
@@ -67,10 +44,8 @@ const DOMAIN_CONFIG: Record<Exclude<SearchDomain, 'all'>, {
 };
 
 const DOMAIN_ORDER: SearchDomain[] = ['all', 'series', 'movies', 'comic'];
-const OVERVIEW_LIMIT = 6;
-const DOMAIN_LIMIT = 24;
 
-function getInitialState(): Record<Exclude<SearchDomain, 'all'>, DomainState> {
+function getInitialState(): SearchDomainStateMap {
   return {
     series: { loading: false, error: null, items: [] },
     movies: { loading: false, error: null, items: [] },
@@ -78,129 +53,51 @@ function getInitialState(): Record<Exclude<SearchDomain, 'all'>, DomainState> {
   };
 }
 
-function normalizeSeriesResults(items: SeriesResult[]): SearchCardItem[] {
-  return items.map((item) => ({
-    id: `series:${item.slug}`,
-    href: `/series/${item.slug}`,
-    title: item.title,
-    image: item.poster,
-    subtitle: formatSeriesCardSubtitle(item) || undefined,
-    badgeText: getSeriesBadgeText(item.type || 'anime'),
-    theme: getSeriesTheme(item.type || 'anime'),
-  }));
-}
-
-function normalizeMovieResults(items: MovieResult[]): SearchCardItem[] {
-  return items.map((item) => ({
-    id: `movies:${item.slug}`,
-    href: `/movies/${item.slug}`,
-    title: item.title,
-    image: item.poster,
-    subtitle: [item.year, item.type?.toUpperCase()].filter(Boolean).join(' • ') || undefined,
-    badgeText: item.rating ? `★ ${item.rating}` : item.type?.toUpperCase(),
-    theme: 'movie',
-  }));
-}
-
-function normalizeMangaResults(items: MangaSearchResult[]): SearchCardItem[] {
-  return items.map((item) => ({
-    id: `manga:${item.slug}`,
-    href: `/comic/${item.slug}`,
-    title: item.title,
-    image: item.thumbnail || item.image,
-    subtitle: item.chapter || item.time_ago || undefined,
-    badgeText: item.type || 'Manga',
-    theme: 'manga',
-  }));
-}
-
-async function fetchDomainResults(domain: Exclude<SearchDomain, 'all'>, query: string, limit: number): Promise<SearchCardItem[]> {
-  const url = new URL(`/api/search/${domain}`, window.location.origin);
-  url.searchParams.set('q', query);
-  url.searchParams.set('limit', String(limit));
-
-  const response = await fetch(url.toString());
-  if (!response.ok) {
-    throw new Error(`Search failed for ${domain}`);
-  }
-
-  if (domain === 'series') {
-    return normalizeSeriesResults(await response.json() as SeriesResult[]);
-  }
-  if (domain === 'movies') {
-    return normalizeMovieResults(await response.json() as MovieResult[]);
-  }
-  if (domain === 'comic') {
-    return normalizeMangaResults(await response.json() as MangaSearchResult[]);
-  }
-  return [];
-}
-
 export default function SearchResultsPageClient({
   initialQuery,
   initialType = 'all',
+  initialDomainState,
 }: {
   initialQuery: string;
   initialType?: SearchDomain;
+  initialDomainState?: SearchDomainStateMap;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [inputValue, setInputValue] = React.useState(initialQuery);
   const [activeTab, setActiveTab] = React.useState<SearchDomain>(initialType);
-  const [domainState, setDomainState] = React.useState<Record<Exclude<SearchDomain, 'all'>, DomainState>>(getInitialState);
-  const requestIdRef = React.useRef(0);
 
   React.useEffect(() => {
-    const query = initialQuery.trim();
-    if (query.length < 2) {
-      setDomainState(getInitialState());
-      return;
+    setInputValue(initialQuery);
+    setActiveTab(initialType);
+  }, [initialQuery, initialType]);
+
+  const buildSearchHref = React.useCallback((nextQuery: string, nextType: SearchDomain) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const trimmed = nextQuery.trim();
+
+    if (trimmed) {
+      params.set('q', trimmed);
+    } else {
+      params.delete('q');
     }
 
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    const targets = activeTab === 'all'
-      ? (['series', 'movies', 'comic'] as const)
-      : [activeTab];
-
-    targets.forEach((domain) => {
-      setDomainState((current) => ({
-        ...current,
-        [domain]: { ...current[domain], loading: true, error: null, items: [] },
-      }));
-
-      void fetchDomainResults(domain, query, activeTab === 'all' ? OVERVIEW_LIMIT : DOMAIN_LIMIT)
-        .then((items) => {
-          if (requestIdRef.current !== requestId) {
-            return;
-          }
-
-          setDomainState((current) => ({
-            ...current,
-            [domain]: { loading: false, error: null, items },
-          }));
-        })
-        .catch(() => {
-          if (requestIdRef.current !== requestId) {
-            return;
-          }
-
-          setDomainState((current) => ({
-            ...current,
-            [domain]: { loading: false, error: 'Search failed', items: [] },
-          }));
-        });
-    });
-  }, [activeTab, initialQuery]);
+    params.set('type', nextType);
+    const queryString = params.toString();
+    return queryString ? `${pathname}?${queryString}` : pathname;
+  }, [pathname, searchParams]);
 
   const handleSearchSubmit = React.useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('q', inputValue.trim());
-    params.set('type', activeTab);
-    router.push(`${pathname}?${params.toString()}`);
-  }, [activeTab, inputValue, pathname, router, searchParams]);
+    router.push(buildSearchHref(inputValue, activeTab));
+  }, [activeTab, buildSearchHref, inputValue, router]);
 
+  const handleTabChange = React.useCallback((domain: SearchDomain) => {
+    setActiveTab(domain);
+    router.push(buildSearchHref(inputValue, domain));
+  }, [buildSearchHref, inputValue, router]);
+
+  const domainState = initialDomainState ?? getInitialState();
   const sections = activeTab === 'all' ? (['series', 'movies', 'comic'] as const) : [activeTab];
 
   return (
@@ -229,7 +126,7 @@ export default function SearchResultsPageClient({
                 key={domain}
                 variant={activeTab === domain ? 'drama' : 'outline'}
                 size="sm"
-                onClick={() => setActiveTab(domain)}
+                onClick={() => handleTabChange(domain)}
               >
                 {domain === 'all' ? 'All' : DOMAIN_CONFIG[domain].label}
               </Button>
@@ -243,6 +140,7 @@ export default function SearchResultsPageClient({
           sections.map((domain) => {
             const state = domainState[domain];
             const config = DOMAIN_CONFIG[domain];
+
             return (
               <SectionCard
                 key={domain}
@@ -288,3 +186,5 @@ export default function SearchResultsPageClient({
     </main>
   );
 }
+
+export type { SearchDomain, SearchCardItem, SearchDomainStateMap, SeriesMediaType };

@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { incrementInterest } from '@/lib/store';
 import { Film } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { MediaCard } from '@/components/atoms/Card';
 import { MediaHubTemplate } from '@/components/organisms/MediaHubTemplate';
 import { SavedContentSection } from '@/components/organisms/SavedContentSection';
@@ -20,34 +21,30 @@ const MOVIE_GENRES = [
 interface MoviesPageClientProps {
   initialPopular: MovieCardItem[];
   initialLatest: MovieCardItem[];
+  initialResults?: MovieCardItem[] | null;
+  activeGenre?: string | null;
 }
 
-export default function MoviesPageClient({ initialPopular, initialLatest }: MoviesPageClientProps) {
+export default function MoviesPageClient({
+  initialPopular,
+  initialLatest,
+  initialResults = null,
+  activeGenre = null,
+}: MoviesPageClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const popular = initialPopular;
   const latest = initialLatest;
-  const [results, setResults] = React.useState<MovieCardItem[] | null>(null);
-  const [loading, setLoading] = React.useState(false);
-  const [activeGenre, setActiveGenre] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     incrementInterest('movie');
   }, []);
 
-  const handleGenreClick = async (genre: string) => {
-    setLoading(true);
-    setActiveGenre(genre);
-    try {
-      const response = await fetch(`/api/movies/genre?genre=${encodeURIComponent(genre)}&limit=24`);
-      if (!response.ok) {
-        throw new Error(`Movie genre request failed with status ${response.status}`);
-      }
-      const data = (await response.json()) as MovieCardItem[];
-      setResults(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const handleGenreClick = (genre: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('genre', genre);
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   return (
@@ -57,14 +54,13 @@ export default function MoviesPageClient({ initialPopular, initialLatest }: Movi
       icon={Film}
       theme="movie"
       genres={MOVIE_GENRES}
-      results={results as GenericMediaItem[] | null}
-      loading={loading}
+      results={initialResults as GenericMediaItem[] | null}
+      loading={false}
       error={null}
       activeGenre={activeGenre}
       onGenreClick={handleGenreClick}
       onClearResults={() => {
-        setResults(null);
-        setActiveGenre(null);
+        router.push(pathname);
       }}
     >
       <StaggerEntry className="app-section-stack" delay={100}>

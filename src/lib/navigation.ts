@@ -40,7 +40,8 @@ const VIDEO_GROUP: NavigationGroup = {
   items: [
     { label: 'Film', href: '/movies', description: 'Movies and watch pages.' },
     { label: 'Series', href: '/series', description: 'Anime, donghua, and episodic drama from the unified catalog.' },
-    { label: 'Donghua in Series', href: '/series', description: 'Chinese animation now lives inside the series catalog.' },
+    { label: 'Donghua in Series', href: '/series/donghua', description: 'Chinese animation shelf inside the canonical series catalog.' },
+    { label: 'Drama in Series', href: '/series/drama', description: 'Live-action episodic drama shelf inside the canonical series catalog.' },
     { label: 'Drama China', href: '/drachin', description: 'Unified vertical short-drama hub.' },
   ],
 };

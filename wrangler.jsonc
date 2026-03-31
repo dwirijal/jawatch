@@ -17,6 +17,10 @@
     {
       "pattern": "weebs.dwizzy.my.id",
       "custom_domain": true
+    },
+    {
+      "pattern": "weeb.dwizzy.my.id",
+      "custom_domain": true
     }
   ]
 }

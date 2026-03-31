@@ -1,15 +1,34 @@
 import MoviesPageClient from './MoviesPageClient';
-import { getMovieHubData } from '@/lib/adapters/movie';
+import { getMovieGenreItems, getMovieHubData } from '@/lib/adapters/movie';
 import { getServerAuthStatus } from '@/lib/server/auth-session';
 
-export default async function MoviesPage() {
+type MoviesPageProps = {
+  searchParams: Promise<{
+    genre?: string;
+  }>;
+};
+
+export default async function MoviesPage({ searchParams }: MoviesPageProps) {
+  const params = await searchParams;
+  const activeGenre = (params.genre || '').trim().slice(0, 64) || null;
   const session = await getServerAuthStatus();
-  const { popular, latest } = await getMovieHubData(24, {
+  const options = {
     includeNsfw: session.authenticated,
-  }).catch(() => ({
+  };
+  const { popular, latest } = await getMovieHubData(24, options).catch(() => ({
     popular: [],
     latest: [],
   }));
+  const initialResults = activeGenre
+    ? await getMovieGenreItems(activeGenre, 24, options).catch(() => [])
+    : null;
 
-  return <MoviesPageClient initialPopular={popular} initialLatest={latest} />;
+  return (
+    <MoviesPageClient
+      initialPopular={popular}
+      initialLatest={latest}
+      initialResults={initialResults}
+      activeGenre={activeGenre}
+    />
+  );
 }

@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import type { AuthBridgeSessionResponse, AuthStatus, AuthUser } from '@/lib/auth-types';
 import { resolveAuthOrigin } from '@/lib/auth-origin';
@@ -30,7 +31,7 @@ function parseAuthPayload(payload: AuthBridgeSessionResponse | null | undefined)
   };
 }
 
-export async function getServerAuthStatus(request?: Request): Promise<AuthStatus> {
+async function loadServerAuthStatus(request?: Request): Promise<AuthStatus> {
   const cookieHeader =
     request?.headers.get('cookie') ??
     (await cookies())
@@ -66,4 +67,14 @@ export async function getServerAuthStatus(request?: Request): Promise<AuthStatus
   } catch {
     return { authenticated: false, user: null };
   }
+}
+
+const getCachedServerAuthStatus = cache(async (): Promise<AuthStatus> => loadServerAuthStatus());
+
+export async function getServerAuthStatus(request?: Request): Promise<AuthStatus> {
+  if (request) {
+    return loadServerAuthStatus(request);
+  }
+
+  return getCachedServerAuthStatus();
 }

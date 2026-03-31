@@ -1,6 +1,7 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import * as React from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { Avatar } from '@/components/atoms/Avatar';
 import { Button } from '@/components/atoms/Button';
@@ -15,7 +16,12 @@ function compactDisplayName(displayName: string) {
 
 export function AuthNavEntry() {
   const pathname = usePathname() || '/';
+  const searchParams = useSearchParams();
   const session = useAuthSession();
+  const redirectTarget = React.useMemo(() => {
+    const query = searchParams.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
 
   if (session.loading) {
     return <div className="h-10 w-32 animate-pulse rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1" />;
@@ -24,7 +30,7 @@ export function AuthNavEntry() {
   if (!session.authenticated || !session.user) {
     return (
       <Link
-        href={buildLoginUrl(pathname)}
+        href={buildLoginUrl(redirectTarget)}
         className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-2.5 text-sm font-black uppercase tracking-[0.24em] text-zinc-100 transition-colors hover:bg-surface-elevated hover:text-white"
       >
         Login
@@ -32,7 +38,7 @@ export function AuthNavEntry() {
     );
   }
 
-  const logoutRequest = buildLogoutRequest(pathname);
+  const logoutRequest = buildLogoutRequest(redirectTarget);
   const returnTo = logoutRequest.body.get('returnTo') ?? '/';
   const origin = logoutRequest.body.get('origin') ?? '';
 
