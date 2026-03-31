@@ -386,6 +386,23 @@ export async function getNsfwMovieItems(limit = 24): Promise<MovieCardItem[]> {
     .map(mapMovieCard);
 }
 
+export async function getNsfwMoviePage(page = 1, limit = 24): Promise<{
+  items: MovieCardItem[];
+  hasNext: boolean;
+}> {
+  const safeLimit = Math.max(1, limit);
+  const safePage = Math.max(1, page);
+  const start = (safePage - 1) * safeLimit;
+  const end = start + safeLimit + 1;
+  const rows = sortMovieRows((await getMovieCatalogRows({ includeNsfw: true })).filter(isMovieCatalogNsfw), 'popular');
+  const slice = rows.slice(start, end);
+
+  return {
+    items: slice.slice(0, safeLimit).map(mapMovieCard),
+    hasNext: slice.length > safeLimit,
+  };
+}
+
 export async function searchMovieCatalog(
   query: string,
   limit = 8,

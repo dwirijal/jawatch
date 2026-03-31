@@ -659,6 +659,23 @@ export async function getNsfwSeriesItems(limit = 24): Promise<SeriesCardItem[]> 
     .map(mapSeriesCard);
 }
 
+export async function getNsfwSeriesPage(page = 1, limit = 24): Promise<{
+  items: SeriesCardItem[];
+  hasNext: boolean;
+}> {
+  const safeLimit = Math.max(1, limit);
+  const safePage = Math.max(1, page);
+  const start = (safePage - 1) * safeLimit;
+  const end = start + safeLimit + 1;
+  const rows = (await getSeriesCatalog(true)).filter(isSeriesCatalogNsfw);
+  const slice = rows.slice(start, end);
+
+  return {
+    items: slice.slice(0, safeLimit).map(mapSeriesCard),
+    hasNext: slice.length > safeLimit,
+  };
+}
+
 export async function searchSeriesCatalog(query: string, limit = 8, options: VisibilityOptions = {}): Promise<SeriesCardItem[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) {

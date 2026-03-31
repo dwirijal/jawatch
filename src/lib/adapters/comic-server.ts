@@ -414,7 +414,9 @@ async function queryPopularComics(limit = 24, includeNsfw = false): Promise<Mang
   return fallbackRows.map(mapComicCard);
 }
 
-async function queryNsfwComics(limit = 24): Promise<MangaSearchResult[]> {
+async function queryNsfwComics(page = 1, limit = 24): Promise<MangaSearchResult[]> {
+  const safeLimit = Math.max(limit, 1);
+  const offset = Math.max(page - 1, 0) * safeLimit;
   const sql = await getSql();
   const rows = await sql.unsafe<ComicItemRow[]>(
     `
@@ -424,8 +426,9 @@ async function queryNsfwComics(limit = 24): Promise<MangaSearchResult[]> {
       and (${NSFW_SQL_CONDITION})
     order by updated_at desc
     limit $1
+    offset $2
   `,
-    [Math.max(limit, 1)],
+    [safeLimit, offset],
   );
 
   return rows.map(mapComicCard);
@@ -662,8 +665,26 @@ export async function getNsfwComics(limit = 24): Promise<MangaSearchResult[]> {
   return rememberComicCacheValue(
     buildComicCacheKey('list', 'nsfw', limit),
     LIST_CACHE_TTL_SECONDS,
-    () => queryNsfwComics(limit),
+    () => queryNsfwComics(1, limit),
   );
+}
+
+export async function getNsfwComicPage(page = 1, limit = 24): Promise<{
+  items: MangaSearchResult[];
+  hasNext: boolean;
+}> {
+  const safeLimit = Math.max(1, limit);
+  const safePage = Math.max(1, page);
+  const items = await rememberComicCacheValue(
+    buildComicCacheKey('list', 'nsfw', safePage, safeLimit),
+    LIST_CACHE_TTL_SECONDS,
+    () => queryNsfwComics(safePage, safeLimit + 1),
+  );
+
+  return {
+    items: items.slice(0, safeLimit),
+    hasNext: items.length > safeLimit,
+  };
 }
 
 export async function getNewManga(
