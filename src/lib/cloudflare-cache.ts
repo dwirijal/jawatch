@@ -109,3 +109,35 @@ export async function withCloudflareEdgeCache<T>(
 export function buildEdgeCacheControl(ttlSeconds: number, staleWhileRevalidateSeconds = ttlSeconds * 3): string {
   return `public, s-maxage=${ttlSeconds}, stale-while-revalidate=${staleWhileRevalidateSeconds}`;
 }
+
+export function buildAuthSensitiveCacheHeaders(extraHeaders?: HeadersInit): Headers {
+  const headers = new Headers(extraHeaders);
+  headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate');
+  headers.set('CDN-Cache-Control', 'no-store');
+  headers.set('Vercel-CDN-Cache-Control', 'no-store');
+  headers.set('Pragma', 'no-cache');
+  headers.set('Vary', 'Cookie, Authorization');
+  return headers;
+}
+
+export function buildPrivateNoStoreCacheControl(): string {
+  return 'private, no-store, max-age=0, must-revalidate';
+}
+
+export function buildAuthSensitiveCacheControl(): string {
+  return 'private, no-store, max-age=0, must-revalidate';
+}
+
+export function buildAuthSensitiveResponseHeaders(): Record<string, string> {
+  return {
+    'Cache-Control': buildAuthSensitiveCacheControl(),
+    'CDN-Cache-Control': 'no-store',
+    'Vercel-CDN-Cache-Control': 'no-store',
+    Pragma: 'no-cache',
+    Vary: 'Cookie, Authorization',
+  };
+}
+
+export function buildPrivateCacheControl(): Record<string, string> {
+  return buildAuthSensitiveResponseHeaders();
+}

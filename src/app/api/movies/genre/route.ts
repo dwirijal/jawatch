@@ -1,8 +1,13 @@
 import { getMovieGenreItems } from '@/lib/adapters/movie';
-import { buildEdgeCacheControl } from '@/lib/cloudflare-cache';
+import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
 import { getServerAuthStatus } from '@/lib/server/auth-session';
+import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
 export async function GET(request: Request) {
+  if (!(await allowRequestWithinRateLimit(request, { bucket: 'api-movies-genre', limit: 120, windowSeconds: 60 }))) {
+    return Response.json({ message: 'Too Many Requests' }, { status: 429, headers: buildPrivateCacheControl() });
+  }
+
   const { searchParams } = new URL(request.url);
   const genre = (searchParams.get('genre') || '').trim().slice(0, 64);
   const limitParam = Number.parseInt(searchParams.get('limit') || '24', 10);
@@ -10,15 +15,15 @@ export async function GET(request: Request) {
   const session = await getServerAuthStatus(request);
 
   if (!genre) {
-    return Response.json([]);
+    return Response.json([], {
+      headers: buildPrivateCacheControl(),
+    });
   }
 
   const results = await getMovieGenreItems(genre, limit, {
     includeNsfw: session.authenticated,
   }).catch(() => []);
   return Response.json(results, {
-    headers: {
-      'Cache-Control': buildEdgeCacheControl(900, 3600),
-    },
+    headers: buildPrivateCacheControl(),
   });
 }

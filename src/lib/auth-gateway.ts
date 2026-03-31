@@ -1,22 +1,10 @@
 // Contract: auth.dwizzy.my.id is the only auth authority consumed by dwizzyWEEB.
 
 import type { AuthBridgeSessionResponse, AuthLogoutRequest, AuthStatus, AuthUser } from '@/lib/auth-types';
-import { canUseBrowserAuthBridge, resolveAuthOrigin } from '@/lib/auth-origin';
+import { canUseBrowserAuthBridge, resolveAllowedAppOrigin, resolveAuthOrigin } from '@/lib/auth-origin';
 import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
-const DEFAULT_APP_ORIGIN = 'https://weebs.dwizzy.my.id';
 const DEFAULT_RETURN_PATH = '/';
-
-function resolveAppOrigin(): string {
-  if (typeof window !== 'undefined' && window.location.origin) {
-    return window.location.origin.replace(/\/+$/, '');
-  }
-
-  const candidate = process.env.NEXT_PUBLIC_SITE_URL?.trim() || DEFAULT_APP_ORIGIN;
-  return candidate.startsWith('http://') || candidate.startsWith('https://')
-    ? candidate.replace(/\/+$/, '')
-    : `https://${candidate.replace(/\/+$/, '')}`;
-}
 
 function shouldSkipBrowserSessionBridge(): boolean {
   if (typeof window === 'undefined') {
@@ -49,6 +37,15 @@ function normalizeUser(user: AuthUser | null | undefined): AuthUser | null {
 
 function buildSessionUrl(): string {
   return new URL('/api/session', resolveAuthOrigin()).toString();
+}
+
+function resolveAppOrigin(): string {
+  const candidate =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://weebs.dwizzy.my.id';
+
+  return resolveAllowedAppOrigin(candidate);
 }
 
 // Browser-facing session bridge. The provider calls this with credentials included.

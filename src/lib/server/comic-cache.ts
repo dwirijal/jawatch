@@ -248,6 +248,35 @@ export async function rememberComicCacheValue<T>(key: string, ttlSeconds: number
   return value;
 }
 
+export async function incrementComicCacheCounter(key: string, ttlSeconds: number): Promise<number | null> {
+  if (!key || ttlSeconds <= 0) {
+    return null;
+  }
+
+  const redisClient = await getRedisClient();
+  if (redisClient) {
+    try {
+      const value = await redisClient.incr(key);
+      if (value === 1) {
+        await redisClient.expire(key, ttlSeconds);
+      }
+      return value;
+    } catch {
+      // Fall through to Upstash.
+    }
+  }
+
+  const result = await sendUpstashCommand<number>('INCR', [key]);
+  if (typeof result === 'number') {
+    if (result === 1) {
+      await sendUpstashCommand<number>('EXPIRE', [key, ttlSeconds]);
+    }
+    return result;
+  }
+
+  return null;
+}
+
 export async function incrementComicSortedSet(key: string, member: string, amount: number): Promise<number | null> {
   if (!key || !member || !Number.isFinite(amount) || amount === 0) {
     return null;

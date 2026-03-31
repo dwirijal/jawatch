@@ -1,8 +1,13 @@
 import { getMangaByGenre } from '@/lib/adapters/comic-server';
-import { buildEdgeCacheControl } from '@/lib/cloudflare-cache';
+import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
 import { getServerAuthStatus } from '@/lib/server/auth-session';
+import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
 export async function GET(request: Request) {
+  if (!(await allowRequestWithinRateLimit(request, { bucket: 'api-comic-genre', limit: 120, windowSeconds: 60 }))) {
+    return Response.json({ message: 'Too Many Requests' }, { status: 429, headers: buildPrivateCacheControl() });
+  }
+
   const { searchParams } = new URL(request.url);
   const genre = (searchParams.get('genre') || '').trim().slice(0, 64);
   const pageParam = Number.parseInt(searchParams.get('page') || '1', 10);
@@ -12,14 +17,14 @@ export async function GET(request: Request) {
   const session = await getServerAuthStatus(request);
 
   if (!genre) {
-    return Response.json({ comics: [] });
+    return Response.json({ comics: [] }, {
+      headers: buildPrivateCacheControl(),
+    });
   }
 
   const payload = await getMangaByGenre(genre, page, limit, { includeNsfw: session.authenticated }).catch(() => ({ comics: [] }));
 
   return Response.json(payload, {
-    headers: {
-      'Cache-Control': buildEdgeCacheControl(300, 1800),
-    },
+    headers: buildPrivateCacheControl(),
   });
 }

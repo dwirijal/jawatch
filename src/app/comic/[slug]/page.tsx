@@ -26,7 +26,6 @@ export default async function ComicDetailPage({ params }: PageProps) {
   const session = await getServerAuthStatus();
   const manga = await getMangaDetail(slug, {
     includeNsfw: session.authenticated,
-    recordAccess: true,
   }).catch(() => null);
 
   if (!manga) {

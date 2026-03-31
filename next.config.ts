@@ -6,13 +6,12 @@ import withPWAInit from "@ducanh2912/next-pwa";
 const projectRoot = fileURLToPath(new URL(".", import.meta.url));
 const defaultImageRemoteHostPatterns = [
   "image.tmdb.org",
-  "**.myanimelist.net",
+  "cdn.myanimelist.net",
   "cdn.anilist.co",
   "books.google.com",
   "covers.openlibrary.org",
-  "**.googleusercontent.com",
+  "lh3.googleusercontent.com",
   "m.media-amazon.com",
-  "**.media-amazon.com",
   "iili.io",
   "ik.imagekit.io",
 ];
@@ -39,6 +38,43 @@ const withPWA = withPWAInit({
   },
 });
 
+const securityHeaders = [
+  {
+    key: 'Content-Security-Policy',
+    value: [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "frame-ancestors 'none'",
+      "form-action 'self' https://auth.dwizzy.my.id",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data: https:",
+      "style-src 'self' 'unsafe-inline' https:",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googlesyndication.com https://*.googleadservices.com https://www.google.com https://www.gstatic.com https://va.vercel-scripts.com",
+      "connect-src 'self' https: ws: wss:",
+      "frame-src 'self' https:",
+      "media-src 'self' data: blob: https:",
+      "worker-src 'self' blob:",
+    ].join('; '),
+  },
+  {
+    key: 'Referrer-Policy',
+    value: 'strict-origin-when-cross-origin',
+  },
+  {
+    key: 'X-Content-Type-Options',
+    value: 'nosniff',
+  },
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+  },
+  {
+    key: 'X-Frame-Options',
+    value: 'DENY',
+  },
+];
+
 const legacyRedirects = [
   ['/anime', '/series/anime'],
   ['/anime/list', '/series/anime'],
@@ -59,6 +95,14 @@ const legacyRedirects = [
 ] as const;
 
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+    ];
+  },
   async redirects() {
     return legacyRedirects.map(([source, destination]) => ({
       source,

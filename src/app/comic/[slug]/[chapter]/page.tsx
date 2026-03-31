@@ -15,7 +15,6 @@ export default async function ComicChapterPage({ params }: PageProps) {
 
   const chapter = await getMangaChapter(chapterSlug, {
     includeNsfw: session.authenticated,
-    recordAccess: true,
   }).catch(() => null);
 
   if (!chapter) {
