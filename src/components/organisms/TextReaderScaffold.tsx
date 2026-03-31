@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { Ads } from '@/components/atoms/Ads';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 
@@ -40,7 +41,12 @@ export function TextReaderScaffold({
         </div>
       </header>
 
-      <main className="app-container max-w-4xl py-6 md:py-8">{children}</main>
+      <main className="app-container max-w-4xl py-6 md:py-8">
+        <div className="mb-6 md:mb-8">
+          <Ads type="horizontal" />
+        </div>
+        {children}
+      </main>
       {footer}
     </div>
   );

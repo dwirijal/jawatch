@@ -18,6 +18,7 @@ interface ComicChapterClientProps {
   slug: string;
   chapterSlug: string;
   chapter: ChapterDetail;
+  routeBase?: string;
 }
 
 function extractChapterSegment(value?: string | null): string | null {
@@ -29,16 +30,21 @@ function extractChapterSegment(value?: string | null): string | null {
   return segments.at(-1) ?? null;
 }
 
-function buildChapterHref(slug: string, navigation: ChapterDetail['navigation'], direction: 'next' | 'prev'): string | null {
+function buildChapterHref(
+  routeBase: string,
+  slug: string,
+  navigation: ChapterDetail['navigation'],
+  direction: 'next' | 'prev',
+): string | null {
   const segment =
     direction === 'next'
       ? extractChapterSegment(navigation.nextChapter ?? navigation.next)
       : extractChapterSegment(navigation.previousChapter ?? navigation.prev);
 
-  return segment ? `/comic/${slug}/${segment}` : null;
+  return segment ? `${routeBase}/${slug}/${segment}` : null;
 }
 
-export default function ComicChapterClient({ slug, chapterSlug, chapter }: ComicChapterClientProps) {
+export default function ComicChapterClient({ slug, chapterSlug, chapter, routeBase = '/comic' }: ComicChapterClientProps) {
   const [autoNext, setAutoNext] = useState(true);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const { readerWidth } = useUIStore();
@@ -46,13 +52,13 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter }: Comic
   const endSentinelRef = useRef<HTMLDivElement | null>(null);
 
   const previousChapterHref = useMemo(
-    () => buildChapterHref(slug, chapter.navigation, 'prev'),
-    [chapter.navigation, slug]
+    () => buildChapterHref(routeBase, slug, chapter.navigation, 'prev'),
+    [chapter.navigation, routeBase, slug]
   );
 
   const nextChapterHref = useMemo(
-    () => buildChapterHref(slug, chapter.navigation, 'next'),
-    [chapter.navigation, slug]
+    () => buildChapterHref(routeBase, slug, chapter.navigation, 'next'),
+    [chapter.navigation, routeBase, slug]
   );
 
   useEffect(() => {
@@ -112,12 +118,12 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter }: Comic
         slug={slug}
         title={chapter.manga_title || chapter.title}
         image=""
-        href={`/comic/${slug}/${chapterSlug}`}
+        href={`${routeBase}/${slug}/${chapterSlug}`}
         chapterLabel={chapter.chapter_title || chapterSlug}
       />
 
       <ImageReaderScaffold
-        backHref={`/comic/${slug}`}
+        backHref={`${routeBase}/${slug}`}
         title={chapter.manga_title || chapter.title}
         subtitle={chapter.chapter_title || chapterSlug}
         leftAside={
@@ -219,7 +225,7 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter }: Comic
                   </>
                 ) : (
                   <Button variant="outline" size="lg" className="h-12 rounded-[var(--radius-sm)] border-border-subtle px-6 text-zinc-400" asChild>
-                    <Link href={`/comic/${slug}`}>
+                    <Link href={`${routeBase}/${slug}`}>
                       <LayoutGrid className="mr-2 h-4 w-4" /> Back to library
                     </Link>
                   </Button>

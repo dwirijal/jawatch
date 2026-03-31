@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
-import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { CssBaseline } from "@/components/atoms/CssBaseline";
 import { Navbar } from "@/components/organisms/Navbar";
 import { Footer } from "@/components/organisms/Footer";
 import { MobileNav } from "@/components/organisms/MobileNav";
+import { AdNetworkScripts } from "@/components/organisms/AdNetworkScripts";
 import { DeviceListener } from "@/components/atoms/DeviceListener";
 import { NoSsr } from "@/components/atoms/NoSsr";
 import { PWAInstallPrompt } from "@/components/molecules/PWAInstallPrompt";
@@ -85,17 +85,10 @@ export default async function RootLayout({
     >
       <head>
         <CssBaseline />
-        <meta name="google-adsense-account" content="ca-pub-8868090753979495" />
-        <Script
-          id="adsense-script"
-          async
-          strategy="afterInteractive"
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8868090753979495"
-          crossOrigin="anonymous"
-        />
       </head>
       <body className="min-h-full flex flex-col text-foreground font-sans">
         <AuthSessionProvider initialState={authSession}>
+          <AdNetworkScripts />
           <DeviceListener />
           <Navbar />
           <main className="flex-1 min-h-screen pb-20 md:pb-0">{children}</main>

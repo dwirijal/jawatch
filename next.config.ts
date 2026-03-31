@@ -50,7 +50,7 @@ const securityHeaders = [
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https:",
       "style-src 'self' 'unsafe-inline' https:",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googlesyndication.com https://*.googleadservices.com https://www.google.com https://www.gstatic.com https://va.vercel-scripts.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googlesyndication.com https://*.googleadservices.com https://www.google.com https://www.gstatic.com https://va.vercel-scripts.com https://a.magsrv.com https://*.magsrv.com",
       "connect-src 'self' https: ws: wss:",
       "frame-src 'self' https:",
       "media-src 'self' data: blob: https:",

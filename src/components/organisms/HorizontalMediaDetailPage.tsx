@@ -18,7 +18,7 @@ export function HorizontalMediaDetailPage({
   sidebar,
   footer,
   theme,
-  showAdSection = false,
+  showAdSection = true,
   desktopColumnsClassName = 'xl:grid-cols-[minmax(0,1.55fr)_minmax(20rem,1fr)] xl:grid-rows-1',
 }: HorizontalMediaDetailPageProps) {
   return (

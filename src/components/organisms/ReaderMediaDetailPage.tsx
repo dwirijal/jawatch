@@ -18,7 +18,7 @@ export function ReaderMediaDetailPage({
   sidebar,
   footer,
   theme,
-  showAdSection = false,
+  showAdSection = true,
   desktopColumnsClassName = 'xl:grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.95fr)] xl:grid-rows-1',
 }: ReaderMediaDetailPageProps) {
   return (

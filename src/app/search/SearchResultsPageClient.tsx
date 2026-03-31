@@ -8,6 +8,7 @@ import { Button } from '@/components/atoms/Button';
 import { MediaCard } from '@/components/atoms/Card';
 import { Input } from '@/components/atoms/Input';
 import { Paper } from '@/components/atoms/Paper';
+import { AdSection } from '@/components/organisms/AdSection';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import type { ThemeType } from '@/lib/utils';
@@ -133,6 +134,12 @@ export default function SearchResultsPageClient({
             ))}
           </div>
         </Paper>
+
+        <AdSection
+          theme="drama"
+          title="Search Sponsor"
+          subtitle="Commercial placements stay inline with the same discovery rhythm as the rest of search."
+        />
 
         {initialQuery.trim().length < 2 ? (
           <StateInfo title="Type something to search" description="Explore results across series, movies, and comics. Anime and donghua both live under series now." />

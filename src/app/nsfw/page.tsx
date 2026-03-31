@@ -1,16 +1,16 @@
-import { redirect } from 'next/navigation';
 import { Button } from '@/components/atoms/Button';
 import { MediaCard } from '@/components/atoms/Card';
 import { Link } from '@/components/atoms/Link';
+import { AdSection } from '@/components/organisms/AdSection';
 import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { getNsfwComicPage } from '@/lib/adapters/comic-server';
 import { getNsfwMoviePage } from '@/lib/adapters/movie';
 import { getNsfwSeriesPage } from '@/lib/adapters/series';
-import { buildLoginUrl } from '@/lib/auth-gateway';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
+import { getNsfwComicDetailHref, getNsfwMovieDetailHref, getNsfwSeriesDetailHref } from '@/lib/nsfw-routes';
 import { getSeriesBadgeText, getSeriesTheme, formatSeriesCardSubtitle } from '@/lib/series-presentation';
+import { requireNsfwAccess } from './access';
 
 export const metadata = {
   title: 'NSFW',
@@ -95,10 +95,7 @@ function PaginationRow({
 }
 
 export default async function NsfwPage({ searchParams }: NsfwPageProps) {
-  const session = await getServerAuthStatus();
-  if (!session.authenticated) {
-    redirect(buildLoginUrl('/nsfw'));
-  }
+  await requireNsfwAccess('/nsfw');
 
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const pages = {
@@ -124,6 +121,12 @@ export default async function NsfwPage({ searchParams }: NsfwPageProps) {
       />
 
       <main className="app-container-wide mt-8 space-y-10 pb-12">
+        <AdSection
+          theme="drama"
+          title="Private Sponsor Slots"
+          subtitle="Adult-network placements stay isolated inside the gated NSFW namespace."
+        />
+
         <div id="series" className="space-y-4">
           <SectionCard
             title="Series"
@@ -135,6 +138,7 @@ export default async function NsfwPage({ searchParams }: NsfwPageProps) {
             {seriesResult.items.length > 0 ? seriesResult.items.map((item) => (
               <MediaCard
                 key={item.slug}
+                href={getNsfwSeriesDetailHref(item.slug)}
                 image={item.poster}
                 title={item.title}
                 subtitle={formatSeriesCardSubtitle(item)}
@@ -165,6 +169,7 @@ export default async function NsfwPage({ searchParams }: NsfwPageProps) {
             {movieResult.items.length > 0 ? movieResult.items.map((item) => (
               <MediaCard
                 key={item.slug}
+                href={getNsfwMovieDetailHref(item.slug)}
                 image={item.poster}
                 title={item.title}
                 subtitle={item.year}
@@ -195,6 +200,7 @@ export default async function NsfwPage({ searchParams }: NsfwPageProps) {
             {comicResult.items.length > 0 ? comicResult.items.map((item) => (
               <MediaCard
                 key={item.slug}
+                href={getNsfwComicDetailHref(item.slug)}
                 image={item.thumbnail || item.image}
                 title={item.title}
                 subtitle={item.chapter || item.time_ago || undefined}
