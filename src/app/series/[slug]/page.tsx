@@ -14,7 +14,6 @@ import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMedi
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
 import { getSeriesDetailBySlug } from '@/lib/adapters/series';
 import { formatSeriesCardSubtitle, getSeriesBadgeText, getSeriesTheme } from '@/lib/series-presentation';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -74,9 +73,8 @@ function buildEpisodeQueryHref(slug: string, page: number, sort: EpisodeSortMode
 export default async function SeriesDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const session = await getServerAuthStatus();
   const series = await getSeriesDetailBySlug(slug, {
-    includeNsfw: session.authenticated,
+    includeNsfw: false,
   });
 
   if (!series) {

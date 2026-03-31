@@ -1,6 +1,5 @@
 import { searchSeriesCatalog } from '@/lib/adapters/series';
 import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
 export async function GET(request: Request) {
@@ -12,8 +11,6 @@ export async function GET(request: Request) {
   const query = (searchParams.get('q') || '').trim().slice(0, 120);
   const limitParam = Number.parseInt(searchParams.get('limit') || '8', 10);
   const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 24) : 8;
-  const session = await getServerAuthStatus(request);
-
   if (query.length < 2) {
     return Response.json([], {
       headers: buildPrivateCacheControl(),
@@ -21,7 +18,7 @@ export async function GET(request: Request) {
   }
 
   const results = await searchSeriesCatalog(query, limit, {
-    includeNsfw: session.authenticated,
+    includeNsfw: false,
   }).catch(() => []);
 
   return Response.json(results, {

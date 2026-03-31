@@ -34,7 +34,7 @@ export default async function NsfwPage() {
     <div className="app-shell" data-theme="drama">
       <MediaHubHeader
         title="NSFW"
-        description="Adult-tagged titles from the unified catalog. Visible only when you are signed in."
+        description="Adult-tagged titles from the unified catalog. Visible only inside this gated NSFW surface when you are signed in."
         iconName="BadgeAlert"
         theme="drama"
         containerClassName="app-container-wide"
@@ -51,7 +51,6 @@ export default async function NsfwPage() {
           {seriesItems.length > 0 ? seriesItems.map((item) => (
             <MediaCard
               key={item.slug}
-              href={`/series/${item.slug}`}
               image={item.poster}
               title={item.title}
               subtitle={formatSeriesCardSubtitle(item)}
@@ -73,7 +72,6 @@ export default async function NsfwPage() {
           {movieItems.length > 0 ? movieItems.map((item) => (
             <MediaCard
               key={item.slug}
-              href={`/movies/${item.slug}`}
               image={item.poster}
               title={item.title}
               subtitle={item.year}
@@ -95,7 +93,6 @@ export default async function NsfwPage() {
           {comicItems.length > 0 ? comicItems.map((item) => (
             <MediaCard
               key={item.slug}
-              href={`/comic/${item.slug}`}
               image={item.thumbnail || item.image}
               title={item.title}
               subtitle={item.chapter || item.time_ago || undefined}

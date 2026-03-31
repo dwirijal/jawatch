@@ -2,7 +2,6 @@ import { notFound, redirect } from 'next/navigation';
 import { Info } from 'lucide-react';
 import { Link } from '@/components/atoms/Link';
 import { getMovieWatchBySlug } from '@/lib/adapters/movie';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 import { Button } from '@/components/atoms/Button';
 import { Badge } from '@/components/atoms/Badge';
 import { Paper } from '@/components/atoms/Paper';
@@ -16,9 +15,8 @@ interface PageProps {
 
 export default async function MovieWatchPage({ params }: PageProps) {
   const { slug } = await params;
-  const session = await getServerAuthStatus();
   const movie = await getMovieWatchBySlug(slug, {
-    includeNsfw: session.authenticated,
+    includeNsfw: false,
   });
 
   if (!movie) {

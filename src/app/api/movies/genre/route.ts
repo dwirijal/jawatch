@@ -1,6 +1,5 @@
 import { getMovieGenreItems } from '@/lib/adapters/movie';
 import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
 export async function GET(request: Request) {
@@ -12,8 +11,6 @@ export async function GET(request: Request) {
   const genre = (searchParams.get('genre') || '').trim().slice(0, 64);
   const limitParam = Number.parseInt(searchParams.get('limit') || '24', 10);
   const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 24) : 24;
-  const session = await getServerAuthStatus(request);
-
   if (!genre) {
     return Response.json([], {
       headers: buildPrivateCacheControl(),
@@ -21,7 +18,7 @@ export async function GET(request: Request) {
   }
 
   const results = await getMovieGenreItems(genre, limit, {
-    includeNsfw: session.authenticated,
+    includeNsfw: false,
   }).catch(() => []);
   return Response.json(results, {
     headers: buildPrivateCacheControl(),

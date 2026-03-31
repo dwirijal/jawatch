@@ -1,6 +1,5 @@
 import { getNewManga } from '@/lib/adapters/comic-server';
 import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
 export async function GET(request: Request) {
@@ -13,15 +12,13 @@ export async function GET(request: Request) {
   const limitParam = Number.parseInt(searchParams.get('limit') || '24', 10);
   const page = Number.isFinite(pageParam) ? Math.max(pageParam, 1) : 1;
   const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 40) : 24;
-  const session = await getServerAuthStatus(request);
-
   if (!Number.isFinite(page) || !Number.isFinite(limit)) {
     return Response.json({ comics: [] }, {
       headers: buildPrivateCacheControl(),
     });
   }
 
-  const payload = await getNewManga(page, limit, { includeNsfw: session.authenticated }).catch(() => ({ comics: [] }));
+  const payload = await getNewManga(page, limit, { includeNsfw: false }).catch(() => ({ comics: [] }));
 
   return Response.json(payload, {
     headers: buildPrivateCacheControl(),

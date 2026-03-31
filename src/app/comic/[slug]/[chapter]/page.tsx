@@ -2,7 +2,6 @@ import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { getMangaChapter } from '@/lib/adapters/comic-server';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 import ComicChapterClient from './ComicChapterClient';
 
 interface PageProps {
@@ -11,10 +10,9 @@ interface PageProps {
 
 export default async function ComicChapterPage({ params }: PageProps) {
   const { slug, chapter: chapterSlug } = await params;
-  const session = await getServerAuthStatus();
 
   const chapter = await getMangaChapter(chapterSlug, {
-    includeNsfw: session.authenticated,
+    includeNsfw: false,
   }).catch(() => null);
 
   if (!chapter) {

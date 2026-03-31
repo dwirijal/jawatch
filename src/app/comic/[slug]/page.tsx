@@ -14,7 +14,6 @@ import { TitleBlock } from '@/components/atoms/TitleBlock';
 import { ReaderMediaDetailPage } from '@/components/organisms/ReaderMediaDetailPage';
 import { MetadataPanel } from '@/components/organisms/MetadataPanel';
 import { User, Activity, Layout, ShieldAlert, ChevronLeft, Play } from 'lucide-react';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 import ComicDetailHistoryTracker from './ComicDetailHistoryTracker';
 
 interface PageProps {
@@ -23,9 +22,8 @@ interface PageProps {
 
 export default async function ComicDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const session = await getServerAuthStatus();
   const manga = await getMangaDetail(slug, {
-    includeNsfw: session.authenticated,
+    includeNsfw: false,
   }).catch(() => null);
 
   if (!manga) {

@@ -2,7 +2,6 @@ import SearchResultsPageClient from './SearchResultsPageClient';
 import { searchManga } from '@/lib/adapters/comic-server';
 import { searchMovieCatalog } from '@/lib/adapters/movie';
 import { searchSeriesCatalog } from '@/lib/adapters/series';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 import type { MangaSearchResult, MovieCardItem } from '@/lib/types';
 import {
   formatSeriesCardSubtitle,
@@ -92,12 +91,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const query = (params.q || '').trim();
   const type = normalizeType(params.type);
-  const session = await getServerAuthStatus();
   const initialDomainState = emptyDomainState();
 
   if (query.length >= 2) {
     const domainLimit = type === 'all' ? 6 : 24;
-    const options = { includeNsfw: session.authenticated };
+    const options = { includeNsfw: false };
 
     if (type === 'all' || type === 'series') {
       const seriesItems = await searchSeriesCatalog(query, domainLimit, options).catch(() => []);

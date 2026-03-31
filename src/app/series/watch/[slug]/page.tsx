@@ -8,7 +8,6 @@ import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { MediaWatchPage } from '@/components/organisms/MediaWatchPage';
 import { getSeriesEpisodeBySlug } from '@/lib/adapters/series';
 import { getSeriesBadgeText, getSeriesTheme } from '@/lib/series-presentation';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -16,9 +15,8 @@ interface PageProps {
 
 export default async function SeriesWatchPage({ params }: PageProps) {
   const { slug } = await params;
-  const session = await getServerAuthStatus();
   const episode = await getSeriesEpisodeBySlug(slug, {
-    includeNsfw: session.authenticated,
+    includeNsfw: false,
   });
 
   if (!episode) {

@@ -1,6 +1,5 @@
 import MoviesPageClient from './MoviesPageClient';
 import { getMovieGenreItems, getMovieHubData } from '@/lib/adapters/movie';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 
 type MoviesPageProps = {
   searchParams: Promise<{
@@ -11,9 +10,8 @@ type MoviesPageProps = {
 export default async function MoviesPage({ searchParams }: MoviesPageProps) {
   const params = await searchParams;
   const activeGenre = (params.genre || '').trim().slice(0, 64) || null;
-  const session = await getServerAuthStatus();
   const options = {
-    includeNsfw: session.authenticated,
+    includeNsfw: false,
   };
   const { popular, latest } = await getMovieHubData(24, options).catch(() => ({
     popular: [],

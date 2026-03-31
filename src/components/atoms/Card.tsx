@@ -13,7 +13,7 @@ import { getHDThumbnail } from '@/lib/adapters/comic';
 import { cn, getMediaPosterAspectClass, THEME_CONFIG, ThemeType } from '@/lib/utils';
 
 export interface MediaCardProps {
-  href: string;
+  href?: string;
   image: string;
   title: string;
   subtitle?: string;
@@ -150,12 +150,11 @@ export function MediaCard({
     setImageLoadFailed(true);
   };
 
-  return (
-    <Link href={href} className={cn('focus-tv group relative block', getMediaPosterAspectClass(theme), className)}>
-      <div
-        className="refractive-border glass-noise relative h-full overflow-hidden rounded-[18px] bg-[#0a0a0f] shadow-[0_10px_28px_rgba(0,0,0,0.22)] transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
-        style={{ '--hover-glow': accent } as React.CSSProperties}
-      >
+  const cardBody = (
+    <div
+      className="refractive-border glass-noise relative h-full overflow-hidden rounded-[18px] bg-[#0a0a0f] shadow-[0_10px_28px_rgba(0,0,0,0.22)] transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
+      style={{ '--hover-glow': accent } as React.CSSProperties}
+    >
         <div className="absolute -inset-2 bg-[var(--hover-glow)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-15" />
 
         <div className="relative h-full overflow-hidden">
@@ -237,6 +236,22 @@ export function MediaCard({
           ) : null}
         </div>
       </div>
+  );
+
+  const wrapperClassName = cn(
+    href ? 'focus-tv' : 'cursor-default',
+    'group relative block',
+    getMediaPosterAspectClass(theme),
+    className,
+  );
+
+  if (!href) {
+    return <div className={wrapperClassName}>{cardBody}</div>;
+  }
+
+  return (
+    <Link href={href} className={wrapperClassName}>
+      {cardBody}
     </Link>
   );
 }

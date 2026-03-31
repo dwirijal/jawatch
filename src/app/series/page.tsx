@@ -1,11 +1,9 @@
 import SeriesPageClient from './SeriesPageClient';
 import { getSeriesHubData } from '@/lib/adapters/series';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 
 export default async function SeriesPage() {
-  const session = await getServerAuthStatus();
   const { popular, latest, dramaSpotlight, weeklySchedule, filters } = await getSeriesHubData(24, {
-    includeNsfw: session.authenticated,
+    includeNsfw: false,
   }).catch(() => ({
     popular: [],
     latest: [],

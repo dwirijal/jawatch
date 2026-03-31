@@ -1,6 +1,5 @@
 import { getMangaDetail } from '@/lib/adapters/comic-server';
 import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
 interface RouteContext {
@@ -13,11 +12,9 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   const { slug } = await context.params;
-  const session = await getServerAuthStatus(request);
-
   try {
     const payload = await getMangaDetail(slug, {
-      includeNsfw: session.authenticated,
+      includeNsfw: false,
     });
     return Response.json(payload, {
       headers: buildPrivateCacheControl(),

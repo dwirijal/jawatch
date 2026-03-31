@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Calendar, Clapperboard, Clock, Film, Play } from 'lucide-react';
 import { getMovieDetailBySlug } from '@/lib/adapters/movie';
-import { getServerAuthStatus } from '@/lib/server/auth-session';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { MediaCard } from '@/components/atoms/Card';
@@ -24,9 +23,8 @@ interface PageProps {
 
 export default async function MovieDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const session = await getServerAuthStatus();
   const movie = await getMovieDetailBySlug(slug, {
-    includeNsfw: session.authenticated,
+    includeNsfw: false,
   });
 
   if (!movie) {
