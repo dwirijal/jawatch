@@ -36,7 +36,7 @@ export interface MixedRecommendationItem {
   title: string;
   image: string;
   href: string;
-  theme: Exclude<ThemeType, 'default' | 'drama'> | 'novel';
+  theme: Exclude<ThemeType, 'default'> | 'novel';
   subtitle?: string;
   badgeText?: string;
 }

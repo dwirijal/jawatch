@@ -7,9 +7,12 @@ type SearchPageProps = {
   }>;
 };
 
-function normalizeType(value?: string): 'all' | 'anime' | 'movies' | 'manga' | 'donghua' {
-  if (value === 'anime' || value === 'movies' || value === 'manga' || value === 'donghua') {
+function normalizeType(value?: string): 'all' | 'series' | 'movies' | 'comic' {
+  if (value === 'series' || value === 'movies' || value === 'comic') {
     return value;
+  }
+  if (value === 'manga') {
+    return 'comic';
   }
   return 'all';
 }

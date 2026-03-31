@@ -1,49 +1,28 @@
 // Contract: auth.dwizzy.my.id is the only auth authority consumed by dwizzyWEEB.
 
 import type { AuthBridgeSessionResponse, AuthLogoutRequest, AuthStatus, AuthUser } from '@/lib/auth-types';
+import { canUseBrowserAuthBridge, resolveAuthOrigin } from '@/lib/auth-origin';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
-const DEFAULT_AUTH_ORIGIN = 'https://auth.dwizzy.my.id';
 const DEFAULT_APP_ORIGIN = 'https://weebs.dwizzy.my.id';
 const DEFAULT_RETURN_PATH = '/';
-
-function normalizeOrigin(value: string | undefined): string {
-  const candidate = value?.trim();
-  if (!candidate) {
-    return DEFAULT_AUTH_ORIGIN;
-  }
-
-  return candidate.startsWith('http://') || candidate.startsWith('https://')
-    ? candidate.replace(/\/+$/, '')
-    : `https://${candidate.replace(/\/+$/, '')}`;
-}
-
-function resolveAuthOrigin(): string {
-  return normalizeOrigin(process.env.NEXT_PUBLIC_AUTH_ORIGIN);
-}
 
 function resolveAppOrigin(): string {
   if (typeof window !== 'undefined' && window.location.origin) {
     return window.location.origin.replace(/\/+$/, '');
   }
 
-  return normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_APP_ORIGIN);
+  const candidate = process.env.NEXT_PUBLIC_SITE_URL?.trim() || DEFAULT_APP_ORIGIN;
+  return candidate.startsWith('http://') || candidate.startsWith('https://')
+    ? candidate.replace(/\/+$/, '')
+    : `https://${candidate.replace(/\/+$/, '')}`;
 }
 
 function shouldSkipBrowserSessionBridge(): boolean {
   if (typeof window === 'undefined') {
     return false;
   }
-
-  if (process.env.NEXT_PUBLIC_ALLOW_CROSS_ORIGIN_AUTH_BRIDGE === 'true') {
-    return false;
-  }
-
-  try {
-    const authOrigin = new URL(resolveAuthOrigin());
-    return authOrigin.origin !== window.location.origin;
-  } catch {
-    return true;
-  }
+  return !canUseBrowserAuthBridge(window.location.origin);
 }
 
 function sanitizeRelativePath(nextPath: string | undefined): string {
@@ -78,9 +57,10 @@ export async function getAuthStatus(): Promise<AuthStatus> {
     return { authenticated: false, user: null };
   }
 
-  const response = await fetch(buildSessionUrl(), {
+  const response = await fetchWithTimeout(buildSessionUrl(), {
     credentials: 'include',
     cache: 'no-store',
+    timeoutMs: 2500,
     headers: {
       Accept: 'application/json',
     },

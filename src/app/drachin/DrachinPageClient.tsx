@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Clapperboard, Flame, Sparkles } from 'lucide-react';
 import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
 import { SectionCard } from '@/components/organisms/SectionCard';
-import { Card } from '@/components/atoms/Card';
+import { MediaCard } from '@/components/atoms/Card';
 import { Badge } from '@/components/atoms/Badge';
 import { Paper } from '@/components/atoms/Paper';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
@@ -133,7 +133,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
             {loading
               ? Array.from({ length: 6 }).map((_, index) => <SkeletonCard key={`featured-${index}`} />)
               : drachinData.featured.map((item) => (
-                <Card
+                <MediaCard
                   key={`featured-${item.slug}`}
                   href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
                   image={item.image}
@@ -148,7 +148,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
             {loading
               ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`latest-${index}`} />)
               : drachinData.latest.map((item) => (
-                <Card
+                <MediaCard
                   key={`latest-${item.slug}`}
                   href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
                   image={item.image}
@@ -163,7 +163,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
             {loading
               ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`dramabox-latest-${index}`} />)
               : dramaboxData.latest.map((item) => (
-                <Card
+                <MediaCard
                   key={`dramabox-latest-${item.slug}`}
                   href={buildDramaboxDetailHref(item)}
                   image={item.image}
@@ -178,7 +178,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
             {loading
               ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`popular-${index}`} />)
               : drachinData.popular.map((item) => (
-                  <Card
+                  <MediaCard
                     key={`popular-${item.slug}`}
                     href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
                     image={item.image}
@@ -193,7 +193,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
             {loading
               ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`dramabox-trending-${index}`} />)
               : dramaboxData.trending.map((item) => (
-                  <Card
+                  <MediaCard
                     key={`dramabox-trending-${item.slug}`}
                     href={buildDramaboxDetailHref(item)}
                     image={item.image}

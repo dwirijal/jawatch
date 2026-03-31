@@ -5,7 +5,7 @@ import { Grid3X3, LayoutGrid, LucideIcon } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { AdSection } from '@/components/organisms/AdSection';
 import { MediaHubHeader } from './MediaHubHeader';
-import { Card } from '@/components/atoms/Card';
+import { MediaCard } from '@/components/atoms/Card';
 import { GenreFilter } from '@/components/molecules/GenreFilter';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { StaggerEntry } from '@/components/molecules/StaggerEntry';
@@ -19,13 +19,13 @@ interface MediaHubTemplateProps {
   description: string;
   icon: LucideIcon;
   theme: ThemeType;
-  genres: string[];
+  genres?: string[];
   results: GenericMediaItem[] | null;
   loading: boolean;
   error: string | null;
-  activeGenre: string | null;
-  onGenreClick: (genre: string) => void;
-  onClearResults: () => void;
+  activeGenre?: string | null;
+  onGenreClick?: (genre: string) => void;
+  onClearResults?: () => void;
   children?: React.ReactNode;
   extraHeaderActions?: React.ReactNode;
   extraFilters?: React.ReactNode;
@@ -33,6 +33,14 @@ interface MediaHubTemplateProps {
 }
 
 type ViewMode = 'comfortable' | 'compact';
+
+function getResultSubtitle(item: GenericMediaItem): string {
+  if (item.country && item.latestEpisode) {
+    return `${item.country} • ${item.latestEpisode}`;
+  }
+
+  return item.latestEpisode || item.episode || item.chapter || item.country || item.year || '';
+}
 
 export function MediaHubTemplate({
   title,
@@ -77,13 +85,15 @@ export function MediaHubTemplate({
       >
         {extraHeaderActions}
         <div className="mx-2 hidden h-8 w-px bg-border-subtle md:block" />
-        <GenreFilter
-          genres={genres.slice(0, 10)}
-          activeGenre={activeGenre}
-          onGenreClick={onGenreClick}
-          theme={theme}
-          className="md:pt-0 space-y-0"
-        />
+        {genres && genres.length > 0 && onGenreClick ? (
+          <GenreFilter
+            genres={genres.slice(0, 10)}
+            activeGenre={activeGenre ?? null}
+            onGenreClick={onGenreClick}
+            theme={theme}
+            className="md:pt-0 space-y-0"
+          />
+        ) : null}
       </MediaHubHeader>
 
       <main className="app-container-wide mt-8 space-y-10 sm:mt-10 md:mt-12 md:space-y-12">
@@ -130,7 +140,7 @@ export function MediaHubTemplate({
               <SectionHeader
                 title={activeGenre ? `Genre: ${activeGenre}` : `Filtered results`}
                 icon={LayoutGrid}
-                action={
+                action={onClearResults ? (
                   <Button
                     type="button"
                     variant="link"
@@ -140,7 +150,7 @@ export function MediaHubTemplate({
                   >
                     Clear filter
                   </Button>
-                }
+                ) : undefined}
               />
 
               {error ? (
@@ -149,12 +159,12 @@ export function MediaHubTemplate({
                 <div className="media-grid" data-grid-density={gridDensity}>
                   <StaggerEntry className="contents">
                     {results.map((item, index) => (
-                      <Card
+                      <MediaCard
                         key={`${item.slug}-${index}`}
                         href={resultHrefBuilder ? resultHrefBuilder(item) : `/${theme === 'movie' ? 'movies' : theme}/${item.slug || ''}`}
                         image={item.thumb || item.image || item.thumbnail || item.poster || ''}
                         title={item.title}
-                        subtitle={item.episode || item.chapter || item.year}
+                        subtitle={getResultSubtitle(item)}
                         theme={theme}
                       />
                     ))}

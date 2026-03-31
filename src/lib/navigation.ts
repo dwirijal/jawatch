@@ -39,8 +39,8 @@ const VIDEO_GROUP: NavigationGroup = {
   isActive: startsWithPath,
   items: [
     { label: 'Film', href: '/movies', description: 'Movies and watch pages.' },
-    { label: 'Anime', href: '/anime', description: 'Anime discovery and episodes.' },
-    { label: 'Donghua', href: '/donghua', description: 'Chinese animation hub.' },
+    { label: 'Series', href: '/series', description: 'Anime, donghua, and episodic drama from the unified catalog.' },
+    { label: 'Donghua in Series', href: '/series', description: 'Chinese animation now lives inside the series catalog.' },
     { label: 'Drama China', href: '/drachin', description: 'Unified vertical short-drama hub.' },
   ],
 };
@@ -52,9 +52,10 @@ const KOMIK_GROUP: NavigationGroup = {
   description: 'Read-first surfaces for comics and serialized panels.',
   isActive: startsWithPath,
   items: [
-    { label: 'Manga', href: '/manga', description: 'Japanese manga catalog.' },
-    { label: 'Manhwa', href: '/manhwa', description: 'Korean webtoon and manhwa catalog.' },
-    { label: 'Manhua', href: '/manhua', description: 'Chinese manhua catalog.' },
+    { label: 'Comic', href: '/comic', description: 'Unified comic hub across manga, manhwa, and manhua.' },
+    { label: 'Manga', href: '/comic/manga', description: 'Japanese manga shelf inside the comic hub.' },
+    { label: 'Manhwa', href: '/comic/manhwa', description: 'Korean webtoon and manhwa shelf inside the comic hub.' },
+    { label: 'Manhua', href: '/comic/manhua', description: 'Chinese manhua shelf inside the comic hub.' },
     { label: 'Comic US', description: 'Coming soon.' },
   ],
 };
@@ -87,13 +88,13 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
     key: 'video',
     type: 'group',
     group: VIDEO_GROUP,
-    match: (pathname) => ['/movies', '/anime', '/donghua', '/drachin', '/dramabox'].some((href) => startsWithPath(pathname, href)),
+    match: (pathname) => ['/movies', '/series', '/drachin', '/dramabox'].some((href) => startsWithPath(pathname, href)),
   },
   {
     key: 'komik',
     type: 'group',
     group: KOMIK_GROUP,
-    match: (pathname) => ['/manga', '/manhwa', '/manhua'].some((href) => startsWithPath(pathname, href)),
+    match: (pathname) => startsWithPath(pathname, '/comic'),
   },
   {
     key: 'novel',
@@ -133,6 +134,7 @@ export const CATEGORY_ICON_MAP = {
   manhwa: BookOpen,
   manhua: BookOpen,
   movie: Clapperboard,
+  series: Clapperboard,
   drama: Clapperboard,
   drachin: Clapperboard,
   dramabox: Clapperboard,

@@ -23,7 +23,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const variants = {
-      theme: config ? `${config.primary} text-white hard-shadow-sm hover:brightness-110` : "",
+      theme: config ? `${config.primary} text-white hard-shadow-sm hover:brightness-110 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] group overflow-hidden relative` : "",
       ghost: "bg-transparent text-zinc-400 hover:bg-surface-1 hover:text-white",
       outline: "border border-border-subtle bg-surface-1 text-zinc-100 hover:bg-surface-elevated hover:text-white",
       link: "h-auto rounded-none px-0 py-0 text-zinc-400 underline-offset-4 hover:text-white hover:underline",
@@ -39,7 +39,20 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           className
         )}
         {...props}
-      />
+      >
+        {asChild ? (
+          props.children
+        ) : (
+          <>
+            {props.children}
+            {config && (
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-inherit">
+                <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-25deg] transition-all duration-1000 group-hover:left-[150%]" />
+              </div>
+            )}
+          </>
+        )}
+      </Comp>
     )
   }
 )

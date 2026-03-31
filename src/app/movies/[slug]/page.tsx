@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 import { Calendar, Clapperboard, Clock, Film, Play } from 'lucide-react';
 import { getMovieDetailBySlug } from '@/lib/adapters/movie';
+import { getServerAuthStatus } from '@/lib/server/auth-session';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
-import { Card } from '@/components/atoms/Card';
+import { MediaCard } from '@/components/atoms/Card';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StatCard } from '@/components/molecules/StatCard';
@@ -11,6 +12,7 @@ import { BookmarkButton } from '@/components/organisms/BookmarkButton';
 import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
+import { CardRail } from '@/components/molecules/card';
 import { ShareButton } from '@/components/molecules/ShareButton';
 import { CastRail } from '@/components/organisms/CastRail';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
@@ -22,7 +24,10 @@ interface PageProps {
 
 export default async function MovieDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const movie = await getMovieDetailBySlug(slug);
+  const session = await getServerAuthStatus();
+  const movie = await getMovieDetailBySlug(slug, {
+    includeNsfw: session.authenticated,
+  });
 
   if (!movie) {
     notFound();
@@ -148,9 +153,9 @@ export default async function MovieDetailPage({ params }: PageProps) {
             theme="movie"
             aside={<Badge variant="outline">{movie.recommendations.length} Available</Badge>}
           />
-          <div className="media-grid" data-grid-density="default">
+          <CardRail variant="default">
             {movie.recommendations.map((item) => (
-              <Card
+              <MediaCard
                 key={item.slug}
                 href={`/movies/${item.slug}`}
                 image={item.poster}
@@ -160,7 +165,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
                 theme="movie"
               />
             ))}
-          </div>
+          </CardRail>
         </section>
       ) : null}
     </HorizontalMediaDetailPage>

@@ -22,16 +22,33 @@ export function SectionHeader({
   contentClassName,
 }: SectionHeaderProps) {
   return (
-    <div className={cn('flex items-end justify-between gap-3 border-b border-border-subtle pb-3.5 md:pb-4', className)}>
-      <div className={cn('min-w-0', contentClassName)}>
-        <div className="flex min-w-0 items-center gap-2.5">
+    <div
+      className={cn(
+        'flex flex-col gap-3 border-b border-border-subtle pb-3 md:flex-row md:items-end md:justify-between md:gap-4 md:pb-4',
+        className
+      )}
+    >
+      <div className={cn('min-w-0 flex-1 space-y-1.5', contentClassName)}>
+        <div className="flex min-w-0 items-center gap-3">
           {leading}
-          {Icon ? <Icon className="h-4 w-4 text-accent md:h-5 md:w-5" /> : null}
-          <h2 className="type-section-title text-white">{title}</h2>
+          {Icon ? (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center border border-border-subtle bg-surface-1 text-accent md:h-9 md:w-9">
+              <Icon className="h-4 w-4 md:h-5 md:w-5" />
+            </div>
+          ) : null}
+          <h2 className="min-w-0 text-balance text-xl font-black tracking-[-0.03em] text-white md:text-2xl">
+            {title}
+          </h2>
         </div>
-        {subtitle ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{subtitle}</p> : null}
+
+        {subtitle ? (
+          <p className="max-w-[68ch] text-sm leading-6 text-muted-foreground">
+            {subtitle}
+          </p>
+        ) : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+
+      {action ? <div className="shrink-0 self-start md:self-end">{action}</div> : null}
     </div>
   );
 }

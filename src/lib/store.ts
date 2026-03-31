@@ -1,4 +1,4 @@
-export type MediaType = 'manga' | 'anime' | 'donghua' | 'movie';
+export type MediaType = 'manga' | 'anime' | 'donghua' | 'movie' | 'drama';
 export type InterestType = MediaType;
 
 export interface HistoryItem {
@@ -138,7 +138,7 @@ export function incrementInterest(type: MediaType) {
 }
 
 export function getInterests(): Record<MediaType, number> {
-  const defaultInterests: Record<MediaType, number> = { manga: 0, anime: 0, donghua: 0, movie: 0 };
+  const defaultInterests: Record<MediaType, number> = { manga: 0, anime: 0, donghua: 0, movie: 0, drama: 0 };
   if (typeof window === 'undefined') return defaultInterests;
   const data = localStorage.getItem(INTEREST_KEY);
   if (!data) return defaultInterests;

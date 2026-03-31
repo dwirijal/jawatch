@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Bookmark } from 'lucide-react';
-import { Card } from '@/components/atoms/Card';
+import { MediaCard } from '@/components/atoms/Card';
 import { AuthGateNotice } from '@/components/molecules/AuthGateNotice';
 import { useAuthGate } from '@/components/hooks/useAuthGate';
 import { getBookmarks, BookmarkItem, MediaType } from '@/lib/store';
@@ -78,13 +78,13 @@ export function SavedContentSection({ type, title = "Your Collection", limit }: 
 
       <div className="media-grid" data-grid-density="default">
         {items.map((item) => (
-          <Card
+          <MediaCard
             key={item.id}
-            href={`/${item.type === 'movie' ? 'movies' : item.type}/${item.id}`}
+            href={`/${item.type === 'movie' ? 'movies' : item.type === 'drama' || item.type === 'anime' || item.type === 'donghua' ? 'series' : item.type}/${item.id}`}
             image={item.image}
             title={item.title}
-            subtitle={item.type.toUpperCase()}
-            theme={item.type}
+            subtitle={item.type === 'drama' || item.type === 'anime' || item.type === 'donghua' ? 'SERIES' : item.type.toUpperCase()}
+            theme={item.type === 'drama' ? 'drama' : item.type === 'donghua' ? 'donghua' : item.type}
           />
         ))}
       </div>

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { FileText, Sparkles } from 'lucide-react';
-import { Card } from '@/components/atoms/Card';
+import { MediaCard } from '@/components/atoms/Card';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { MediaHubTemplate } from '@/components/organisms/MediaHubTemplate';
 import { SectionCard } from '@/components/organisms/SectionCard';
@@ -68,7 +68,7 @@ export default function NovelPageClient({ initialFeatured, initialLatest, genres
           {initialFeatured.length === 0
             ? Array.from({ length: 8 }).map((_, index) => <SkeletonCard key={`featured-novel-${index}`} />)
             : initialFeatured.map((item) => (
-              <Card
+              <MediaCard
                 key={item.slug}
                 href={`/novel/${item.slug}`}
                 image={item.poster}
@@ -84,7 +84,7 @@ export default function NovelPageClient({ initialFeatured, initialLatest, genres
           {initialLatest.length === 0
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`latest-novel-${index}`} />)
             : initialLatest.map((item) => (
-              <Card
+              <MediaCard
                 key={item.slug}
                 href={`/novel/${item.slug}`}
                 image={item.poster}

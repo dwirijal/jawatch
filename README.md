@@ -4,11 +4,15 @@ Next.js 16 app for the `weebs.dwizzy.my.id` frontend.
 
 ## Data Access Model
 
-`dwizzyWEEB` reads media data through the API gateway (default `https://api.dwizzy.my.id`).
+`dwizzyWEEB` currently mixes two media read paths:
 
-- No direct DB call from this app to Neon
-- No direct media read path from Supabase
-- Supabase is reserved for account/auth concerns outside media catalog reads
+- comic surfaces (`manga`, `manhwa`, `manhua`) read directly from `DATABASE_URL`
+- the remaining media surfaces still read through the API gateway (default `https://api.dwizzy.my.id`)
+
+- Aiven Valkey / Redis can be used as the primary shared comic cache and hot leaderboard
+- Upstash Redis can remain as REST fallback cache
+- Supabase analytics is optional for comic access events
+- `dwizzyBRAIN` is not required for the comic read path
 
 ## Getting Started
 
@@ -32,6 +36,10 @@ Main envs:
 
 - `DWIZZY_API_BASE_URL` (server fetch base, default: `https://api.dwizzy.my.id`)
 - `NEXT_PUBLIC_DWIZZY_API_BASE_URL` (optional client-safe mirror)
+- `DATABASE_URL` (optional direct Postgres read path for comics)
+- `VALKEY_URL` or `REDIS_URL` (optional primary shared comic cache)
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (optional Redis REST fallback)
+- `SUPABASE_COMIC_ANALYTICS_TABLE` + Supabase service role envs (optional comic analytics sink)
 - `SITE_URL` (canonical site URL for metadata/sitemap)
 - `NEXT_PUBLIC_SITE_URL` (client app origin fallback)
 

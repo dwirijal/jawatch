@@ -19,7 +19,7 @@ export function HorizontalMediaDetailPage({
   footer,
   theme,
   showAdSection = false,
-  desktopColumnsClassName = 'xl:grid-cols-[minmax(0,1.7fr)_minmax(18rem,0.9fr)] xl:grid-rows-1',
+  desktopColumnsClassName = 'xl:grid-cols-[minmax(0,1.55fr)_minmax(20rem,1fr)] xl:grid-rows-1',
 }: HorizontalMediaDetailPageProps) {
   return (
     <DetailPageScaffold

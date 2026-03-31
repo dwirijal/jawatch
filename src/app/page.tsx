@@ -1,73 +1,46 @@
-import HomePageClient, { type HomeRecommendationSection } from './HomePageClient';
+import HomePageClient, { type HomeRecommendationSection, type MixedRecommendationItem } from './HomePageClient';
 import type { HeroItem } from '@/components/organisms/HeroCarousel';
-import type { MixedRecommendationItem } from './HomePageClient';
 import {
-  getHDThumbnail,
   extractSlugFromUrl,
+  getHDThumbnail,
   getMangaSubtype,
   getNewManga,
   getPopularManga,
   type MangaSearchResult,
-} from '@/lib/adapters/comic';
-import { getAnimeHomeItems, getKanataAnimeByGenre } from '@/lib/adapters/anime';
-import { donghua } from '@/lib/adapters/donghua';
-import { getMovieGenreItems, getMovieHomeSection, getMovieHubData } from '@/lib/adapters/movie';
-import type { MovieCardItem, KanataAnime } from '@/lib/types';
+} from '@/lib/adapters/comic-server';
+import { getSeriesHubData } from '@/lib/adapters/series';
+import {
+  formatSeriesCardSubtitle,
+  getSeriesBadgeText,
+  getSeriesTheme,
+  type SeriesCardItem,
+} from '@/lib/series-presentation';
+import { getServerAuthStatus } from '@/lib/server/auth-session';
+import { getMovieHubData } from '@/lib/adapters/movie';
+import type { MovieCardItem } from '@/lib/types';
 
 const SECTION_LIMIT = 12;
+const HERO_TYPE_BY_ROUTE = {
+  comic: 'manga',
+  movies: 'movie',
+  series: 'series',
+} as const;
 
 function notNull<T>(value: T | null | undefined): value is T {
   return value !== null && value !== undefined;
-}
-
-function toNumber(value: unknown): number {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value !== 'string') return 0;
-  const parsed = Number.parseFloat(value.replace(/[^0-9.]+/g, ''));
-  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function uniqueById<T extends { id: string }>(items: T[]): T[] {
   const seen = new Set<string>();
   const output: T[] = [];
   for (const item of items) {
-    if (!item.id || seen.has(item.id)) continue;
+    if (!item.id || seen.has(item.id)) {
+      continue;
+    }
     seen.add(item.id);
     output.push(item);
   }
   return output;
-}
-
-type AnimeLikeItem = {
-  slug?: string;
-  title?: string;
-  thumb?: string;
-  image?: string;
-  status?: string;
-  episode?: string;
-  type?: string;
-  score?: string | number;
-};
-
-function toAnimeItems(items: AnimeLikeItem[], limit = SECTION_LIMIT): MixedRecommendationItem[] {
-  return items
-    .map<MixedRecommendationItem | null>((item) => {
-      const slug = String(item.slug || '');
-      const title = String(item.title || '');
-      if (!slug || !title) return null;
-      const subtitleParts = [String(item.status || ''), String(item.episode || '')].filter(Boolean);
-      return {
-        id: `anime:${slug}`,
-        title,
-        image: getHDThumbnail(String(item.thumb || item.image || '')),
-        href: `/anime/${slug}`,
-        theme: 'anime' as const,
-        subtitle: subtitleParts.join(' • ') || undefined,
-        badgeText: String(item.type || 'Anime'),
-      };
-    })
-    .filter(notNull)
-    .slice(0, limit);
 }
 
 function toMovieItems(items: MovieCardItem[], limit = SECTION_LIMIT): MixedRecommendationItem[] {
@@ -80,33 +53,51 @@ function toMovieItems(items: MovieCardItem[], limit = SECTION_LIMIT): MixedRecom
         image: getHDThumbnail(item.poster || ''),
         href: `/movies/${item.slug}`,
         theme: 'movie',
-        subtitle: [item.year, item.type?.toUpperCase()].filter(Boolean).join(' • ') || undefined,
-        badgeText: item.rating ? `★ ${item.rating}` : item.type?.toUpperCase(),
+        subtitle: item.year || undefined,
+        badgeText: item.rating ? `★ ${item.rating}` : 'MOVIE',
       };
     })
     .filter(notNull)
     .slice(0, limit);
 }
 
-function toDonghuaItems(items: Array<Record<string, unknown>>, limit = SECTION_LIMIT): MixedRecommendationItem[] {
+function toSeriesItems(items: SeriesCardItem[], limit = SECTION_LIMIT): MixedRecommendationItem[] {
   return items
     .map<MixedRecommendationItem | null>((item) => {
-      const slug = String(item.slug ?? '');
-      const title = String(item.title ?? '');
-      const href = String(item.link ?? '') || `/donghua/${slug}`;
-      if (!slug || !title) return null;
+      if (!item.slug || !item.title) return null;
       return {
-        id: `donghua:${slug}`,
-        title,
-        image: getHDThumbnail(String(item.thumb ?? item.image ?? '')),
-        href,
-        theme: 'donghua' as const,
-        subtitle: String(item.episode ?? '') || undefined,
-        badgeText: String(item.status ?? 'Donghua') || undefined,
+        id: `series:${item.slug}`,
+        title: item.title,
+        image: getHDThumbnail(item.poster || ''),
+        href: `/series/${item.slug}`,
+        theme: getSeriesTheme(item.type),
+        subtitle: formatSeriesCardSubtitle(item) || undefined,
+        badgeText: getSeriesBadgeText(item.type),
       };
     })
     .filter(notNull)
     .slice(0, limit);
+}
+
+function toSeriesScheduleItems(days: Array<{ label: string; items: SeriesCardItem[] }>, limit = SECTION_LIMIT): MixedRecommendationItem[] {
+  const flattened: MixedRecommendationItem[] = [];
+  for (const day of days) {
+    for (const item of day.items) {
+      flattened.push({
+        id: `series-schedule:${day.label}:${item.slug}`,
+        title: item.title,
+        image: getHDThumbnail(item.poster || ''),
+        href: `/series/${item.slug}`,
+        theme: getSeriesTheme(item.type),
+        subtitle: `${day.label} • ${formatSeriesCardSubtitle(item)}`.replace(/\s•\s$/, ''),
+        badgeText: getSeriesBadgeText(item.type),
+      });
+      if (flattened.length >= limit) {
+        return flattened;
+      }
+    }
+  }
+  return flattened;
 }
 
 function toMangaItems(items: MangaSearchResult[], limit = SECTION_LIMIT): MixedRecommendationItem[] {
@@ -118,8 +109,8 @@ function toMangaItems(items: MangaSearchResult[], limit = SECTION_LIMIT): MixedR
         id: `manga:${slug}`,
         title: item.title,
         image: getHDThumbnail(item.image || item.thumbnail || ''),
-        href: `/manga/${slug}`,
-        theme: 'manga' as const,
+        href: `/comic/${slug}`,
+        theme: 'manga',
         subtitle: item.chapter || item.time_ago || undefined,
         badgeText: item.type || undefined,
       };
@@ -128,35 +119,41 @@ function toMangaItems(items: MangaSearchResult[], limit = SECTION_LIMIT): MixedR
     .slice(0, limit);
 }
 
-function toKanataAnimeItems(items: KanataAnime[], limit = SECTION_LIMIT): MixedRecommendationItem[] {
-  return items
-    .map<MixedRecommendationItem | null>((item) => {
-      if (!item.slug || !item.title) return null;
-      return {
-        id: `anime:${item.slug}`,
-        title: item.title,
-        image: getHDThumbnail(item.thumb || ''),
-        href: `/anime/${item.slug}`,
-        theme: 'anime',
-        subtitle: item.status || item.episode || undefined,
-        badgeText: item.type || 'Anime',
-      };
-    })
-    .filter(notNull)
-    .slice(0, limit);
+function limitItems<T>(items: T[], limit = SECTION_LIMIT): T[] {
+  return items.slice(0, limit);
+}
+
+function buildHomeSection(
+  id: string,
+  title: string,
+  subtitle: string,
+  iconKey: HomeRecommendationSection['iconKey'],
+  items: MixedRecommendationItem[],
+  viewAllHref?: string,
+): HomeRecommendationSection {
+  return {
+    id,
+    title,
+    subtitle,
+    iconKey,
+    viewAllHref,
+    items: limitItems(items),
+  };
 }
 
 function recommendationToHero(item: MixedRecommendationItem): HeroItem | null {
+  if (!item.image) return null;
   const segments = item.href.split('/').filter(Boolean);
   if (segments.length < 2) return null;
   const [route, slug] = segments;
-  const type = route === 'movies' ? 'movie' : route === 'manga' ? 'manga' : route === 'donghua' ? 'donghua' : route === 'anime' ? 'anime' : null;
+  const type = HERO_TYPE_BY_ROUTE[route as keyof typeof HERO_TYPE_BY_ROUTE] ?? null;
   if (!type) return null;
+
   return {
     id: slug,
     title: item.title,
-    image: item.image || '/favicon.ico',
-    banner: item.image || '/favicon.ico',
+    image: item.image,
+    banner: item.image,
     description: item.subtitle || 'Discover your next favorite title.',
     type,
     tags: [item.badgeText || type.toUpperCase(), 'Recommended'].filter(Boolean).slice(0, 3),
@@ -165,28 +162,28 @@ function recommendationToHero(item: MixedRecommendationItem): HeroItem | null {
 }
 
 async function getHomeSections(): Promise<{ sections: HomeRecommendationSection[]; heroItems: HeroItem[] }> {
-  const [animeHomeRaw, movieHub, movieTrendingRaw, mangaPopularResponse, mangaLatestResponse, donghuaHomeRaw, animeActionRaw, movieActionRaw] = await Promise.all([
-    getAnimeHomeItems(32).catch(() => []),
-    getMovieHubData(32).catch(() => ({ popular: [], latest: [] })),
-    getMovieHomeSection('trending', 32).catch(() => []),
-    getPopularManga().catch(() => ({ comics: [] })),
-    getNewManga(1, 40).catch(() => ({ comics: [] })),
-    donghua.getHome().catch(() => ({ latest_updates: [], ongoing_series: [], completed_series: [] })),
-    getKanataAnimeByGenre('action').catch(() => []),
-    getMovieGenreItems('action', 32).catch(() => []),
+  const session = await getServerAuthStatus();
+  const [seriesHub, movieHub, mangaPopularResponse, mangaLatestResponse] = await Promise.all([
+    getSeriesHubData(32, { includeNsfw: session.authenticated }).catch(() => ({ popular: [], latest: [], dramaSpotlight: [], weeklySchedule: [], filters: [] })),
+    getMovieHubData(32, { includeNsfw: session.authenticated }).catch(() => ({ popular: [], latest: [] })),
+    getPopularManga(40, { includeNsfw: session.authenticated }).catch(() => ({ comics: [] })),
+    getNewManga(1, 40, { includeNsfw: session.authenticated }).catch(() => ({ comics: [] })),
   ]);
+
+  const seriesLatestItems = toSeriesItems(seriesHub.latest, 24);
+  const seriesPopularItems = toSeriesItems(seriesHub.popular, 24);
+  const animeLaneItems = toSeriesItems(seriesHub.latest.filter((item) => item.type === 'anime'), 24);
+  const dramaLaneItems = toSeriesItems(seriesHub.dramaSpotlight, 24);
+  const donghuaLaneItems = toSeriesItems(seriesHub.latest.filter((item) => item.type === 'donghua'), 24);
+  const releaseRadarItems = toSeriesScheduleItems(seriesHub.weeklySchedule, 24);
+  const japanLaneItems = toSeriesItems(seriesHub.latest.filter((item) => item.country === 'Japan'), 24);
+  const chinaLaneItems = toSeriesItems(seriesHub.latest.filter((item) => item.country === 'China'), 24);
+  const koreaLaneItems = toSeriesItems(seriesHub.latest.filter((item) => item.country === 'South Korea'), 24);
+  const movieLatestItems = toMovieItems(movieHub.latest, 24);
+  const moviePopularItems = toMovieItems(movieHub.popular, 24);
 
   const mangaPopularRaw = mangaPopularResponse.comics || [];
   const mangaLatestRaw = mangaLatestResponse.comics || [];
-
-  const animeHomeItems = toAnimeItems(animeHomeRaw, 24);
-  const movieLatestItems = toMovieItems(movieHub.latest, 24);
-  const moviePopularItems = toMovieItems(movieHub.popular, 24);
-  const movieTrendingItems = toMovieItems(movieTrendingRaw, 24);
-  const moviePool = uniqueById([...movieTrendingItems, ...moviePopularItems, ...movieLatestItems]);
-  const donghuaLatestItems = toDonghuaItems(donghuaHomeRaw.latest_updates as Array<Record<string, unknown>>, 24);
-  const donghuaOngoingItems = toDonghuaItems(donghuaHomeRaw.ongoing_series as Array<Record<string, unknown>>, 24);
-
   const mangaPopularItems = toMangaItems(mangaPopularRaw, 24);
   const mangaLatestMapped = toMangaItems(mangaLatestRaw, 40);
 
@@ -196,9 +193,11 @@ async function getHomeSections(): Promise<{ sections: HomeRecommendationSection[
     if (!slug) continue;
     mangaTypeBySlug.set(slug, getMangaSubtype(entry));
   }
+
   const mangaLatestItems: MixedRecommendationItem[] = [];
   const manhwaLatestItems: MixedRecommendationItem[] = [];
   const manhuaLatestItems: MixedRecommendationItem[] = [];
+
   for (const item of mangaLatestMapped) {
     const slug = item.id.replace(/^manga:/, '');
     const normalizedType = mangaTypeBySlug.get(slug) ?? 'manga';
@@ -213,72 +212,51 @@ async function getHomeSections(): Promise<{ sections: HomeRecommendationSection[
     mangaLatestItems.push(item);
   }
 
-  const animeScoreSorted = toAnimeItems(
-    [...animeHomeRaw].sort((left, right) => toNumber(right.score) - toNumber(left.score)),
-    SECTION_LIMIT
-  );
-
-  const movieRatingSorted = [...moviePool].sort((left, right) => {
-    const leftRating = toNumber(left.badgeText);
-    const rightRating = toNumber(right.badgeText);
-    return rightRating - leftRating;
-  });
-  const seriesLatestItems = moviePool
-    .filter((item) => {
-      const subtitle = item.subtitle?.toLowerCase() ?? '';
-      const badge = item.badgeText?.toLowerCase() ?? '';
-      return subtitle.includes('series') || subtitle.includes('tv') || badge.includes('series') || badge.includes('tv');
-    })
-    .slice(0, SECTION_LIMIT);
-
-  const genreBlend = uniqueById([
-    ...toKanataAnimeItems(animeActionRaw, 8),
-    ...toMovieItems(movieActionRaw, 8),
-  ]).slice(0, SECTION_LIMIT);
-
   const popularMedia = uniqueById([
-    ...animeHomeItems.slice(0, 4),
+    ...seriesPopularItems.slice(0, 4),
     ...moviePopularItems.slice(0, 4),
     ...mangaPopularItems.slice(0, 4),
-    ...donghuaLatestItems.slice(0, 4),
+    ...donghuaLaneItems.slice(0, 4),
   ]).slice(0, SECTION_LIMIT);
 
   const loversByCommunity = uniqueById([
     ...mangaPopularItems.slice(0, 5),
-    ...donghuaOngoingItems.slice(0, 4),
-    ...animeScoreSorted.slice(0, 4),
+    ...donghuaLaneItems.slice(0, 4),
+    ...seriesPopularItems.slice(0, 4),
   ]).slice(0, SECTION_LIMIT);
 
   const freshThisWeek = uniqueById([
-    ...animeHomeItems.slice(0, 4),
+    ...seriesLatestItems.slice(0, 4),
     ...movieLatestItems.slice(0, 4),
     ...mangaLatestMapped.slice(0, 4),
-    ...donghuaLatestItems.slice(0, 4),
+    ...donghuaLaneItems.slice(0, 4),
   ]).slice(0, SECTION_LIMIT);
 
   const sections: HomeRecommendationSection[] = [
-    { id: 'anime-latest', title: 'Anime Terbaru', subtitle: 'Rilis anime terbaru dari katalog live', iconKey: 'anime', viewAllHref: '/anime', items: animeHomeItems.slice(0, SECTION_LIMIT) },
-    { id: 'movie-latest', title: 'Movie Terbaru', subtitle: 'Film terbaru siap ditonton', iconKey: 'movie', viewAllHref: '/movies', items: movieLatestItems.slice(0, SECTION_LIMIT) },
-    { id: 'series-latest', title: 'Series Terbaru', subtitle: 'Serial terbaru dari berbagai provider', iconKey: 'series', viewAllHref: '/movies', items: seriesLatestItems.length > 0 ? seriesLatestItems : movieLatestItems.slice(0, SECTION_LIMIT) },
-    { id: 'donghua-latest', title: 'Donghua Terbaru', subtitle: 'Update donghua paling baru', iconKey: 'donghua', viewAllHref: '/donghua', items: donghuaLatestItems.slice(0, SECTION_LIMIT) },
-    { id: 'manga-latest', title: 'Manga Terbaru', subtitle: 'Chapter manga terbaru', iconKey: 'manga', viewAllHref: '/manga', items: mangaLatestItems.slice(0, SECTION_LIMIT) },
-    { id: 'manhwa-latest', title: 'Manhwa Terbaru', subtitle: 'Update manhwa terbaru', iconKey: 'manhwa', viewAllHref: '/manhwa', items: manhwaLatestItems.slice(0, SECTION_LIMIT) },
-    { id: 'manhua-latest', title: 'Manhua Terbaru', subtitle: 'Update manhua terbaru', iconKey: 'manhua', viewAllHref: '/manhua', items: manhuaLatestItems.slice(0, SECTION_LIMIT) },
-    { id: 'popular-media', title: 'Populer Media', subtitle: 'Pilihan populer lintas kategori', iconKey: 'popular', items: popularMedia },
-    { id: 'genre-action', title: 'Media by Genre: Action', subtitle: 'Rekomendasi action dari anime dan movie', iconKey: 'genre', items: genreBlend },
-    { id: 'blockbuster', title: 'Blockbuster Picks', subtitle: 'Highlight judul dengan hype tertinggi', iconKey: 'blockbuster', viewAllHref: '/movies', items: movieRatingSorted.slice(0, SECTION_LIMIT) },
-    { id: 'top-mal', title: 'Top MyAnimeList', subtitle: 'Peringkat tertinggi berdasarkan skor anime', iconKey: 'mal', viewAllHref: '/anime', items: animeScoreSorted.slice(0, SECTION_LIMIT) },
-    { id: 'top-reading', title: 'Top Reading', subtitle: 'Judul paling banyak dibaca saat ini', iconKey: 'reading', viewAllHref: '/manga', items: mangaPopularItems.slice(0, SECTION_LIMIT) },
-    { id: 'community-lovers', title: 'Lovers by Community', subtitle: 'Favorit komunitas dari tren terbaru', iconKey: 'community', items: loversByCommunity },
-    { id: 'top-imdb', title: 'Top IMDb Vibe', subtitle: 'Kurasi berdasarkan skor film tertinggi', iconKey: 'imdb', viewAllHref: '/movies', items: movieRatingSorted.slice(0, SECTION_LIMIT) },
-    { id: 'fresh-week', title: 'Fresh This Week', subtitle: 'Rangkuman rilisan baru yang lagi naik', iconKey: 'fresh', items: freshThisWeek },
+    buildHomeSection('series-latest', 'Latest Episodes', 'Semua judul episodik canonical: anime, donghua, dan drama hidup di satu lane series', 'series', seriesLatestItems, '/series'),
+    buildHomeSection('series-popular', 'Popular Across Series', 'Judul episodik paling ramai dari katalog series canonical', 'popular', seriesPopularItems, '/series'),
+    buildHomeSection('movie-latest', 'Movie Terbaru', 'Film terbaru siap ditonton', 'movie', movieLatestItems, '/movies'),
+    buildHomeSection('series-anime', 'Anime in Series', 'Lane anime Jepang yang sekarang dibaca dari series catalog yang sama', 'series', animeLaneItems, '/series'),
+    buildHomeSection('series-radar', 'Release Radar', 'Jadwal mingguan yang diturunkan langsung dari release_day dan cadence di database', 'series', releaseRadarItems, '/series'),
+    buildHomeSection('series-donghua', 'Donghua Spotlight', 'Animation dari China yang sekarang sepenuhnya masuk ke series canonical', 'series', donghuaLaneItems, '/series'),
+    buildHomeSection('series-drama', 'Drama Spotlight', 'Drama episodik canonical dari database, tetap terpisah dari Drachin', 'series', dramaLaneItems, '/series'),
+    buildHomeSection('series-japan', 'Japan Lane', 'Series dengan rilis Jepang dari taxonomy canonical', 'series', japanLaneItems, '/series'),
+    buildHomeSection('series-china', 'China Lane', 'Series dari China, termasuk donghua dan live-action yang sudah ternormalisasi', 'series', chinaLaneItems, '/series'),
+    buildHomeSection('series-korea', 'South Korea Lane', 'Series Korea dari canonical metadata, terpisah dari short drama provider', 'series', koreaLaneItems, '/series'),
+    buildHomeSection('manga-latest', 'Manga Terbaru', 'Chapter manga terbaru', 'manga', mangaLatestItems, '/comic/manga'),
+    buildHomeSection('manhwa-latest', 'Manhwa Terbaru', 'Update manhwa terbaru', 'manhwa', manhwaLatestItems, '/comic/manhwa'),
+    buildHomeSection('manhua-latest', 'Manhua Terbaru', 'Update manhua terbaru', 'manhua', manhuaLatestItems, '/comic/manhua'),
+    buildHomeSection('popular-media', 'Populer Media', 'Pilihan populer lintas kategori', 'popular', popularMedia),
+    buildHomeSection('top-reading', 'Top Reading', 'Judul paling banyak dibaca saat ini', 'reading', mangaPopularItems, '/comic'),
+    buildHomeSection('community-lovers', 'Lovers by Community', 'Favorit komunitas dari tren terbaru', 'community', loversByCommunity),
+    buildHomeSection('fresh-week', 'Fresh This Week', 'Rangkuman rilisan baru yang lagi naik', 'fresh', freshThisWeek),
   ];
 
   const heroItems = uniqueById([
-    ...animeHomeItems.slice(0, 1),
-    ...moviePopularItems.slice(0, 1),
+    ...moviePopularItems.slice(0, 2),
+    ...seriesPopularItems.slice(0, 2),
     ...mangaPopularItems.slice(0, 1),
-    ...donghuaLatestItems.slice(0, 1),
+    ...donghuaLaneItems.slice(0, 1),
   ])
     .map(recommendationToHero)
     .filter((item): item is HeroItem => item !== null)

@@ -1,5 +1,6 @@
 import 'server-only';
 import { withCloudflareEdgeCache } from './cloudflare-cache';
+import { fetchWithTimeout } from './fetch-with-timeout';
 
 const DEFAULT_API_GATEWAY_BASE_URL = 'https://api.dwizzy.my.id';
 
@@ -30,7 +31,14 @@ export function buildGatewayUrl(path: string): string {
     return getApiGatewayBaseUrl();
   }
   if (/^https?:\/\//i.test(rawPath)) {
-    return rawPath;
+    const targetUrl = new URL(rawPath);
+    const gatewayUrl = new URL(getApiGatewayBaseUrl());
+
+    if (targetUrl.origin !== gatewayUrl.origin) {
+      throw new Error('Cross-origin gateway URLs are not allowed');
+    }
+
+    return targetUrl.toString();
   }
   const normalizedPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
   return new URL(normalizedPath, getApiGatewayBaseUrl()).toString();
@@ -45,19 +53,16 @@ type FetchOptions = {
 
 export async function gatewayFetchJson<T>(path: string, options: FetchOptions = {}): Promise<T> {
   const loader = async () => {
-    const controller = new AbortController();
-    const timeoutMs = options.timeoutMs ?? 10000;
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
     try {
-      const response = await fetch(buildGatewayUrl(path), {
+      const response = await fetchWithTimeout(buildGatewayUrl(path), {
         headers: {
           Accept: 'application/json',
         },
         next: {
           revalidate: options.revalidate ?? 3600,
         },
-        signal: controller.signal,
+        timeoutMs: options.timeoutMs ?? 10_000,
+        retries: 1,
       });
 
       if (!response.ok) {
@@ -66,12 +71,10 @@ export async function gatewayFetchJson<T>(path: string, options: FetchOptions = 
 
       return response.json() as Promise<T>;
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.message === 'Request timeout') {
         throw new Error('Gateway timeout');
       }
       throw error;
-    } finally {
-      clearTimeout(timeoutId);
     }
   };
 

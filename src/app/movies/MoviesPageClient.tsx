@@ -3,12 +3,12 @@
 import * as React from 'react';
 import { incrementInterest } from '@/lib/store';
 import { Film } from 'lucide-react';
-import { Card } from '@/components/atoms/Card';
+import { MediaCard } from '@/components/atoms/Card';
 import { MediaHubTemplate } from '@/components/organisms/MediaHubTemplate';
 import { SavedContentSection } from '@/components/organisms/SavedContentSection';
-import { SurpriseButton } from '@/components/molecules/SurpriseButton';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { SectionCard } from '@/components/organisms/SectionCard';
+import { StaggerEntry } from '@/components/molecules/StaggerEntry';
 import type { GenericMediaItem, MovieCardItem } from '@/lib/types';
 
 const MOVIE_GENRES = [
@@ -66,14 +66,13 @@ export default function MoviesPageClient({ initialPopular, initialLatest }: Movi
         setResults(null);
         setActiveGenre(null);
       }}
-      extraHeaderActions={<SurpriseButton type="movie" theme="movie" />}
     >
-      <div className="app-section-stack">
+      <StaggerEntry className="app-section-stack" delay={100}>
         <SectionCard title="Most popular" subtitle="Top trending this month" mode="grid" gridDensity="default" viewAllHref="/movies">
           {popular.length === 0
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`popular-skeleton-${index}`} />)
             : popular.slice(0, 12).map((item, index) => (
-              <Card
+              <MediaCard
                 key={index}
                 href={`/movies/${item.slug}`}
                 image={item.poster}
@@ -91,7 +90,7 @@ export default function MoviesPageClient({ initialPopular, initialLatest }: Movi
           {latest.length === 0
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`latest-skeleton-${index}`} />)
             : latest.map((item, index) => (
-              <Card
+              <MediaCard
                 key={index}
                 href={`/movies/${item.slug}`}
                 image={item.poster}
@@ -102,7 +101,7 @@ export default function MoviesPageClient({ initialPopular, initialLatest }: Movi
               />
             ))}
         </SectionCard>
-      </div>
+      </StaggerEntry>
     </MediaHubTemplate>
   );
 }

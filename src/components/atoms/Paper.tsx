@@ -12,6 +12,7 @@ interface PaperProps extends React.HTMLAttributes<HTMLElement> {
   shadow?: PaperShadow;
   padded?: boolean;
   interactive?: boolean;
+  glassy?: boolean;
 }
 
 const TONE_CLASS: Record<PaperTone, string> = {
@@ -33,6 +34,7 @@ export function Paper({
   shadow = 'none',
   padded = true,
   interactive = false,
+  glassy = false,
   className,
   ...props
 }: PaperProps) {
@@ -41,9 +43,10 @@ export function Paper({
   return (
     <Comp
       className={cn(
-        'rounded-[var(--radius-sm)] border text-foreground',
+        'rounded-[var(--radius-sm)] border text-foreground relative',
         TONE_CLASS[tone],
         SHADOW_CLASS[shadow],
+        glassy && 'refractive-border glass-noise border-none',
         padded && 'p-4 md:p-5',
         interactive && 'transition-all duration-300 hover:-translate-y-1 hover:border-white/20',
         className

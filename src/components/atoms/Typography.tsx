@@ -34,9 +34,15 @@ export const Typography = React.forwardRef<HTMLElement, TypographyProps>(({
     xl: "text-xl tracking-[-0.016em] leading-[1.12]",
     "2xl": "text-2xl tracking-[-0.02em] leading-[1.08]",
     "3xl": "text-3xl tracking-[-0.024em] leading-[1.02]",
-    "4xl": "text-4xl md:text-5xl tracking-[-0.028em] leading-[0.98]",
-    "5xl": "text-5xl md:text-7xl tracking-[-0.03em] leading-[0.95]",
-    "6xl": "text-6xl md:text-8xl tracking-[-0.036em] leading-[0.92]",
+    "4xl": "text-4xl md:text-5xl tracking-[-0.028em] leading-[0.98] font-[var(--font-heading)]",
+    "5xl": "text-5xl md:text-7xl tracking-[-0.03em] leading-[0.95] font-[var(--font-heading)]",
+    "6xl": "text-6xl md:text-8xl tracking-[-0.036em] leading-[0.92] font-[var(--font-heading)]",
+  };
+
+  const variableStyles = {
+    "4xl": { fontVariationSettings: '"wght" 800, "wdth" 105' },
+    "5xl": { fontVariationSettings: '"wght" 850, "wdth" 110' },
+    "6xl": { fontVariationSettings: '"wght" 900, "wdth" 115' },
   };
 
   const baseStyles = cn(
@@ -59,7 +65,10 @@ export const Typography = React.forwardRef<HTMLElement, TypographyProps>(({
       outline && "text-transparent",
       className
     ),
-    style: outline ? { WebkitTextStroke: `1px var(--color-foreground, #fafafa)` } : {},
+    style: {
+      ...(outline ? { WebkitTextStroke: `1px var(--color-foreground, #fafafa)` } : {}),
+      ...(size && variableStyles[size as keyof typeof variableStyles] ? variableStyles[size as keyof typeof variableStyles] : {}),
+    },
     ...props,
   };
 

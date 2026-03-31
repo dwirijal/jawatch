@@ -80,6 +80,7 @@ function defaultNormalizeLabel(label: string): string {
     .replace(/FULLHD/gi, '1080P')
     .replace(/MP4HD/gi, '720P')
     .replace(/Gofle/gi, 'Gofile')
+    .replace(/\s*\[[^\]]+\]\s*/g, '')
     .trim();
 }
 

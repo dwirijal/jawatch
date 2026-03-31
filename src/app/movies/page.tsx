@@ -1,8 +1,12 @@
 import MoviesPageClient from './MoviesPageClient';
 import { getMovieHubData } from '@/lib/adapters/movie';
+import { getServerAuthStatus } from '@/lib/server/auth-session';
 
 export default async function MoviesPage() {
-  const { popular, latest } = await getMovieHubData(24).catch(() => ({
+  const session = await getServerAuthStatus();
+  const { popular, latest } = await getMovieHubData(24, {
+    includeNsfw: session.authenticated,
+  }).catch(() => ({
     popular: [],
     latest: [],
   }));

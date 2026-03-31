@@ -1,4 +1,5 @@
 import type { AnimeCastMember, JikanEnrichment } from '@/lib/types';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
 type TMDBImageSize = 'w500' | 'w780' | 'w1280';
 
@@ -49,14 +50,12 @@ async function withRuntimeCache<T>(key: string, ttlMs: number, loader: () => Pro
 }
 
 async function fetchJson<T>(url: string, headersOverride?: HeadersInit): Promise<T> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       headers: headersOverride ?? { Accept: 'application/json' },
       next: { revalidate: 3600 },
-      signal: controller.signal,
+      timeoutMs: 10_000,
+      retries: 1,
     });
 
     if (!res.ok) {
@@ -65,12 +64,10 @@ async function fetchJson<T>(url: string, headersOverride?: HeadersInit): Promise
 
     return res.json();
   } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
+    if (error instanceof Error && error.message === 'Request timeout') {
       throw new Error('API timeout');
     }
     throw error;
-  } finally {
-    clearTimeout(timeoutId);
   }
 }
 
@@ -189,7 +186,7 @@ async function fetchTMDBMovieSearch(title: string, year?: string): Promise<TMDBM
   if (year) {
     params.set('year', year);
   }
-  if (credential.apiKey) {
+  if (!credential.token && credential.apiKey) {
     params.set('api_key', credential.apiKey);
   }
 

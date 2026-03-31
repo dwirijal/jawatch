@@ -2,12 +2,14 @@ import { Link } from '@/components/atoms/Link';
 
 export function Footer() {
   const navLinks = [
-    { href: '/anime', label: 'Anime' },
+    { href: '/movies', label: 'Movies' },
+    { href: '/series', label: 'Series' },
+    { href: '/series', label: 'Donghua in Series' },
     { href: '/drachin', label: 'Drama China' },
-    { href: '/manga', label: 'Manga' },
-    { href: '/manhwa', label: 'Manhwa' },
-    { href: '/manhua', label: 'Manhua' },
-    { href: '/donghua', label: 'Donghua' },
+    { href: '/comic', label: 'Comic' },
+    { href: '/comic/manga', label: 'Manga' },
+    { href: '/comic/manhwa', label: 'Manhwa' },
+    { href: '/comic/manhua', label: 'Manhua' },
   ];
 
   const legalLinks = [
@@ -30,7 +32,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="max-w-xs text-center text-xs leading-6 text-zinc-500 md:text-left">
-              Your premium destination for Anime, Donghua, short drama, Manga, Manhwa, and Manhua content.
+              Your premium destination for movies, unified series, short drama, and the full comic library.
             </p>
           </div>
 
@@ -39,7 +41,7 @@ export function Footer() {
               <h4 className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-400">Navigation</h4>
               <ul className="space-y-2 text-xs font-bold text-zinc-500">
                 {navLinks.map((item) => (
-                  <li key={item.href}>
+                  <li key={`${item.href}-${item.label}`}>
                     <Link href={item.href} className="transition-colors hover:text-white">
                       {item.label}
                     </Link>

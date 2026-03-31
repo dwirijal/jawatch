@@ -94,8 +94,7 @@ export const THEME_CONFIG = {
 export function resolveThemeFromPathname(pathname?: string | null): ThemeType {
   if (!pathname) return 'default';
   if (pathname === '/movies' || pathname.startsWith('/movies/')) return 'movie';
-  if (pathname === '/anime' || pathname.startsWith('/anime/')) return 'anime';
-  if (pathname === '/donghua' || pathname.startsWith('/donghua/')) return 'donghua';
+  if (pathname === '/series' || pathname.startsWith('/series/')) return 'drama';
   if (
     pathname === '/drachin' ||
     pathname.startsWith('/drachin/') ||
@@ -105,12 +104,8 @@ export function resolveThemeFromPathname(pathname?: string | null): ThemeType {
     return 'drama';
   }
   if (
-    pathname === '/manga' ||
-    pathname.startsWith('/manga/') ||
-    pathname === '/manhwa' ||
-    pathname.startsWith('/manhwa/') ||
-    pathname === '/manhua' ||
-    pathname.startsWith('/manhua/')
+    pathname === '/comic' ||
+    pathname.startsWith('/comic/')
   ) {
     return 'manga';
   }
@@ -123,7 +118,7 @@ export function getMediaPosterAspectClass(theme: ThemeType): string {
     case 'movie':
       return 'aspect-[2/3]';
     case 'drama':
-      return 'aspect-[9/16]';
+      return 'aspect-[2/3]';
     case 'novel':
       return 'aspect-[210/297]';
     case 'anime':

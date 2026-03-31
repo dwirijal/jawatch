@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 
 interface BookmarkButtonProps {
   item: BookmarkItem;
-  theme?: 'manga' | 'anime' | 'donghua' | 'movie';
+  theme?: 'manga' | 'anime' | 'donghua' | 'movie' | 'drama';
   className?: string;
 }
 
@@ -32,6 +32,7 @@ export function BookmarkButton({ item, theme = 'anime', className }: BookmarkBut
     anime: isSaved ? 'bg-blue-600 text-white hover:bg-blue-700 border-transparent' : 'text-blue-500 hover:bg-blue-600/10 border-blue-600/50',
     donghua: isSaved ? 'bg-red-600 text-white hover:bg-red-700 border-transparent' : 'text-red-500 hover:bg-red-600/10 border-red-600/50',
     movie: isSaved ? 'bg-indigo-600 text-white hover:bg-indigo-700 border-transparent' : 'text-indigo-500 hover:bg-indigo-600/10 border-indigo-600/50',
+    drama: isSaved ? 'bg-rose-600 text-white hover:bg-rose-700 border-transparent' : 'text-rose-400 hover:bg-rose-600/10 border-rose-600/50',
   };
 
   return (

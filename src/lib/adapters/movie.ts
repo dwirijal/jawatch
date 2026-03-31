@@ -1,11 +1,24 @@
 import 'server-only';
 
-import { withCloudflareEdgeCache } from '@/lib/cloudflare-cache';
-import { enrichMovieVisuals } from '@/lib/enrichment';
-import { buildKanataMovieUrl } from '@/lib/media';
+import { buildComicCacheKey, rememberComicCacheValue } from '@/lib/server/comic-cache';
+import { getComicDb } from '@/lib/server/comic-db';
 import type { MovieCardItem } from '@/lib/types';
-
-type JSONRecord = Record<string, unknown>;
+import {
+  buildDownloadGroups,
+  buildMirrorEntries,
+  extractPopularityScore,
+  getVideoGenres,
+  isVideoNsfw,
+  normalizePosterUrl,
+  readArray,
+  readNumber,
+  readRecord,
+  readStringArray,
+  readText,
+  type VideoItemRow,
+  type VideoUnitRow,
+  type VisibilityOptions,
+} from '@/lib/adapters/video-db';
 
 type MovieCastItem = {
   id: string | number;
@@ -65,522 +78,396 @@ export type MovieWatchData = {
   downloadGroups: MovieDownloadGroup[];
 };
 
-const HOME_REVALIDATE_SECONDS = 60 * 10;
-const HUB_REVALIDATE_SECONDS = 60 * 10;
-const DETAIL_REVALIDATE_SECONDS = 60 * 30;
-const SEARCH_REVALIDATE_SECONDS = 60;
-const KANATA_TYPE = 'movie';
-
 export type MovieSupabaseDetail = MovieDetailData;
 export type MovieSupabaseWatch = MovieWatchData;
 
-async function fetchKanataMovieJson<T>(
-  path: string,
-  options: {
-    revalidate?: number;
-    timeoutMs?: number;
-    edgeCacheKey?: string;
-    edgeCacheTtlSeconds?: number;
-  } = {}
-): Promise<T> {
-  const loader = async () => {
-    const controller = new AbortController();
-    const timeoutMs = options.timeoutMs ?? 10000;
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+const LIST_CACHE_TTL_SECONDS = 60 * 10;
+const DETAIL_CACHE_TTL_SECONDS = 60 * 30;
+const SEARCH_CACHE_TTL_SECONDS = 60 * 3;
+const MOVIE_CACHE_NAMESPACE = 'video-movie-v4';
 
-    try {
-      const response = await fetch(buildKanataMovieUrl(path), {
-        headers: {
-          Accept: 'application/json, text/plain, */*',
-        },
-        next: {
-          revalidate: options.revalidate ?? 3600,
-        },
-        signal: controller.signal,
-      });
+function visibilitySegment(options: VisibilityOptions): 'auth' | 'public' {
+  return options.includeNsfw ? 'auth' : 'public';
+}
 
-      if (!response.ok) {
-        throw new Error(`Kanata movie ${response.status}`);
-      }
-
-      return response.json() as Promise<T>;
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Kanata movie timeout');
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeoutId);
-    }
+function getMovieDetailRecord(row: Pick<VideoItemRow, 'detail' | 'tmdb_payload'>): Record<string, unknown> {
+  return {
+    ...readRecord(row.detail),
+    ...readRecord(row.tmdb_payload),
   };
-
-  if (options.edgeCacheKey && options.edgeCacheTtlSeconds) {
-    return withCloudflareEdgeCache(options.edgeCacheKey, options.edgeCacheTtlSeconds, loader);
-  }
-
-  return loader();
 }
 
-function readRecord(value: unknown): JSONRecord {
-  return value && typeof value === 'object' && !Array.isArray(value) ? (value as JSONRecord) : {};
+function getMovieItemDetailRecord(row: Pick<VideoUnitRow, 'item_detail' | 'item_tmdb_payload'>): Record<string, unknown> {
+  return {
+    ...readRecord(row.item_detail),
+    ...readRecord(row.item_tmdb_payload),
+  };
 }
 
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
+function formatYear(row: VideoItemRow): string {
+  const detail = getMovieDetailRecord(row);
+  if (row.release_year) {
+    return String(row.release_year);
+  }
+
+  const detailYear = readNumber(detail.release_year) ?? readNumber(detail.year);
+  if (detailYear && detailYear > 0) {
+    return String(Math.round(detailYear));
+  }
+
+  return readText(detail.year) || readText(detail.release_year) || 'N/A';
 }
 
-function readText(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
+function formatDuration(detail: Record<string, unknown>): string {
+  const runtime =
+    readNumber(detail.runtime_minutes) ??
+    readNumber(detail.duration_minutes) ??
+    readNumber(detail.runtime);
+
+  if (runtime && runtime > 0) {
+    return `${Math.round(runtime)} min`;
+  }
+
+  return readText(detail.duration) || 'N/A';
 }
 
-function readNumber(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+function formatRating(row: VideoItemRow): string {
+  const detail = getMovieDetailRecord(row);
+  const rating =
+    readNumber(detail.rating) ??
+    readNumber(detail.score) ??
+    (row.score > 0 ? row.score : null);
+
+  return rating && rating > 0 ? rating.toFixed(1) : 'N/A';
 }
 
-function uniqueStrings(values: Array<string | null | undefined>): string[] {
-  const seen = new Set<string>();
-  const output: string[] = [];
-
-  for (const value of values) {
-    const trimmed = value?.trim();
-    if (!trimmed || seen.has(trimmed)) {
-      continue;
-    }
-    seen.add(trimmed);
-    output.push(trimmed);
-  }
-
-  return output;
-}
-
-function splitList(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return uniqueStrings(
-      value.map((entry) => {
-        if (typeof entry === 'string') {
-          return entry;
-        }
-        if (entry && typeof entry === 'object') {
-          const record = entry as JSONRecord;
-          return readText(record.name) || readText(record.title);
-        }
-        return '';
-      })
-    );
-  }
-
-  const text = readText(value);
-  if (!text) {
-    return [];
-  }
-
-  return uniqueStrings(
-    text
-      .split(',')
-      .map((part) => part.trim())
-  );
-}
-
-function unwrapMoviePayload<T>(payload: T | { data?: T; result?: T } | null | undefined): T | null {
-  if (payload == null) {
-    return null;
-  }
-  if (typeof payload === 'object' && !Array.isArray(payload)) {
-    const record = payload as { data?: T; result?: T };
-    if (record.data !== undefined) {
-      return record.data ?? null;
-    }
-    if (record.result !== undefined) {
-      return record.result ?? null;
-    }
-  }
-  return payload as T;
-}
-
-function formatRating(value: unknown): string {
-  const numeric = readNumber(value);
-  if (numeric == null || numeric <= 0) {
-    return 'N/A';
-  }
-  return numeric.toFixed(1);
-}
-
-function formatDuration(value: unknown): string {
-  const numeric = readNumber(value);
-  if (numeric == null || numeric <= 0) {
-    return 'N/A';
-  }
-  return `${Math.round(numeric)} min`;
-}
-
-function qualityLabelFromCode(value: unknown): string {
-  const text = readText(value).toLowerCase();
-  if (!text) {
-    return 'STREAM';
-  }
-  switch (text) {
-    case 'bluray':
-    case 'b':
-      return 'BLURAY';
-    case 'web':
-    case 'w':
-      return 'WEB';
-    case 'dvd':
-    case 'd':
-      return 'DVD';
-    case '1080p':
-    case '720p':
-    case 'fullhd':
-    case 'mp4hd':
-    case 'h':
-      return text === '720p' || text === 'mp4hd' ? '720P' : '1080P';
-    case '480p':
-    case 'm':
-      return '480P';
-    case '360p':
-    case 'l':
-      return '360P';
-    default:
-      return text.toUpperCase();
-  }
-}
-
-function formatLabelFromCode(value: unknown): string {
-  const text = readText(value).toLowerCase();
-  switch (text) {
-    case 'm':
-      return 'MP4';
-    case 'k':
-      return 'MKV';
-    case 'x':
-      return 'x265';
-    default:
-      return 'LINK';
-  }
-}
-
-function hostLabelFromCode(value: unknown): string {
-  const text = readText(value).toLowerCase();
-  switch (text) {
-    case 'n':
-      return 'Ngopi';
-    case 'y':
-      return 'YouTube';
-    default:
-      return 'Source';
-  }
-}
-
-async function normalizeMovieCard(item: unknown): Promise<MovieCardItem | null> {
-  const record = readRecord(item);
-  const slug = readText(record.slug) || readText(record.provider_movie_slug);
-  const title = readText(record.title) || readText(record.provider_title) || slug;
-  if (!slug || !title) {
-    return null;
-  }
-
-  const visuals = await enrichMovieVisuals(record, {
-    title,
-    year: record.year,
-  });
+function mapMovieCard(row: VideoItemRow): MovieCardItem {
+  const detail = getMovieDetailRecord(row);
 
   return {
-    slug,
-    title,
-    poster: visuals.poster,
-    year: readText(record.year) || (readNumber(record.year) != null ? String(readNumber(record.year)) : '') || 'N/A',
+    slug: row.slug,
+    title: row.title,
+    poster: normalizePosterUrl(readText(detail.poster_url) || readText(row.cover_url)),
+    year: formatYear(row),
     type: 'movie',
-    rating: formatRating(record.rating ?? record.provider_rating),
-    status: readText(record.status) || undefined,
-    genres: splitList(record.genres).join(', '),
+    rating: formatRating(row),
+    status: readText(row.status),
+    genres: getVideoGenres(detail).join(', '),
   };
 }
 
-async function normalizeMovieList(payload: unknown): Promise<MovieCardItem[]> {
-  const data = unwrapMoviePayload(payload);
-  if (Array.isArray(data)) {
-    const items = await Promise.all(data.map(normalizeMovieCard));
-    return items.filter((item): item is MovieCardItem => item !== null);
-  }
+function mapMovieCast(detail: Record<string, unknown>): MovieCastItem[] {
+  const items: MovieCastItem[] = [];
 
-  if (data && typeof data === 'object') {
-    const record = data as JSONRecord;
-    const candidateList = record.items ?? record.latest ?? record.popular ?? record.results ?? record.data;
-    if (Array.isArray(candidateList)) {
-      const items = await Promise.all(candidateList.map(normalizeMovieCard));
-      return items.filter((item): item is MovieCardItem => item !== null);
-    }
-  }
-
-  return [];
-}
-
-function normalizeMovieCast(payload: unknown): MovieCastItem[] {
-  const castItems: MovieCastItem[] = [];
-
-  readArray(payload).forEach((item, index) => {
-    const record = readRecord(item);
-    const name = readText(record.name);
+  for (const [index, entry] of readArray(detail.cast).entries()) {
+    const record = readRecord(entry);
+    const name = readText(record.name) || readText(record.title);
     if (!name) {
-      return;
+      continue;
     }
 
-    castItems.push({
-      id: readNumber(record.id) ?? (readText(record.id) || index),
+    items.push({
+      id: readText(record.id) || index,
       name,
       role: readText(record.role) || undefined,
     });
+  }
+
+  return items;
+}
+
+async function getMovieCatalogRows(options: VisibilityOptions = {}): Promise<VideoItemRow[]> {
+  const cacheKey = buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'catalog', visibilitySegment(options));
+  return rememberComicCacheValue(cacheKey, LIST_CACHE_TTL_SECONDS, async () => {
+    const sql = getComicDb();
+    if (!sql) {
+      return [];
+    }
+
+    const rows = await sql<VideoItemRow[]>`
+      select
+        i.item_key,
+        i.source,
+        i.media_type,
+        i.slug,
+        i.title,
+        i.cover_url,
+        i.status,
+        i.release_year,
+        i.score,
+        i.detail,
+        e.payload as tmdb_payload,
+        i.updated_at,
+        (
+          select count(*)
+          from public.media_units u
+          where u.item_key = i.item_key
+            and u.unit_type = 'episode'
+        )::int as unit_count
+      from public.media_items i
+      left join public.media_item_enrichments e
+        on e.item_key = i.item_key
+       and e.provider = 'tmdb'
+       and e.match_status = 'matched'
+      where (
+        i.surface_type = 'movie'
+        or (i.surface_type = 'unknown' and i.media_type = 'movie')
+      )
+      order by i.updated_at desc
+    `;
+
+    return rows.filter((row) => options.includeNsfw || !isVideoNsfw(getMovieDetailRecord(row)));
   });
-
-  return castItems;
 }
 
-function normalizeMovieMirrors(payload: unknown): MovieMirror[] {
-  const record = readRecord(payload);
-  const source = Array.isArray(record.mirrors) ? record.mirrors : [];
-  const deduped = new Map<string, MovieMirror>();
+function sortMovieRows(rows: VideoItemRow[], section: 'popular' | 'latest' | 'trending'): VideoItemRow[] {
+  const nextRows = [...rows];
 
-  for (const item of source) {
-    const mirror = readRecord(item);
-    const embedUrl = readText(mirror.embed_url) || readText(mirror.url);
-    if (!embedUrl) {
-      continue;
-    }
-    deduped.set(embedUrl, {
-      label: readText(mirror.label) || hostLabelFromCode(mirror.host_code),
-      embed_url: embedUrl,
+  if (section === 'latest') {
+    return nextRows.sort((left, right) => right.updated_at.localeCompare(left.updated_at));
+  }
+
+  return nextRows.sort((left, right) => {
+    const leftScore = extractPopularityScore(getMovieDetailRecord(left)) + (left.score || 0) * 100 + (left.unit_count || 0) * 10;
+    const rightScore = extractPopularityScore(getMovieDetailRecord(right)) + (right.score || 0) * 100 + (right.unit_count || 0) * 10;
+    return rightScore - leftScore || right.updated_at.localeCompare(left.updated_at);
+  });
+}
+
+export async function getMovieHomeItems(limit = 6): Promise<MovieCardItem[]> {
+  return getMovieHomeItemsWithOptions(limit);
+}
+
+export async function getMovieHomeItemsWithOptions(limit = 6, options: VisibilityOptions = {}): Promise<MovieCardItem[]> {
+  const rows = sortMovieRows(await getMovieCatalogRows(options), 'popular').slice(0, Math.max(1, limit));
+  return rows.map(mapMovieCard);
+}
+
+export async function getMovieHomeSection(
+  section: 'popular' | 'latest' | 'trending',
+  limit = 24,
+  options: VisibilityOptions = {},
+): Promise<MovieCardItem[]> {
+  const rows = sortMovieRows(await getMovieCatalogRows(options), section).slice(0, Math.max(1, limit));
+  return rows.map(mapMovieCard);
+}
+
+export async function getMovieHubData(
+  limit = 24,
+  options: VisibilityOptions = {},
+): Promise<{ popular: MovieCardItem[]; latest: MovieCardItem[] }> {
+  const [popular, latest] = await Promise.all([
+    getMovieHomeSection('popular', limit, options),
+    getMovieHomeSection('latest', limit, options),
+  ]);
+
+  return { popular, latest };
+}
+
+export async function getMovieGenreItems(
+  genre: string,
+  limit = 24,
+  options: VisibilityOptions = {},
+): Promise<MovieCardItem[]> {
+  const needle = genre.trim().toLowerCase();
+  if (!needle) {
+    return [];
+  }
+
+  const rows = sortMovieRows(
+    (await getMovieCatalogRows(options)).filter((row) =>
+      getVideoGenres(getMovieDetailRecord(row)).some((entry) => entry.toLowerCase() === needle)
+    ),
+    'popular',
+  );
+
+  return rows.slice(0, Math.max(1, limit)).map(mapMovieCard);
+}
+
+export async function searchMovieCatalog(
+  query: string,
+  limit = 8,
+  options: VisibilityOptions = {},
+): Promise<MovieCardItem[]> {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (normalizedQuery.length < 2) {
+    return [];
+  }
+
+  const cacheKey = buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'search', visibilitySegment(options), normalizedQuery, limit);
+  return rememberComicCacheValue(cacheKey, SEARCH_CACHE_TTL_SECONDS, async () => {
+    const rows = await getMovieCatalogRows(options);
+    const filtered = rows.filter((row) => {
+      const detail = getMovieDetailRecord(row);
+      const haystack = [
+        row.title,
+        readText(detail.overview),
+        readText(detail.synopsis),
+        getVideoGenres(detail).join(' '),
+      ].join(' ').toLowerCase();
+
+      return haystack.includes(normalizedQuery);
     });
-  }
 
-  const defaultUrl = readText(record.defaultUrl) || readText(record.default_url) || readText(record.default_embed);
-  if (defaultUrl && !deduped.has(defaultUrl)) {
-    deduped.set(defaultUrl, { label: 'Primary Source', embed_url: defaultUrl });
-  }
-
-  return [...deduped.values()];
+    return sortMovieRows(filtered, 'popular').slice(0, Math.max(1, limit)).map(mapMovieCard);
+  });
 }
 
-function normalizeMovieDownloadGroups(payload: unknown): MovieDownloadGroup[] {
-  const record = readRecord(payload);
-  const source = Array.isArray(record.downloadGroups)
-    ? record.downloadGroups
-    : Array.isArray(record.download_groups)
-      ? record.download_groups
-      : [];
-
-  if (source.length > 0) {
-    return source
-      .map((item) => {
-        const group = readRecord(item);
-        const format = readText(group.format);
-        const quality = readText(group.quality);
-        const links = readArray(group.links)
-          .map((link) => {
-            const itemLink = readRecord(link);
-            const label = readText(itemLink.label);
-            const href = readText(itemLink.href);
-            return label && href ? { label, href } : null;
-          })
-          .filter((link): link is { label: string; href: string } => link !== null);
-        return format && quality && links.length > 0 ? { format, quality, links } : null;
-      })
-      .filter((item): item is MovieDownloadGroup => item !== null);
+export async function getMovieDetailBySlug(slug: string, options: VisibilityOptions = {}): Promise<MovieDetailData | null> {
+  const normalizedSlug = slug.trim();
+  if (!normalizedSlug) {
+    return null;
   }
 
-  const grouped = new Map<string, MovieDownloadLink[]>();
-  const nested = readRecord(record.download_links_json ?? record.download_links ?? record.downloadLinks);
-
-  for (const [format, qualityValue] of Object.entries(nested)) {
-    const qualities = readRecord(qualityValue);
-    for (const [quality, linksValue] of Object.entries(qualities)) {
-      const linksRecord = readRecord(linksValue);
-      const links = Object.entries(linksRecord)
-        .map(([label, href]) => {
-          const url = readText(href);
-          return url ? { label: label.replace(/\s+/g, ' ').trim(), href: url } : null;
-        })
-        .filter((link): link is MovieDownloadLink => link !== null);
-
-      if (links.length === 0) {
-        continue;
-      }
-
-      grouped.set(`${format}::${quality}`, links);
+  const cacheKey = buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'detail', visibilitySegment(options), normalizedSlug);
+  return rememberComicCacheValue(cacheKey, DETAIL_CACHE_TTL_SECONDS, async () => {
+    const sql = getComicDb();
+    if (!sql) {
+      return null;
     }
-  }
 
-  return [...grouped.entries()].map(([key, links]) => {
-    const [format, quality] = key.split('::');
+    const rows = await sql<VideoItemRow[]>`
+      select
+        i.item_key,
+        i.source,
+        i.media_type,
+        i.slug,
+        i.title,
+        i.cover_url,
+        i.status,
+        i.release_year,
+        i.score,
+        i.detail,
+        e.payload as tmdb_payload,
+        i.updated_at,
+        0::int as unit_count
+      from public.media_items i
+      left join public.media_item_enrichments e
+        on e.item_key = i.item_key
+       and e.provider = 'tmdb'
+       and e.match_status = 'matched'
+      where (
+        i.surface_type = 'movie'
+        or (i.surface_type = 'unknown' and i.media_type = 'movie')
+      )
+        and i.slug = ${normalizedSlug}
+      limit 1
+    `;
+
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+
+    const detail = getMovieDetailRecord(row);
+    if (!options.includeNsfw && isVideoNsfw(detail)) {
+      return null;
+    }
+
+    const relatedRows = sortMovieRows(
+      (await getMovieCatalogRows(options)).filter((entry) => entry.slug !== row.slug),
+      'popular',
+    );
+
     return {
-      format: formatLabelFromCode(format),
-      quality: qualityLabelFromCode(quality),
-      links,
+      slug: row.slug,
+      title: row.title,
+      poster: normalizePosterUrl(readText(detail.poster_url) || readText(row.cover_url)),
+      backdrop: normalizePosterUrl(readText(detail.backdrop_url) || readText(detail.poster_url) || readText(row.cover_url)),
+      year: formatYear(row),
+      rating: formatRating(row),
+      genres: getVideoGenres(detail),
+      quality: readText(detail.quality) || 'STREAM',
+      duration: formatDuration(detail),
+      synopsis: readText(detail.overview) || readText(detail.synopsis) || 'Synopsis is not available yet.',
+      cast: mapMovieCast(detail),
+      director: readText(detail.director) || readStringArray(detail.directors)[0] || '',
+      trailerUrl: readText(detail.trailer_url) || null,
+      externalUrl: `/movies/watch/${row.slug}`,
+      recommendations: relatedRows.slice(0, 8).map(mapMovieCard),
     };
   });
 }
 
-function canInlinePlayback(url: string): boolean {
-  const trimmed = url.trim().toLowerCase();
-  if (!trimmed) {
-    return false;
-  }
-  return trimmed.includes('/embed/') || trimmed.includes('youtube.com/embed') || trimmed.includes('player');
-}
-
-function getMovieRoutePath(slug: string): string {
-  return `/detail/${encodeURIComponent(slug)}?type=${KANATA_TYPE}`;
-}
-
-function getMovieWatchRoutePath(slug: string): string {
-  return `/stream?id=${encodeURIComponent(slug)}&type=${KANATA_TYPE}`;
-}
-
-export async function getMovieHomeItems(limit = 6): Promise<MovieCardItem[]> {
-  const payload = await fetchKanataMovieJson<unknown>(`/home?limit=${Math.max(limit, 1)}`, {
-    edgeCacheKey: `home:movie:items:${Math.max(limit, 1)}`,
-    edgeCacheTtlSeconds: 900,
-    revalidate: HOME_REVALIDATE_SECONDS,
-  });
-  const items = await normalizeMovieList(payload);
-  return items.slice(0, Math.max(limit, 1));
-}
-
-export async function getMovieHomeSection(
-  section: 'popular' | 'latest' | 'trending' = 'latest',
-  limit = 24
-): Promise<MovieCardItem[]> {
-  const normalizedLimit = Math.max(limit, 1);
-  const payload = await fetchKanataMovieJson<unknown>(`/home?section=${section}&limit=${normalizedLimit}`, {
-    edgeCacheKey: `home:movie:${section}:${normalizedLimit}`,
-    edgeCacheTtlSeconds: 900,
-    revalidate: HOME_REVALIDATE_SECONDS,
-  });
-  const items = await normalizeMovieList(payload);
-  return items.slice(0, normalizedLimit);
-}
-
-export async function getMovieHubData(limit = 24): Promise<{ popular: MovieCardItem[]; latest: MovieCardItem[] }> {
-  const normalizedLimit = Math.max(limit, 1);
-  const [popular, latest] = await Promise.all([
-    getMovieHomeSection('popular', normalizedLimit),
-    getMovieHomeSection('latest', normalizedLimit),
-  ]);
-  return { popular, latest };
-}
-
-export async function getMovieGenreItems(genre: string, limit = 24): Promise<MovieCardItem[]> {
-  const trimmed = genre.trim();
-  if (!trimmed) {
-    return [];
-  }
-
-  const payload = await fetchKanataMovieJson<unknown>(`/genre/${encodeURIComponent(trimmed)}?page=1&limit=${Math.max(limit, 1)}`, {
-    edgeCacheKey: `home:movie:genre:${trimmed.toLowerCase()}:${Math.max(limit, 1)}`,
-    edgeCacheTtlSeconds: 900,
-    revalidate: HUB_REVALIDATE_SECONDS,
-  });
-  const items = await normalizeMovieList(payload);
-  return items.slice(0, Math.max(limit, 1));
-}
-
-export async function searchMovieCatalog(query: string, limit = 8): Promise<MovieCardItem[]> {
-  const trimmed = query.trim();
-  if (trimmed.length < 2) {
-    return [];
-  }
-
-  const payload = await fetchKanataMovieJson<unknown>(`/search?q=${encodeURIComponent(trimmed)}&page=1&limit=${Math.max(limit, 1)}`, {
-    edgeCacheKey: `search:movie:catalog:${trimmed.toLowerCase()}:${Math.max(limit, 1)}`,
-    edgeCacheTtlSeconds: 300,
-    revalidate: SEARCH_REVALIDATE_SECONDS,
-  });
-  const items = await normalizeMovieList(payload);
-  return items.slice(0, Math.min(Math.max(limit, 1), 12));
-}
-
-async function normalizeMovieDetail(payload: unknown, slugFallback = ''): Promise<MovieDetailData | null> {
-  const record = readRecord(unwrapMoviePayload(payload));
-  const slug = readText(record.slug) || slugFallback;
-  const title = readText(record.title) || readText(record.provider_title) || slug;
-  if (!slug || !title) {
+export async function getMovieWatchBySlug(slug: string, options: VisibilityOptions = {}): Promise<MovieWatchData | null> {
+  const normalizedSlug = slug.trim();
+  if (!normalizedSlug) {
     return null;
   }
 
-  const [recommendations, visuals] = await Promise.all([
-    normalizeMovieList(record.recommendations ?? record.related ?? record.similar_movies ?? []),
-    enrichMovieVisuals(record, {
-      title,
-      year: record.year,
-    }),
-  ]);
+  const cacheKey = buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'watch', visibilitySegment(options), normalizedSlug);
+  return rememberComicCacheValue(cacheKey, DETAIL_CACHE_TTL_SECONDS, async () => {
+    const sql = getComicDb();
+    if (!sql) {
+      return null;
+    }
 
-  return {
-    slug,
-    title,
-    poster: visuals.poster,
-    backdrop: visuals.backdrop,
-    year: readText(record.year) || (readNumber(record.year) != null ? String(readNumber(record.year)) : '') || 'N/A',
-    rating: formatRating(record.rating ?? record.provider_rating),
-    genres: splitList(record.genres ?? record.genre_names),
-    quality: readText(record.quality) || qualityLabelFromCode(record.quality_code),
-    duration: readText(record.duration) || formatDuration(record.runtime_minutes),
-    synopsis: readText(record.synopsis) || readText(record.overview) || 'No synopsis available for this movie.',
-    cast: normalizeMovieCast(record.cast ?? record.cast_json),
-    director: uniqueStrings(splitList(record.director ?? record.director_names)).join(', '),
-    trailerUrl: readText(record.trailerUrl) || readText(record.trailer_url) || null,
-    externalUrl: readText(record.externalUrl) || buildKanataMovieUrl(getMovieRoutePath(slug)),
-    recommendations,
-  };
-}
+    const rows = await sql<VideoUnitRow[]>`
+      select
+        u.item_key,
+        i.slug as item_slug,
+        i.title as item_title,
+        i.media_type,
+        i.cover_url,
+        i.detail as item_detail,
+        e.payload as item_tmdb_payload,
+        u.slug,
+        u.title,
+        u.label,
+        u.number,
+        u.prev_slug,
+        u.next_slug,
+        u.published_at,
+        u.detail
+      from public.media_units u
+      join public.media_items i on i.item_key = u.item_key
+      left join public.media_item_enrichments e
+        on e.item_key = i.item_key
+       and e.provider = 'tmdb'
+       and e.match_status = 'matched'
+      where (
+        i.surface_type = 'movie'
+        or (i.surface_type = 'unknown' and i.media_type = 'movie')
+      )
+        and u.unit_type = 'episode'
+        and i.slug = ${normalizedSlug}
+      order by u.updated_at desc
+      limit 1
+    `;
 
-export async function getMovieDetailBySlug(slug: string): Promise<MovieDetailData | null> {
-  const payload = await fetchKanataMovieJson<unknown>(getMovieRoutePath(slug), {
-    edgeCacheKey: `detail:movie:${slug}`,
-    edgeCacheTtlSeconds: 1800,
-    revalidate: DETAIL_REVALIDATE_SECONDS,
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+
+    const detail = readRecord(row.detail);
+    const itemDetail = getMovieItemDetailRecord(row);
+    if (!options.includeNsfw && isVideoNsfw(itemDetail)) {
+      return null;
+    }
+
+    const mirrors = buildMirrorEntries(detail);
+    const defaultUrl = mirrors[0]?.embed_url || readText(detail.stream_url);
+
+    return {
+      slug: row.item_slug,
+      title: row.item_title,
+      poster: normalizePosterUrl(readText(itemDetail.poster_url) || readText(row.cover_url)),
+      backdrop: normalizePosterUrl(readText(itemDetail.backdrop_url) || readText(itemDetail.poster_url) || readText(row.cover_url)),
+      year: (
+        readNumber(itemDetail.release_year) ??
+        readNumber(itemDetail.year)
+      )?.toFixed(0) || readText(itemDetail.release_year) || readText(itemDetail.year) || 'N/A',
+      rating: readNumber(itemDetail.rating)?.toFixed(1) || 'N/A',
+      quality: readText(itemDetail.quality) || 'STREAM',
+      duration: formatDuration(itemDetail),
+      synopsis: readText(itemDetail.overview) || readText(itemDetail.synopsis) || 'Synopsis is not available yet.',
+      mirrors,
+      defaultUrl,
+      canInlinePlayback: Boolean(defaultUrl),
+      externalUrl: defaultUrl || `/movies/${row.item_slug}`,
+      detailHref: `/movies/${row.item_slug}`,
+      downloadGroups: buildDownloadGroups(detail),
+    };
   });
-  return normalizeMovieDetail(payload, slug);
-}
-
-async function normalizeMovieWatch(payload: unknown, slugFallback = ''): Promise<MovieWatchData | null> {
-  const record = readRecord(unwrapMoviePayload(payload));
-  const slug = readText(record.slug) || slugFallback;
-  const title = readText(record.title) || readText(record.provider_title) || slug;
-  if (!slug || !title) {
-    return null;
-  }
-
-  const mirrors = normalizeMovieMirrors(record);
-  const defaultUrl = readText(record.defaultUrl) || readText(record.default_url) || mirrors[0]?.embed_url || '';
-  const visuals = await enrichMovieVisuals(record, {
-    title,
-    year: record.year,
-  });
-
-  return {
-    slug,
-    title,
-    poster: visuals.poster,
-    backdrop: visuals.backdrop,
-    year: readText(record.year) || (readNumber(record.year) != null ? String(readNumber(record.year)) : '') || 'N/A',
-    rating: formatRating(record.rating ?? record.provider_rating),
-    quality: readText(record.quality) || qualityLabelFromCode(record.quality_code),
-    duration: readText(record.duration) || formatDuration(record.runtime_minutes),
-    synopsis: readText(record.synopsis) || readText(record.overview) || 'No synopsis available for this movie.',
-    mirrors,
-    defaultUrl,
-    canInlinePlayback: canInlinePlayback(defaultUrl),
-    externalUrl: readText(record.externalUrl) || defaultUrl || buildKanataMovieUrl(getMovieWatchRoutePath(slug)),
-    detailHref: readText(record.detailHref) || `/movies/${slug}`,
-    downloadGroups: normalizeMovieDownloadGroups(record),
-  };
-}
-
-export async function getMovieWatchBySlug(slug: string): Promise<MovieWatchData | null> {
-  const payload = await fetchKanataMovieJson<unknown>(getMovieWatchRoutePath(slug), {
-    edgeCacheKey: `playback:movie:${slug}`,
-    edgeCacheTtlSeconds: 300,
-    revalidate: DETAIL_REVALIDATE_SECONDS,
-  });
-  return normalizeMovieWatch(payload, slug);
 }

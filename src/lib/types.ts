@@ -11,6 +11,9 @@ export interface GenericMediaItem {
   status?: string;
   type?: string;
   link?: string;
+  country?: string;
+  latestEpisode?: string;
+  rating?: string;
 }
 
 export type MangaSubtype = 'manga' | 'manhwa' | 'manhua';
@@ -22,6 +25,7 @@ export interface MangaSearchResult {
   href: string;
   thumbnail: string;
   type: string;
+  subtype?: MangaSubtype;
   genre: string;
   description: string;
   chapter?: string;
@@ -40,6 +44,7 @@ export interface MangaChapter {
 export interface MangaDetail {
   creator: string;
   slug: string;
+  subtype?: MangaSubtype;
   title: string;
   title_indonesian: string;
   image: string;
@@ -62,6 +67,8 @@ export interface MangaDetail {
 
 export interface ChapterDetail {
   title: string;
+  subtype?: MangaSubtype;
+  manga_slug?: string;
   manga_title?: string;
   chapter_title?: string;
   images: string[];

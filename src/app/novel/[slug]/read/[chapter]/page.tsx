@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { ChevronLeft, ChevronRight, LibraryBig } from 'lucide-react';
+import sanitizeHtml from 'sanitize-html';
 import { getNovelDetail, getNovelRead } from '@/lib/adapters/novel';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
@@ -12,13 +13,33 @@ interface PageProps {
 }
 
 function sanitizeNovelHtml(content: string): string {
-  return content
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
-    .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, '')
-    .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '')
-    .replace(/javascript:/gi, '');
+  return sanitizeHtml(content, {
+    allowedTags: [
+      'article',
+      'blockquote',
+      'br',
+      'div',
+      'em',
+      'h1',
+      'h2',
+      'h3',
+      'hr',
+      'li',
+      'ol',
+      'p',
+      'span',
+      'strong',
+      'sub',
+      'sup',
+      'u',
+      'ul',
+    ],
+    allowedAttributes: {
+      '*': ['class'],
+    },
+    allowedSchemes: [],
+    disallowedTagsMode: 'discard',
+  });
 }
 
 export default async function NovelReadPage({ params }: PageProps) {

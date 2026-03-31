@@ -2,20 +2,40 @@
 
 import * as React from 'react';
 import Image from 'next/image';
+import { Mic2, UserRound } from 'lucide-react';
 import { BookCoverArt } from '@/components/atoms/BookCoverArt';
-import { cn, getMediaPosterAspectClass, THEME_CONFIG, ThemeType } from '@/lib/utils';
+import { Badge } from '@/components/atoms/Badge';
 import { Link } from '@/components/atoms/Link';
+import { Paper } from '@/components/atoms/Paper';
+import { Typography } from '@/components/atoms/Typography';
 import { getMovieMetadata } from '@/lib/enrichment';
 import { getHDThumbnail } from '@/lib/adapters/comic';
+import { cn, getMediaPosterAspectClass, THEME_CONFIG, ThemeType } from '@/lib/utils';
 
-export interface CardProps {
+export interface MediaCardProps {
   href: string;
   image: string;
   title: string;
   subtitle?: string;
+  metaLine?: string;
   badgeText?: string;
   theme?: ThemeType;
   className?: string;
+}
+
+export interface CastItem {
+  id: string | number;
+  name: string;
+  role?: string;
+  image?: string;
+  secondary?: string;
+  secondaryLabel?: string;
+}
+
+export interface CastCardProps {
+  item: CastItem;
+  theme: Extract<ThemeType, 'anime' | 'movie'>;
+  layout?: 'grid' | 'scroll';
 }
 
 function normalizeCardImage(image: string, theme: ThemeType): string {
@@ -62,15 +82,25 @@ function splitCardTitle(title: string): { title: string; derivedSubtitle?: strin
   };
 }
 
-export function Card({
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+export function MediaCard({
   href,
   image,
   title,
   subtitle,
+  metaLine,
   badgeText,
   theme = 'default',
   className,
-}: CardProps) {
+}: MediaCardProps) {
   const [displayImage, setDisplayImage] = React.useState(normalizeCardImage(image, theme));
   const [retryCount, setRetryCount] = React.useState(0);
   const [imageLoadFailed, setImageLoadFailed] = React.useState(false);
@@ -122,7 +152,12 @@ export function Card({
 
   return (
     <Link href={href} className={cn('focus-tv group relative block', getMediaPosterAspectClass(theme), className)}>
-      <div className="relative h-full overflow-hidden rounded-[18px] border border-white/10 bg-[#0a0a0f] shadow-[0_10px_28px_rgba(0,0,0,0.22)] transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-0.5 hover:border-white/15 hover:shadow-[0_16px_36px_rgba(0,0,0,0.28)]">
+      <div
+        className="refractive-border glass-noise relative h-full overflow-hidden rounded-[18px] bg-[#0a0a0f] shadow-[0_10px_28px_rgba(0,0,0,0.22)] transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
+        style={{ '--hover-glow': accent } as React.CSSProperties}
+      >
+        <div className="absolute -inset-2 bg-[var(--hover-glow)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-15" />
+
         <div className="relative h-full overflow-hidden">
           {theme === 'novel' ? (
             <BookCoverArt
@@ -184,11 +219,19 @@ export function Card({
                   {displayTitle}
                 </h3>
 
-                {effectiveSubtitle && !compactCopy ? (
+                {effectiveSubtitle ? (
                   <p className="mt-2 max-w-[33ch] line-clamp-2 text-[12px] leading-[1.54] text-white/58 transition-colors duration-500 ease-out group-hover:text-white/68 sm:text-[13px]">
                     {effectiveSubtitle}
                   </p>
-                ) : <p className="mt-2 select-none text-[12px] leading-[1.54] text-transparent sm:text-[13px]">{'\u00A0'}</p>}
+                ) : (
+                  <p className="mt-2 select-none text-[12px] leading-[1.54] text-transparent sm:text-[13px]">{'\u00A0'}</p>
+                )}
+
+                {metaLine ? (
+                  <p className="mt-2 line-clamp-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/42 transition-colors duration-500 ease-out group-hover:text-white/60">
+                    {metaLine}
+                  </p>
+                ) : null}
               </div>
             </div>
           ) : null}
@@ -197,3 +240,123 @@ export function Card({
     </Link>
   );
 }
+
+export function CastCard({ item, theme, layout = 'grid' }: CastCardProps) {
+  const config = THEME_CONFIG[theme];
+
+  if (layout === 'scroll') {
+    return (
+      <Paper as="article" tone="muted" shadow="sm" padded={false} className="w-[144px] shrink-0 overflow-hidden">
+        <div
+          className={cn(
+            'relative aspect-[3/4] overflow-hidden border-b border-border-subtle bg-surface-2',
+            item.image ? '' : config.bg,
+            !item.image && config.bg
+          )}
+        >
+          {item.image ? (
+            <Image
+              src={item.image}
+              alt={item.name}
+              fill
+              sizes="148px"
+              className="object-cover"
+              unoptimized
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <span className={cn('text-lg font-black uppercase tracking-tight', config.text)}>{getInitials(item.name)}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-1.5 p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {item.role ? <Badge variant={theme}>{item.role}</Badge> : null}
+            {!item.image ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-600">
+                <UserRound className="h-3 w-3" /> Cast
+              </span>
+            ) : null}
+          </div>
+
+          <Typography as="h3" size="base" className="line-clamp-2 text-white">
+            {item.name}
+          </Typography>
+
+          {item.secondary ? (
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">
+                {item.secondaryLabel || 'Featured'}
+              </p>
+              <p className="line-clamp-2 flex items-start gap-2 text-sm font-medium leading-relaxed text-zinc-300">
+                <Mic2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-500" />
+                <span>{item.secondary}</span>
+              </p>
+            </div>
+          ) : null}
+        </div>
+      </Paper>
+    );
+  }
+
+  return (
+    <Paper
+      as="article"
+      tone="muted"
+      shadow="sm"
+      interactive
+      className={cn('group flex gap-3 rounded-[var(--radius-sm)] p-3.5')}
+    >
+      <div
+        className={cn(
+          'relative flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-md)] border border-border-subtle bg-surface-2',
+          !item.image && config.bg
+        )}
+      >
+        {item.image ? (
+          <Image
+            src={item.image}
+            alt={item.name}
+            fill
+            sizes="80px"
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          <span className={cn('text-lg font-black uppercase tracking-tight', config.text)}>{getInitials(item.name)}</span>
+        )}
+      </div>
+
+      <div className="min-w-0 space-y-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          {item.role ? <Badge variant={theme}>{item.role}</Badge> : null}
+          {!item.image ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-600">
+              <UserRound className="h-3 w-3" /> Cast
+            </span>
+          ) : null}
+        </div>
+
+        <Typography as="h3" size="base" className="line-clamp-2 text-sm text-white">
+          {item.name}
+        </Typography>
+
+        {item.secondary ? (
+          <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">
+              {item.secondaryLabel || 'Featured'}
+            </p>
+            <p className="line-clamp-2 flex items-center gap-2 text-xs font-medium leading-relaxed text-zinc-300">
+              <Mic2 className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+              <span>{item.secondary}</span>
+            </p>
+          </div>
+        ) : null}
+      </div>
+    </Paper>
+  );
+}
+
+export { MediaCard as Card };
+export type { MediaCardProps as CardProps };

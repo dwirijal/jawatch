@@ -15,8 +15,10 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "lint": "eslint",
     "test:movie": "node scripts/movie-dataflow-check.mjs",
-    "test:anime": "node scripts/anime-dataflow-check.mjs",
-    "test:donghua": "node scripts/donghua-dataflow-check.mjs",
+    "test:series": "node scripts/series-dataflow-check.mjs",
+    "test:comic": "node scripts/comic-dataflow-check.mjs",
+    "test:security": "node scripts/security-check.mjs",
+    "test:sources": "node scripts/source-health-check.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -36,8 +38,11 @@
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.577.0",
     "next": "16.2.1",
+    "postgres": "^3.4.8",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "redis": "^5.11.0",
+    "sanitize-html": "^2.17.2",
     "tailwind-merge": "^3.5.0",
     "zustand": "^5.0.12"
   },
@@ -47,6 +52,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",

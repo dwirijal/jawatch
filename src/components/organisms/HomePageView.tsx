@@ -20,10 +20,11 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Badge } from '@/components/atoms/Badge';
-import { Card } from '@/components/atoms/Card';
+import { MediaCard } from '@/components/atoms/Card';
 import { Link } from '@/components/atoms/Link';
 import { AdSection } from '@/components/organisms/AdSection';
 import { SectionCard } from '@/components/organisms/SectionCard';
+import { StaggerEntry } from '@/components/molecules/StaggerEntry';
 import { type ThemeType } from '@/lib/utils';
 import type { CardRailVariant } from '@/components/molecules/card/CardRail';
 
@@ -33,7 +34,7 @@ type HeroItem = {
   image: string;
   banner: string;
   description: string;
-  type: 'anime' | 'movie' | 'manga' | 'donghua';
+  type: 'anime' | 'movie' | 'manga' | 'donghua' | 'series';
   tags: string[];
   rating: string;
 };
@@ -43,7 +44,7 @@ type MixedRecommendationItem = {
   title: string;
   image: string;
   href: string;
-  theme: 'anime' | 'movie' | 'manga' | 'donghua' | 'novel';
+  theme: 'anime' | 'movie' | 'manga' | 'donghua' | 'drama' | 'novel';
   subtitle?: string;
   badgeText?: string;
 };
@@ -129,6 +130,9 @@ function getThemeLabel(theme: MixedRecommendationItem['theme'] | HeroItem['type'
       return 'Manga';
     case 'donghua':
       return 'Donghua';
+    case 'series':
+    case 'drama':
+      return 'Series';
     case 'novel':
       return 'Novel';
     default:
@@ -142,10 +146,11 @@ function getThemeFromIconKey(iconKey: string): ThemeType {
     case 'mal':
       return 'anime';
     case 'movie':
-    case 'series':
     case 'blockbuster':
     case 'imdb':
       return 'movie';
+    case 'series':
+      return 'drama';
     case 'manga':
     case 'reading':
     case 'manhwa':
@@ -209,7 +214,15 @@ function normalizeHomeSections(sections: HomeRecommendationSection[], gridColumn
 }
 
 function toDetailHref(item: HeroItem) {
-  return item.type === 'movie' ? `/movies/${item.id}` : `/${item.type}/${item.id}`;
+  if (item.type === 'movie') {
+    return `/movies/${item.id}`;
+  }
+
+  if (item.type === 'series') {
+    return `/series/${item.id}`;
+  }
+
+  return `/${item.type}/${item.id}`;
 }
 
 function HeroStage({
@@ -219,6 +232,8 @@ function HeroStage({
   item: HeroItem;
   secondaryItems: HeroItem[];
 }) {
+  const itemVariant = item.type === 'series' ? 'drama' : item.type;
+
   return (
     <section className="surface-panel-elevated relative overflow-hidden">
       <div className="absolute inset-0">
@@ -240,7 +255,7 @@ function HeroStage({
           <div className="max-w-[44rem] space-y-3 sm:space-y-4">
             <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-200">
               <Badge variant="solid" className="text-[10px]">Featured</Badge>
-              <Badge variant={item.type} className="text-[10px]">{getThemeLabel(item.type)}</Badge>
+              <Badge variant={itemVariant} className="text-[10px]">{getThemeLabel(item.type)}</Badge>
               <Badge variant="outline" className="text-[10px]">★ {item.rating || 'N/A'}</Badge>
               {item.tags.slice(0, 2).map((tag) => (
                 <Badge key={tag} variant="outline" className="text-[10px]">{tag}</Badge>
@@ -256,7 +271,7 @@ function HeroStage({
             </p>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <Button variant={item.type} size="lg" asChild className="w-full sm:w-auto">
+              <Button variant={itemVariant} size="lg" asChild className="w-full sm:w-auto">
                 <Link href={toDetailHref(item)}>Start Watching</Link>
               </Button>
               <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
@@ -267,33 +282,37 @@ function HeroStage({
 
           <div className="hidden lg:block">
             <div className="grid gap-2">
-              {secondaryItems.map((secondary) => (
-                <Link
-                  key={secondary.id}
-                  href={toDetailHref(secondary)}
-                  className="surface-panel group flex items-center gap-3 p-2 transition-colors hover:bg-surface-elevated"
-                >
-                  <div className="relative h-[4.5rem] w-[3.5rem] shrink-0 overflow-hidden rounded-[var(--radius-md)] border border-border-subtle bg-surface-2">
-                    <Image
-                      src={secondary.image || secondary.banner || '/favicon.ico'}
-                      alt={secondary.title}
-                      fill
-                      sizes="112px"
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={secondary.type} className="text-[10px]">{getThemeLabel(secondary.type)}</Badge>
-                      <span className="text-[10px] font-semibold text-zinc-400">★ {secondary.rating || 'N/A'}</span>
+              {secondaryItems.map((secondary) => {
+                const secondaryVariant = secondary.type === 'series' ? 'drama' : secondary.type;
+
+                return (
+                  <Link
+                    key={secondary.id}
+                    href={toDetailHref(secondary)}
+                    className="surface-panel group flex items-center gap-3 p-2 transition-colors hover:bg-surface-elevated"
+                  >
+                    <div className="relative h-[4.5rem] w-[3.5rem] shrink-0 overflow-hidden rounded-[var(--radius-md)] border border-border-subtle bg-surface-2">
+                      <Image
+                        src={secondary.image || secondary.banner || '/favicon.ico'}
+                        alt={secondary.title}
+                        fill
+                        sizes="112px"
+                        className="object-cover"
+                        unoptimized
+                      />
                     </div>
-                    <h3 className="line-clamp-2 text-sm font-black tracking-tight text-white group-hover:text-zinc-100">
-                      {secondary.title}
-                    </h3>
-                  </div>
-                </Link>
-              ))}
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={secondaryVariant} className="text-[10px]">{getThemeLabel(secondary.type)}</Badge>
+                        <span className="text-[10px] font-semibold text-zinc-400">★ {secondary.rating || 'N/A'}</span>
+                      </div>
+                      <h3 className="line-clamp-2 text-sm font-black tracking-tight text-white group-hover:text-zinc-100">
+                        {secondary.title}
+                      </h3>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -324,7 +343,7 @@ function RecommendationSection({
       railVariant={layoutConfig.railVariant}
     >
       {section.items.map((item) => (
-        <Card
+        <MediaCard
           key={item.id}
           href={item.href}
           image={item.image}
@@ -381,16 +400,18 @@ export function HomePageView({ heroItems, sections }: HomePageClientProps) {
       </div>
 
       <div className="relative z-10 app-container-wide flex flex-col gap-6 py-3 sm:gap-8 sm:py-5 lg:gap-10">
-        {featuredHero ? (
-          <HeroStage item={featuredHero} secondaryItems={secondaryHeroes} />
-        ) : (
-          <section className="surface-panel h-[44vh] animate-pulse" />
-        )}
-        <AdSection
-          title="Partner Spotlight"
-          subtitle="Featured campaigns and partner placements that keep the same compact editorial rhythm as the rest of the homepage."
-        />
-        <SectionGrid sections={normalizedSections} />
+        <StaggerEntry className="flex flex-col gap-6 sm:gap-8 lg:gap-10" delay={150}>
+          {featuredHero ? (
+            <HeroStage item={featuredHero} secondaryItems={secondaryHeroes} />
+          ) : (
+            <section className="surface-panel h-[44vh] animate-pulse" />
+          )}
+          <AdSection
+            title="Partner Spotlight"
+            subtitle="Featured campaigns and partner placements that keep the same compact editorial rhythm as the rest of the homepage."
+          />
+          <SectionGrid sections={normalizedSections} />
+        </StaggerEntry>
       </div>
     </main>
   );

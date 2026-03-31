@@ -8,9 +8,8 @@ import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { ModalContent, ModalDescription, ModalRoot, ModalTitle } from '@/components/atoms/Modal';
 import { Paper } from '@/components/atoms/Paper';
-import { SplitLayout } from '@/components/atoms/SplitLayout';
 import { TitleBlock } from '@/components/atoms/TitleBlock';
-import { getMediaPosterAspectClass, ThemeType, cn } from '@/lib/utils';
+import { ThemeType, cn } from '@/lib/utils';
 import { getVideoTrailerPreference, setVideoTrailerPreference } from '@/lib/store';
 
 interface VideoHeroMetaItem {
@@ -19,7 +18,7 @@ interface VideoHeroMetaItem {
 }
 
 interface VideoDetailHeroProps {
-  theme: Extract<ThemeType, 'anime' | 'donghua' | 'movie'>;
+  theme: Extract<ThemeType, 'anime' | 'donghua' | 'movie' | 'drama'>;
   backHref: string;
   backLabel: string;
   poster: string;
@@ -92,7 +91,6 @@ export function VideoDetailHero({
 
   const shouldPlayTrailer = Boolean(canPlayTrailer && trailerPreference);
   const isCompactGallery = galleryVariant === 'compact';
-  const posterAspectClass = getMediaPosterAspectClass(theme);
 
   const savePreference = (value: boolean) => {
     setVideoTrailerPreference(value);
@@ -102,7 +100,7 @@ export function VideoDetailHero({
 
   return (
     <>
-      <section className="relative overflow-hidden rounded-[var(--radius-2xl)] border border-border-subtle bg-surface-1 hard-shadow-md">
+      <section className="relative aspect-[3/4] overflow-hidden rounded-[var(--radius-2xl)] border border-border-subtle bg-surface-1 hard-shadow-md lg:aspect-video">
         <div className="absolute inset-0 overflow-hidden">
           {shouldPlayTrailer && embedUrl ? (
             <div className="pointer-events-none absolute inset-0 scale-[1.25] opacity-35">
@@ -126,8 +124,8 @@ export function VideoDetailHero({
           <div className="absolute inset-0 bg-black/68" />
         </div>
 
-        <div className="relative z-10 px-5 py-5 md:px-7 md:py-7">
-          <nav className="mb-6">
+        <div className="relative z-10 flex h-full flex-col px-5 py-5 md:px-7 md:py-7">
+          <nav className="mb-4 shrink-0 md:mb-6">
             <Button variant="outline" size="sm" asChild className="rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 hover:bg-surface-elevated">
               <Link href={backHref}>
                 <ChevronLeft className="h-4 w-4" /> {backLabel}
@@ -135,12 +133,9 @@ export function VideoDetailHero({
             </Button>
           </nav>
 
-          <SplitLayout
-            mobileGoldenRows
-            breakpoint="lg"
-            className="items-end gap-6"
-            stage={
-              <div className="space-y-5">
+          <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] gap-4 lg:gap-5">
+            <div className="grid min-h-0 grid-cols-[minmax(0,1fr)_auto] gap-4 lg:gap-6">
+              <div className="min-w-0 self-end space-y-5">
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                   <div className="flex flex-wrap gap-2">
                     {badges.map((badge) => (
@@ -150,8 +145,8 @@ export function VideoDetailHero({
                     ))}
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    {canPlayTrailer ? (
+                  {canPlayTrailer ? (
+                    <div className="flex flex-wrap items-center gap-2">
                       <Button
                         type="button"
                         variant="outline"
@@ -162,9 +157,8 @@ export function VideoDetailHero({
                         <Settings2 className="h-3.5 w-3.5" />
                         Trailer {trailerPreference ? 'On' : 'Off'}
                       </Button>
-                    ) : null}
-                    {controls}
-                  </div>
+                    </div>
+                  ) : null}
                 </div>
 
                 <TitleBlock
@@ -177,41 +171,41 @@ export function VideoDetailHero({
                 <div className="flex flex-wrap items-center gap-2.5">
                   {primaryAction}
                   {secondaryAction}
+                  {controls}
                 </div>
               </div>
-            }
-            gallery={
-              <div className={cn('space-y-3.5', isCompactGallery && 'space-y-3')}>
-                <Paper tone="muted" shadow="sm" padded={false} className="overflow-hidden">
-                  <div className={cn('relative mx-auto w-40 md:w-48', posterAspectClass, isCompactGallery && 'w-36 md:w-40')}>
+
+              <Paper tone="muted" shadow="sm" padded={false} className="min-h-[12rem] justify-self-end overflow-hidden bg-[#06070b] lg:min-h-0 lg:h-full">
+                <div className="relative h-full w-auto">
                     <Image
                       src={poster || '/favicon.ico'}
                       alt={title}
-                      fill
-                      sizes="208px"
-                      className="object-cover"
+                      width={800}
+                      height={1200}
+                      sizes="(max-width: 640px) 32vw, (max-width: 1024px) 26vw, 24vw"
+                      className="h-full w-auto max-w-none object-contain"
                       unoptimized
                     />
-                  </div>
-                </Paper>
-                <div className={cn('grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1', isCompactGallery && 'lg:grid-cols-2')}>
-                  {metadata.map((item) => (
-                    <Paper
-                      key={item.label}
-                      tone="muted"
-                      shadow="sm"
-                      className={cn('px-3.5 py-3', isCompactGallery && 'rounded-[var(--radius-md)] px-3 py-2.5')}
-                    >
-                      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{item.label}</p>
-                      <p className={cn('mt-1.5 text-sm font-bold text-zinc-100', isCompactGallery && 'mt-1 text-[13px] leading-5')}>
-                        {item.value}
-                      </p>
-                    </Paper>
-                  ))}
                 </div>
-              </div>
-            }
-          />
+              </Paper>
+            </div>
+
+            <div className={cn('grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6', isCompactGallery && 'xl:grid-cols-3')}>
+              {metadata.map((item) => (
+                <Paper
+                  key={item.label}
+                  tone="muted"
+                  shadow="sm"
+                  className={cn('px-3.5 py-3', isCompactGallery && 'rounded-[var(--radius-md)] px-3 py-2.5')}
+                >
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{item.label}</p>
+                  <p className={cn('mt-1.5 text-sm font-bold text-zinc-100', isCompactGallery && 'mt-1 text-[13px] leading-5')}>
+                    {item.value}
+                  </p>
+                </Paper>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
