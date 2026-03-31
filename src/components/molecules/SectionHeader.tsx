@@ -1,11 +1,13 @@
 import * as React from 'react';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { renderLucideIcon } from '@/lib/lucide-icons';
 
 interface SectionHeaderProps {
   title: string;
   subtitle?: string;
   icon?: LucideIcon;
+  iconName?: string;
   leading?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
@@ -16,6 +18,7 @@ export function SectionHeader({
   title,
   subtitle,
   icon: Icon,
+  iconName,
   leading,
   action,
   className,
@@ -34,6 +37,10 @@ export function SectionHeader({
           {Icon ? (
             <div className="flex h-8 w-8 shrink-0 items-center justify-center border border-border-subtle bg-surface-1 text-accent md:h-9 md:w-9">
               <Icon className="h-4 w-4 md:h-5 md:w-5" />
+            </div>
+          ) : iconName ? (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center border border-border-subtle bg-surface-1 text-accent md:h-9 md:w-9">
+              {renderLucideIcon(iconName, 'h-4 w-4 md:h-5 md:w-5')}
             </div>
           ) : null}
           <h2 className="min-w-0 text-balance text-xl font-black tracking-[-0.03em] text-white md:text-2xl">

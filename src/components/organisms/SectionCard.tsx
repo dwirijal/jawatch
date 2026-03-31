@@ -1,12 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { CardRail } from '@/components/molecules/card';
 import type { CardRailVariant } from '@/components/molecules/card/CardRail';
+import { resolveLucideIcon } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';
 
 type SectionCardMode = 'grid' | 'rail';
@@ -16,6 +17,7 @@ interface SectionCardProps {
   title: string;
   subtitle?: string;
   icon?: LucideIcon;
+  iconName?: string;
   viewAllHref?: string;
   mode?: SectionCardMode;
   gridDensity?: CardGridDensity;
@@ -27,6 +29,7 @@ export function SectionCard({
   title,
   subtitle,
   icon,
+  iconName,
   viewAllHref,
   mode = 'grid',
   gridDensity = 'default',
@@ -34,6 +37,7 @@ export function SectionCard({
   children,
 }: SectionCardProps) {
   const railRef = React.useRef<HTMLDivElement>(null);
+  const resolvedIcon = icon ?? resolveLucideIcon(iconName);
 
   const scrollRailByPage = React.useCallback((direction: 'prev' | 'next') => {
     const rail = railRef.current;
@@ -53,7 +57,8 @@ export function SectionCard({
       <SectionHeader
         title={title}
         subtitle={subtitle}
-        icon={icon}
+        icon={resolvedIcon ?? undefined}
+        iconName={resolvedIcon ? undefined : iconName}
         action={
           <div className="flex items-center gap-2">
             {mode === 'rail' ? (

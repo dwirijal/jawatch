@@ -1,13 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { LucideIcon } from 'lucide-react';
+import { Grid3X3, type LucideIcon } from 'lucide-react';
+import { renderLucideIcon } from '@/lib/lucide-icons';
 import { cn, THEME_CONFIG, ThemeType } from '@/lib/utils';
 
 interface MediaHubHeaderProps {
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  iconName?: string;
   theme: ThemeType;
   children?: React.ReactNode;
   containerClassName?: string;
@@ -17,6 +19,7 @@ export function MediaHubHeader({
   title,
   description,
   icon: Icon,
+  iconName,
   theme,
   children,
   containerClassName = 'app-container',
@@ -32,7 +35,13 @@ export function MediaHubHeader({
           <div className="space-y-4 md:space-y-5">
             <div className="flex items-center gap-3 md:gap-4">
               <div className={cn("rounded-[var(--radius-lg)] p-2.5 transition-transform duration-500 hover:scale-110 md:p-3", config.primary, 'hard-shadow-sm')}>
-                <Icon className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
+                {Icon ? (
+                  <Icon className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
+                ) : iconName ? (
+                  renderLucideIcon(iconName, 'h-6 w-6 fill-white text-white md:h-8 md:w-8')
+                ) : (
+                  <Grid3X3 className="h-6 w-6 fill-white text-white md:h-8 md:w-8" />
+                )}
               </div>
               <div className="space-y-1">
                 <h1 className="type-display text-white">

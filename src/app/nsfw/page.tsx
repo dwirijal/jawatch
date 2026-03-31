@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import { BadgeAlert, BookOpen, Clapperboard, Film } from 'lucide-react';
 import { MediaCard } from '@/components/atoms/Card';
 import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
 import { SectionCard } from '@/components/organisms/SectionCard';
@@ -36,7 +35,7 @@ export default async function NsfwPage() {
       <MediaHubHeader
         title="NSFW"
         description="Adult-tagged titles from the unified catalog. Visible only when you are signed in."
-        icon={BadgeAlert}
+        iconName="BadgeAlert"
         theme="drama"
         containerClassName="app-container-wide"
       />
@@ -45,7 +44,7 @@ export default async function NsfwPage() {
         <SectionCard
           title="Series"
           subtitle="Adult-tagged episodic titles across anime, donghua, and drama."
-          icon={Clapperboard}
+          iconName="Clapperboard"
           mode="grid"
           gridDensity="default"
         >
@@ -67,7 +66,7 @@ export default async function NsfwPage() {
         <SectionCard
           title="Movies"
           subtitle="Adult-tagged movie titles from the canonical movie catalog."
-          icon={Film}
+          iconName="Film"
           mode="grid"
           gridDensity="default"
         >
@@ -89,7 +88,7 @@ export default async function NsfwPage() {
         <SectionCard
           title="Comics"
           subtitle="Adult-tagged manga, manhwa, and manhua from the comic library."
-          icon={BookOpen}
+          iconName="BookOpen"
           mode="grid"
           gridDensity="default"
         >
