@@ -1,7 +1,9 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import { getHDThumbnail, getJikanEnrichment, getMangaDetail } from '@/lib/adapters/comic-server';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
+import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StatCard } from '@/components/molecules/StatCard';
@@ -14,10 +16,43 @@ import { TitleBlock } from '@/components/atoms/TitleBlock';
 import { ReaderMediaDetailPage } from '@/components/organisms/ReaderMediaDetailPage';
 import { MetadataPanel } from '@/components/organisms/MetadataPanel';
 import { User, Activity, Layout, ShieldAlert, ChevronLeft, Play } from 'lucide-react';
+import { buildComicDetailJsonLd, buildMetadata } from '@/lib/seo';
 import ComicDetailHistoryTracker from './ComicDetailHistoryTracker';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+function stripBahasaIndonesiaSuffix(value: string): string {
+  return value.replace(/\s+bahasa indonesia$/i, '').trim();
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const manga = await getMangaDetail(slug, {
+    includeNsfw: false,
+  }).catch(() => null);
+
+  if (!manga) {
+    return buildMetadata({
+      title: 'Comic Tidak Ditemukan',
+      description: 'Comic yang kamu cari tidak tersedia di katalog dwizzyWEEB.',
+      path: `/comic/${slug}`,
+      noIndex: true,
+    });
+  }
+
+  const image = getHDThumbnail(manga.image);
+  const description = manga.synopsis_full || manga.synopsis || manga.summary;
+  const title = stripBahasaIndonesiaSuffix(manga.title);
+
+  return buildMetadata({
+    title: `Baca ${title} Bahasa Indonesia`,
+    description: `${description} Temukan chapter terbaru ${title} dan baca online di dwizzyWEEB.`,
+    path: `/comic/${manga.slug}`,
+    image,
+    keywords: [...manga.genres.map((genre) => genre.name), manga.metadata.type, manga.metadata.author].filter(Boolean),
+  });
 }
 
 export default async function ComicDetailPage({ params }: PageProps) {
@@ -48,6 +83,16 @@ export default async function ComicDetailPage({ params }: PageProps) {
 
   return (
     <>
+      <JsonLd
+        data={buildComicDetailJsonLd({
+          title: manga.title,
+          slug: manga.slug,
+          poster: hdImage,
+          description: enrichment?.synopsis || manga.synopsis_full || manga.synopsis,
+          genres: manga.genres.map((genre) => genre.name),
+          author: manga.metadata.author,
+        })}
+      />
       <ComicDetailHistoryTracker slug={manga.slug} title={manga.title} image={hdImage} href={`/comic/${manga.slug}`} />
 
       <ReaderMediaDetailPage
@@ -56,13 +101,13 @@ export default async function ComicDetailPage({ params }: PageProps) {
           <section className="surface-panel-elevated relative overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
               <Image
-                src={hdImage || '/favicon.ico'}
-                alt=""
-                fill
-                sizes="100vw"
-                className="scale-110 object-cover opacity-25 blur-2xl"
-                unoptimized
-              />
+              src={hdImage || '/favicon.ico'}
+              alt=""
+              fill
+              sizes="100vw"
+              className="scale-110 object-cover opacity-25 blur-2xl"
+              priority
+            />
               <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-background/80" />
             </div>
 
@@ -81,7 +126,7 @@ export default async function ComicDetailPage({ params }: PageProps) {
                     fill
                     sizes="208px"
                     className="object-cover"
-                    unoptimized
+                    priority
                   />
                 </div>
 
@@ -169,7 +214,6 @@ export default async function ComicDetailPage({ params }: PageProps) {
                             fill
                             sizes="96px"
                             className="object-cover transition-transform group-hover:scale-110"
-                            unoptimized
                           />
                         </div>
                         <div className="flex-1 py-1">

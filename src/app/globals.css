@@ -56,7 +56,7 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-accent-strong: var(--accent-strong);
-  --font-sans: var(--font-plus-jakarta-sans), var(--font-geist-sans), sans-serif;
+  --font-sans: var(--font-plus-jakarta-sans), sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
   --font-heading: var(--font-bricolage-grotesque), var(--font-plus-jakarta-sans), sans-serif;
   --font-lora: var(--font-plus-jakarta-sans), sans-serif;

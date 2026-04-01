@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import SearchResultsPageClient from './SearchResultsPageClient';
 import { searchManga } from '@/lib/adapters/comic-server';
 import { searchMovieCatalog } from '@/lib/adapters/movie';
@@ -9,6 +10,7 @@ import {
   getSeriesTheme,
   type SeriesCardItem,
 } from '@/lib/series-presentation';
+import { buildMetadata } from '@/lib/seo';
 
 type SearchPageProps = {
   searchParams: Promise<{
@@ -16,6 +18,13 @@ type SearchPageProps = {
     type?: string;
   }>;
 };
+
+export const metadata: Metadata = buildMetadata({
+  title: 'Pencarian',
+  description: 'Cari anime, film, komik, dan series di dwizzyWEEB.',
+  path: '/search',
+  noIndex: true,
+});
 
 function normalizeType(value?: string): 'all' | 'series' | 'movies' | 'comic' {
   if (value === 'series' || value === 'movies' || value === 'comic') {

@@ -1,4 +1,6 @@
+import { JsonLd } from '@/components/atoms/JsonLd';
 import { MediaHubTemplate } from '@/components/organisms/MediaHubTemplate';
+import { buildCollectionPageJsonLd } from '@/lib/seo';
 import type { GenericMediaItem } from '@/lib/types';
 import type { ThemeType } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
@@ -6,6 +8,7 @@ import type { LucideIcon } from 'lucide-react';
 interface BuildSeriesBrowsePageProps {
   title: string;
   description: string;
+  path: string;
   icon: LucideIcon;
   theme: ThemeType;
   results: GenericMediaItem[];
@@ -14,21 +17,36 @@ interface BuildSeriesBrowsePageProps {
 export function buildSeriesBrowsePage({
   title,
   description,
+  path,
   icon,
   theme,
   results,
 }: BuildSeriesBrowsePageProps) {
   return (
-    <MediaHubTemplate
-      title={title}
-      description={description}
-      iconName={icon.name}
-      theme={theme}
-      results={results}
-      loading={false}
-      error={null}
-      resultHrefPrefix="/series"
-    />
+    <>
+      <JsonLd
+        data={buildCollectionPageJsonLd({
+          title,
+          description,
+          path,
+          items: results.map((item) => ({
+            name: item.title,
+            url: `/series/${item.slug}`,
+            image: item.poster || item.image || item.thumbnail || item.thumb || null,
+          })),
+        })}
+      />
+      <MediaHubTemplate
+        title={title}
+        description={description}
+        iconName={icon.name}
+        theme={theme}
+        results={results}
+        loading={false}
+        error={null}
+        resultHrefPrefix="/series"
+      />
+    </>
   );
 }
 

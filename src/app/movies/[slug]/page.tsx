@@ -1,9 +1,11 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Calendar, Clapperboard, Clock, Film, Play } from 'lucide-react';
 import { getMovieDetailBySlug } from '@/lib/adapters/movie';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { MediaCard } from '@/components/atoms/Card';
+import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StatCard } from '@/components/molecules/StatCard';
@@ -16,9 +18,34 @@ import { ShareButton } from '@/components/molecules/ShareButton';
 import { CastRail } from '@/components/organisms/CastRail';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
+import { buildMetadata, buildMovieDetailJsonLd } from '@/lib/seo';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const movie = await getMovieDetailBySlug(slug, {
+    includeNsfw: false,
+  });
+
+  if (!movie) {
+    return buildMetadata({
+      title: 'Film Tidak Ditemukan',
+      description: 'Film yang kamu cari tidak tersedia di katalog dwizzyWEEB.',
+      path: `/movies/${slug}`,
+      noIndex: true,
+    });
+  }
+
+  return buildMetadata({
+    title: `${movie.title} Subtitle Indonesia`,
+    description: `${movie.synopsis} Streaming ${movie.title}${movie.year ? ` rilis ${movie.year}` : ''}${movie.quality ? ` kualitas ${movie.quality}` : ''} di dwizzyWEEB.`,
+    path: `/movies/${movie.slug}`,
+    image: movie.poster,
+    keywords: [...movie.genres, movie.director].filter(Boolean),
+  });
 }
 
 export default async function MovieDetailPage({ params }: PageProps) {
@@ -39,53 +66,65 @@ export default async function MovieDetailPage({ params }: PageProps) {
   ];
 
   return (
-    <HorizontalMediaDetailPage
-      theme="movie"
-      hero={
-        <VideoDetailHero
-          theme="movie"
-          backHref="/movies"
-          backLabel="Back to Movies"
-          poster={movie.poster}
-          title={movie.title}
-          subtitle={movie.duration}
-          eyebrow={movie.quality}
-          badges={movie.genres.slice(0, 5)}
-          metadata={[
-            { label: 'Rating', value: movie.rating || 'N/A' },
-            { label: 'Year', value: movie.year || 'N/A' },
-            { label: 'Runtime', value: movie.duration || 'N/A' },
-            { label: 'Format', value: movie.quality || 'STREAM' },
-          ]}
-          controls={
-            <>
-              <ShareButton title={movie.title} theme="movie" />
-              <BookmarkButton
-                item={{
-                  id: slug,
-                  type: 'movie',
-                  title: movie.title,
-                  image: movie.poster,
-                  timestamp: 0,
-                }}
-                theme="movie"
-              />
-            </>
-          }
-          primaryAction={
-            <Button variant="movie" size="lg" className="h-11 rounded-[var(--radius-lg)] px-5" asChild>
-              <Link href={watchHubHref}>
-                Start Watching
-                <Play className="ml-2 h-4 w-4 fill-current" />
-              </Link>
-            </Button>
-          }
-          trailerUrl={movie.trailerUrl}
-          galleryVariant="compact"
-        />
-      }
-      sidebar={
-        <>
+    <>
+      <JsonLd
+        data={buildMovieDetailJsonLd({
+          title: movie.title,
+          slug: movie.slug,
+          poster: movie.poster,
+          description: movie.synopsis,
+          year: movie.year,
+          duration: movie.duration,
+          genres: movie.genres,
+        })}
+      />
+      <HorizontalMediaDetailPage
+        theme="movie"
+        hero={
+          <VideoDetailHero
+            theme="movie"
+            backHref="/movies"
+            backLabel="Back to Movies"
+            poster={movie.poster}
+            title={movie.title}
+            subtitle={movie.duration}
+            eyebrow={movie.quality}
+            badges={movie.genres.slice(0, 5)}
+            metadata={[
+              { label: 'Rating', value: movie.rating || 'N/A' },
+              { label: 'Year', value: movie.year || 'N/A' },
+              { label: 'Runtime', value: movie.duration || 'N/A' },
+              { label: 'Format', value: movie.quality || 'STREAM' },
+            ]}
+            controls={
+              <>
+                <ShareButton title={movie.title} theme="movie" />
+                <BookmarkButton
+                  item={{
+                    id: slug,
+                    type: 'movie',
+                    title: movie.title,
+                    image: movie.poster,
+                    timestamp: 0,
+                  }}
+                  theme="movie"
+                />
+              </>
+            }
+            primaryAction={
+              <Button variant="movie" size="lg" className="h-11 rounded-[var(--radius-lg)] px-5" asChild>
+                <Link href={watchHubHref}>
+                  Start Watching
+                  <Play className="ml-2 h-4 w-4 fill-current" />
+                </Link>
+              </Button>
+            }
+            trailerUrl={movie.trailerUrl}
+            galleryVariant="compact"
+          />
+        }
+        sidebar={
+          <>
           <DetailActionCard
             theme="movie"
             title="Ready to watch"
@@ -122,30 +161,30 @@ export default async function MovieDetailPage({ params }: PageProps) {
               {movie.director ? <StatCard label="Director" value={movie.director} icon={Clapperboard} /> : null}
             </div>
           </Paper>
-        </>
-      }
-      footer={<CommunityCTA mediaId={slug} title={movie.title} type="movie" theme="movie" />}
-    >
-      <section id="overview" className="space-y-8">
+          </>
+        }
+        footer={<CommunityCTA mediaId={slug} title={movie.title} type="movie" theme="movie" />}
+      >
+        <section id="overview" className="space-y-8">
         <DetailSectionHeading title="Overview" theme="movie" />
         <Paper tone="muted" shadow="sm" className="p-5 md:p-6">
           <p className="text-sm leading-7 text-zinc-400 md:text-base">{movie.synopsis}</p>
         </Paper>
       </section>
 
-      {movie.cast.length > 0 ? (
-        <section id="cast" className="space-y-8">
+        {movie.cast.length > 0 ? (
+          <section id="cast" className="space-y-8">
           <DetailSectionHeading
             title="Cast"
             theme="movie"
             aside={<Badge variant="outline">{movie.cast.length} Available</Badge>}
           />
           <CastRail items={movie.cast} theme="movie" layout="grid" />
-        </section>
-      ) : null}
+          </section>
+        ) : null}
 
-      {movie.recommendations.length > 0 ? (
-        <section id="related" className="space-y-8">
+        {movie.recommendations.length > 0 ? (
+          <section id="related" className="space-y-8">
           <DetailSectionHeading
             title="More Like This"
             theme="movie"
@@ -164,8 +203,9 @@ export default async function MovieDetailPage({ params }: PageProps) {
               />
             ))}
           </CardRail>
-        </section>
-      ) : null}
-    </HorizontalMediaDetailPage>
+          </section>
+        ) : null}
+      </HorizontalMediaDetailPage>
+    </>
   );
 }

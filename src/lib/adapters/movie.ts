@@ -295,6 +295,10 @@ async function getMovieCatalogRows(options: VisibilityOptions = {}): Promise<Mov
             and u.unit_type = 'episode'
         )::int as unit_count
       from public.media_items i
+      left join public.media_item_enrichments e
+        on e.item_key = i.item_key
+       and e.provider = 'tmdb'
+       and e.match_status = 'matched'
       where (
         i.surface_type = 'movie'
         or (i.surface_type = 'unknown' and i.media_type = 'movie')

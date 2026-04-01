@@ -46,6 +46,50 @@ function appendScript({
   document.head.appendChild(script);
 }
 
+function scheduleDeferredWork(task: () => void) {
+  let cancelled = false;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let idleId: number | null = null;
+
+  const run = () => {
+    if (cancelled) {
+      return;
+    }
+
+    if ('requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(() => {
+        if (!cancelled) {
+          task();
+        }
+      }, { timeout: 1500 });
+      return;
+    }
+
+    timeoutId = globalThis.setTimeout(() => {
+      if (!cancelled) {
+        task();
+      }
+    }, 300);
+  };
+
+  if (document.readyState === 'complete') {
+    run();
+  } else {
+    window.addEventListener('load', run, { once: true });
+  }
+
+  return () => {
+    cancelled = true;
+    window.removeEventListener('load', run);
+    if (timeoutId != null) {
+      globalThis.clearTimeout(timeoutId);
+    }
+    if (idleId != null && 'cancelIdleCallback' in window) {
+      window.cancelIdleCallback(idleId);
+    }
+  };
+}
+
 export function AdNetworkScripts() {
   const pathname = usePathname() || '/';
   const isNsfwRoute = pathname === '/nsfw' || pathname.startsWith('/nsfw/');
@@ -75,14 +119,15 @@ export function AdNetworkScripts() {
         return;
       }
 
-      appendScript({
-        id: 'dwizzy-exoclick-script',
-        src: 'https://a.magsrv.com/ad-provider.js',
-        onLoad: () => {
-          window.dispatchEvent(new Event('dwizzy:adult-ads-ready'));
-        },
+      return scheduleDeferredWork(() => {
+        appendScript({
+          id: 'dwizzy-exoclick-script',
+          src: 'https://a.magsrv.com/ad-provider.js',
+          onLoad: () => {
+            window.dispatchEvent(new Event('dwizzy:adult-ads-ready'));
+          },
+        });
       });
-      return;
     }
 
     removeScript('dwizzy-exoclick-script');
@@ -91,24 +136,26 @@ export function AdNetworkScripts() {
       return;
     }
 
-    appendScript({
-      id: 'dwizzy-adsense-script',
-      src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`,
-      onLoad: () => {
-        if (!window.__dwizzyAutoAdsStarted) {
-          window.adsbygoogle = window.adsbygoogle || [];
-          try {
-            window.adsbygoogle.push({
-              google_ad_client: ADSENSE_CLIENT,
-              enable_page_level_ads: true,
-            });
-            window.__dwizzyAutoAdsStarted = true;
-          } catch {
-            // Ignore provider boot failures and keep the app functional.
+    return scheduleDeferredWork(() => {
+      appendScript({
+        id: 'dwizzy-adsense-script',
+        src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`,
+        onLoad: () => {
+          if (!window.__dwizzyAutoAdsStarted) {
+            window.adsbygoogle = window.adsbygoogle || [];
+            try {
+              window.adsbygoogle.push({
+                google_ad_client: ADSENSE_CLIENT,
+                enable_page_level_ads: true,
+              });
+              window.__dwizzyAutoAdsStarted = true;
+            } catch {
+              // Ignore provider boot failures and keep the app functional.
+            }
           }
-        }
-        window.dispatchEvent(new Event('dwizzy:adsense-ready'));
-      },
+          window.dispatchEvent(new Event('dwizzy:adsense-ready'));
+        },
+      });
     });
   }, [isNsfwRoute]);
 

@@ -7,11 +7,11 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/_next/"],
+        disallow: ["/api/", "/_next/", "/search", "/collection", "/nsfw"],
         crawlDelay: 2,
       },
     ],
-    sitemap: `${SITE_URL}sitemap.xml`,
-    host: SITE_URL.toString(),
+    sitemap: `${SITE_URL.toString()}sitemap.xml`,
+    host: SITE_URL.host,
   };
 }

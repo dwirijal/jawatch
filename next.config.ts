@@ -6,6 +6,7 @@ import withPWAInit from "@ducanh2912/next-pwa";
 const projectRoot = fileURLToPath(new URL(".", import.meta.url));
 const defaultImageRemoteHostPatterns = [
   "image.tmdb.org",
+  "myanimelist.net",
   "cdn.myanimelist.net",
   "cdn.anilist.co",
   "books.google.com",
@@ -14,6 +15,22 @@ const defaultImageRemoteHostPatterns = [
   "m.media-amazon.com",
   "iili.io",
   "ik.imagekit.io",
+  "anichin.cafe",
+  "convert.d-cdn.me",
+  "hanime-cdn.com",
+  "nekopoi.care",
+  "bacaman00.sokuja.id",
+  "kacu.gmbr.pro",
+  "kanzenin.info",
+  "mangasusuku.com",
+  "i0.wp.com",
+  "i1.wp.com",
+  "i2.wp.com",
+  "i3.wp.com",
+  "images.envira-cdn.com",
+  "v2.samehadaku.how",
+  "02.ikiru.wtf",
+  "komikcast03.com",
 ];
 
 function readImageRemoteHostPatterns() {

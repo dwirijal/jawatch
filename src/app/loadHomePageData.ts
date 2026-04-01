@@ -1,7 +1,6 @@
 import 'server-only';
 
 import { unstable_cache } from 'next/cache';
-import type { HeroItem } from '@/components/organisms/HeroCarousel';
 import {
   extractSlugFromUrl,
   getHDThumbnail,
@@ -20,9 +19,10 @@ import {
 } from '@/lib/series-presentation';
 import type { MovieCardItem } from '@/lib/types';
 import type {
+  HeroItem,
   HomeRecommendationSection,
   MixedRecommendationItem,
-} from './HomePageClient';
+} from './home-page-types';
 
 const SECTION_LIMIT = 12;
 const SECTION_SOURCE_LIMIT = 24;

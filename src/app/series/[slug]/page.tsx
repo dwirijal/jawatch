@@ -1,8 +1,10 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Play } from 'lucide-react';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { MediaCard } from '@/components/atoms/Card';
+import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { CardRail } from '@/components/molecules/card';
@@ -13,6 +15,7 @@ import { ShareButton } from '@/components/molecules/ShareButton';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
 import { getSeriesDetailBySlug } from '@/lib/adapters/series';
+import { buildMetadata, buildSeriesDetailJsonLd } from '@/lib/seo';
 import { formatSeriesCardSubtitle, getSeriesBadgeText, getSeriesTheme } from '@/lib/series-presentation';
 
 interface PageProps {
@@ -70,6 +73,30 @@ function buildEpisodeQueryHref(slug: string, page: number, sort: EpisodeSortMode
   return query ? `/series/${slug}?${query}#episodes` : `/series/${slug}#episodes`;
 }
 
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const series = await getSeriesDetailBySlug(slug, {
+    includeNsfw: false,
+  });
+
+  if (!series) {
+    return buildMetadata({
+      title: 'Series Tidak Ditemukan',
+      description: 'Series yang kamu cari tidak tersedia di katalog dwizzyWEEB.',
+      path: `/series/${slug}`,
+      noIndex: true,
+    });
+  }
+
+  return buildMetadata({
+    title: `${series.title} Subtitle Indonesia`,
+    description: `${series.synopsis} Tonton episode terbaru ${series.title}${series.country ? ` dari ${series.country}` : ''}${series.year ? ` rilis ${series.year}` : ''} di dwizzyWEEB.`,
+    path: `/series/${series.slug}`,
+    image: series.poster,
+    keywords: [...series.genres, series.country, series.mediaType].filter(Boolean),
+  });
+}
+
 export default async function SeriesDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -101,56 +128,68 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
   const nextPageHref = currentPage < totalPages ? buildEpisodeQueryHref(slug, currentPage + 1, episodeSort) : null;
 
   return (
-    <HorizontalMediaDetailPage
-      theme={theme}
-      hero={
-        <VideoDetailHero
-          theme={theme}
-          backHref="/series"
-          backLabel="Back to Series"
-          poster={series.poster}
-          title={series.title}
-          eyebrow={series.seasonLabel}
-          badges={series.genres.slice(0, 5)}
-          metadata={[
-            { label: 'Rating', value: series.rating },
-            { label: 'Year', value: series.year || 'Tidak Tersedia' },
-            { label: 'Country', value: series.country || 'Tidak Tersedia' },
-            { label: 'Episodes', value: series.episodeCount || 'Tidak Tersedia' },
-            { label: 'Studio', value: series.studio || 'Tidak Tersedia' },
-            { label: 'Status', value: series.status || 'Tidak Tersedia' },
-          ]}
-          controls={
-            <>
-              <ShareButton title={series.title} theme={theme} />
-              <BookmarkButton
-                item={{
-                  id: slug,
-                  type: series.mediaType,
-                  title: series.title,
-                  image: series.poster,
-                  timestamp: 0,
-                }}
-                theme={theme}
-              />
-            </>
-          }
-          primaryAction={
-            latestEpisodeHref ? (
-              <Button variant={theme} size="lg" className="h-11 rounded-[var(--radius-lg)] px-5" asChild>
-                <Link href={latestEpisodeHref}>
-                  Start Episode
-                  <Play className="ml-2 h-4 w-4 fill-current" />
-                </Link>
-              </Button>
-            ) : null
-          }
-        />
-      }
-      sidebar={null}
-      footer={<CommunityCTA mediaId={slug} title={series.title} type="series" theme={theme} />}
-    >
-      <section id="overview" className="space-y-8">
+    <>
+      <JsonLd
+        data={buildSeriesDetailJsonLd({
+          title: series.title,
+          slug: series.slug,
+          poster: series.poster,
+          description: series.synopsis,
+          genres: series.genres,
+          country: series.country,
+          year: series.year,
+        })}
+      />
+      <HorizontalMediaDetailPage
+        theme={theme}
+        hero={
+          <VideoDetailHero
+            theme={theme}
+            backHref="/series"
+            backLabel="Back to Series"
+            poster={series.poster}
+            title={series.title}
+            eyebrow={series.seasonLabel}
+            badges={series.genres.slice(0, 5)}
+            metadata={[
+              { label: 'Rating', value: series.rating },
+              { label: 'Year', value: series.year || 'Tidak Tersedia' },
+              { label: 'Country', value: series.country || 'Tidak Tersedia' },
+              { label: 'Episodes', value: series.episodeCount || 'Tidak Tersedia' },
+              { label: 'Studio', value: series.studio || 'Tidak Tersedia' },
+              { label: 'Status', value: series.status || 'Tidak Tersedia' },
+            ]}
+            controls={
+              <>
+                <ShareButton title={series.title} theme={theme} />
+                <BookmarkButton
+                  item={{
+                    id: slug,
+                    type: series.mediaType,
+                    title: series.title,
+                    image: series.poster,
+                    timestamp: 0,
+                  }}
+                  theme={theme}
+                />
+              </>
+            }
+            primaryAction={
+              latestEpisodeHref ? (
+                <Button variant={theme} size="lg" className="h-11 rounded-[var(--radius-lg)] px-5" asChild>
+                  <Link href={latestEpisodeHref}>
+                    Start Episode
+                    <Play className="ml-2 h-4 w-4 fill-current" />
+                  </Link>
+                </Button>
+              ) : null
+            }
+          />
+        }
+        sidebar={null}
+        footer={<CommunityCTA mediaId={slug} title={series.title} type="series" theme={theme} />}
+      >
+        <section id="overview" className="space-y-8">
         <DetailSectionHeading title="Overview" theme={theme} />
         <Paper tone="muted" shadow="sm" className="p-5 md:p-6">
           <details className="group">
@@ -170,8 +209,8 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
         </Paper>
       </section>
 
-      {trailerEmbedUrl ? (
-        <section id="trailer" className="space-y-8">
+        {trailerEmbedUrl ? (
+          <section id="trailer" className="space-y-8">
           <DetailSectionHeading title="Trailer" theme={theme} />
           <Paper tone="muted" shadow="sm" padded={false} className="overflow-hidden">
             <div className="aspect-video w-full bg-black">
@@ -184,10 +223,10 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
               />
             </div>
           </Paper>
-        </section>
-      ) : null}
+          </section>
+        ) : null}
 
-      <section id="episodes" className="space-y-8">
+        <section id="episodes" className="space-y-8">
         <DetailSectionHeading
           title="Episodes"
           theme={theme}
@@ -236,10 +275,10 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
             </div>
           </div>
         ) : null}
-      </section>
+        </section>
 
-      {series.recommendations.length > 0 ? (
-        <section id="related" className="space-y-8">
+        {series.recommendations.length > 0 ? (
+          <section id="related" className="space-y-8">
           <DetailSectionHeading
             title="More Like This"
             theme={theme}
@@ -258,8 +297,9 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
               />
             ))}
           </CardRail>
-        </section>
-      ) : null}
-    </HorizontalMediaDetailPage>
+          </section>
+        ) : null}
+      </HorizontalMediaDetailPage>
+    </>
   );
 }

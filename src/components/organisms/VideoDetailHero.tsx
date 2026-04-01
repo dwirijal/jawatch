@@ -117,8 +117,8 @@ export function VideoDetailHero({
               alt=""
               fill
               sizes="100vw"
+              priority
               className="object-cover opacity-20"
-              unoptimized
             />
           )}
           <div className="absolute inset-0 bg-black/68" />
@@ -183,8 +183,8 @@ export function VideoDetailHero({
                       width={800}
                       height={1200}
                       sizes="(max-width: 640px) 32vw, (max-width: 1024px) 26vw, 24vw"
+                      priority
                       className="h-full w-auto max-w-none object-contain"
-                      unoptimized
                     />
                 </div>
               </Paper>

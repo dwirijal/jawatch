@@ -9,6 +9,7 @@ interface BookCoverArtProps {
   title: string;
   subtitle?: string;
   sizes?: string;
+  priority?: boolean;
   className?: string;
   imageClassName?: string;
 }
@@ -124,6 +125,7 @@ export function BookCoverArt({
   title,
   subtitle,
   sizes = '208px',
+  priority = false,
   className,
   imageClassName,
 }: BookCoverArtProps) {
@@ -146,8 +148,8 @@ export function BookCoverArt({
           alt={title}
           fill
           sizes={sizes}
+          priority={priority}
           className={cn('object-cover', imageClassName)}
-          unoptimized
           onError={() => setImageFailed(true)}
         />
       ) : (

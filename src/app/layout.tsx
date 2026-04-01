@@ -1,23 +1,14 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Bricolage_Grotesque, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { CssBaseline } from "@/components/atoms/CssBaseline";
 import { Navbar } from "@/components/organisms/Navbar";
 import { Footer } from "@/components/organisms/Footer";
-import { MobileNav } from "@/components/organisms/MobileNav";
-import { AdNetworkScripts } from "@/components/organisms/AdNetworkScripts";
-import { DeviceListener } from "@/components/atoms/DeviceListener";
-import { NoSsr } from "@/components/atoms/NoSsr";
-import { PWAInstallPrompt } from "@/components/molecules/PWAInstallPrompt";
+import { ClientShell } from "@/components/organisms/ClientShell";
 import { AuthSessionProvider } from "@/components/providers/AuthSessionProvider";
 import { getServerAuthStatus } from "@/lib/server/auth-session";
 import { SITE_URL } from "@/lib/site";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -37,10 +28,19 @@ const bricolageGrotesque = Bricolage_Grotesque({
 export const metadata: Metadata = {
   metadataBase: SITE_URL,
   title: {
-    default: "dwizzyWEEB - Premium Discovery",
+    default: "dwizzyWEEB - Anime, Donghua, Drama, Film, Komik, dan Novel",
     template: "%s | dwizzyWEEB"
   },
-  description: "High-performance platform for Anime, Manga, Donghua and Movies discovery.",
+  description: "Tempat nonton anime, donghua, drama, film, baca komik, dan novel subtitle Indonesia dalam satu katalog yang cepat dan rapi.",
+  applicationName: "dwizzyWEEB",
+  keywords: [
+    "anime subtitle indonesia",
+    "donghua subtitle indonesia",
+    "drama asia subtitle indonesia",
+    "film subtitle indonesia",
+    "komik indonesia",
+    "novel online indonesia",
+  ],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -49,15 +49,16 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
+    locale: "id_ID",
     siteName: "dwizzyWEEB",
-    title: "dwizzyWEEB - Premium Discovery",
-    description: "Stream your favorite Anime, Manga, and Movies in high definition.",
+    title: "dwizzyWEEB - Anime, Donghua, Drama, Film, Komik, dan Novel",
+    description: "Tempat nonton anime, donghua, drama, film, baca komik, dan novel subtitle Indonesia dalam satu katalog yang cepat dan rapi.",
     images: ["/favicon.ico"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "dwizzyWEEB - Premium Discovery",
-    description: "Stream your favorite Anime, Manga, and Movies in high definition.",
+    title: "dwizzyWEEB - Anime, Donghua, Drama, Film, Komik, dan Novel",
+    description: "Tempat nonton anime, donghua, drama, film, baca komik, dan novel subtitle Indonesia dalam satu katalog yang cepat dan rapi.",
     images: ["/favicon.ico"],
   },
 };
@@ -79,24 +80,19 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="en"
+      lang="id"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${plusJakartaSans.variable} ${bricolageGrotesque.variable} h-full antialiased`}
+      className={`${geistMono.variable} ${plusJakartaSans.variable} ${bricolageGrotesque.variable} h-full antialiased`}
     >
       <head>
         <CssBaseline />
       </head>
       <body className="min-h-full flex flex-col text-foreground font-sans">
         <AuthSessionProvider initialState={authSession}>
-          <AdNetworkScripts />
-          <DeviceListener />
+          <ClientShell />
           <Navbar />
           <main className="flex-1 min-h-screen pb-20 md:pb-0">{children}</main>
-          <NoSsr>
-            <PWAInstallPrompt />
-          </NoSsr>
           <Analytics />
-          <MobileNav />
           <Footer />
         </AuthSessionProvider>
       </body>

@@ -8,6 +8,10 @@ import { SectionHeader } from '@/components/molecules/SectionHeader';
 export const metadata: Metadata = {
   title: 'Bookmarks',
   description: 'Your saved content and recent watch progress on dwizzyWEEB.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function CollectionPage() {

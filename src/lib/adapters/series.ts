@@ -168,7 +168,7 @@ export type SeriesEpisodeData = {
 const HUB_CACHE_TTL_SECONDS = 60 * 10;
 const DETAIL_CACHE_TTL_SECONDS = 60 * 30;
 const SEARCH_CACHE_TTL_SECONDS = 60 * 3;
-const SERIES_CACHE_NAMESPACE = 'series-v7';
+const SERIES_CACHE_NAMESPACE = 'series-v8';
 
 function formatRating(value: unknown): string {
   const numeric = readNumber(value);
@@ -227,6 +227,35 @@ function formatCountryCode(code: string | null | undefined): string {
       return 'United States';
     default:
       return '';
+  }
+}
+
+function collapseRepeatedSeriesTitle(value: string): string {
+  let current = readText(value);
+  if (!current) {
+    return '';
+  }
+
+  while (true) {
+    const parts = current.split(/\s+/).filter(Boolean);
+    const maxChunkSize = Math.floor(parts.length / 2);
+    let next = current;
+
+    for (let size = maxChunkSize; size >= 1; size -= 1) {
+      const left = parts.slice(0, size).join(' ').toLowerCase();
+      const right = parts.slice(size, size * 2).join(' ').toLowerCase();
+
+      if (left === right) {
+        next = [...parts.slice(0, size), ...parts.slice(size * 2)].join(' ');
+        break;
+      }
+    }
+
+    if (next === current) {
+      return current;
+    }
+
+    current = next;
   }
 }
 
@@ -378,7 +407,7 @@ function mapSeriesCard(row: SeriesCatalogRow): SeriesCardItem {
   const type = getSeriesType(row);
   return {
     slug: readText(row.slug),
-    title: readText(row.title),
+    title: collapseRepeatedSeriesTitle(row.title),
     poster: normalizePosterUrl(row.poster_url, row.cover_url),
     year: formatCatalogYear(row),
     type,
@@ -809,6 +838,11 @@ export async function getSeriesDetailBySlug(slug: string, options: VisibilityOpt
         and u.unit_type = 'episode'
       order by u.number desc nulls last, u.updated_at desc
     `, [row.item_key]);
+    const normalizedEpisodes = episodes.map((episode) => ({
+      ...episode,
+      title: collapseRepeatedSeriesTitle(episode.title),
+      label: readText(episode.label),
+    }));
 
     const detail = getSeriesDetailRecord(row);
     const genres = getSeriesGenres(detail);
@@ -827,7 +861,7 @@ export async function getSeriesDetailBySlug(slug: string, options: VisibilityOpt
     return {
       slug: row.slug,
       mediaType: getSeriesType(row),
-      title: row.title,
+      title: collapseRepeatedSeriesTitle(row.title),
       poster: normalizePosterUrl(detail.poster_url, row.cover_url),
       backdrop: normalizePosterUrl(detail.backdrop_url, detail.poster_url, row.cover_url),
       trailerUrl: readText(detail.trailer_url) || readText(detail.trailer) || readText(detail.trailerUrl),
@@ -844,12 +878,12 @@ export async function getSeriesDetailBySlug(slug: string, options: VisibilityOpt
             ? 'Drama Series'
             : 'Anime Series'
       ),
-      episodeCount: episodes.length ? String(episodes.length) : readText(detail.episodes_text),
+      episodeCount: normalizedEpisodes.length ? String(normalizedEpisodes.length) : readText(detail.episodes_text),
       latestEpisode: getLatestEpisodeLabel(row),
       studio: readText(detail.studio) || readText(detail.studios) || readText(detail.network),
       director: readText(detail.director) || readFirstString(detail.directors),
       sourceLabel: row.source,
-      episodes,
+      episodes: normalizedEpisodes,
       recommendations,
     };
   });
@@ -931,11 +965,11 @@ export async function getSeriesEpisodeBySlug(slug: string, options: VisibilityOp
       slug: row.slug,
       mediaType: getSeriesType(row),
       seriesSlug: row.item_slug,
-      seriesTitle: row.item_title,
+      seriesTitle: collapseRepeatedSeriesTitle(row.item_title),
       poster: normalizePosterUrl(itemDetail.poster_url, row.cover_url),
       year: formatDetailYear(row.release_year, itemDetail),
       country: normalizeCountry(itemDetail) || formatCountryCode(row.release_country),
-      title: readText(row.title) || `${row.item_title} ${row.label}`.trim(),
+      title: collapseRepeatedSeriesTitle(readText(row.title) || `${row.item_title} ${row.label}`.trim()),
       episodeLabel: readText(row.label),
       episodeNumber: row.number == null ? '' : String(row.number),
       synopsis: readText(itemDetail.synopsis) || readText(itemDetail.overview) || 'Synopsis is still being prepared.',

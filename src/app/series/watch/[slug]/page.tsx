@@ -1,16 +1,69 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
+import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { MediaWatchPage } from '@/components/organisms/MediaWatchPage';
 import { getSeriesEpisodeBySlug } from '@/lib/adapters/series';
+import { buildMetadata, buildSeriesEpisodeJsonLd } from '@/lib/seo';
 import { getSeriesBadgeText, getSeriesTheme } from '@/lib/series-presentation';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+function collapseRepeatedLeadingPhrase(value: string): string {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+  const maxChunkSize = Math.floor(parts.length / 2);
+
+  for (let size = maxChunkSize; size >= 1; size -= 1) {
+    const left = parts.slice(0, size).join(' ').toLowerCase();
+    const right = parts.slice(size, size * 2).join(' ').toLowerCase();
+
+    if (left === right) {
+      return [...parts.slice(0, size), ...parts.slice(size * 2)].join(' ');
+    }
+  }
+
+  return value.trim();
+}
+
+function stripSubtitleIndonesia(value: string): string {
+  return value.replace(/\s+subtitle indonesia$/i, '').trim();
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const episode = await getSeriesEpisodeBySlug(slug, {
+    includeNsfw: false,
+  });
+
+  if (!episode) {
+    return buildMetadata({
+      title: 'Episode Tidak Ditemukan',
+      description: 'Episode yang kamu cari tidak tersedia di katalog series dwizzyWEEB.',
+      path: `/series/watch/${slug}`,
+      noIndex: true,
+    });
+  }
+
+  const episodeLabel = episode.episodeNumber ? `Episode ${episode.episodeNumber}` : episode.episodeLabel || episode.title;
+  const normalizedSeriesTitle = stripSubtitleIndonesia(collapseRepeatedLeadingPhrase(episode.seriesTitle));
+  const normalizedEpisodeTitle = stripSubtitleIndonesia(collapseRepeatedLeadingPhrase(episode.title));
+  const normalizedTitle = normalizedEpisodeTitle.toLowerCase().includes(normalizedSeriesTitle.toLowerCase())
+    ? normalizedEpisodeTitle
+    : `${normalizedSeriesTitle} ${stripSubtitleIndonesia(episodeLabel)}`.trim();
+
+  return buildMetadata({
+    title: `${normalizedTitle} Subtitle Indonesia`,
+    description: `Nonton ${normalizedTitle} subtitle Indonesia${episode.country ? ` dari ${episode.country}` : ''}${episode.year ? ` rilis ${episode.year}` : ''}.`,
+    path: `/series/watch/${episode.slug}`,
+    image: episode.poster,
+  });
 }
 
 export default async function SeriesWatchPage({ params }: PageProps) {
@@ -27,73 +80,87 @@ export default async function SeriesWatchPage({ params }: PageProps) {
   const badgeText = getSeriesBadgeText(episode.mediaType);
 
   return (
-    <MediaWatchPage
-      backHref={episode.detailHref}
-      eyebrow="Now Watching"
-      title={episode.seriesTitle}
-      subtitle={
-        <>
-          <Badge variant={theme} className="px-2 py-0.5 text-[10px]">
-            {badgeText}
-          </Badge>
-          <p className="text-[10px] md:text-xs">{episode.title}</p>
-        </>
-      }
-      browseHref="/series"
-      browseLabel="More Series"
-      theme={theme}
-      stage={
-        <VideoPlayer
-          mirrors={episode.mirrors}
-          defaultUrl={episode.defaultUrl}
-          title={episode.title}
-          theme={theme}
-          hasNext={Boolean(episode.nextEpisodeSlug)}
-        />
-      }
-      sidebar={
-        <Paper tone="muted" shadow="sm" className="flex h-full min-h-0 flex-col gap-4 p-4 md:p-5">
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={theme} className="px-2 py-0.5 text-[10px]">{badgeText}</Badge>
-              <Badge variant="outline" className="px-2 py-0.5 text-[10px]">Episode {episode.episodeNumber || '?'}</Badge>
-              {episode.year ? <Badge variant="outline" className="px-2 py-0.5 text-[10px]">{episode.year}</Badge> : null}
-              {episode.country ? <Badge variant="outline" className="px-2 py-0.5 text-[10px]">{episode.country}</Badge> : null}
+    <>
+      <JsonLd
+        data={buildSeriesEpisodeJsonLd({
+          seriesTitle: episode.seriesTitle,
+          seriesSlug: episode.seriesSlug,
+          episodeTitle: episode.title,
+          episodeSlug: episode.slug,
+          poster: episode.poster,
+          description: episode.synopsis,
+          episodeNumber: episode.episodeNumber,
+          country: episode.country,
+        })}
+      />
+      <MediaWatchPage
+        backHref={episode.detailHref}
+        eyebrow="Now Watching"
+        title={episode.seriesTitle}
+        subtitle={
+          <>
+            <Badge variant={theme} className="px-2 py-0.5 text-[10px]">
+              {badgeText}
+            </Badge>
+            <p className="text-[10px] md:text-xs">{episode.title}</p>
+          </>
+        }
+        browseHref="/series"
+        browseLabel="More Series"
+        theme={theme}
+        stage={
+          <VideoPlayer
+            mirrors={episode.mirrors}
+            defaultUrl={episode.defaultUrl}
+            title={episode.title}
+            theme={theme}
+            hasNext={Boolean(episode.nextEpisodeSlug)}
+          />
+        }
+        sidebar={
+          <Paper tone="muted" shadow="sm" className="flex h-full min-h-0 flex-col gap-4 p-4 md:p-5">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={theme} className="px-2 py-0.5 text-[10px]">{badgeText}</Badge>
+                <Badge variant="outline" className="px-2 py-0.5 text-[10px]">Episode {episode.episodeNumber || '?'}</Badge>
+                {episode.year ? <Badge variant="outline" className="px-2 py-0.5 text-[10px]">{episode.year}</Badge> : null}
+                {episode.country ? <Badge variant="outline" className="px-2 py-0.5 text-[10px]">{episode.country}</Badge> : null}
+              </div>
+              <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">{episode.seriesTitle}</h2>
+              <p className="line-clamp-5 text-sm leading-6 text-zinc-400">{episode.synopsis}</p>
             </div>
-            <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">{episode.seriesTitle}</h2>
-            <p className="line-clamp-5 text-sm leading-6 text-zinc-400">{episode.synopsis}</p>
-          </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" disabled={!episode.prevEpisodeSlug} asChild={Boolean(episode.prevEpisodeSlug)}>
-              {episode.prevEpisodeSlug ? (
-                <Link href={`/series/watch/${episode.prevEpisodeSlug}`}>
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Prev
-                </Link>
-              ) : (
-                <span><ChevronLeft className="mr-2 h-4 w-4" /> Prev</span>
-              )}
-            </Button>
-            <Button variant="outline" disabled={!episode.nextEpisodeSlug} asChild={Boolean(episode.nextEpisodeSlug)}>
-              {episode.nextEpisodeSlug ? (
-                <Link href={`/series/watch/${episode.nextEpisodeSlug}`}>
-                  Next <ChevronRight className="ml-2 h-4 w-4" />
-                </Link>
-              ) : (
-                <span>Next <ChevronRight className="ml-2 h-4 w-4" /></span>
-              )}
-            </Button>
-          </div>
-        </Paper>
-      }
-      downloadGroups={episode.downloadGroups}
-      community={{
-        mediaId: episode.seriesSlug,
-        title: episode.seriesTitle,
-        type: 'series',
-        theme,
-      }}
-    >
-    </MediaWatchPage>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" disabled={!episode.prevEpisodeSlug} asChild={Boolean(episode.prevEpisodeSlug)}>
+                {episode.prevEpisodeSlug ? (
+                  <Link href={`/series/watch/${episode.prevEpisodeSlug}`}>
+                    <ChevronLeft className="mr-2 h-4 w-4" /> Prev
+                  </Link>
+                ) : (
+                  <span><ChevronLeft className="mr-2 h-4 w-4" /> Prev</span>
+                )}
+              </Button>
+              <Button variant="outline" disabled={!episode.nextEpisodeSlug} asChild={Boolean(episode.nextEpisodeSlug)}>
+                {episode.nextEpisodeSlug ? (
+                  <Link href={`/series/watch/${episode.nextEpisodeSlug}`}>
+                    Next <ChevronRight className="ml-2 h-4 w-4" />
+                  </Link>
+                ) : (
+                  <span>Next <ChevronRight className="ml-2 h-4 w-4" /></span>
+                )}
+              </Button>
+            </div>
+          </Paper>
+        }
+        downloadGroups={episode.downloadGroups}
+        community={{
+          mediaId: episode.seriesSlug,
+          title: episode.seriesTitle,
+          type: 'series',
+          theme,
+        }}
+      >
+      </MediaWatchPage>
+    </>
   );
 }

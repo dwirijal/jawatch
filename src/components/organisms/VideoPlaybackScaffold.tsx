@@ -40,7 +40,7 @@ export function VideoPlaybackScaffold({
                 <ChevronLeft className="h-5 w-5" />
               </Link>
             </Button>
-            <div className="min-w-0 space-y-1">
+            <div className="min-w-0 min-h-[2.75rem] space-y-1 md:min-h-[3rem]">
               {eyebrow ? (
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">
                   {eyebrow}
@@ -50,7 +50,7 @@ export function VideoPlaybackScaffold({
                 {title}
               </h1>
               {subtitle ? (
-                <div className="flex flex-wrap items-center gap-2 text-[10px] text-zinc-500">
+                <div className="flex min-h-4 flex-wrap items-center gap-2 text-[10px] text-zinc-500">
                   {subtitle}
                 </div>
               ) : null}
