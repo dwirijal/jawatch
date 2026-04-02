@@ -7,12 +7,11 @@ import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StatCard } from '@/components/molecules/StatCard';
-import { BookmarkButton } from '@/components/organisms/BookmarkButton';
-import { ShareButton } from '@/components/molecules/ShareButton';
 import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
 import { TitleBlock } from '@/components/atoms/TitleBlock';
+import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { ReaderMediaDetailPage } from '@/components/organisms/ReaderMediaDetailPage';
 import { MetadataPanel } from '@/components/organisms/MetadataPanel';
 import { User, Activity, Layout, ShieldAlert, ChevronLeft, Play } from 'lucide-react';
@@ -140,16 +139,16 @@ export default async function ComicDetailPage({ params }: PageProps) {
                       ))}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <ShareButton title={manga.title} theme="manga" />
-                      <BookmarkButton
-                        item={{
+                      <DeferredHeroActions
+                        title={manga.title}
+                        theme="manga"
+                        bookmarkItem={{
                           id: slug,
                           type: 'manga',
                           title: manga.title,
                           image: hdImage,
                           timestamp: 0,
                         }}
-                        theme="manga"
                       />
                     </div>
                   </div>

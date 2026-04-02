@@ -2,17 +2,16 @@ import { notFound } from 'next/navigation';
 import { Info } from 'lucide-react';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
-import { MediaCard } from '@/components/atoms/Card';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
+import { StaticMediaCard } from '@/components/atoms/StaticMediaCard';
 import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
-import { ShareButton } from '@/components/molecules/ShareButton';
-import { CardRail } from '@/components/molecules/card';
 import { CastRail } from '@/components/organisms/CastRail';
+import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
-import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
+import { VideoDetailHeroWithTrailer } from '@/components/organisms/VideoDetailHeroWithTrailer';
 import { getMovieDetailBySlug } from '@/lib/adapters/movie';
 import { getNsfwMovieDetailHref, getNsfwMovieWatchHref } from '@/lib/nsfw-routes';
 import { requireNsfwAccess } from '../../access';
@@ -44,7 +43,7 @@ export default async function NsfwMovieDetailPage({ params }: PageProps) {
     <HorizontalMediaDetailPage
       theme="movie"
       hero={
-        <VideoDetailHero
+        <VideoDetailHeroWithTrailer
           theme="movie"
           backHref="/nsfw#movies"
           backLabel="Back to NSFW"
@@ -59,7 +58,7 @@ export default async function NsfwMovieDetailPage({ params }: PageProps) {
             { label: 'Runtime', value: movie.duration || 'N/A' },
             { label: 'Format', value: movie.quality || 'STREAM' },
           ]}
-          controls={<ShareButton title={movie.title} theme="movie" />}
+          controls={<DeferredHeroActions title={movie.title} theme="movie" />}
           primaryAction={
             <Button variant="movie" size="lg" className="h-11 rounded-[var(--radius-lg)] px-5" asChild>
               <Link href={watchHubHref}>
@@ -126,9 +125,9 @@ export default async function NsfwMovieDetailPage({ params }: PageProps) {
             theme="movie"
             aside={<Badge variant="outline">{movie.recommendations.length} Available</Badge>}
           />
-          <CardRail variant="default">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {movie.recommendations.map((item) => (
-              <MediaCard
+              <StaticMediaCard
                 key={item.slug}
                 href={getNsfwMovieDetailHref(item.slug)}
                 image={item.poster}
@@ -138,7 +137,7 @@ export default async function NsfwMovieDetailPage({ params }: PageProps) {
                 theme="movie"
               />
             ))}
-          </CardRail>
+          </div>
         </section>
       ) : null}
     </HorizontalMediaDetailPage>

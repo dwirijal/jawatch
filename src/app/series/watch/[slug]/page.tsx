@@ -5,6 +5,7 @@ import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
+import { PendingLinkHint } from '@/components/atoms/PendingLinkHint';
 import { Paper } from '@/components/atoms/Paper';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { MediaWatchPage } from '@/components/organisms/MediaWatchPage';
@@ -135,6 +136,7 @@ export default async function SeriesWatchPage({ params }: PageProps) {
                 {episode.prevEpisodeSlug ? (
                   <Link href={`/series/watch/${episode.prevEpisodeSlug}`}>
                     <ChevronLeft className="mr-2 h-4 w-4" /> Prev
+                    <PendingLinkHint label="Membuka episode sebelumnya..." />
                   </Link>
                 ) : (
                   <span><ChevronLeft className="mr-2 h-4 w-4" /> Prev</span>
@@ -144,6 +146,7 @@ export default async function SeriesWatchPage({ params }: PageProps) {
                 {episode.nextEpisodeSlug ? (
                   <Link href={`/series/watch/${episode.nextEpisodeSlug}`}>
                     Next <ChevronRight className="ml-2 h-4 w-4" />
+                    <PendingLinkHint label="Membuka episode berikutnya..." />
                   </Link>
                 ) : (
                   <span>Next <ChevronRight className="ml-2 h-4 w-4" /></span>

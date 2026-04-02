@@ -4,11 +4,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
+import { DeferredAds } from '@/components/atoms/DeferredAds';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
-import { Ads } from '@/components/atoms/Ads';
 import { Paper } from '@/components/atoms/Paper';
-import { ReadingSettings } from '@/components/molecules/ReadingSettings';
+import { DeferredReadingSettings } from '@/components/molecules/DeferredReadingSettings';
 import { ImageReaderScaffold } from '@/components/organisms/ImageReaderScaffold';
 import { useUIStore } from '@/store/useUIStore';
 import type { ChapterDetail } from '@/lib/types';
@@ -128,12 +128,12 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter, routeBa
         subtitle={chapter.chapter_title || chapterSlug}
         leftAside={
           <div className="sticky top-24">
-            <Ads type="vertical" className="h-[560px] max-w-none" />
+            <DeferredAds type="vertical" className="h-[560px] max-w-none" />
           </div>
         }
         rightAside={
           <div className="sticky top-24">
-            <Ads type="vertical" className="h-[560px] max-w-none" />
+            <DeferredAds type="vertical" className="h-[560px] max-w-none" />
           </div>
         }
         headerActions={
@@ -152,7 +152,7 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter, routeBa
               )}
             </Button>
 
-            <ReadingSettings autoNext={autoNext} setAutoNext={setAutoNext} />
+            <DeferredReadingSettings autoNext={autoNext} setAutoNext={setAutoNext} />
 
             <Button
               variant="manga"

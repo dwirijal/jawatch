@@ -4,20 +4,18 @@ import { Calendar, Clapperboard, Clock, Film, Play } from 'lucide-react';
 import { getMovieDetailBySlug } from '@/lib/adapters/movie';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
-import { MediaCard } from '@/components/atoms/Card';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
+import { StaticMediaCard } from '@/components/atoms/StaticMediaCard';
 import { StatCard } from '@/components/molecules/StatCard';
-import { BookmarkButton } from '@/components/organisms/BookmarkButton';
 import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
-import { CardRail } from '@/components/molecules/card';
-import { ShareButton } from '@/components/molecules/ShareButton';
 import { CastRail } from '@/components/organisms/CastRail';
+import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
-import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
+import { VideoDetailHeroWithTrailer } from '@/components/organisms/VideoDetailHeroWithTrailer';
 import { buildMetadata, buildMovieDetailJsonLd } from '@/lib/seo';
 
 interface PageProps {
@@ -81,7 +79,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
       <HorizontalMediaDetailPage
         theme="movie"
         hero={
-          <VideoDetailHero
+          <VideoDetailHeroWithTrailer
             theme="movie"
             backHref="/movies"
             backLabel="Back to Movies"
@@ -97,19 +95,17 @@ export default async function MovieDetailPage({ params }: PageProps) {
               { label: 'Format', value: movie.quality || 'STREAM' },
             ]}
             controls={
-              <>
-                <ShareButton title={movie.title} theme="movie" />
-                <BookmarkButton
-                  item={{
-                    id: slug,
-                    type: 'movie',
-                    title: movie.title,
-                    image: movie.poster,
-                    timestamp: 0,
-                  }}
-                  theme="movie"
-                />
-              </>
+              <DeferredHeroActions
+                title={movie.title}
+                theme="movie"
+                bookmarkItem={{
+                  id: slug,
+                  type: 'movie',
+                  title: movie.title,
+                  image: movie.poster,
+                  timestamp: 0,
+                }}
+              />
             }
             primaryAction={
               <Button variant="movie" size="lg" className="h-11 rounded-[var(--radius-lg)] px-5" asChild>
@@ -190,9 +186,9 @@ export default async function MovieDetailPage({ params }: PageProps) {
             theme="movie"
             aside={<Badge variant="outline">{movie.recommendations.length} Available</Badge>}
           />
-          <CardRail variant="default">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {movie.recommendations.map((item) => (
-              <MediaCard
+              <StaticMediaCard
                 key={item.slug}
                 href={`/movies/${item.slug}`}
                 image={item.poster}
@@ -202,7 +198,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
                 theme="movie"
               />
             ))}
-          </CardRail>
+          </div>
           </section>
         ) : null}
       </HorizontalMediaDetailPage>

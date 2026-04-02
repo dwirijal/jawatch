@@ -30,6 +30,7 @@ import {
   type SeriesReleaseDay,
   type SeriesScheduleLane,
 } from '@/lib/series-presentation';
+import { selectSeriesRecommendations } from '@/lib/series-recommendations';
 
 type SeriesRow = {
   item_key: string;
@@ -140,6 +141,10 @@ export type SeriesDetailData = {
   sourceLabel: string;
   episodes: Array<{ slug: string; title: string; label: string; number: number | null }>;
   recommendations: SeriesCardItem[];
+};
+
+export type SeriesDetailOptions = VisibilityOptions & {
+  includeRecommendations?: boolean;
 };
 
 export type SeriesEpisodeData = {
@@ -773,7 +778,7 @@ export async function searchSeriesCatalog(query: string, limit = 8, options: Vis
   });
 }
 
-export async function getSeriesDetailBySlug(slug: string, options: VisibilityOptions = {}): Promise<SeriesDetailData | null> {
+export async function getSeriesDetailBySlug(slug: string, options: SeriesDetailOptions = {}): Promise<SeriesDetailData | null> {
   const normalizedSlug = slug.trim();
   if (!normalizedSlug) {
     return null;
@@ -847,16 +852,14 @@ export async function getSeriesDetailBySlug(slug: string, options: VisibilityOpt
     const detail = getSeriesDetailRecord(row);
     const genres = getSeriesGenres(detail);
     const country = getRowCountry(row);
-    const recommendations = (await getSeriesCatalog(Boolean(options.includeNsfw)))
-      .filter((item) => item.slug !== row.slug)
-      .map((item) => {
-        const overlap = getSeriesCatalogGenres(item).filter((genre) => genres.includes(genre)).length;
-        const countryBoost = getCatalogCountry(item) === country ? 1 : 0;
-        return { item, rank: overlap * 10 + countryBoost };
-      })
-      .sort((left, right) => right.rank - left.rank)
-      .slice(0, 8)
-      .map(({ item }) => mapSeriesCard(item));
+    const recommendations = options.includeRecommendations === false
+      ? []
+      : selectSeriesRecommendations({
+          currentSlug: row.slug,
+          genres,
+          country,
+          items: (await getSeriesCatalog(Boolean(options.includeNsfw))).map(mapSeriesCard),
+        });
 
     return {
       slug: row.slug,
@@ -886,6 +889,29 @@ export async function getSeriesDetailBySlug(slug: string, options: VisibilityOpt
       episodes: normalizedEpisodes,
       recommendations,
     };
+  });
+}
+
+export async function getSeriesRecommendations({
+  currentSlug,
+  genres,
+  country,
+  includeNsfw = false,
+  limit = 8,
+}: {
+  currentSlug: string;
+  genres: string[];
+  country: string;
+  includeNsfw?: boolean;
+  limit?: number;
+}): Promise<SeriesCardItem[]> {
+  const rows = await getSeriesCatalog(includeNsfw);
+  return selectSeriesRecommendations({
+    currentSlug,
+    genres,
+    country,
+    limit,
+    items: rows.map(mapSeriesCard),
   });
 }
 

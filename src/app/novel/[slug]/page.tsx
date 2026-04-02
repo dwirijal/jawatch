@@ -11,9 +11,9 @@ import { StatCard } from '@/components/molecules/StatCard';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { ReaderMediaDetailPage } from '@/components/organisms/ReaderMediaDetailPage';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
-import { ShareButton } from '@/components/molecules/ShareButton';
 import { TitleBlock } from '@/components/atoms/TitleBlock';
-import { BookCoverArt } from '@/components/atoms/BookCoverArt';
+import { StaticBookCoverArt } from '@/components/atoms/StaticBookCoverArt';
+import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { buildMetadata, buildNovelDetailJsonLd } from '@/lib/seo';
 import Image from 'next/image';
 
@@ -96,7 +96,7 @@ export default async function NovelDetailPage({ params }: PageProps) {
 
               <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:items-end">
                 <div className="relative mx-auto aspect-[210/297] w-44 overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2 hard-shadow-md md:mx-0 md:w-52">
-                  <BookCoverArt src={novel.poster} title={novel.title} subtitle={novel.altTitle} sizes="208px" priority />
+                  <StaticBookCoverArt src={novel.poster} title={novel.title} subtitle={novel.altTitle} sizes="208px" priority />
                 </div>
 
                 <div className="space-y-5">
@@ -109,7 +109,7 @@ export default async function NovelDetailPage({ params }: PageProps) {
                       ))}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <ShareButton title={novel.title} />
+                      <DeferredHeroActions title={novel.title} theme="novel" />
                     </div>
                   </div>
 

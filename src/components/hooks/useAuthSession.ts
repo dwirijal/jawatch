@@ -3,21 +3,23 @@
 // Contract: auth.dwizzy.my.id is the only auth authority consumed by dwizzyWEEB.
 
 import * as React from 'react';
-import { AuthSessionContext } from '@/components/providers/AuthSessionProvider';
-import type { AuthSessionState } from '@/lib/auth-types';
+import { getAuthStatus } from '@/lib/auth-gateway';
+import { createAuthSessionStore, INITIAL_AUTH_SESSION_STATE } from './auth-session-store';
 
-const FALLBACK_SESSION: AuthSessionState = {
-  loading: true,
-  authenticated: false,
-  user: null,
-};
+const authSessionStore = createAuthSessionStore(getAuthStatus);
+
+export { createAuthSessionStore };
 
 export function useAuthSession() {
-  const session = React.useContext(AuthSessionContext);
+  const session = React.useSyncExternalStore(
+    authSessionStore.subscribe,
+    authSessionStore.getSnapshot,
+    authSessionStore.getSnapshot
+  );
 
-  if (!session) {
-    return FALLBACK_SESSION;
-  }
+  React.useEffect(() => {
+    void authSessionStore.ensureLoaded();
+  }, []);
 
-  return session;
+  return session ?? INITIAL_AUTH_SESSION_STATE;
 }

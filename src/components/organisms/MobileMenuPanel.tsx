@@ -2,9 +2,10 @@
 
 import * as React from 'react';
 import { BadgeAlert, Check, X, LogOut, UserRound } from 'lucide-react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Link } from '@/components/atoms/Link';
 import { ModalClose, ModalContent, ModalRoot, ModalTitle } from '@/components/atoms/Modal';
+import { useRedirectTarget } from '@/components/hooks/useRedirectTarget';
 import { useUIStore } from '@/store/useUIStore';
 import { ACCOUNT_PANEL_META, MOBILE_MENU_GROUPS } from '@/lib/navigation';
 import { useAuthSession } from '@/components/hooks/useAuthSession';
@@ -13,13 +14,9 @@ import { buildLoginUrl, buildLogoutRequest } from '@/lib/auth-gateway';
 
 export function MobileMenuPanel() {
   const pathname = usePathname() || '/';
-  const searchParams = useSearchParams();
   const { isSidebarOpen, setSidebarOpen } = useUIStore();
   const session = useAuthSession();
-  const redirectTarget = React.useMemo(() => {
-    const query = searchParams.toString();
-    return query ? `${pathname}?${query}` : pathname;
-  }, [pathname, searchParams]);
+  const redirectTarget = useRedirectTarget();
   const logoutRequest = buildLogoutRequest(redirectTarget);
   const returnTo = logoutRequest.body.get('returnTo') ?? '/';
   const origin = logoutRequest.body.get('origin') ?? '';

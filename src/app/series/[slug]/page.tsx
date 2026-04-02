@@ -1,22 +1,21 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { Play } from 'lucide-react';
-import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
-import { MediaCard } from '@/components/atoms/Card';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
-import { CardRail } from '@/components/molecules/card';
-import { BookmarkButton } from '@/components/organisms/BookmarkButton';
 import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
-import { ShareButton } from '@/components/molecules/ShareButton';
+import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
+import { SeriesRecommendationsSection } from '@/components/organisms/SeriesRecommendationsSection';
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
-import { getSeriesDetailBySlug } from '@/lib/adapters/series';
+import { getSeriesDetailPageData } from './series-detail-data';
+import { SeriesEpisodeSection } from './SeriesEpisodeSection';
 import { buildMetadata, buildSeriesDetailJsonLd } from '@/lib/seo';
-import { formatSeriesCardSubtitle, getSeriesBadgeText, getSeriesTheme } from '@/lib/series-presentation';
+import { getSeriesTheme } from '@/lib/series-presentation';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -75,9 +74,7 @@ function buildEpisodeQueryHref(slug: string, page: number, sort: EpisodeSortMode
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const series = await getSeriesDetailBySlug(slug, {
-    includeNsfw: false,
-  });
+  const series = await getSeriesDetailPageData(slug);
 
   if (!series) {
     return buildMetadata({
@@ -100,9 +97,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function SeriesDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const series = await getSeriesDetailBySlug(slug, {
-    includeNsfw: false,
-  });
+  const series = await getSeriesDetailPageData(slug);
 
   if (!series) {
     notFound();
@@ -142,6 +137,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
       />
       <HorizontalMediaDetailPage
         theme={theme}
+        showAdSection={false}
         hero={
           <VideoDetailHero
             theme={theme}
@@ -160,19 +156,17 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
               { label: 'Status', value: series.status || 'Tidak Tersedia' },
             ]}
             controls={
-              <>
-                <ShareButton title={series.title} theme={theme} />
-                <BookmarkButton
-                  item={{
-                    id: slug,
-                    type: series.mediaType,
-                    title: series.title,
-                    image: series.poster,
-                    timestamp: 0,
-                  }}
-                  theme={theme}
-                />
-              </>
+              <DeferredHeroActions
+                title={series.title}
+                theme={theme}
+                bookmarkItem={{
+                  id: slug,
+                  type: series.mediaType,
+                  title: series.title,
+                  image: series.poster,
+                  timestamp: 0,
+                }}
+              />
             }
             primaryAction={
               latestEpisodeHref ? (
@@ -217,6 +211,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
               <iframe
                 src={trailerEmbedUrl}
                 title={`${series.title} trailer`}
+                loading="lazy"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 className="h-full w-full"
@@ -226,79 +221,33 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
           </section>
         ) : null}
 
-        <section id="episodes" className="space-y-8">
-        <DetailSectionHeading
-          title="Episodes"
+        <SeriesEpisodeSection
           theme={theme}
-          aside={
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline">{series.episodes.length} Tersedia</Badge>
-              <Badge variant="outline">Halaman {currentPage} / {totalPages}</Badge>
-            </div>
-          }
+          episodeCount={series.episodes.length}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          episodeSort={episodeSort}
+          episodes={visibleEpisodes.map((episode) => ({
+            slug: episode.slug,
+            title: episode.title || episode.label,
+            label: episode.label,
+          }))}
+          pageStart={pageStart}
+          totalCount={sortedEpisodes.length}
+          latestSortHref={buildEpisodeQueryHref(slug, 1, 'latest')}
+          azSortHref={buildEpisodeQueryHref(slug, 1, 'az')}
+          previousPageHref={previousPageHref}
+          nextPageHref={nextPageHref}
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant={episodeSort === 'latest' ? theme : 'outline'} size="sm" asChild>
-            <Link href={buildEpisodeQueryHref(slug, 1, 'latest')}>Terbaru</Link>
-          </Button>
-          <Button variant={episodeSort === 'az' ? theme : 'outline'} size="sm" asChild>
-            <Link href={buildEpisodeQueryHref(slug, 1, 'az')}>A-Z</Link>
-          </Button>
-        </div>
-        <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
-          {visibleEpisodes.map((episode) => (
-            <Button
-              key={episode.slug}
-              variant="outline"
-              className="h-full min-h-24 w-full justify-start rounded-[var(--radius-md)] border-border-subtle bg-surface-1 px-4 py-4 text-left hover:bg-surface-elevated"
-              asChild
-            >
-              <Link href={`/series/watch/${episode.slug}`} className="flex h-full flex-col items-start justify-between gap-3">
-                <span className="line-clamp-2 text-sm font-semibold text-white">{episode.title || episode.label}</span>
-                <span className="text-xs text-zinc-400">{episode.label}</span>
-              </Link>
-            </Button>
-          ))}
-        </div>
-        {totalPages > 1 ? (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-zinc-400">
-              Showing {pageStart + 1}-{Math.min(pageStart + visibleEpisodes.length, sortedEpisodes.length)} of {sortedEpisodes.length} episodes
-            </p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled={!previousPageHref} asChild={Boolean(previousPageHref)}>
-                {previousPageHref ? <Link href={previousPageHref}>Previous</Link> : <span>Previous</span>}
-              </Button>
-              <Button variant="outline" size="sm" disabled={!nextPageHref} asChild={Boolean(nextPageHref)}>
-                {nextPageHref ? <Link href={nextPageHref}>Next</Link> : <span>Next</span>}
-              </Button>
-            </div>
-          </div>
-        ) : null}
-        </section>
 
-        {series.recommendations.length > 0 ? (
-          <section id="related" className="space-y-8">
-          <DetailSectionHeading
-            title="More Like This"
+        <Suspense fallback={null}>
+          <SeriesRecommendationsSection
+            currentSlug={series.slug}
+            genres={series.genres}
+            country={series.country}
             theme={theme}
-            aside={<Badge variant="outline">{series.recommendations.length} Judul Menantimu</Badge>}
           />
-          <CardRail variant="default">
-            {series.recommendations.map((item) => (
-              <MediaCard
-                key={item.slug}
-                href={`/series/${item.slug}`}
-                image={item.poster}
-                title={item.title}
-                subtitle={formatSeriesCardSubtitle(item)}
-                badgeText={getSeriesBadgeText(item.type)}
-                theme={getSeriesTheme(item.type)}
-              />
-            ))}
-          </CardRail>
-          </section>
-        ) : null}
+        </Suspense>
       </HorizontalMediaDetailPage>
     </>
   );

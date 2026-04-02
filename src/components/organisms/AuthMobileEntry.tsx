@@ -1,11 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
 import { LogOut, UserRound } from 'lucide-react';
 import { Avatar } from '@/components/atoms/Avatar';
 import { Link } from '@/components/atoms/Link';
 import { useAuthSession } from '@/components/hooks/useAuthSession';
+import { useRedirectTarget } from '@/components/hooks/useRedirectTarget';
 import { buildLoginUrl, buildLogoutRequest } from '@/lib/auth-gateway';
 import { cn } from '@/lib/utils';
 
@@ -15,13 +15,8 @@ function compactDisplayName(displayName: string) {
 }
 
 export function AuthMobileEntry() {
-  const pathname = usePathname() || '/';
-  const searchParams = useSearchParams();
   const session = useAuthSession();
-  const redirectTarget = React.useMemo(() => {
-    const query = searchParams.toString();
-    return query ? `${pathname}?${query}` : pathname;
-  }, [pathname, searchParams]);
+  const redirectTarget = useRedirectTarget();
 
   if (session.loading) {
     return <div className="h-11 w-14 animate-pulse rounded-[var(--radius-sm)] bg-surface-1/80" />;

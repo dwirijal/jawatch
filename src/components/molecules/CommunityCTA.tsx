@@ -1,5 +1,3 @@
-'use client';
-
 import { MessageSquare, ExternalLink } from 'lucide-react';
 import { Paper } from '@/components/atoms/Paper';
 import { cn, THEME_CONFIG, ThemeType } from '@/lib/utils';

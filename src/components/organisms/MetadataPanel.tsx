@@ -1,6 +1,3 @@
-'use client';
-
-import * as React from 'react';
 import { Star, TrendingUp, Users, ExternalLink, Play } from 'lucide-react';
 import type { JikanEnrichment } from '@/lib/types';
 import { Badge } from '@/components/atoms/Badge';

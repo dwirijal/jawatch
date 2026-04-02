@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 
 interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
+  prefetch?: boolean | null;
 }
 
 function isExternalHref(href: string) {
@@ -11,7 +12,7 @@ function isExternalHref(href: string) {
 }
 
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ href, className, rel, target, ...props }, ref) => {
+  ({ href, className, rel, target, prefetch, ...props }, ref) => {
     if (isExternalHref(href)) {
       return (
         <a
@@ -25,7 +26,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       );
     }
 
-    return <NextLink ref={ref} href={href} className={cn(className)} {...props} />;
+    return <NextLink ref={ref} href={href} prefetch={prefetch} className={cn(className)} {...props} />;
   }
 );
 

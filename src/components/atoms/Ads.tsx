@@ -1,16 +1,17 @@
 'use client';
 
 import * as React from 'react';
-import { BadgeAlert, Megaphone } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Paper } from '@/components/atoms/Paper';
+import { AdRenderState } from '@/lib/ad-section-visibility';
+import { AdNetworkBootstrap } from '@/components/organisms/AdNetworkBootstrap';
 import { cn, ThemeType } from '@/lib/utils';
 
 interface AdsProps {
   type?: 'horizontal' | 'vertical' | 'square';
-  compact?: boolean;
   className?: string;
   theme?: ThemeType;
+  onStatusChange?: (status: AdRenderState) => void;
 }
 
 const ADS_SIZES = {
@@ -62,7 +63,20 @@ function getAdultKeywords(pathname: string, theme?: ThemeType): string {
   return 'adult,hentai';
 }
 
-export function Ads({ type = 'horizontal', compact = false, className, theme }: AdsProps) {
+function hasRenderedAdContent(slot: HTMLElement): boolean {
+  const adStatus = slot.getAttribute('data-ad-status');
+  if (adStatus === 'filled') {
+    return true;
+  }
+
+  if (adStatus === 'unfilled') {
+    return false;
+  }
+
+  return Boolean(slot.querySelector('iframe, img, video, object, embed') || slot.childElementCount > 0);
+}
+
+export function Ads({ type = 'horizontal', className, theme, onStatusChange }: AdsProps) {
   const pathname = usePathname() || '/';
   const isNsfwRoute = pathname === '/nsfw' || pathname.startsWith('/nsfw/');
   const adsenseRef = React.useRef<HTMLModElement | null>(null);
@@ -73,16 +87,54 @@ export function Ads({ type = 'horizontal', compact = false, className, theme }: 
   const hasAdultInventory = Boolean(adultZoneId);
   const provider = isNsfwRoute ? 'adult' : 'adsense';
   const adultSubId = React.useMemo(() => hashToPositiveInt(`${pathname}:${type}`), [pathname, type]);
+  const [status, setStatus] = React.useState<AdRenderState>('pending');
+
+  React.useEffect(() => {
+    onStatusChange?.(status);
+  }, [onStatusChange, status]);
+
+  React.useEffect(() => {
+    setStatus(provider === 'adsense' ? (hasAdsenseInventory ? 'pending' : 'hidden') : (hasAdultInventory ? 'pending' : 'hidden'));
+  }, [hasAdsenseInventory, hasAdultInventory, provider]);
 
   React.useEffect(() => {
     if (provider !== 'adsense' || !hasAdsenseInventory || !adsenseRef.current) {
+      if (provider === 'adsense' && !hasAdsenseInventory) {
+        setStatus('hidden');
+      }
       return undefined;
     }
 
     const slot = adsenseRef.current;
+    let settled = false;
+
+    const updateStatus = (nextStatus: AdRenderState) => {
+      if (settled && nextStatus === 'pending') {
+        return;
+      }
+
+      if (nextStatus !== 'pending') {
+        settled = true;
+      }
+
+      setStatus((current) => (current === nextStatus ? current : nextStatus));
+    };
+
+    const inspectSlot = () => {
+      const adStatus = slot.getAttribute('data-ad-status');
+      if (adStatus === 'unfilled') {
+        updateStatus('hidden');
+        return;
+      }
+
+      if (hasRenderedAdContent(slot)) {
+        updateStatus('ready');
+      }
+    };
 
     const serve = () => {
       if (slot.dataset.loaded === 'true') {
+        inspectSlot();
         return;
       }
 
@@ -93,30 +145,70 @@ export function Ads({ type = 'horizontal', compact = false, className, theme }: 
       try {
         window.adsbygoogle.push({});
         slot.dataset.loaded = 'true';
+        inspectSlot();
       } catch {
-        // Ignore provider errors and keep the reserved slot intact.
+        updateStatus('hidden');
       }
     };
+
+    const observer = new MutationObserver(inspectSlot);
+    observer.observe(slot, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-ad-status', 'style'],
+    });
 
     serve();
     window.addEventListener('dwizzy:adsense-ready', serve);
     const retryTimer = window.setTimeout(serve, 400);
+    const settleTimer = window.setTimeout(() => {
+      inspectSlot();
+      if (!hasRenderedAdContent(slot)) {
+        updateStatus('hidden');
+      }
+    }, 2500);
 
     return () => {
+      observer.disconnect();
       window.removeEventListener('dwizzy:adsense-ready', serve);
       window.clearTimeout(retryTimer);
+      window.clearTimeout(settleTimer);
     };
   }, [hasAdsenseInventory, provider]);
 
   React.useEffect(() => {
     if (provider !== 'adult' || !adultZoneId || !adultRef.current) {
+      if (provider === 'adult' && !adultZoneId) {
+        setStatus('hidden');
+      }
       return undefined;
     }
 
     const slot = adultRef.current;
+    let settled = false;
+
+    const updateStatus = (nextStatus: AdRenderState) => {
+      if (settled && nextStatus === 'pending') {
+        return;
+      }
+
+      if (nextStatus !== 'pending') {
+        settled = true;
+      }
+
+      setStatus((current) => (current === nextStatus ? current : nextStatus));
+    };
+
+    const inspectSlot = () => {
+      if (hasRenderedAdContent(slot)) {
+        updateStatus('ready');
+      }
+    };
 
     const serve = () => {
       if (slot.dataset.loaded === 'true') {
+        inspectSlot();
         return;
       }
 
@@ -127,97 +219,90 @@ export function Ads({ type = 'horizontal', compact = false, className, theme }: 
       try {
         window.AdProvider.push({ serve: {} });
         slot.dataset.loaded = 'true';
+        inspectSlot();
       } catch {
-        // Ignore provider errors and keep the reserved slot intact.
+        updateStatus('hidden');
       }
     };
+
+    const observer = new MutationObserver(inspectSlot);
+    observer.observe(slot, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
 
     serve();
     window.addEventListener('dwizzy:adult-ads-ready', serve);
     const retryTimer = window.setTimeout(serve, 400);
+    const settleTimer = window.setTimeout(() => {
+      inspectSlot();
+      if (!hasRenderedAdContent(slot)) {
+        updateStatus('hidden');
+      }
+    }, 2500);
 
     return () => {
+      observer.disconnect();
       window.removeEventListener('dwizzy:adult-ads-ready', serve);
       window.clearTimeout(retryTimer);
+      window.clearTimeout(settleTimer);
     };
   }, [adultZoneId, provider]);
 
-  const fallbackIcon = provider === 'adult' ? BadgeAlert : Megaphone;
-  const FallbackIcon = fallbackIcon;
+  if (status === 'hidden') {
+    return null;
+  }
 
   return (
-    <Paper
-      data-theme={theme}
-      tone="muted"
-      shadow="sm"
-      className={cn(
-        'relative overflow-hidden border border-border-subtle/80 bg-surface-1',
-        ADS_SIZES[type],
-        className
-      )}
-    >
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between px-3 py-2">
-        <span className="rounded-[var(--radius-xs)] border border-border-subtle bg-background/80 px-2 py-1 text-[9px] font-black uppercase tracking-[0.24em] text-zinc-500 backdrop-blur">
-          {provider === 'adult' ? 'Adult Sponsor' : 'Sponsored'}
-        </span>
-      </div>
-
-      {provider === 'adsense' && hasAdsenseInventory ? (
-        <div className="h-full w-full px-2 py-8 md:px-3">
-          <ins
-            ref={adsenseRef}
-            className="adsbygoogle block h-full w-full overflow-hidden"
-            style={{ display: 'block' }}
-            data-ad-client={ADSENSE_CLIENT}
-            data-ad-slot={adsenseSlotId}
-            data-ad-format="auto"
-            data-full-width-responsive={type === 'horizontal' ? 'true' : 'false'}
-          />
+    <>
+      <AdNetworkBootstrap
+        provider={provider}
+        enabled={provider === 'adsense' ? hasAdsenseInventory : hasAdultInventory}
+      />
+      <Paper
+        data-theme={theme}
+        tone="muted"
+        shadow="sm"
+        className={cn(
+          'relative overflow-hidden border border-border-subtle/80 bg-surface-1',
+          status !== 'ready' && 'pointer-events-none opacity-0',
+          ADS_SIZES[type],
+          className
+        )}
+      >
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between px-3 py-2">
+          <span className="rounded-[var(--radius-xs)] border border-border-subtle bg-background/80 px-2 py-1 text-[9px] font-black uppercase tracking-[0.24em] text-zinc-500 backdrop-blur">
+            {provider === 'adult' ? 'Adult Sponsor' : 'Sponsored'}
+          </span>
         </div>
-      ) : null}
 
-      {provider === 'adult' && adultZoneId ? (
-        <div className="h-full w-full px-2 py-8 md:px-3">
-          <ins
-            ref={adultRef}
-            className="eas6a97888e block h-full w-full overflow-hidden"
-            data-zoneid={adultZoneId}
-            data-sub={adultSubId}
-            data-keywords={getAdultKeywords(pathname, theme)}
-          />
-        </div>
-      ) : null}
-
-      {((provider === 'adsense' && !hasAdsenseInventory) || (provider === 'adult' && !hasAdultInventory)) ? (
-        <>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.05),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.03),transparent_30%)]" />
-          <div
-            className={cn(
-              'relative flex h-full min-h-full flex-col items-center justify-center text-center',
-              compact ? 'gap-2 px-4 py-3.5' : 'gap-3 px-6 py-8'
-            )}
-          >
-            <div
-              className={cn(
-                'inline-flex items-center justify-center border border-border-subtle bg-accent-soft text-accent',
-                compact ? 'h-9 w-9 rounded-xl' : 'h-12 w-12 rounded-2xl'
-              )}
-            >
-              <FallbackIcon className={cn(compact ? 'h-4 w-4' : 'h-5 w-5')} />
-            </div>
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-accent">
-                {provider === 'adult' ? 'Adult Inventory Pending' : 'Sponsored Placement'}
-              </p>
-              <p className={cn('text-zinc-400', compact ? 'max-w-[14rem] text-[11px] leading-4' : 'max-w-xs text-xs leading-5')}>
-                {provider === 'adult'
-                  ? 'Configure adult zone IDs to activate NSFW monetization on this placement.'
-                  : 'Auto ads stay active across SFW pages. Add slot IDs if you want this exact placement reserved for AdSense.'}
-              </p>
-            </div>
+        {provider === 'adsense' && hasAdsenseInventory ? (
+          <div className="h-full w-full px-2 py-8 md:px-3">
+            <ins
+              ref={adsenseRef}
+              className="adsbygoogle block h-full w-full overflow-hidden"
+              style={{ display: 'block' }}
+              data-ad-client={ADSENSE_CLIENT}
+              data-ad-slot={adsenseSlotId}
+              data-ad-format="auto"
+              data-full-width-responsive={type === 'horizontal' ? 'true' : 'false'}
+            />
           </div>
-        </>
-      ) : null}
-    </Paper>
+        ) : null}
+
+        {provider === 'adult' && adultZoneId ? (
+          <div className="h-full w-full px-2 py-8 md:px-3">
+            <ins
+              ref={adultRef}
+              className="eas6a97888e block h-full w-full overflow-hidden"
+              data-zoneid={adultZoneId}
+              data-sub={adultSubId}
+              data-keywords={getAdultKeywords(pathname, theme)}
+            />
+          </div>
+        ) : null}
+      </Paper>
+    </>
   );
 }

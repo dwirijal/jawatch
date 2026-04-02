@@ -1,12 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { Avatar } from '@/components/atoms/Avatar';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { useAuthSession } from '@/components/hooks/useAuthSession';
+import { useRedirectTarget } from '@/components/hooks/useRedirectTarget';
 import { buildLoginUrl, buildLogoutRequest } from '@/lib/auth-gateway';
 
 function compactDisplayName(displayName: string) {
@@ -15,13 +15,8 @@ function compactDisplayName(displayName: string) {
 }
 
 export function AuthNavEntry() {
-  const pathname = usePathname() || '/';
-  const searchParams = useSearchParams();
   const session = useAuthSession();
-  const redirectTarget = React.useMemo(() => {
-    const query = searchParams.toString();
-    return query ? `${pathname}?${query}` : pathname;
-  }, [pathname, searchParams]);
+  const redirectTarget = useRedirectTarget();
 
   if (session.loading) {
     return <div className="h-10 w-32 animate-pulse rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1" />;

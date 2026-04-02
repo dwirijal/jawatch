@@ -2,14 +2,10 @@
 
 import dynamic from 'next/dynamic';
 import { NoSsr } from '@/components/atoms/NoSsr';
+import { DeferredAnalytics } from '@/components/organisms/DeferredAnalytics';
 
 const DeviceListener = dynamic(
   () => import('@/components/atoms/DeviceListener').then((mod) => mod.DeviceListener),
-  { ssr: false }
-);
-
-const AdNetworkScripts = dynamic(
-  () => import('@/components/organisms/AdNetworkScripts').then((mod) => mod.AdNetworkScripts),
   { ssr: false }
 );
 
@@ -26,8 +22,8 @@ const PWAInstallPrompt = dynamic(
 export function ClientShell() {
   return (
     <>
-      <AdNetworkScripts />
       <DeviceListener />
+      <DeferredAnalytics />
       <NoSsr>
         <PWAInstallPrompt />
       </NoSsr>

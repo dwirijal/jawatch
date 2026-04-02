@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { SplitLayout } from '@/components/atoms/SplitLayout';
-import { AdSection } from '@/components/organisms/AdSection';
 import { ThemeType } from '@/lib/utils';
 
 interface DetailPageScaffoldProps {
@@ -13,7 +12,7 @@ interface DetailPageScaffoldProps {
   desktopColumnsClassName?: string;
 }
 
-export function DetailPageScaffold({
+export async function DetailPageScaffold({
   hero,
   children,
   sidebar,
@@ -22,12 +21,16 @@ export function DetailPageScaffold({
   showAdSection = true,
   desktopColumnsClassName,
 }: DetailPageScaffoldProps) {
+  const AdSection = showAdSection
+    ? (await import('@/components/organisms/AdSection')).AdSection
+    : null;
+
   return (
     <div className="app-shell" data-theme={theme} data-view-mode="comfortable">
       <div className="app-container-wide flex flex-col gap-12 pb-6 pt-8 md:gap-16">
         {hero}
 
-        {showAdSection ? <AdSection theme={theme} /> : null}
+        {AdSection ? <AdSection theme={theme} /> : null}
 
         {sidebar ? (
           <SplitLayout

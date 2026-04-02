@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuthSession } from '@/components/hooks/useAuthSession';
+import { useRedirectTarget } from '@/components/hooks/useRedirectTarget';
 import { buildLoginUrl } from '@/lib/auth-gateway';
 
 type AuthenticatedAction = () => void;
@@ -13,14 +13,8 @@ interface GateOptions {
 
 export function useAuthGate() {
   const session = useAuthSession();
-  const pathname = usePathname() || '/';
-  const searchParams = useSearchParams();
   const [noticeVisible, setNoticeVisible] = React.useState(false);
-
-  const redirectTarget = React.useMemo(() => {
-    const query = searchParams.toString();
-    return query ? `${pathname}?${query}` : pathname;
-  }, [pathname, searchParams]);
+  const redirectTarget = useRedirectTarget();
   const loginHref = React.useMemo(() => buildLoginUrl(redirectTarget), [redirectTarget]);
 
   const requireAuth = React.useCallback(

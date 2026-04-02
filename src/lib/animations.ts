@@ -1,4 +1,6 @@
-import { utils } from 'animejs';
+function staggerByIndex(step: number) {
+  return (_target: unknown, index: number) => index * step;
+}
 
 /**
  * Premium Animation Presets for dwizzyWEEB
@@ -48,7 +50,7 @@ export const ANIMATION_PRESETS = {
   staggerEntrance: (delay = 80) => ({
     opacity: [0, 1],
     translateY: [20, 0],
-    delay: utils.stagger(delay),
+    delay: staggerByIndex(delay),
     duration: 800,
     easing: 'outExpo'
   }),
@@ -57,7 +59,7 @@ export const ANIMATION_PRESETS = {
   textReveal: {
     opacity: [0, 1],
     translateX: [-50, 0],
-    delay: utils.stagger(100),
+    delay: staggerByIndex(100),
     duration: 1200,
     easing: 'outExpo'
   },

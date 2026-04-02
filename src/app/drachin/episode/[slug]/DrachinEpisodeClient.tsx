@@ -4,67 +4,35 @@ import * as React from 'react';
 import Image from 'next/image';
 import { Check, LayoutGrid, Play, TimerReset } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
-import { StateInfo } from '@/components/molecules/StateInfo';
-import { AdSection } from '@/components/organisms/AdSection';
-import { PageStateScaffold } from '@/components/organisms/PageStateScaffold';
+import { DeferredAdSection } from '@/components/organisms/DeferredAdSection';
 import { VerticalPlayerPage } from '@/components/organisms/VerticalPlayerPage';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
-import { getDrachinDetailBySlug, getDrachinEpisodeBySlug, type DrachinDetailData, type DrachinEpisodeData } from '@/lib/adapters/drama';
+import type { DrachinDetailData, DrachinEpisodeData } from '@/lib/adapters/drama';
 import { saveVerticalDramaProgress } from '@/lib/vertical-drama-store';
 
 interface DrachinEpisodeClientProps {
   slug: string;
+  episodeIndex: number;
+  detail: DrachinDetailData;
+  episode: DrachinEpisodeData;
 }
 
-export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps) {
+export default function DrachinEpisodeClient({
+  slug,
+  episodeIndex,
+  detail,
+  episode,
+}: DrachinEpisodeClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const index = searchParams.get('index') || '1';
-  const episodeIndex = Number.parseInt(index, 10) || 1;
-
-  const [detail, setDetail] = React.useState<DrachinDetailData | null>(null);
-  const [episode, setEpisode] = React.useState<DrachinEpisodeData | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
   const [autoNextCountdown, setAutoNextCountdown] = React.useState<number | null>(null);
 
   React.useEffect(() => {
-    let cancelled = false;
-
-    Promise.all([getDrachinDetailBySlug(slug), getDrachinEpisodeBySlug(slug, episodeIndex)])
-      .then(([detailData, episodeData]) => {
-        if (!cancelled) {
-          setDetail(detailData);
-          setEpisode(episodeData);
-          setError(detailData && episodeData ? null : 'Playback data is unavailable for this episode.');
-        }
-      })
-      .catch((cause) => {
-        if (!cancelled) {
-          setError(cause instanceof Error ? cause.message : 'Failed to load playback.');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [slug, episodeIndex]);
-
-  React.useEffect(() => {
-    if (!loading && episode) {
-      saveVerticalDramaProgress('drachin', slug, episodeIndex);
-    }
-  }, [episode, episodeIndex, loading, slug]);
+    saveVerticalDramaProgress('drachin', slug, episodeIndex);
+  }, [episodeIndex, slug]);
 
   const currentIndex = detail?.episodes.findIndex((item) => item.index === String(episodeIndex)) ?? -1;
   const previousEpisode = currentIndex > 0 && detail ? detail.episodes[currentIndex - 1] : null;
@@ -98,27 +66,6 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
       window.clearTimeout(timeoutId);
     };
   }, [autoNextCountdown, nextEpisodeHref, router]);
-
-  if (loading) {
-    return (
-      <PageStateScaffold>
-          <Paper tone="muted" shadow="sm" className="p-6 md:p-8">
-            <div className="animate-pulse space-y-4">
-              <div className="h-5 w-32 rounded-full bg-white/10" />
-              <div className="aspect-video rounded-[var(--radius-lg)] bg-white/10" />
-            </div>
-          </Paper>
-      </PageStateScaffold>
-    );
-  }
-
-  if (!detail || !episode || error) {
-    return (
-      <PageStateScaffold>
-          <StateInfo type="error" title="Playback unavailable" description={error || 'This episode could not be loaded.'} />
-      </PageStateScaffold>
-    );
-  }
 
   return (
     <VerticalPlayerPage
@@ -258,7 +205,7 @@ export default function DrachinEpisodeClient({ slug }: DrachinEpisodeClientProps
         </Paper>
       ) : null}
 
-      <AdSection theme="drama" />
+      <DeferredAdSection theme="drama" />
 
       <section className="space-y-4">
         <div className="flex items-end justify-between gap-3 border-b border-border-subtle pb-3.5 md:pb-4">

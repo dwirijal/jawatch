@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Clapperboard, CalendarDays, Globe2, Grid3X3, LayoutGrid, Tag, Tv, Zap, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
-import { AdSection } from '@/components/organisms/AdSection';
+import { DeferredAdSection } from '@/components/organisms/DeferredAdSection';
 import { MediaHubHeader } from './MediaHubHeader';
 import { MediaCard } from '@/components/atoms/Card';
 import { GenreFilter } from '@/components/molecules/GenreFilter';
@@ -147,7 +147,7 @@ export function MediaHubTemplate({
           )}
         </div>
 
-        <AdSection />
+        <DeferredAdSection />
 
         <div className="app-section-stack">
           {results ? (

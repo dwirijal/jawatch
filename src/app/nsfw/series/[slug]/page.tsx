@@ -2,10 +2,9 @@ import { notFound } from 'next/navigation';
 import { Play } from 'lucide-react';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
-import { MediaCard } from '@/components/atoms/Card';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
-import { CardRail } from '@/components/molecules/card';
+import { StaticMediaCard } from '@/components/atoms/StaticMediaCard';
 import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
 import { ShareButton } from '@/components/molecules/ShareButton';
@@ -239,9 +238,9 @@ export default async function NsfwSeriesDetailPage({ params, searchParams }: Pag
             theme={theme}
             aside={<Badge variant="outline">{series.recommendations.length} Judul Menantimu</Badge>}
           />
-          <CardRail variant="default">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {series.recommendations.map((item) => (
-              <MediaCard
+              <StaticMediaCard
                 key={item.slug}
                 href={getNsfwSeriesDetailHref(item.slug)}
                 image={item.poster}
@@ -251,7 +250,7 @@ export default async function NsfwSeriesDetailPage({ params, searchParams }: Pag
                 theme={getSeriesTheme(item.type)}
               />
             ))}
-          </CardRail>
+          </div>
         </section>
       ) : null}
     </HorizontalMediaDetailPage>

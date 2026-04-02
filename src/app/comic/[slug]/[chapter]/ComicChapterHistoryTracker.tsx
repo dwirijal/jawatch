@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { saveHistory } from '@/lib/store';
 
 interface ComicChapterHistoryTrackerProps {
   slug: string;
@@ -19,15 +18,27 @@ export default function ComicChapterHistoryTracker({
   chapterLabel,
 }: ComicChapterHistoryTrackerProps) {
   React.useEffect(() => {
-    saveHistory({
-      id: slug,
-      type: 'manga',
-      title,
-      image,
-      lastChapterOrEpisode: chapterLabel,
-      lastLink: href,
-      timestamp: Date.now(),
+    let cancelled = false;
+
+    import('@/lib/store').then(({ saveHistory }) => {
+      if (cancelled) {
+        return;
+      }
+
+      saveHistory({
+        id: slug,
+        type: 'manga',
+        title,
+        image,
+        lastChapterOrEpisode: chapterLabel,
+        lastLink: href,
+        timestamp: Date.now(),
+      });
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug, title, image, href, chapterLabel]);
 
   return null;

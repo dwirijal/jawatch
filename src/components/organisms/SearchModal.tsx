@@ -82,17 +82,6 @@ export function SearchModal() {
   }, [query, router, setSearchOpen]);
 
   React.useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setSearchOpen(!isSearchOpen);
-      }
-    };
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
-  }, [isSearchOpen, setSearchOpen]);
-
-  React.useEffect(() => {
     if (query.length < 2) {
       latestRequestId.current += 1;
       setLoading(false);
@@ -193,58 +182,42 @@ export function SearchModal() {
   };
 
   return (
-    <>
-      <Button 
-        variant="ghost" 
-        onClick={() => setSearchOpen(true)}
-        className="hidden items-center gap-4 rounded-[var(--radius-sm)] border border-white/5 bg-surface-1/50 backdrop-blur-md px-4 py-2 text-zinc-400 hover:bg-surface-elevated hover:text-white md:flex refractive-border glass-noise"
-      >
-        <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-zinc-500" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Search Discovery</span>
-        </div>
-        <div className="flex items-center gap-1 rounded-[var(--radius-xs)] border border-white/10 bg-white/5 px-1.5 py-0.5">
-          <Command className="w-2.5 h-2.5 opacity-50" />
-          <span className="text-[9px] font-black">K</span>
-        </div>
-      </Button>
-
-      <ModalRoot open={isSearchOpen} onOpenChange={setSearchOpen}>
-          <ModalContent className="w-full max-w-2xl p-4 animate-in zoom-in-95 duration-300" overlayClassName="z-[200] backdrop-blur-2xl bg-black/60 animate-in fade-in duration-300">
-            <ModalTitle className="sr-only">Search media</ModalTitle>
-            <Paper glassy padded={false} className="overflow-hidden rounded-[var(--radius-2xl)] bg-background/40 shadow-2xl">
-              <div className="flex items-center border-b border-white/5 px-6 py-6 bg-white/5">
-                <Search className="mr-4 h-6 w-6 text-white/40" />
-                <Input
-                  id={inputId}
-                  autoFocus
-                  placeholder="Type to search anything..."
-                  aria-label="Search media"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      openSearchResults();
-                    }
-                  }}
-                  className="h-auto flex-1 border-0 bg-transparent px-0 py-0 text-lg font-black uppercase tracking-tight text-white placeholder:text-zinc-600 focus-visible:ring-0 md:text-2xl"
-                />
-                {loading ? (
-                  <Loader2 className="h-6 w-6 animate-spin text-white/20" />
-                ) : (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSearchOpen(false)}
-                    aria-label="Close search"
-                    className="h-10 w-10 rounded-full bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-white transition-all"
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
-                )}
-              </div>
+    <ModalRoot open={isSearchOpen} onOpenChange={setSearchOpen}>
+      <ModalContent className="w-full max-w-2xl p-4 animate-in zoom-in-95 duration-300" overlayClassName="z-[200] bg-black/60 backdrop-blur-2xl animate-in fade-in duration-300">
+        <ModalTitle className="sr-only">Search media</ModalTitle>
+        <Paper glassy padded={false} className="overflow-hidden rounded-[var(--radius-2xl)] bg-background/40 shadow-2xl">
+          <div className="flex items-center border-b border-white/5 bg-white/5 px-6 py-6">
+            <Search className="mr-4 h-6 w-6 text-white/40" />
+            <Input
+              id={inputId}
+              autoFocus
+              placeholder="Type to search anything..."
+              aria-label="Search media"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  openSearchResults();
+                }
+              }}
+              className="h-auto flex-1 border-0 bg-transparent px-0 py-0 text-lg font-black uppercase tracking-tight text-white placeholder:text-zinc-600 focus-visible:ring-0 md:text-2xl"
+            />
+            {loading ? (
+              <Loader2 className="h-6 w-6 animate-spin text-white/20" />
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setSearchOpen(false)}
+                aria-label="Close search"
+                className="h-10 w-10 rounded-full bg-white/5 text-zinc-500 transition-all hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
 
               <ScrollArea className="max-h-[65vh]">
                 <div className="space-y-6 p-6">
@@ -336,8 +309,7 @@ export function SearchModal() {
                  <Typography as="span" size="xs" uppercase className="font-black italic text-white/10 tracking-[0.3em]">dwizzyWEEB</Typography>
               </div>
             </Paper>
-          </ModalContent>
-      </ModalRoot>
-    </>
+      </ModalContent>
+    </ModalRoot>
   );
 }

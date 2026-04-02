@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { Bookmark, Clock4 } from 'lucide-react';
-import { AdSection } from '@/components/organisms/AdSection';
-import { ContinueWatching } from '@/components/organisms/ContinueWatching';
-import { SavedContentSection } from '@/components/organisms/SavedContentSection';
+import { CollectionSections } from '@/app/collection/CollectionSections';
+import { DeferredAdSection } from '@/components/organisms/DeferredAdSection';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 
 export const metadata: Metadata = {
@@ -37,11 +36,10 @@ export default function CollectionPage() {
           />
         </section>
 
-        <AdSection />
+        <DeferredAdSection />
 
         <div className="app-section-stack">
-          <ContinueWatching />
-          <SavedContentSection title="Saved Favorites" />
+          <CollectionSections />
         </div>
       </div>
     </main>

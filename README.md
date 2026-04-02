@@ -43,6 +43,24 @@ Main envs:
 - `SITE_URL` (canonical site URL for metadata/sitemap)
 - `NEXT_PUBLIC_SITE_URL` (client app origin fallback)
 
+## Verification
+
+Primary local verification flow:
+
+```bash
+npm run verify
+```
+
+This runs:
+
+- unit tests
+- ESLint
+- TypeScript
+- production build
+- route performance budgets
+
+Performance budgets are defined in [perf-budgets.json](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/perf-budgets.json). Operational notes live in [docs/performance-release-playbook.md](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/docs/performance-release-playbook.md).
+
 You can start editing the app from [src/app/page.tsx](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/src/app/page.tsx). The page auto-updates as you edit the file.
 
 ## Learn More
@@ -61,6 +79,8 @@ Preferred deployment target:
 - first-time auth: `npx vercel login`
 - link project: `npm run link:vercel`
 - production deploy: `npm run deploy:vercel`
+- project id: `prj_RLGnVJAUGiBdCLJk9kZkCZYHHDEk`
+- team id: `team_LkIeOkeNrl7eNLKUJUljLeaC`
 
 Recommended Vercel envs:
 
@@ -79,3 +99,15 @@ Cloudflare-specific deploy flows are still available, but no longer the primary 
 
 - preview: `npm run preview:cloudflare`
 - deploy: `npm run deploy:cloudflare`
+
+## CI
+
+GitHub Actions CI is defined in [.github/workflows/ci.yml](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/.github/workflows/ci.yml).
+
+It currently gates:
+
+- `npm run test:unit`
+- `npm run lint`
+- `npm run typecheck`
+- `npm run build`
+- `npm run perf:budgets`

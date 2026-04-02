@@ -1,0 +1,122 @@
+'use client';
+
+import * as React from 'react';
+import dynamic from 'next/dynamic';
+import type { BookmarkItem } from '@/lib/store';
+import type { ThemeType } from '@/lib/utils';
+
+const ShareButton = dynamic(
+  () => import('@/components/molecules/ShareButton').then((mod) => mod.ShareButton),
+  { ssr: false }
+);
+
+const BookmarkButton = dynamic(
+  () => import('@/components/organisms/BookmarkButton').then((mod) => mod.BookmarkButton),
+  { ssr: false }
+);
+
+interface DeferredHeroActionsProps {
+  title: string;
+  theme: Extract<ThemeType, 'manga' | 'anime' | 'donghua' | 'movie' | 'drama' | 'novel'>;
+  bookmarkItem?: BookmarkItem;
+}
+
+function scheduleDeferredLoad(task: () => void) {
+  let cancelled = false;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let idleId: number | null = null;
+  const requestIdle =
+    'requestIdleCallback' in window ? window.requestIdleCallback.bind(window) : null;
+  const cancelIdle =
+    'cancelIdleCallback' in window ? window.cancelIdleCallback.bind(window) : null;
+
+  const run = () => {
+    if (cancelled) {
+      return;
+    }
+
+    if (requestIdle) {
+      idleId = requestIdle(() => {
+        if (!cancelled) {
+          task();
+        }
+      }, { timeout: 1600 });
+      return;
+    }
+
+    timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        task();
+      }
+    }, 500);
+  };
+
+  if (document.readyState === 'complete') {
+    run();
+  } else {
+    window.addEventListener('load', run, { once: true });
+  }
+
+  return () => {
+    cancelled = true;
+    window.removeEventListener('load', run);
+    if (timeoutId != null) {
+      clearTimeout(timeoutId);
+    }
+    if (idleId != null && cancelIdle) {
+      cancelIdle(idleId);
+    }
+  };
+}
+
+function ActionPlaceholder({ wide = false }: { wide?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={wide
+        ? 'inline-flex h-10 min-w-[7rem] rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/80'
+        : 'inline-flex h-10 w-10 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/80'}
+    />
+  );
+}
+
+export function DeferredHeroActions({
+  title,
+  theme,
+  bookmarkItem,
+}: DeferredHeroActionsProps) {
+  const [shouldLoad, setShouldLoad] = React.useState(false);
+  const bookmarkTheme = theme === 'novel' ? undefined : theme;
+
+  React.useEffect(() => {
+    if (shouldLoad) {
+      return;
+    }
+
+    return scheduleDeferredLoad(() => {
+      setShouldLoad(true);
+    });
+  }, [shouldLoad]);
+
+  const handleEagerLoad = React.useCallback(() => {
+    setShouldLoad(true);
+  }, []);
+
+  return (
+    <span
+      className="contents"
+      onPointerEnter={handleEagerLoad}
+      onFocus={handleEagerLoad}
+      onTouchStart={handleEagerLoad}
+    >
+      {shouldLoad ? <ShareButton title={title} theme={theme} /> : <ActionPlaceholder />}
+      {bookmarkItem && bookmarkTheme ? (
+        shouldLoad ? (
+          <BookmarkButton item={bookmarkItem} theme={bookmarkTheme} />
+        ) : (
+          <ActionPlaceholder wide />
+        )
+      ) : null}
+    </span>
+  );
+}

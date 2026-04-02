@@ -1,0 +1,97 @@
+{
+  "ignoreRoutePatterns": [
+    "^/_not-found$"
+  ],
+  "routeGroups": [
+    {
+      "name": "landing-listing",
+      "routePatterns": [
+        "^/$",
+        "^/(series|movies|novel|comic|search|collection|nsfw|drachin|dramabox)$",
+        "^/series/(anime|donghua|drama|list|drachin|country/\\[country\\]|genre/\\[genre\\]|year/\\[year\\])$",
+        "^/comic/(manga|manhua|manhwa)$"
+      ],
+      "budgets": {
+        "healthy": {
+          "gzipBytes": 170000,
+          "rawBytes": 550000
+        },
+        "warn": {
+          "gzipBytes": 190000,
+          "rawBytes": 650000
+        },
+        "fail": {
+          "gzipBytes": 220000,
+          "rawBytes": 725000
+        }
+      }
+    },
+    {
+      "name": "detail",
+      "routePatterns": [
+        "^/(series|movies|comic|novel)/\\[slug\\]$",
+        "^/nsfw/(series|movies|comic)/\\[slug\\]$",
+        "^/drachin/\\[slug\\]$",
+        "^/dramabox/\\[bookId\\]$"
+      ],
+      "budgets": {
+        "healthy": {
+          "gzipBytes": 180000,
+          "rawBytes": 575000
+        },
+        "warn": {
+          "gzipBytes": 205000,
+          "rawBytes": 675000
+        },
+        "fail": {
+          "gzipBytes": 230000,
+          "rawBytes": 760000
+        }
+      }
+    },
+    {
+      "name": "watch-read",
+      "routePatterns": [
+        "^/(series|movies)/watch/\\[slug\\]$",
+        "^/nsfw/(series|movies)/watch/\\[slug\\]$",
+        "^/comic/\\[slug\\]/\\[chapter\\]$",
+        "^/nsfw/comic/\\[slug\\]/\\[chapter\\]$",
+        "^/novel/\\[slug\\]/read/\\[chapter\\]$",
+        "^/drachin/episode/\\[slug\\]$"
+      ],
+      "budgets": {
+        "healthy": {
+          "gzipBytes": 170000,
+          "rawBytes": 540000
+        },
+        "warn": {
+          "gzipBytes": 190000,
+          "rawBytes": 620000
+        },
+        "fail": {
+          "gzipBytes": 220000,
+          "rawBytes": 710000
+        }
+      }
+    }
+  ],
+  "sharedChunkBudget": {
+    "name": "shared-global-shell",
+    "topN": 2,
+    "reportOnly": true,
+    "budgets": {
+      "healthy": {
+        "gzipBytes": 60000,
+        "rawBytes": 220000
+      },
+      "warn": {
+        "gzipBytes": 80000,
+        "rawBytes": 300000
+      },
+      "fail": {
+        "gzipBytes": 95000,
+        "rawBytes": 340000
+      }
+    }
+  }
+}

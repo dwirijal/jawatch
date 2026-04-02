@@ -5,7 +5,7 @@ import { SplitLayout } from '@/components/atoms/SplitLayout';
 import { getMediaPosterAspectClass, ThemeType } from '@/lib/utils';
 
 interface VideoDetailPageSkeletonProps {
-  theme: Extract<ThemeType, 'anime' | 'donghua' | 'movie'>;
+  theme: Extract<ThemeType, 'anime' | 'donghua' | 'movie' | 'drama'>;
   backLabel: string;
 }
 

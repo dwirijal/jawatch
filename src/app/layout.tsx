@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { CssBaseline } from "@/components/atoms/CssBaseline";
 import { Navbar } from "@/components/organisms/Navbar";
 import { Footer } from "@/components/organisms/Footer";
 import { ClientShell } from "@/components/organisms/ClientShell";
-import { AuthSessionProvider } from "@/components/providers/AuthSessionProvider";
-import { getServerAuthStatus } from "@/lib/server/auth-session";
 import { SITE_URL } from "@/lib/site";
 
 const geistMono = Geist_Mono({
@@ -71,13 +68,11 @@ export const viewport = {
   userScalable: false,
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const authSession = await getServerAuthStatus();
-
   return (
     <html
       lang="id"
@@ -88,13 +83,10 @@ export default async function RootLayout({
         <CssBaseline />
       </head>
       <body className="min-h-full flex flex-col text-foreground font-sans">
-        <AuthSessionProvider initialState={authSession}>
-          <ClientShell />
-          <Navbar />
-          <main className="flex-1 min-h-screen pb-20 md:pb-0">{children}</main>
-          <Analytics />
-          <Footer />
-        </AuthSessionProvider>
+        <ClientShell />
+        <Navbar />
+        <main className="flex-1 min-h-screen pb-20 md:pb-0">{children}</main>
+        <Footer />
       </body>
     </html>
   );
