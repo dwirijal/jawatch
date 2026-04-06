@@ -9,6 +9,7 @@
     "verify": "npm run test:unit && npm run lint && npm run typecheck && npm run build && npm run perf:budgets",
     "perf:budgets": "node scripts/check-route-budgets.mjs",
     "perf:build-and-budgets": "npm run build && npm run perf:budgets",
+    "smoke:production": "node scripts/production-smoke-check.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "link:vercel": "npm exec --yes -- vercel link",
