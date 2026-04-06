@@ -38,6 +38,36 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Notify Discord on failure
+        if: failure() && secrets.DISCORD_WEBHOOK_URL != ''
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          payload = {
+              "content": (
+                  "dwizzyWEEB CI quality failed\n"
+                  f"workflow: {os.environ['GITHUB_WORKFLOW']}\n"
+                  f"job: quality\n"
+                  f"ref: {os.environ['GITHUB_REF_NAME']}\n"
+                  f"run: {os.environ['RUN_URL']}"
+              )
+          }
+          req = urllib.request.Request(
+              os.environ["DISCORD_WEBHOOK_URL"],
+              data=json.dumps(payload).encode("utf-8"),
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(req):
+              pass
+          PY
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -61,3 +91,33 @@ jobs:
 
       - name: Enforce route budgets
         run: npm run perf:budgets
+
+      - name: Notify Discord on failure
+        if: failure() && secrets.DISCORD_WEBHOOK_URL != ''
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          payload = {
+              "content": (
+                  "dwizzyWEEB CI build failed\n"
+                  f"workflow: {os.environ['GITHUB_WORKFLOW']}\n"
+                  f"job: build\n"
+                  f"ref: {os.environ['GITHUB_REF_NAME']}\n"
+                  f"run: {os.environ['RUN_URL']}"
+              )
+          }
+          req = urllib.request.Request(
+              os.environ["DISCORD_WEBHOOK_URL"],
+              data=json.dumps(payload).encode("utf-8"),
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(req):
+              pass
+          PY
