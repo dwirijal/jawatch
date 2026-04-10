@@ -19,6 +19,7 @@ export default async function SeriesDramaPage() {
     path: '/series/drama',
     icon: Clapperboard,
     theme: 'drama',
+    eyebrow: 'Drama Lane',
     results,
   });
 }

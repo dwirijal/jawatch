@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Calendar, Clapperboard, Flame, Sparkles, Timer } from 'lucide-react';
+import { Activity, Calendar, Clapperboard, Flame, Sparkles, Timer } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Paper } from '@/components/atoms/Paper';
 import { MediaCard } from '@/components/atoms/Card';
@@ -66,6 +66,27 @@ export default function SeriesPageClient({
   const [activeRadarDay, setActiveRadarDay] = React.useState<string | null>(today);
   const initialDonghuaSpotlight = initialLatest.filter((item) => item.type === 'donghua').slice(0, 8);
   const activeRadarLane = initialWeeklySchedule.find((lane) => lane.day === activeRadarDay) ?? initialWeeklySchedule[0] ?? null;
+  const shelfBrowseCards = React.useMemo(
+    () => [
+      {
+        label: 'Ongoing',
+        route: '/series/ongoing',
+        badge: 'LIVE',
+        image: initialLatest[0]?.poster || initialPopular[0]?.poster || '',
+        subtitle: 'Series that are still actively airing',
+        theme: 'drama' as const,
+      },
+      {
+        label: 'Full List',
+        route: '/series/list',
+        badge: 'LIST',
+        image: initialPopular[0]?.poster || initialLatest[0]?.poster || '',
+        subtitle: 'Browse the broader canonical catalog',
+        theme: 'anime' as const,
+      },
+    ],
+    [initialLatest, initialPopular],
+  );
 
   const handleFilterClick = (filter: string) => {
     router.push(buildSeriesFilterHref(filter));
@@ -77,6 +98,7 @@ export default function SeriesPageClient({
       description="Anime, donghua, dan drama episodik sekarang hidup di satu katalog canonical. Filter-nya membaca origin type dan negara rilis langsung dari database."
       icon={Clapperboard}
       theme="drama"
+      eyebrow="Episodic Desk"
       genres={filters}
       results={null as GenericMediaItem[] | null}
       loading={false}
@@ -87,6 +109,20 @@ export default function SeriesPageClient({
       resultHrefBuilder={(item) => `/series/${item.slug}`}
     >
       <div className="app-section-stack">
+        <SectionCard title="Browse By Shelf" subtitle="Open focused series lanes for ongoing titles or the full canonical list." icon={Activity} mode="rail" railVariant="default">
+          {shelfBrowseCards.map((item) => (
+            <MediaCard
+              key={item.route}
+              href={item.route}
+              image={item.image}
+              title={item.label}
+              subtitle={item.subtitle}
+              badgeText={item.badge}
+              theme={item.theme}
+            />
+          ))}
+        </SectionCard>
+
         <SectionCard title="Popular Across Series" subtitle="Judul episodik paling ramai di katalog canonical" icon={Flame} mode="grid" gridDensity="default" viewAllHref="/series">
           {initialPopular.length === 0
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`series-popular-${index}`} />)
@@ -103,7 +139,7 @@ export default function SeriesPageClient({
             ))}
         </SectionCard>
 
-        <SectionCard title="Latest Episodes" subtitle="Update terbaru dari anime, donghua, dan drama episodik" icon={Sparkles} mode="grid" gridDensity="default">
+        <SectionCard title="Latest Episodes" subtitle="Update terbaru dari anime, donghua, dan drama episodik" icon={Sparkles} mode="grid" gridDensity="default" viewAllHref="/series/ongoing">
           {initialLatest.length === 0
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`series-latest-${index}`} />)
             : initialLatest.slice(0, 12).map((item) => (

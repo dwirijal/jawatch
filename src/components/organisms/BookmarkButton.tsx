@@ -43,7 +43,7 @@ export function BookmarkButton({ item, theme = 'anime', className }: BookmarkBut
         disabled={isPending}
         aria-busy={isPending}
         className={cn(
-          "gap-2 px-4 transition-all duration-300",
+          "h-11 gap-2 px-4.5 transition-all duration-300",
           isPending && "cursor-wait opacity-70",
           themeClasses[theme],
           className

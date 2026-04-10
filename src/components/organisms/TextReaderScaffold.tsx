@@ -26,7 +26,7 @@ export function TextReaderScaffold({
       <header className="sticky top-0 z-[160] border-b border-border-subtle bg-surface-1/95 backdrop-blur-xl transition-all">
         <div className="app-container flex items-center justify-between gap-3 py-3">
           <div className="flex min-w-0 items-center gap-3">
-            <Button variant="ghost" size="icon" asChild className="h-9 w-9 shrink-0 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1">
+            <Button variant="ghost" size="icon" asChild className="h-11 w-11 shrink-0 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1">
               <Link href={backHref}>
                 <ArrowLeft className="h-4 w-4" />
               </Link>

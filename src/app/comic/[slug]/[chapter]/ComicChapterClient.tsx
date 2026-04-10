@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
 import { DeferredAds } from '@/components/atoms/DeferredAds';
+import { ReaderPageImage } from '@/components/atoms/ReaderPageImage';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
@@ -143,7 +143,7 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter, routeBa
               size="icon"
               disabled={!previousChapterHref}
               asChild={!!previousChapterHref}
-              className="h-9 w-9 rounded-[var(--radius-sm)] border-border-subtle"
+              className="h-11 w-11 rounded-[var(--radius-sm)] border-border-subtle"
             >
               {previousChapterHref ? (
                 <Link href={previousChapterHref}><ChevronLeft className="h-4 w-4" /></Link>
@@ -159,7 +159,7 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter, routeBa
               size="icon"
               disabled={!nextChapterHref}
               asChild={!!nextChapterHref}
-              className="h-9 w-9 rounded-[var(--radius-sm)]"
+              className="h-11 w-11 rounded-[var(--radius-sm)]"
             >
               {nextChapterHref ? (
                 <Link href={nextChapterHref}><ChevronRight className="h-4 w-4" /></Link>
@@ -181,15 +181,10 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter, routeBa
             <Paper tone="muted" shadow="md" padded={false} className="overflow-hidden">
               <div className="flex flex-col gap-0">
                 {chapter.images.map((url: string, index: number) => (
-                  <Image
+                  <ReaderPageImage
                     key={`${url}-${index}`}
                     src={url}
-                    alt={`Page ${index + 1}`}
-                    width={1200}
-                    height={1700}
-                    sizes="(max-width: 1200px) 100vw, 1200px"
-                    className="h-auto w-full select-none"
-                    unoptimized
+                    index={index}
                     loading={index < 3 ? 'eager' : 'lazy'}
                   />
                 ))}

@@ -15,7 +15,7 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function ComicPage() {
-  const { popular, newest } = await loadComicPageData(VARIANT);
+  const { popular, newest, subtypePosters } = await loadComicPageData(VARIANT);
 
   return (
     <>
@@ -36,6 +36,7 @@ export default async function ComicPage() {
         routeBase="/comic"
         initialPopular={popular}
         initialNewest={newest}
+        subtypePosters={subtypePosters}
       />
     </>
   );

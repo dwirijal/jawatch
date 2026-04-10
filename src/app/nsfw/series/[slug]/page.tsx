@@ -16,6 +16,11 @@ import {
   getSeriesBadgeText,
   getSeriesTheme,
 } from '@/lib/series-presentation';
+import {
+  formatSeriesDetailEpisodeCount,
+  formatSeriesDetailRating,
+  formatSeriesDetailText,
+} from '@/lib/series-detail-presentation';
 import { getNsfwSeriesDetailHref, getNsfwSeriesWatchHref } from '@/lib/nsfw-routes';
 import { requireNsfwAccess } from '../../access';
 
@@ -120,12 +125,12 @@ export default async function NsfwSeriesDetailPage({ params, searchParams }: Pag
           eyebrow={series.seasonLabel}
           badges={series.genres.slice(0, 5)}
           metadata={[
-            { label: 'Rating', value: series.rating },
-            { label: 'Year', value: series.year || 'Tidak Tersedia' },
-            { label: 'Country', value: series.country || 'Tidak Tersedia' },
-            { label: 'Episodes', value: series.episodeCount || 'Tidak Tersedia' },
-            { label: 'Studio', value: series.studio || 'Tidak Tersedia' },
-            { label: 'Status', value: series.status || 'Tidak Tersedia' },
+            { label: 'Rating', value: formatSeriesDetailRating(series.rating) },
+            { label: 'Year', value: formatSeriesDetailText(series.year) },
+            { label: 'Country', value: formatSeriesDetailText(series.country) },
+            { label: 'Episodes', value: formatSeriesDetailEpisodeCount(series.episodeCount) },
+            { label: 'Studio', value: formatSeriesDetailText(series.studio) },
+            { label: 'Status', value: formatSeriesDetailText(series.status) },
           ]}
           controls={<ShareButton title={series.title} theme={theme} />}
           primaryAction={

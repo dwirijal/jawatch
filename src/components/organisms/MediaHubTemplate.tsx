@@ -30,6 +30,7 @@ interface MediaHubTemplateProps {
   icon?: LucideIcon;
   iconName?: string;
   theme: ThemeType;
+  eyebrow?: string;
   genres?: string[];
   results: GenericMediaItem[] | null;
   loading: boolean;
@@ -43,8 +44,6 @@ interface MediaHubTemplateProps {
   resultHrefBuilder?: (item: GenericMediaItem) => string;
   resultHrefPrefix?: string;
 }
-
-type ViewMode = 'comfortable' | 'compact';
 
 function getResultSubtitle(item: GenericMediaItem): string {
   if (item.country && item.latestEpisode) {
@@ -60,6 +59,7 @@ export function MediaHubTemplate({
   icon,
   iconName,
   theme,
+  eyebrow,
   genres,
   results,
   loading,
@@ -73,133 +73,98 @@ export function MediaHubTemplate({
   resultHrefBuilder,
   resultHrefPrefix,
 }: MediaHubTemplateProps) {
-  const [viewMode, setViewMode] = React.useState<ViewMode>('compact');
-  const viewModeStorageKey = `dwizzy_view_mode_${theme}`;
-  const gridDensity = viewMode === 'comfortable' ? 'comfortable' : 'dense';
+  const gridDensity = 'dense';
   const resolvedIcon = icon ?? MEDIA_HUB_ICONS[iconName as keyof typeof MEDIA_HUB_ICONS] ?? Grid3X3;
 
-  React.useEffect(() => {
-    const saved = window.localStorage.getItem(viewModeStorageKey);
-    if (saved === 'comfortable' || saved === 'compact') {
-      setViewMode(saved);
-    }
-  }, [viewModeStorageKey]);
-
-  React.useEffect(() => {
-    window.localStorage.setItem(viewModeStorageKey, viewMode);
-  }, [viewMode, viewModeStorageKey]);
-
   return (
-    <div className="app-shell" data-theme={theme} data-view-mode={viewMode}>
+    <div className="app-shell" data-theme={theme} data-view-mode="compact">
       <MediaHubHeader
         title={title}
         description={description}
         icon={resolvedIcon}
         theme={theme}
+        eyebrow={eyebrow}
         containerClassName="app-container-wide"
+        layoutVariant="editorial"
+        footer={(
+          <>
+            <div className="min-w-0 flex-1">
+              {genres && genres.length > 0 && onGenreClick ? (
+                <GenreFilter
+                  genres={genres.slice(0, 10)}
+                  activeGenre={activeGenre ?? null}
+                  onGenreClick={onGenreClick}
+                  theme={theme}
+                  layout="rail"
+                  className="space-y-2.5 md:space-y-3"
+                />
+              ) : <div className="hidden md:block" />}
+            </div>
+            {extraFilters ? <div className="hidden md:flex md:justify-end">{extraFilters}</div> : <div className="hidden md:block" />}
+          </>
+        )}
       >
         {extraHeaderActions}
-        <div className="mx-2 hidden h-8 w-px bg-border-subtle md:block" />
-        {genres && genres.length > 0 && onGenreClick ? (
-          <GenreFilter
-            genres={genres.slice(0, 10)}
-            activeGenre={activeGenre ?? null}
-            onGenreClick={onGenreClick}
-            theme={theme}
-            className="md:pt-0 space-y-0"
-          />
-        ) : null}
       </MediaHubHeader>
 
-      <main className="app-container-wide mt-8 space-y-10 sm:mt-10 md:mt-12 md:space-y-12">
-        {/* Advanced Filters Area */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="inline-flex items-center gap-1 rounded-[var(--radius-lg)] border border-white/10 bg-surface-1 p-1">
-            <button
-              type="button"
-              aria-label="Comfortable view"
-              onClick={() => setViewMode('comfortable')}
-              className={`inline-flex items-center gap-2 rounded-[calc(var(--radius-lg)-0.35rem)] px-3 py-2 text-xs font-semibold tracking-[0.02em] transition ${viewMode === 'comfortable'
-                  ? 'bg-accent-soft text-accent'
-                  : 'text-muted-foreground hover:text-foreground'
-                }`}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              Comfort
-            </button>
-            <button
-              type="button"
-              aria-label="Compact view"
-              onClick={() => setViewMode('compact')}
-              className={`inline-flex items-center gap-2 rounded-[calc(var(--radius-lg)-0.35rem)] px-3 py-2 text-xs font-semibold tracking-[0.02em] transition ${viewMode === 'compact'
-                  ? 'bg-accent-soft text-accent'
-                  : 'text-muted-foreground hover:text-foreground'
-                }`}
-            >
-              <Grid3X3 className="h-3.5 w-3.5" />
-              Compact
-            </button>
+      <main className="app-container-wide mt-7 sm:mt-8 md:mt-10">
+        <div className="border-t border-white/8 pt-5 md:pt-6">
+          <div className="hidden md:block">
+            <DeferredAdSection />
           </div>
-          {extraFilters && (
-            <div className="flex justify-end">
-              {extraFilters}
-            </div>
-          )}
-        </div>
 
-        <DeferredAdSection />
+          <div className="app-section-stack mt-5 md:mt-7">
+            {results ? (
+              <section className="animate-in space-y-4 fade-in duration-500">
+                <SectionHeader
+                  title={activeGenre ? `Genre: ${activeGenre}` : `Filtered results`}
+                  icon={LayoutGrid}
+                  action={onClearResults ? (
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      onClick={onClearResults}
+                      className="focus-tv shrink-0 text-xs font-semibold tracking-[0.02em] text-zinc-500 hover:text-white"
+                    >
+                      Clear filter
+                    </Button>
+                  ) : undefined}
+                />
 
-        <div className="app-section-stack">
-          {results ? (
-            <section className="animate-in space-y-4 fade-in duration-500">
-              <SectionHeader
-                title={activeGenre ? `Genre: ${activeGenre}` : `Filtered results`}
-                icon={LayoutGrid}
-                action={onClearResults ? (
-                  <Button
-                    type="button"
-                    variant="link"
-                    size="sm"
-                    onClick={onClearResults}
-                    className="focus-tv shrink-0 text-xs font-semibold tracking-[0.02em] text-zinc-500 hover:text-white"
-                  >
-                    Clear filter
-                  </Button>
-                ) : undefined}
-              />
-
-              {error ? (
-                <StateInfo type="error" title="Search Error" description={error} />
-              ) : results.length > 0 ? (
-                <div className="media-grid" data-grid-density={gridDensity}>
-                  <StaggerEntry className="contents">
-                    {results.map((item, index) => (
-                      <MediaCard
-                        key={`${item.slug}-${index}`}
-                        href={
-                          resultHrefBuilder
-                            ? resultHrefBuilder(item)
-                            : `${resultHrefPrefix ?? `/${theme === 'movie' ? 'movies' : theme}`}/${item.slug || ''}`
-                        }
-                        image={item.thumb || item.image || item.thumbnail || item.poster || ''}
-                        title={item.title}
-                        subtitle={getResultSubtitle(item)}
-                        theme={theme}
-                      />
-                    ))}
-                  </StaggerEntry>
-                </div>
-              ) : (
-                <StateInfo title="No Content Found" description="Try choosing a different genre or filter." />
-              )}
-            </section>
-          ) : loading ? (
-            <div className="media-grid" data-grid-density={gridDensity}>
-              {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
-            </div>
-          ) : (
-            children
-          )}
+                {error ? (
+                  <StateInfo type="error" title="Search Error" description={error} />
+                ) : results.length > 0 ? (
+                  <div className="media-grid" data-grid-density={gridDensity}>
+                    <StaggerEntry className="contents">
+                      {results.map((item, index) => (
+                        <MediaCard
+                          key={`${item.slug}-${index}`}
+                          href={
+                            resultHrefBuilder
+                              ? resultHrefBuilder(item)
+                              : `${resultHrefPrefix ?? `/${theme === 'movie' ? 'movies' : theme}`}/${item.slug || ''}`
+                          }
+                          image={item.thumb || item.image || item.thumbnail || item.poster || ''}
+                          title={item.title}
+                          subtitle={getResultSubtitle(item)}
+                          theme={theme}
+                        />
+                      ))}
+                    </StaggerEntry>
+                  </div>
+                ) : (
+                  <StateInfo title="No Content Found" description="Try choosing a different genre or filter." />
+                )}
+              </section>
+            ) : loading ? (
+              <div className="media-grid" data-grid-density={gridDensity}>
+                {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
+              </div>
+            ) : (
+              children
+            )}
+          </div>
         </div>
       </main>
     </div>

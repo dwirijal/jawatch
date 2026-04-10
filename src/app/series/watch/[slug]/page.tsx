@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
@@ -10,6 +10,7 @@ import { Paper } from '@/components/atoms/Paper';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { MediaWatchPage } from '@/components/organisms/MediaWatchPage';
 import { getSeriesEpisodeBySlug } from '@/lib/adapters/series';
+import { resolveSeriesCanonicalRedirect } from '@/lib/adapters/series-canonical-utils';
 import { buildMetadata, buildSeriesEpisodeJsonLd } from '@/lib/seo';
 import { getSeriesBadgeText, getSeriesTheme } from '@/lib/series-presentation';
 
@@ -75,6 +76,11 @@ export default async function SeriesWatchPage({ params }: PageProps) {
 
   if (!episode) {
     notFound();
+  }
+
+  const redirectPath = resolveSeriesCanonicalRedirect('/series/watch', slug, episode);
+  if (redirectPath) {
+    redirect(redirectPath);
   }
 
   const theme = getSeriesTheme(episode.mediaType);

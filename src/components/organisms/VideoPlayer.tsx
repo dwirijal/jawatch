@@ -155,9 +155,9 @@ export function VideoPlayer({
   const overlayButtonClass =
     'h-11 w-11 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/90 text-white backdrop-blur-md hover:bg-surface-elevated';
 
-  return (
+      return (
     <div className={cn(
-      "relative z-[150] space-y-6 transition-all duration-700 ease-in-out",
+      "relative z-[150] space-y-4 md:space-y-6 transition-all duration-700 ease-in-out",
       isTheaterMode && device !== 'mobile' ? "fixed inset-0 z-[200] flex flex-col space-y-0 bg-background p-0" : "w-full"
     )}>
       {isLightsDimmed && !isTheaterMode && (
@@ -236,8 +236,8 @@ export function VideoPlayer({
       </div>
 
       {!isTheaterMode && showMirrorPanel && (
-        <Paper tone="muted" shadow="sm" className={cn("p-5 md:p-6 transition-all", isLightsDimmed && "opacity-20 hover:opacity-100")}>
-          <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <Paper tone="muted" shadow="sm" className={cn("p-4 md:p-6 transition-all", isLightsDimmed && "opacity-20 hover:opacity-100")}>
+          <div className="mb-4 flex flex-col justify-between gap-4 md:mb-5 md:flex-row md:items-center">
             <div className="flex items-center gap-3">
               <div className={cn("rounded-lg p-2", accent.panel)}>
                 <Layers className="w-4 h-4" />

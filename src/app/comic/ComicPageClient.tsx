@@ -9,6 +9,7 @@ import {
   getNewManga,
   getPopularManga,
 } from "@/lib/adapters/comic";
+import { pickSubtypePosterImage } from '@/lib/comic-media';
 import { incrementInterest } from '@/lib/store';
 import { BookOpen, Sparkles } from "lucide-react";
 import { MediaCard } from "@/components/atoms/Card";
@@ -28,6 +29,7 @@ interface ComicPageClientProps {
   routeBase?: '/comic';
   initialPopular: MangaSearchResult[];
   initialNewest: MangaSearchResult[];
+  subtypePosters?: Partial<Record<MangaSubtype, string>>;
 }
 
 const VARIANT_CONFIG: Record<MangaSubtype | 'all', {
@@ -87,9 +89,18 @@ function buildItemHref(routeBase: string, item: MangaSearchResult): string {
   return `${routeBase}/${extractSlugFromUrl(item.link)}`;
 }
 
-export default function ComicPageClient({ variant, routeBase = '/comic', initialPopular, initialNewest }: ComicPageClientProps) {
+export default function ComicPageClient({
+  variant,
+  routeBase = '/comic',
+  initialPopular,
+  initialNewest,
+  subtypePosters = {},
+}: ComicPageClientProps) {
   const config = VARIANT_CONFIG[variant];
   const isAllVariant = variant === 'all';
+  const eyebrow = isAllVariant
+    ? 'Graphic Shelf'
+    : `${config.title.split(': ')[1] ?? 'Graphic'} Shelf`;
   const [results, setResults] = React.useState<MangaSearchResult[] | null>(null);
   const [popular, setPopular] = React.useState(() => {
     if (isAllVariant) {
@@ -106,6 +117,55 @@ export default function ComicPageClient({ variant, routeBase = '/comic', initial
   const [loading, setLoading] = React.useState(false);
   const [bootstrapping, setBootstrapping] = React.useState(popular.length === 0 || newest.length === 0);
   const [activeGenre, setActiveGenre] = React.useState<string | null>(null);
+  const subtypeBrowseCards = React.useMemo(
+    () => [
+      {
+        label: 'Manga',
+        route: '/comic/manga',
+        badge: 'MANGA',
+        image: subtypePosters.manga || pickSubtypePosterImage(popular, newest, 'manga'),
+      },
+      {
+        label: 'Manhwa',
+        route: '/comic/manhwa',
+        badge: 'MANHWA',
+        image: subtypePosters.manhwa || pickSubtypePosterImage(popular, newest, 'manhwa'),
+      },
+      {
+        label: 'Manhua',
+        route: '/comic/manhua',
+        badge: 'MANHUA',
+        image: subtypePosters.manhua || pickSubtypePosterImage(popular, newest, 'manhua'),
+      },
+    ],
+    [newest, popular, subtypePosters.manga, subtypePosters.manhua, subtypePosters.manhwa],
+  );
+  const shelfBrowseCards = React.useMemo(
+    () => [
+      {
+        label: 'Latest',
+        route: '/comic/latest',
+        badge: 'NEW',
+        image: newest[0]?.image || newest[0]?.thumbnail || popular[0]?.image || popular[0]?.thumbnail || '',
+        subtitle: 'Open the newest chapter feed',
+      },
+      {
+        label: 'Popular',
+        route: '/comic/popular',
+        badge: 'HOT',
+        image: popular[0]?.image || popular[0]?.thumbnail || newest[0]?.image || newest[0]?.thumbnail || '',
+        subtitle: 'See what readers open most',
+      },
+      {
+        label: 'Ongoing',
+        route: '/comic/ongoing',
+        badge: 'LIVE',
+        image: newest[1]?.image || newest[1]?.thumbnail || popular[1]?.image || popular[1]?.thumbnail || newest[0]?.image || '',
+        subtitle: 'Browse titles still updating',
+      },
+    ],
+    [newest, popular],
+  );
 
   React.useEffect(() => {
     incrementInterest('manga');
@@ -185,6 +245,7 @@ export default function ComicPageClient({ variant, routeBase = '/comic', initial
       description={config.description}
       icon={BookOpen}
       theme="manga"
+      eyebrow={eyebrow}
       genres={COMMON_GENRES}
       results={results}
       loading={loading}
@@ -196,28 +257,52 @@ export default function ComicPageClient({ variant, routeBase = '/comic', initial
         setActiveGenre(null);
       }}
     >
-      {isAllVariant ? (
-        <SectionCard title="Browse By Type" subtitle={config.browseSubtitle} mode="rail" railVariant="default">
-          {([
-            { label: 'Manga', route: '/comic/manga', badge: 'MANGA' },
-            { label: 'Manhwa', route: '/comic/manhwa', badge: 'MANHWA' },
-            { label: 'Manhua', route: '/comic/manhua', badge: 'MANHUA' },
-          ] as const).map((item) => (
+      <StaggerEntry className="app-section-stack" delay={100}>
+        <SectionCard
+          title="Browse By Shelf"
+          subtitle={
+            isAllVariant
+              ? 'Open focused lanes for what is newest or most read right now.'
+              : 'Jump to the shared latest and popular comic shelves from this subtype lane.'
+          }
+          mode="rail"
+          railVariant="default"
+        >
+          {shelfBrowseCards.map((item) => (
             <MediaCard
               key={item.route}
               href={item.route}
-              image=""
+              image={item.image}
               title={item.label}
-              subtitle="Open curated subtype catalog"
+              subtitle={item.subtitle}
               badgeText={item.badge}
               theme="manga"
             />
           ))}
         </SectionCard>
-      ) : null}
 
-      <StaggerEntry className="app-section-stack" delay={100}>
-        <SectionCard title={config.trendingTitle} subtitle={config.trendingSubtitle} mode="rail" railVariant="default" viewAllHref={routeBase}>
+        {isAllVariant ? (
+          <SectionCard title="Browse By Type" subtitle={config.browseSubtitle} mode="rail" railVariant="default">
+            {subtypeBrowseCards.map((item) => (
+              <MediaCard
+                key={item.route}
+                href={item.route}
+                image={item.image}
+                title={item.label}
+                subtitle="Open curated subtype catalog"
+                badgeText={item.badge}
+                theme="manga"
+              />
+            ))}
+          </SectionCard>
+        ) : null}
+        <SectionCard
+          title={config.trendingTitle}
+          subtitle={config.trendingSubtitle}
+          mode="rail"
+          railVariant="default"
+          viewAllHref={isAllVariant ? '/comic/popular' : routeBase}
+        >
           {popular.length === 0 && bootstrapping
             ? Array.from({ length: 6 }).map((_, index) => <SkeletonCard key={`popular-skeleton-${index}`} />)
             : popular.map((mangaItem, index) => (
@@ -235,7 +320,13 @@ export default function ComicPageClient({ variant, routeBase = '/comic', initial
 
         <SavedContentSection type="manga" title={config.savedTitle} />
 
-        <SectionCard title={config.newestTitle} subtitle={config.newestSubtitle} icon={Sparkles} gridDensity="default">
+        <SectionCard
+          title={config.newestTitle}
+          subtitle={config.newestSubtitle}
+          icon={Sparkles}
+          gridDensity="default"
+          viewAllHref={isAllVariant ? '/comic/latest' : routeBase}
+        >
           {newest.length === 0 && bootstrapping
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`newest-skeleton-${index}`} />)
             : newest.map((mangaItem, index) => (

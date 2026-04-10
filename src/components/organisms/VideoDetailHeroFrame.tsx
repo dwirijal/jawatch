@@ -50,7 +50,7 @@ export function VideoDetailHeroFrame({
   const isCompactGallery = galleryVariant === 'compact';
 
   return (
-    <section className="relative aspect-[3/4] overflow-hidden rounded-[var(--radius-2xl)] border border-border-subtle bg-surface-1 hard-shadow-md lg:aspect-video">
+    <section className="relative min-h-[42rem] overflow-hidden rounded-[var(--radius-2xl)] border border-border-subtle bg-surface-1 hard-shadow-md lg:aspect-video lg:min-h-0">
       <div className="absolute inset-0 overflow-hidden">
         <Image
           src={poster || '/favicon.ico'}
@@ -65,16 +65,20 @@ export function VideoDetailHeroFrame({
 
       <div className="relative z-10 flex h-full flex-col px-5 py-5 md:px-7 md:py-7">
         <nav className="mb-4 shrink-0 md:mb-6">
-          <Button variant="outline" size="sm" asChild className="rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 hover:bg-surface-elevated">
+          <Button
+            variant="outline"
+            asChild
+            className="h-11 rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 px-4 text-[11px] uppercase tracking-[0.18em] hover:bg-surface-elevated"
+          >
             <Link href={backHref}>
               <ChevronLeft className="h-4 w-4" /> {backLabel}
             </Link>
           </Button>
         </nav>
 
-        <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] gap-4 lg:gap-5">
-          <div className="grid min-h-0 grid-cols-[minmax(0,1fr)_auto] gap-4 lg:gap-6">
-            <div className="min-w-0 self-end space-y-5">
+        <div className="grid min-h-0 flex-1 gap-4 lg:grid-rows-[minmax(0,1fr)_auto] lg:gap-5">
+          <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-6">
+            <div className="min-w-0 self-start space-y-4 lg:self-end lg:space-y-5">
               <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                 <div className="flex flex-wrap gap-2">
                   {badges.map((badge) => (
@@ -92,6 +96,7 @@ export function VideoDetailHeroFrame({
                 subtitle={subtitle}
                 eyebrow={eyebrow}
                 theme={theme}
+                className="max-w-3xl space-y-2.5 md:space-y-3"
               />
 
               <div className="flex flex-wrap items-center gap-2.5">
@@ -101,16 +106,21 @@ export function VideoDetailHeroFrame({
               </div>
             </div>
 
-            <Paper tone="muted" shadow="sm" padded={false} className="min-h-[12rem] justify-self-end overflow-hidden bg-[#06070b] lg:min-h-0 lg:h-full">
-              <div className="relative h-full w-auto">
+            <Paper
+              tone="muted"
+              shadow="sm"
+              padded={false}
+              className="min-h-[12rem] max-h-[16rem] w-full overflow-hidden bg-[#06070b] lg:max-h-none lg:min-h-0 lg:h-full lg:w-auto lg:justify-self-end"
+            >
+              <div className="relative h-full w-full lg:w-auto">
                 <Image
                   src={poster || '/favicon.ico'}
                   alt={title}
                   width={800}
                   height={1200}
-                  sizes="(max-width: 640px) 32vw, (max-width: 1024px) 26vw, 24vw"
+                  sizes="(max-width: 640px) 72vw, (max-width: 1024px) 26vw, 24vw"
                   priority
-                  className="h-full w-auto max-w-none object-contain"
+                  className="h-full w-full object-contain lg:w-auto lg:max-w-none"
                 />
               </div>
             </Paper>

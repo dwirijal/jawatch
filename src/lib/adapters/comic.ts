@@ -2,6 +2,7 @@ import type {
   MangaSearchResult,
   MangaSubtype,
 } from '@/lib/types';
+import { normalizeComicImageUrl } from '@/lib/comic-media';
 
 type SearchResponse = {
   data: MangaSearchResult[];
@@ -33,10 +34,7 @@ async function fetchComicJson<T>(path: string): Promise<T> {
 export const extractSlugFromUrl = (url: string) => (url ? url.split('/').filter(Boolean).pop() || '' : '');
 
 export const getHDThumbnail = (url: string) => {
-  if (!url) return '';
-  if (url.startsWith('//')) return `https:${url}`;
-  if (url.startsWith('/')) return url;
-  return url.split('?')[0];
+  return normalizeComicImageUrl(url);
 };
 
 export const searchManga = async (q: string, p = 1) => {

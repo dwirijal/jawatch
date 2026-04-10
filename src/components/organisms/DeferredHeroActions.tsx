@@ -70,12 +70,12 @@ function scheduleDeferredLoad(task: () => void) {
 }
 
 function ActionPlaceholder({ wide = false }: { wide?: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={wide
-        ? 'inline-flex h-10 min-w-[7rem] rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/80'
-        : 'inline-flex h-10 w-10 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/80'}
+      return (
+        <span
+          aria-hidden="true"
+          className={wide
+        ? 'inline-flex min-h-11 min-w-[7.5rem] rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/80'
+        : 'inline-flex h-11 w-11 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/80'}
     />
   );
 }

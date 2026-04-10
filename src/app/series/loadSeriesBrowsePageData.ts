@@ -1,7 +1,7 @@
 import { getSeriesBrowseItems } from '@/lib/adapters/series';
 import type { GenericMediaItem } from '@/lib/types';
 
-type SeriesBrowseKind = 'list' | 'type' | 'genre' | 'country' | 'year';
+type SeriesBrowseKind = 'list' | 'type' | 'genre' | 'country' | 'year' | 'status';
 
 export async function loadSeriesBrowsePageData(
   kind: SeriesBrowseKind,

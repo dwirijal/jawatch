@@ -94,12 +94,12 @@ export default async function NovelDetailPage({ params }: PageProps) {
                 </Link>
               </nav>
 
-              <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:items-end">
-                <div className="relative mx-auto aspect-[210/297] w-44 overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2 hard-shadow-md md:mx-0 md:w-52">
+              <div className="grid gap-5 md:grid-cols-[220px_minmax(0,1fr)] md:items-end md:gap-6">
+                <div className="order-2 relative mx-auto aspect-[210/297] w-36 overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2 hard-shadow-md md:order-1 md:mx-0 md:w-52">
                   <StaticBookCoverArt src={novel.poster} title={novel.title} subtitle={novel.altTitle} sizes="208px" priority />
                 </div>
 
-                <div className="space-y-5">
+                <div className="order-1 space-y-4 md:order-2 md:space-y-5">
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                     <div className="flex flex-wrap gap-2">
                       {novel.genres.map((genre) => (
@@ -113,27 +113,33 @@ export default async function NovelDetailPage({ params }: PageProps) {
                     </div>
                   </div>
 
-                  <TitleBlock title={novel.title} subtitle={novel.altTitle} eyebrow={novel.type} theme="novel" />
-
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    <StatCard label="Author" value={novel.info.author || 'Unknown'} icon={User} />
-                    <StatCard label="Status" value={novel.status || 'Unknown'} icon={LibraryBig} />
-                    <StatCard label="Origin" value={novel.info.country || 'Unknown'} icon={Globe2} />
-                    <StatCard label="Chapters" value={novel.info.totalChapters || String(novel.chapters.length)} icon={BookOpen} />
-                  </div>
+                  <TitleBlock
+                    title={novel.title}
+                    subtitle={novel.altTitle}
+                    eyebrow={novel.type}
+                    theme="novel"
+                    className="space-y-2 [&_h1]:text-4xl [&_h1]:leading-[0.96] md:[&_h1]:text-5xl xl:[&_h1]:text-7xl"
+                  />
 
                   <div className="flex flex-wrap items-center gap-3">
                     {latestChapter ? (
-                      <Button size="lg" asChild>
+                      <Button size="lg" className="h-11 px-5 md:h-12 md:px-6" asChild>
                         <Link href={`/novel/${slug}/read/${latestChapter.slug}`}>
                           Read Latest
                           <ScrollText className="ml-2 h-4 w-4" />
                         </Link>
                       </Button>
                     ) : null}
-                    <Button variant="outline" size="lg" asChild>
+                    <Button variant="outline" size="lg" className="h-11 px-5 md:h-12 md:px-6" asChild>
                       <Link href="#chapters">Browse Chapters</Link>
                     </Button>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <StatCard label="Author" value={novel.info.author || 'Unknown'} icon={User} />
+                    <StatCard label="Status" value={novel.status || 'Unknown'} icon={LibraryBig} />
+                    <StatCard label="Origin" value={novel.info.country || 'Unknown'} icon={Globe2} />
+                    <StatCard label="Chapters" value={novel.info.totalChapters || String(novel.chapters.length)} icon={BookOpen} />
                   </div>
                 </div>
               </div>

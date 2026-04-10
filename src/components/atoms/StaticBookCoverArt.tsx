@@ -1,3 +1,6 @@
+'use client';
+
+import * as React from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { getBookCoverPalette, splitBookTitle } from '@/components/atoms/book-cover-art-palette';
@@ -21,9 +24,15 @@ export function StaticBookCoverArt({
   className,
   imageClassName,
 }: StaticBookCoverArtProps) {
+  const [imageFailed, setImageFailed] = React.useState(false);
+
+  React.useEffect(() => {
+    setImageFailed(false);
+  }, [src]);
+
   const splitTitle = splitBookTitle(title);
   const coverSubtitle = subtitle || splitTitle.subtitle;
-  const shouldShowImage = Boolean(src?.trim());
+  const shouldShowImage = Boolean(src?.trim()) && !imageFailed;
   const palette = getBookCoverPalette(title);
 
   return (
@@ -36,6 +45,7 @@ export function StaticBookCoverArt({
           sizes={sizes}
           priority={priority}
           className={cn('object-cover', imageClassName)}
+          onError={() => setImageFailed(true)}
         />
       ) : (
         <div className="absolute inset-0" style={{ background: palette.background }}>

@@ -31,6 +31,7 @@ export function Navbar() {
   const isSearchOpen = useUIStore((state) => state.isSearchOpen);
   const [isSolid, setIsSolid] = React.useState(false);
   const [searchModalMounted, setSearchModalMounted] = React.useState(false);
+  const [authControlsMounted, setAuthControlsMounted] = React.useState(false);
 
   React.useEffect(() => {
     const onScroll = () => {
@@ -47,6 +48,62 @@ export function Navbar() {
       setSearchModalMounted(true);
     }
   }, [isSearchOpen]);
+
+  React.useEffect(() => {
+    if (authControlsMounted) {
+      return;
+    }
+
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let idleId: number | null = null;
+    const requestIdle =
+      typeof window !== 'undefined' && 'requestIdleCallback' in window
+        ? window.requestIdleCallback.bind(window)
+        : null;
+    const cancelIdle =
+      typeof window !== 'undefined' && 'cancelIdleCallback' in window
+        ? window.cancelIdleCallback.bind(window)
+        : null;
+
+    const mountAuthControls = () => {
+      if (cancelled) {
+        return;
+      }
+
+      if (requestIdle) {
+        idleId = requestIdle(() => {
+          if (!cancelled) {
+            setAuthControlsMounted(true);
+          }
+        }, { timeout: 1500 });
+        return;
+      }
+
+      timeoutId = setTimeout(() => {
+        if (!cancelled) {
+          setAuthControlsMounted(true);
+        }
+      }, 900);
+    };
+
+    if (document.readyState === 'complete') {
+      mountAuthControls();
+    } else {
+      window.addEventListener('load', mountAuthControls, { once: true });
+    }
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('load', mountAuthControls);
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+      if (idleId !== null && cancelIdle) {
+        cancelIdle(idleId);
+      }
+    };
+  }, [authControlsMounted]);
 
   return (
     <>
@@ -92,7 +149,11 @@ export function Navbar() {
                   </Link>
                 )
               )}
-              <NavbarAuthControls />
+              {authControlsMounted ? (
+                <NavbarAuthControls />
+              ) : (
+                <div className="h-10 w-32 animate-pulse rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1" />
+              )}
             </div>
           </div>
 

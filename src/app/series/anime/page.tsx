@@ -19,6 +19,7 @@ export default async function SeriesAnimePage() {
     path: '/series/anime',
     icon: Tv,
     theme: 'anime',
+    eyebrow: 'Anime Lane',
     results,
   });
 }

@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { getJikanEnrichment } from '@/lib/enrichment';
+import { normalizeComicImageUrl } from '@/lib/comic-media';
 import {
   buildComicCacheKey,
   getComicSortedSetDescending,
@@ -60,10 +61,22 @@ type PopularComicEntry = {
   score: number;
 };
 
+type SubtypePosterRow = {
+  media_type: MangaSubtype;
+  cover_url: string;
+};
+
 const LIST_CACHE_TTL_SECONDS = 60 * 10;
 const DETAIL_CACHE_TTL_SECONDS = 60 * 30;
 const CHAPTER_CACHE_TTL_SECONDS = 60 * 10;
 const SEARCH_CACHE_TTL_SECONDS = 60 * 3;
+const ONGOING_COMIC_SQL_CONDITION = `
+  lower(coalesce(status, '')) = 'ongoing'
+  or lower(coalesce(status, '')) = 'airing'
+  or lower(coalesce(status, '')) = 'currently airing'
+  or lower(coalesce(status, '')) like '%ongoing%'
+  or lower(coalesce(status, '')) like '%airing%'
+`;
 const NSFW_SQL_CONDITION = `
   exists (
     select 1
@@ -158,9 +171,7 @@ function slugify(value: string): string {
 export const extractSlugFromUrl = (url: string) => (url ? url.split('/').filter(Boolean).pop() || '' : '');
 
 export const getHDThumbnail = (url: string) => {
-  if (!url) return '';
-  if (url.startsWith('//')) return `https:${url}`;
-  return url.split('?')[0];
+  return normalizeComicImageUrl(url);
 };
 
 function normalizeSubtype(rawSubtype: string, detailType?: unknown): MangaSubtype {
@@ -414,6 +425,24 @@ async function queryPopularComics(limit = 24, includeNsfw = false): Promise<Mang
   return fallbackRows.map(mapComicCard);
 }
 
+async function queryOngoingComics(limit = 24, includeNsfw = false): Promise<MangaSearchResult[]> {
+  const sql = await getSql();
+  const rows = await sql.unsafe<ComicItemRow[]>(
+    `
+    select item_key, source, media_type, slug, title, cover_url, status, release_year, score, detail, updated_at
+    from public.media_items
+    where media_type in ('manga', 'manhwa', 'manhua')
+      and (${ONGOING_COMIC_SQL_CONDITION})
+      ${buildVisibilityCondition(includeNsfw)}
+    order by updated_at desc
+    limit $1
+  `,
+    [Math.max(limit, 1)],
+  );
+
+  return rows.map(mapComicCard);
+}
+
 async function queryNsfwComics(page = 1, limit = 24): Promise<MangaSearchResult[]> {
   const safeLimit = Math.max(limit, 1);
   const offset = Math.max(page - 1, 0) * safeLimit;
@@ -495,6 +524,33 @@ async function queryGenreComics(genre: string, page = 1, limit = 24, includeNsfw
   );
 
   return rows.map(mapComicCard);
+}
+
+async function querySubtypePosterMap(includeNsfw = false): Promise<Partial<Record<MangaSubtype, string>>> {
+  const sql = await getSql();
+  const rows = await sql.unsafe<SubtypePosterRow[]>(
+    `
+    select distinct on (media_type)
+      media_type,
+      cover_url
+    from public.media_items
+    where media_type in ('manga', 'manhwa', 'manhua')
+      and cover_url is not null
+      and cover_url <> ''
+      ${buildVisibilityCondition(includeNsfw)}
+    order by media_type, updated_at desc
+  `,
+    [],
+  );
+
+  return rows.reduce<Partial<Record<MangaSubtype, string>>>((accumulator, row) => {
+    const subtype = normalizeSubtype(row.media_type);
+    const image = normalizeComicImageUrl(readText(row.cover_url));
+    if (image) {
+      accumulator[subtype] = image;
+    }
+    return accumulator;
+  }, {});
 }
 
 async function queryComicDetail(slug: string, includeNsfw = false): Promise<MangaDetail> {
@@ -702,6 +758,20 @@ export async function getNewManga(
   return { comics };
 }
 
+export async function getOngoingManga(
+  limit = 40,
+  options: { includeNsfw?: boolean } = {},
+): Promise<{ comics: MangaSearchResult[] }> {
+  const includeNsfw = options.includeNsfw === true;
+  const comics = await rememberComicCacheValue(
+    buildComicCacheKey('list', 'ongoing', getVisibilityCacheSegment(includeNsfw), limit),
+    LIST_CACHE_TTL_SECONDS,
+    () => queryOngoingComics(limit, includeNsfw),
+  );
+
+  return { comics };
+}
+
 export async function searchManga(
   query: string,
   page = 1,
@@ -732,6 +802,17 @@ export async function getMangaByGenre(
   );
 
   return { comics };
+}
+
+export async function getComicSubtypePosters(
+  options: { includeNsfw?: boolean } = {},
+): Promise<Partial<Record<MangaSubtype, string>>> {
+  const includeNsfw = options.includeNsfw === true;
+  return rememberComicCacheValue(
+    buildComicCacheKey('subtype-posters', getVisibilityCacheSegment(includeNsfw)),
+    LIST_CACHE_TTL_SECONDS,
+    () => querySubtypePosterMap(includeNsfw),
+  );
 }
 
 export async function getMangaDetail(
@@ -767,17 +848,21 @@ export async function getMangaChapter(
     CHAPTER_CACHE_TTL_SECONDS,
     () => queryComicChapter(slug, includeNsfw),
   );
+  const normalizedChapter = {
+    ...chapter,
+    images: chapter.images.map((image) => normalizeComicImageUrl(image)).filter(Boolean),
+  };
 
   if (options.recordAccess) {
     void recordComicAccess({
-      slug: chapter.manga_slug || slug,
-      subtype: chapter.subtype ?? 'manga',
+      slug: normalizedChapter.manga_slug || slug,
+      subtype: normalizedChapter.subtype ?? 'manga',
       eventName: 'chapter_view',
       weight: 3,
     });
   }
 
-  return chapter;
+  return normalizedChapter;
 }
 
 export async function getMangaRecommendations(slug: string): Promise<{ recommendations: MangaSearchResult[] }> {

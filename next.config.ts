@@ -135,6 +135,12 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    localPatterns: [
+      {
+        pathname: '/api/comic/image',
+        search: '?url=*',
+      },
+    ],
     remotePatterns: imageRemoteHostPatterns.map((hostname) => ({
       protocol: hostname === 'localhost' || hostname === '127.0.0.1' ? 'http' : 'https',
       hostname,

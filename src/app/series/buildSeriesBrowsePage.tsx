@@ -11,6 +11,7 @@ interface BuildSeriesBrowsePageProps {
   path: string;
   icon: LucideIcon;
   theme: ThemeType;
+  eyebrow?: string;
   results: GenericMediaItem[];
 }
 
@@ -20,6 +21,7 @@ export function buildSeriesBrowsePage({
   path,
   icon,
   theme,
+  eyebrow,
   results,
 }: BuildSeriesBrowsePageProps) {
   return (
@@ -41,6 +43,7 @@ export function buildSeriesBrowsePage({
         description={description}
         iconName={icon.name}
         theme={theme}
+        eyebrow={eyebrow}
         results={results}
         loading={false}
         error={null}

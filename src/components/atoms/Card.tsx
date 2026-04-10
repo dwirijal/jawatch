@@ -173,7 +173,7 @@ export function MediaCard({
               fill
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.028]"
               sizes="(max-width: 500px) 48vw, (max-width: 768px) 33vw, (max-width: 1200px) 20vw, 12vw"
-              unoptimized
+              quality={68}
               onError={handleImageError}
             />
           ) : (

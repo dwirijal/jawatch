@@ -14,7 +14,7 @@ export function ReadingSettings({ autoNext, setAutoNext }: { autoNext: boolean, 
   return (
     <PopperRoot>
       <PopperTrigger asChild>
-        <Button variant="outline" size="icon" className="rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 text-zinc-400 hover:bg-surface-elevated hover:text-white">
+        <Button variant="outline" size="icon" className="h-11 w-11 rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 text-zinc-400 hover:bg-surface-elevated hover:text-white">
           <Settings2 className="h-4 w-4" />
         </Button>
       </PopperTrigger>

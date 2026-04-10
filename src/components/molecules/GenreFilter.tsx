@@ -11,6 +11,7 @@ interface GenreFilterProps {
   onGenreClick: (genre: string) => void;
   theme: ThemeType;
   className?: string;
+  layout?: 'wrap' | 'rail';
 }
 
 export function GenreFilter({
@@ -18,9 +19,11 @@ export function GenreFilter({
   activeGenre,
   onGenreClick,
   theme,
-  className
+  className,
+  layout = 'wrap',
 }: GenreFilterProps) {
   const headingId = React.useId();
+  const isRail = layout === 'rail';
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -28,7 +31,16 @@ export function GenreFilter({
         <Filter className="w-4 h-4 text-zinc-500" />
         <h3 id={headingId} className="type-kicker">Filter by Genres</h3>
       </div>
-      <div className="flex flex-wrap gap-2" role="group" aria-labelledby={headingId}>
+      <div
+        className={cn(
+          'flex gap-2',
+          isRail
+            ? 'overflow-x-auto overflow-y-hidden whitespace-nowrap pb-1 scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none] touch-pan-x md:flex-wrap md:overflow-visible md:whitespace-normal md:pb-0'
+            : 'flex-wrap'
+        )}
+        role="group"
+        aria-labelledby={headingId}
+      >
         {genres.map(genre => (
           <Button 
             key={genre} 
@@ -36,7 +48,10 @@ export function GenreFilter({
             size="sm"
             onClick={() => onGenreClick(genre)}
             aria-pressed={activeGenre === genre}
-            className="rounded-xl text-[10px] uppercase font-black px-4 h-9 border-zinc-800"
+            className={cn(
+              'rounded-xl text-[10px] uppercase font-black px-4 h-9 border-zinc-800',
+              isRail && 'shrink-0'
+            )}
           >
             {genre}
           </Button>

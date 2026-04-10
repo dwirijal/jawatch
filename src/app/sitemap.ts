@@ -12,8 +12,14 @@ const staticRoutes = [
   { path: '/series/anime', priority: 0.9, changeFrequency: 'hourly' },
   { path: '/series/donghua', priority: 0.9, changeFrequency: 'hourly' },
   { path: '/series/drama', priority: 0.9, changeFrequency: 'hourly' },
+  { path: '/series/ongoing', priority: 0.9, changeFrequency: 'hourly' },
   { path: '/movies', priority: 0.9, changeFrequency: 'daily' },
+  { path: '/movies/latest', priority: 0.85, changeFrequency: 'daily' },
+  { path: '/movies/popular', priority: 0.85, changeFrequency: 'daily' },
   { path: '/comic', priority: 0.9, changeFrequency: 'daily' },
+  { path: '/comic/latest', priority: 0.85, changeFrequency: 'daily' },
+  { path: '/comic/popular', priority: 0.85, changeFrequency: 'daily' },
+  { path: '/comic/ongoing', priority: 0.85, changeFrequency: 'daily' },
   { path: '/comic/manga', priority: 0.85, changeFrequency: 'daily' },
   { path: '/comic/manhwa', priority: 0.85, changeFrequency: 'daily' },
   { path: '/comic/manhua', priority: 0.85, changeFrequency: 'daily' },
@@ -30,6 +36,19 @@ type SlugRow = {
   slug: string;
   updated_at: string;
 };
+
+type BrowseValueRow = {
+  value: string;
+  updated_at: string;
+};
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 function toEntry(
   path: string,
@@ -51,7 +70,7 @@ async function loadDynamicSitemapEntries(): Promise<SitemapEntry[]> {
     return [];
   }
 
-  const [seriesDetails, seriesWatch, movieDetails, movieWatch, comicDetails, novelDetails, drachinDetails, drachinEpisodes, dramaboxDetails] = await Promise.all([
+  const [seriesDetails, seriesWatch, movieDetails, movieWatch, comicDetails, novelDetails, drachinDetails, drachinEpisodes, dramaboxDetails, seriesGenres, seriesCountries, seriesYears] = await Promise.all([
     sql.unsafe<SlugRow[]>(`
       select slug, updated_at::text
       from public.media_items
@@ -133,6 +152,85 @@ async function loadDynamicSitemapEntries(): Promise<SitemapEntry[]> {
       order by updated_at desc
       limit 300
     `),
+    sql.unsafe<BrowseValueRow[]>(`
+      select
+        genre_name.value as value,
+        max(i.updated_at)::text as updated_at
+      from public.media_items i
+      cross join lateral jsonb_array_elements_text(
+        case
+          when jsonb_typeof(i.detail->'genres') = 'array' then i.detail->'genres'
+          else '[]'::jsonb
+        end
+      ) as genre_name(value)
+      where i.surface_type = 'series'
+        and coalesce(i.is_nsfw, false) = false
+        and nullif(trim(genre_name.value), '') is not null
+      group by genre_name.value
+      order by max(i.updated_at) desc
+      limit 80
+    `),
+    sql.unsafe<BrowseValueRow[]>(`
+      with country_values as (
+        select
+          case
+            when lower(trim(coalesce(
+              i.detail->>'country',
+              i.detail->>'region',
+              i.detail->'country_names'->>0,
+              case upper(coalesce(i.release_country, ''))
+                when 'JP' then 'Japan'
+                when 'CN' then 'China'
+                when 'KR' then 'South Korea'
+                when 'US' then 'United States'
+                else ''
+              end
+            ))) = 'korea' then 'South Korea'
+            else trim(coalesce(
+              i.detail->>'country',
+              i.detail->>'region',
+              i.detail->'country_names'->>0,
+              case upper(coalesce(i.release_country, ''))
+                when 'JP' then 'Japan'
+                when 'CN' then 'China'
+                when 'KR' then 'South Korea'
+                when 'US' then 'United States'
+                else ''
+              end
+            ))
+          end as value,
+          i.updated_at
+        from public.media_items i
+        where i.surface_type = 'series'
+          and coalesce(i.is_nsfw, false) = false
+      )
+      select value, max(updated_at)::text as updated_at
+      from country_values
+      where nullif(value, '') is not null
+      group by value
+      order by max(updated_at) desc
+      limit 24
+    `),
+    sql.unsafe<BrowseValueRow[]>(`
+      with year_values as (
+        select
+          coalesce(
+            nullif(i.release_year::text, ''),
+            nullif(i.detail->>'release_year', ''),
+            nullif(i.detail->>'year', '')
+          ) as value,
+          i.updated_at
+        from public.media_items i
+        where i.surface_type = 'series'
+          and coalesce(i.is_nsfw, false) = false
+      )
+      select value, max(updated_at)::text as updated_at
+      from year_values
+      where value ~ '^[0-9]{4}$'
+      group by value
+      order by value desc
+      limit 40
+    `),
   ]);
 
   return [
@@ -145,6 +243,9 @@ async function loadDynamicSitemapEntries(): Promise<SitemapEntry[]> {
     ...drachinDetails.map((row) => toEntry(`/drachin/${row.slug}`, row.updated_at, 0.7, 'daily')),
     ...drachinEpisodes.map((row) => toEntry(`/drachin/episode/${row.slug}`, row.updated_at, 0.75, 'daily')),
     ...dramaboxDetails.map((row) => toEntry(`/dramabox/${row.slug}`, row.updated_at, 0.7, 'weekly')),
+    ...seriesGenres.map((row) => toEntry(`/series/genre/${slugify(row.value)}`, row.updated_at, 0.65, 'weekly')),
+    ...seriesCountries.map((row) => toEntry(`/series/country/${slugify(row.value)}`, row.updated_at, 0.65, 'weekly')),
+    ...seriesYears.map((row) => toEntry(`/series/year/${row.value}`, row.updated_at, 0.65, 'weekly')),
   ];
 }
 

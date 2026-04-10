@@ -51,6 +51,7 @@ export default function NovelPageClient({ initialFeatured, initialLatest, genres
       description="Read long-form stories from a readable source with chapter detail and in-app reader flow."
       icon={FileText}
       theme="novel"
+      eyebrow="Reading Desk"
       genres={genres.map((genre) => genre.name)}
       results={results}
       loading={loading}

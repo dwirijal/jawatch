@@ -6,6 +6,7 @@ import { Button } from '@/components/atoms/Button';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
+import { PosterImageWithFallback } from '@/components/atoms/PosterImageWithFallback';
 import { StatCard } from '@/components/molecules/StatCard';
 import { CommunityCTA } from '@/components/molecules/CommunityCTA';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
@@ -119,13 +120,12 @@ export default async function ComicDetailPage({ params }: PageProps) {
 
               <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:items-end">
                 <div className="relative mx-auto aspect-[3/4] w-44 overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2 hard-shadow-md md:mx-0 md:w-52">
-                  <Image
-                    src={hdImage || '/favicon.ico'}
-                    alt={manga.title}
-                    fill
+                  <PosterImageWithFallback
+                    src={hdImage}
+                    title={manga.title}
                     sizes="208px"
-                    className="object-cover"
                     priority
+                    imageClassName="object-cover"
                   />
                 </div>
 

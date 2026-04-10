@@ -1,8 +1,7 @@
 import 'server-only';
 
 import { buildComicCacheKey, rememberComicCacheValue } from '@/lib/server/comic-cache';
-import { getComicDb } from '@/lib/server/comic-db';
-import { hasNsfwLabel } from '@/lib/media-safety';
+import { getComicDb, type ComicDbClient } from '@/lib/server/comic-db';
 import {
   buildVisibilityCondition,
   getVisibilityCacheSegment,
@@ -10,10 +9,10 @@ import {
   normalizePosterUrl,
   parseVideoDownloads,
   parseVideoMirrors,
+  readCanonicalPlaybackOptions,
   readNumber,
   readRecord,
   readText,
-  resolvePrimaryVideoUrl,
   slugify,
   type JsonRecord,
   type VideoDownloadGroup,
@@ -31,9 +30,24 @@ import {
   type SeriesScheduleLane,
 } from '@/lib/series-presentation';
 import { selectSeriesRecommendations } from '@/lib/series-recommendations';
+import {
+  buildCanonicalEpisodeLateralSubquery,
+  collapseCanonicalEpisodeEntries,
+  collapseCanonicalSeriesRows,
+  getSeriesSearchCandidateLimit,
+  resolveSeriesEpisodeNavigation,
+  selectCanonicalSeriesRow,
+  selectPreferredLinkedSourceItem,
+  selectPreferredLinkedSourceUnit,
+  selectSeriesPlaybackSources,
+} from './series-canonical-utils';
 
 type SeriesRow = {
   item_key: string;
+  requested_item_key?: string | null;
+  requested_source?: string | null;
+  is_canonical?: boolean | null;
+  linked_source_item_key?: string | null;
   media_type: SeriesMediaType;
   surface_type: string | null;
   presentation_type: string | null;
@@ -60,6 +74,8 @@ type SeriesRow = {
 
 type SeriesCatalogRow = {
   item_key: string;
+  canonical_item_key?: string | null;
+  is_canonical?: boolean | null;
   media_type: SeriesMediaType;
   surface_type: string | null;
   presentation_type: string | null;
@@ -92,6 +108,11 @@ type SeriesCatalogRow = {
 };
 
 type SeriesEpisodeRow = {
+  item_key?: string | null;
+  canonical_unit_key?: string | null;
+  requested_unit_key?: string | null;
+  requested_source?: string | null;
+  linked_source_item_key?: string | null;
   media_type: SeriesMediaType;
   origin_type: string | null;
   release_country: string | null;
@@ -108,9 +129,10 @@ type SeriesEpisodeRow = {
   prev_slug: string | null;
   next_slug: string | null;
   detail: JsonRecord | null;
+  source_detail?: JsonRecord | null;
 };
 
-type SeriesBrowseKind = 'list' | 'type' | 'genre' | 'country' | 'year';
+type SeriesBrowseKind = 'list' | 'type' | 'genre' | 'country' | 'year' | 'status';
 
 export type SeriesHubData = {
   popular: SeriesCardItem[];
@@ -170,10 +192,124 @@ export type SeriesEpisodeData = {
   nextEpisodeSlug: string | null;
 };
 
-const HUB_CACHE_TTL_SECONDS = 60 * 10;
 const DETAIL_CACHE_TTL_SECONDS = 60 * 30;
 const SEARCH_CACHE_TTL_SECONDS = 60 * 3;
 const SERIES_CACHE_NAMESPACE = 'series-v8';
+const SERIES_CANDIDATE_MULTIPLIER = 4;
+
+type LinkedSourceItemRow = {
+  item_key: string | null;
+  source: string | null;
+  is_primary: boolean | null;
+  priority: number | null;
+};
+
+type LinkedSourceUnitRow = LinkedSourceItemRow & {
+  unit_key: string | null;
+  detail: JsonRecord | null;
+};
+
+function buildSeriesScopeCondition(alias: string): string {
+  return `(
+    ${alias}.surface_type = 'series'
+    or (${alias}.surface_type = 'unknown' and ${alias}.media_type in ('anime', 'drama'))
+  )`;
+}
+
+function buildSeriesCanonicalShadowCondition(alias: string): string {
+  return `
+    and (
+      coalesce(${alias}.is_canonical, false) = true
+      or not exists (
+        select 1
+        from public.media_items canonical_item
+        where canonical_item.slug = ${alias}.slug
+          and ${buildSeriesScopeCondition('canonical_item')}
+          and coalesce(canonical_item.is_canonical, false) = true
+      )
+    )
+  `;
+}
+
+async function readPreferredLinkedSourceItemKey(
+  sql: ComicDbClient,
+  canonicalItemKey: string | null | undefined,
+  {
+    requestedItemKey,
+    requestedSource,
+    includeNsfw,
+  }: {
+    requestedItemKey?: string | null;
+    requestedSource?: string | null;
+    includeNsfw: boolean;
+  },
+): Promise<string | null> {
+  const itemKey = readText(canonicalItemKey);
+  if (!itemKey) {
+    return null;
+  }
+
+  const rows = await sql.unsafe<LinkedSourceItemRow[]>(`
+    select
+      si.item_key,
+      si.source,
+      mil.is_primary,
+      mil.priority
+    from public.media_item_links mil
+    join public.media_items si on si.item_key = mil.source_item_key
+    where mil.canonical_item_key = $1
+      and ${buildSeriesScopeCondition('si')}
+      ${buildVisibilityCondition(includeNsfw, 'si.detail', 'si.is_nsfw')}
+  `, [itemKey]);
+
+  return readText(selectPreferredLinkedSourceItem(rows, {
+    requestedItemKey,
+    requestedSource,
+  })?.item_key) || null;
+}
+
+async function readPreferredLinkedSourceUnitDetail(
+  sql: ComicDbClient,
+  canonicalUnitKey: string | null | undefined,
+  {
+    requestedUnitKey,
+    linkedSourceItemKey,
+    requestedSource,
+    includeNsfw,
+  }: {
+    requestedUnitKey?: string | null;
+    linkedSourceItemKey?: string | null;
+    requestedSource?: string | null;
+    includeNsfw: boolean;
+  },
+): Promise<JsonRecord> {
+  const unitKey = readText(canonicalUnitKey);
+  if (!unitKey) {
+    return {};
+  }
+
+  const rows = await sql.unsafe<LinkedSourceUnitRow[]>(`
+    select
+      su.unit_key,
+      su.item_key,
+      si.source,
+      su.detail,
+      mul.is_primary,
+      mul.priority
+    from public.media_unit_links mul
+    join public.media_units su on su.unit_key = mul.source_unit_key
+    join public.media_items si on si.item_key = su.item_key
+    where mul.canonical_unit_key = $1
+      and ${buildSeriesScopeCondition('si')}
+      ${buildVisibilityCondition(includeNsfw, 'si.detail', 'si.is_nsfw')}
+  `, [unitKey]);
+
+  return readRecord(selectPreferredLinkedSourceUnit(rows, {
+    requestedUnitKey,
+    linkedSourceItemKey,
+    requestedSource,
+  })?.detail);
+}
 
 function formatRating(value: unknown): string {
   const numeric = readNumber(value);
@@ -382,10 +518,6 @@ function getSeriesCatalogGenres(row: Pick<SeriesCatalogRow, 'genres' | 'genre_na
   });
 }
 
-function isSeriesCatalogNsfw(row: Pick<SeriesCatalogRow, 'is_nsfw' | 'genres' | 'genre_names' | 'canonical_genre_names' | 'category_names'>): boolean {
-  return Boolean(row.is_nsfw) || hasNsfwLabel(row.genres, row.genre_names, row.canonical_genre_names, row.category_names);
-}
-
 function formatCatalogYear(row: Pick<SeriesCatalogRow, 'release_year' | 'detail_year'>): string {
   if (row.release_year && row.release_year > 0) {
     return String(row.release_year);
@@ -505,15 +637,22 @@ function getUpcomingScheduleDays(rows: SeriesCatalogRow[], dayCount: number, lim
     });
 }
 
-async function loadSeriesRows(includeNsfw: boolean): Promise<SeriesCatalogRow[]> {
-  const sql = getComicDb();
-  if (!sql) {
-    return [];
-  }
-
-  return sql.unsafe<SeriesCatalogRow[]>(`
+function buildSeriesCatalogSelect(includeNsfw: boolean): string {
+  return `
     select
       i.item_key,
+      coalesce(
+        case when coalesce(i.is_canonical, false) then i.item_key end,
+        (
+          select mil.canonical_item_key
+          from public.media_item_links mil
+          where mil.source_item_key = i.item_key
+          order by mil.is_primary desc, mil.priority desc, mil.updated_at desc
+          limit 1
+        ),
+        i.item_key
+      ) as canonical_item_key,
+      i.is_canonical,
       i.media_type,
       i.surface_type,
       i.presentation_type,
@@ -550,78 +689,288 @@ async function loadSeriesRows(includeNsfw: boolean): Promise<SeriesCatalogRow[]>
       i.detail -> 'genre_names' as genre_names,
       to_jsonb(i.genre_names) as canonical_genre_names,
       i.detail -> 'category_names' as category_names,
-      (
-        select count(*)
-        from public.media_units u
-        where u.item_key = i.item_key
-          and u.unit_type = 'episode'
-      )::int as episode_count
+      coalesce(episode_counts.episode_count, 0)::int as episode_count
     from public.media_items i
-    where (
-      i.surface_type = 'series'
-      or (i.surface_type = 'unknown' and i.media_type in ('anime', 'drama'))
-    )
+    left join (
+      select
+        u.item_key,
+        count(*)::int as episode_count
+      from public.media_units u
+      where u.unit_type = 'episode'
+      group by u.item_key
+    ) episode_counts on episode_counts.item_key = i.item_key
+    where ${buildSeriesScopeCondition('i')}
       ${buildVisibilityCondition(includeNsfw, 'i.detail', 'i.is_nsfw')}
-    order by i.updated_at desc
+      ${buildSeriesCanonicalShadowCondition('i')}
+  `;
+}
+
+function buildSeriesGenreMatchCondition(alias: string, paramRef = '$1'): string {
+  return `
+    (
+      exists (
+        select 1
+        from jsonb_array_elements_text(
+          case
+            when jsonb_typeof(${alias}.detail->'genres') = 'array' then ${alias}.detail->'genres'
+            when jsonb_typeof(${alias}.detail->'genre_names') = 'array' then ${alias}.detail->'genre_names'
+            when jsonb_typeof(${alias}.detail->'category_names') = 'array' then ${alias}.detail->'category_names'
+            else '[]'::jsonb
+          end
+        ) as genre_name(value)
+        where lower(genre_name.value) = ${paramRef}
+      )
+      or exists (
+        select 1
+        from unnest(coalesce(${alias}.genre_names, '{}'::text[])) as canonical_genre(value)
+        where lower(canonical_genre.value) = ${paramRef}
+      )
+    )
+  `;
+}
+
+function buildSeriesGenreAnyMatchCondition(alias: string, paramRef: string): string {
+  return `
+    (
+      exists (
+        select 1
+        from jsonb_array_elements_text(
+          case
+            when jsonb_typeof(${alias}.detail->'genres') = 'array' then ${alias}.detail->'genres'
+            when jsonb_typeof(${alias}.detail->'genre_names') = 'array' then ${alias}.detail->'genre_names'
+            when jsonb_typeof(${alias}.detail->'category_names') = 'array' then ${alias}.detail->'category_names'
+            else '[]'::jsonb
+          end
+        ) as genre_name(value)
+        where lower(genre_name.value) = any(${paramRef})
+      )
+      or exists (
+        select 1
+        from unnest(coalesce(${alias}.genre_names, '{}'::text[])) as canonical_genre(value)
+        where lower(canonical_genre.value) = any(${paramRef})
+      )
+    )
+  `;
+}
+
+function buildSeriesTypeMatchCondition(type: SeriesMediaType): string {
+  if (type === 'donghua') {
+    return `(coalesce(i.origin_type, '') = 'donghua' or (coalesce(i.origin_type, '') = '' and i.source = 'anichin'))`;
+  }
+  if (type === 'drama') {
+    return `(coalesce(i.origin_type, '') = 'drama' or i.media_type = 'drama')`;
+  }
+  return `(coalesce(i.origin_type, '') = 'anime' or (coalesce(i.origin_type, '') not in ('donghua', 'drama') and i.source <> 'anichin' and i.media_type = 'anime'))`;
+}
+
+function buildSeriesCountryMatchCondition(): string {
+  return `
+    lower(
+      coalesce(
+        nullif(i.detail ->> 'country', ''),
+        nullif(i.detail ->> 'region', ''),
+        i.detail -> 'country_names' ->> 0,
+        i.release_country,
+        ''
+      )
+    ) = $1
+  `;
+}
+
+function buildSeriesYearMatchCondition(): string {
+  return `
+    coalesce(
+      nullif(i.release_year::text, ''),
+      nullif(i.detail ->> 'release_year', ''),
+      nullif(i.detail ->> 'year', '')
+    ) = $1
+  `;
+}
+
+function buildSeriesStatusMatchCondition(status: string): string {
+  if (status === 'ongoing') {
+    return `
+      (
+        lower(coalesce(i.status, '')) = 'ongoing'
+        or lower(coalesce(i.status, '')) = 'airing'
+        or lower(coalesce(i.status, '')) = 'currently airing'
+        or lower(coalesce(i.status, '')) = 'on-going'
+        or lower(coalesce(i.status, '')) like '%ongoing%'
+        or lower(coalesce(i.status, '')) like '%airing%'
+      )
+    `;
+  }
+
+  return `lower(coalesce(i.status, '')) = $1`;
+}
+
+function buildSeriesNsfwCondition(alias: string): string {
+  return `
+    (
+      coalesce(${alias}.is_nsfw, false)
+      or exists (
+        select 1
+        from jsonb_array_elements_text(
+          case
+            when jsonb_typeof(${alias}.detail->'genres') = 'array' then ${alias}.detail->'genres'
+            when jsonb_typeof(${alias}.detail->'genre_names') = 'array' then ${alias}.detail->'genre_names'
+            when jsonb_typeof(${alias}.detail->'category_names') = 'array' then ${alias}.detail->'category_names'
+            else '[]'::jsonb
+          end
+        ) as label_name(value)
+        where lower(label_name.value) = 'nsfw'
+      )
+      or exists (
+        select 1
+        from jsonb_array_elements_text(
+          case
+            when jsonb_typeof(${alias}.detail->'tags') = 'array' then ${alias}.detail->'tags'
+            else '[]'::jsonb
+          end
+        ) as tag_name(value)
+        where lower(tag_name.value) = 'nsfw'
+      )
+    )
+  `;
+}
+
+async function querySeriesCatalogRows(
+  {
+    includeNsfw,
+    extraWhere = '',
+    params = [],
+    orderBy = 'i.updated_at desc',
+    limit,
+  }: {
+    includeNsfw: boolean;
+    extraWhere?: string;
+    params?: unknown[];
+    orderBy?: string;
+    limit?: number;
+  },
+): Promise<SeriesCatalogRow[]> {
+  const sql = getComicDb();
+  if (!sql) {
+    return [];
+  }
+
+  const normalizedLimit = typeof limit === 'number' ? Math.max(1, Math.trunc(limit)) : null;
+  const queryParams = [...params];
+  let query = buildSeriesCatalogSelect(includeNsfw);
+  if (extraWhere.trim()) {
+    query += ` and (${extraWhere})`;
+  }
+  query += ` order by ${orderBy}`;
+  if (normalizedLimit != null) {
+    queryParams.push(normalizedLimit);
+    query += ` limit $${queryParams.length}`;
+  }
+
+  return sql.unsafe<SeriesCatalogRow[]>(query, queryParams).then(collapseCanonicalSeriesRows);
+}
+
+async function querySeriesFilterTokens(includeNsfw: boolean): Promise<string[]> {
+  const sql = getComicDb();
+  if (!sql) {
+    return [];
+  }
+
+  const rows = await sql.unsafe<Array<{ type_label: string | null; country_label: string | null }>>(`
+    select distinct
+      case
+        when coalesce(i.origin_type, '') = 'donghua' or (coalesce(i.origin_type, '') = '' and i.source = 'anichin') then 'Donghua'
+        when coalesce(i.origin_type, '') = 'drama' or i.media_type = 'drama' then 'Drama'
+        else 'Anime'
+      end as type_label,
+      coalesce(
+        nullif(i.detail ->> 'country', ''),
+        nullif(i.detail ->> 'region', ''),
+        i.detail -> 'country_names' ->> 0,
+        i.release_country,
+        ''
+      ) as country_label
+    from public.media_items i
+    where ${buildSeriesScopeCondition('i')}
+      ${buildVisibilityCondition(includeNsfw, 'i.detail', 'i.is_nsfw')}
+      ${buildSeriesCanonicalShadowCondition('i')}
   `);
-}
 
-function getSeriesCatalog(includeNsfw: boolean): Promise<SeriesCatalogRow[]> {
-  const visibility = getVisibilityCacheSegment(includeNsfw);
-  const key = buildComicCacheKey(SERIES_CACHE_NAMESPACE, visibility, 'catalog');
-  return rememberComicCacheValue(key, HUB_CACHE_TTL_SECONDS, () => loadSeriesRows(includeNsfw));
-}
-
-function getSeriesFilters(rows: SeriesCatalogRow[]): string[] {
   const available = new Set<string>();
   for (const row of rows) {
-    switch (getSeriesType(row)) {
-      case 'anime':
-        available.add('Anime');
-        break;
-      case 'donghua':
-        available.add('Donghua');
-        break;
-      case 'drama':
-        available.add('Drama');
-        break;
+    const typeLabel = readText(row.type_label);
+    if (typeLabel) {
+      available.add(typeLabel);
     }
-
-    const country = getCatalogCountry(row);
-    if (country) {
-      available.add(country);
+    const countryLabel = normalizeBrowseToken(readText(row.country_label));
+    if (countryLabel === 'korea') {
+      available.add('South Korea');
+    } else if (countryLabel) {
+      available.add(countryLabel);
     }
   }
 
   return getSeriesCanonicalFilters(available);
 }
 
-function matchesBrowseToken(row: SeriesCatalogRow, kind: SeriesBrowseKind, rawValue: string): boolean {
-  const value = normalizeBrowseToken(rawValue);
-  if (!value) {
-    return false;
+async function querySeriesRecommendationItems(
+  {
+    currentSlug,
+    genres,
+    country,
+    includeNsfw,
+    limit,
+  }: {
+    currentSlug: string;
+    genres: string[];
+    country: string;
+    includeNsfw: boolean;
+    limit: number;
+  },
+): Promise<SeriesCardItem[]> {
+  const normalizedLimit = Math.max(1, limit);
+  const normalizedGenres = genres
+    .map((entry) => normalizeBrowseToken(entry))
+    .filter(Boolean);
+  const normalizedCountry = normalizeBrowseToken(country);
+
+  const queryParams: unknown[] = [currentSlug];
+  const predicates = ['i.slug <> $1'];
+
+  if (normalizedGenres.length > 0) {
+    queryParams.push(normalizedGenres);
+    predicates.push(buildSeriesGenreAnyMatchCondition('i', `$${queryParams.length}`));
   }
 
-  const type = getSeriesType(row);
-  const country = getCatalogCountry(row).toLowerCase();
-  const year = formatCatalogYear(row).toLowerCase();
-  const genres = getSeriesCatalogGenres(row).map((genre) => genre.toLowerCase());
-  const slugValue = slugify(value);
-
-  if (kind === 'type') {
-    return type === value;
-  }
-  if (kind === 'genre') {
-    return genres.some((genre) => genre === value || slugify(genre) === slugValue);
-  }
-  if (kind === 'country') {
-    return country === value || slugify(country) === slugValue;
-  }
-  if (kind === 'year') {
-    return year === value;
+  if (normalizedCountry) {
+    queryParams.push(normalizedCountry === 'south korea' ? 'korea' : normalizedCountry);
+    predicates.push(`
+      lower(
+        coalesce(
+          nullif(i.detail ->> 'country', ''),
+          nullif(i.detail ->> 'region', ''),
+          i.detail -> 'country_names' ->> 0,
+          i.release_country,
+          ''
+        )
+      ) = $${queryParams.length}
+    `);
   }
 
-  return true;
+  const candidateRows = await querySeriesCatalogRows({
+    includeNsfw,
+    extraWhere: predicates.join(' and '),
+    params: queryParams,
+    orderBy: 'i.score desc nulls last, coalesce(episode_counts.episode_count, 0) desc, i.updated_at desc',
+    limit: normalizedLimit * SERIES_CANDIDATE_MULTIPLIER * 2,
+  });
+
+  return selectSeriesRecommendations({
+    currentSlug,
+    genres,
+    country,
+    limit: normalizedLimit,
+    items: candidateRows.map(mapSeriesCard),
+  });
 }
 
 export async function getSeriesBrowseItems(
@@ -630,19 +979,104 @@ export async function getSeriesBrowseItems(
   limit = 24,
   options: VisibilityOptions = {},
 ): Promise<SeriesCardItem[]> {
-  const rows = await getSeriesCatalog(Boolean(options.includeNsfw));
   const normalizedLimit = Math.max(1, limit);
-  const filteredRows = kind === 'list'
-    ? rows
-    : rows.filter((row) => value ? matchesBrowseToken(row, kind, value) : false);
+  const includeNsfw = Boolean(options.includeNsfw);
+  const normalizedValue = normalizeBrowseToken(value ?? '');
+  let filteredRows: SeriesCatalogRow[] = [];
+
+  if (kind === 'list') {
+    filteredRows = await querySeriesCatalogRows({
+      includeNsfw,
+      orderBy: 'i.updated_at desc',
+      limit: normalizedLimit,
+    });
+  } else if (normalizedValue) {
+    switch (kind) {
+      case 'type':
+        filteredRows = await querySeriesCatalogRows({
+          includeNsfw,
+          extraWhere: buildSeriesTypeMatchCondition(normalizedValue as SeriesMediaType),
+          orderBy: 'i.updated_at desc',
+          limit: normalizedLimit,
+        });
+        break;
+      case 'genre':
+        filteredRows = await querySeriesCatalogRows({
+          includeNsfw,
+          extraWhere: buildSeriesGenreMatchCondition('i'),
+          params: [normalizedValue],
+          orderBy: 'i.updated_at desc',
+          limit: normalizedLimit,
+        });
+        break;
+      case 'country': {
+        const countryValue = normalizedValue === 'south korea' ? 'korea' : normalizedValue;
+        filteredRows = await querySeriesCatalogRows({
+          includeNsfw,
+          extraWhere: buildSeriesCountryMatchCondition(),
+          params: [countryValue],
+          orderBy: 'i.updated_at desc',
+          limit: normalizedLimit,
+        });
+        break;
+      }
+      case 'year':
+        filteredRows = await querySeriesCatalogRows({
+          includeNsfw,
+          extraWhere: buildSeriesYearMatchCondition(),
+          params: [normalizedValue],
+          orderBy: 'i.updated_at desc',
+          limit: normalizedLimit,
+        });
+        break;
+      case 'status':
+        filteredRows = await querySeriesCatalogRows({
+          includeNsfw,
+          extraWhere: buildSeriesStatusMatchCondition(normalizedValue),
+          params: normalizedValue === 'ongoing' ? [] : [normalizedValue],
+          orderBy: 'i.updated_at desc',
+          limit: normalizedLimit,
+        });
+        break;
+      default:
+        filteredRows = [];
+        break;
+    }
+  }
 
   return filteredRows.slice(0, normalizedLimit).map(mapSeriesCard);
 }
 
 export async function getSeriesHubData(limit = 24, options: VisibilityOptions = {}): Promise<SeriesHubData> {
-  const rows = await getSeriesCatalog(Boolean(options.includeNsfw));
   const normalizedLimit = Math.max(1, limit);
-  const popularRows = [...rows].sort((left, right) => {
+  const includeNsfw = Boolean(options.includeNsfw);
+  const [popularCandidates, latestRows, dramaCandidates, scheduleRows, filters] = await Promise.all([
+    querySeriesCatalogRows({
+      includeNsfw,
+      orderBy: 'i.score desc nulls last, coalesce(episode_counts.episode_count, 0) desc, i.updated_at desc',
+      limit: normalizedLimit * SERIES_CANDIDATE_MULTIPLIER,
+    }),
+    querySeriesCatalogRows({
+      includeNsfw,
+      orderBy: 'i.updated_at desc',
+      limit: normalizedLimit,
+    }),
+    querySeriesCatalogRows({
+      includeNsfw,
+      extraWhere: buildSeriesTypeMatchCondition('drama'),
+      orderBy: 'i.score desc nulls last, coalesce(episode_counts.episode_count, 0) desc, i.updated_at desc',
+      limit: normalizedLimit * SERIES_CANDIDATE_MULTIPLIER,
+    }),
+    querySeriesCatalogRows({
+      includeNsfw,
+      extraWhere: `lower(coalesce(i.cadence, '')) = 'weekly' and coalesce(i.release_day, '') <> ''`,
+      orderBy: `i.next_release_at asc nulls last, i.score desc nulls last, coalesce(episode_counts.episode_count, 0) desc, i.updated_at desc`,
+      limit: 120,
+    }),
+    querySeriesFilterTokens(includeNsfw),
+  ]);
+
+  const popularRows = [...popularCandidates].sort((left, right) => {
     const leftScore = getSeriesType(left) === 'drama'
       ? getDramaPopularity({ category_names: left.category_names })
       : (readNumber(left.score) ?? 0) * 1000 + (left.episode_count ?? 0);
@@ -652,7 +1086,7 @@ export async function getSeriesHubData(limit = 24, options: VisibilityOptions = 
     return rightScore - leftScore;
   });
 
-  const dramaSpotlight = rows
+  const dramaSpotlight = dramaCandidates
     .filter((row) => getSeriesType(row) === 'drama')
     .sort((left, right) => getDramaPopularity({ category_names: right.category_names }) - getDramaPopularity({ category_names: left.category_names }))
     .slice(0, normalizedLimit)
@@ -660,10 +1094,10 @@ export async function getSeriesHubData(limit = 24, options: VisibilityOptions = 
 
   return {
     popular: popularRows.slice(0, normalizedLimit).map(mapSeriesCard),
-    latest: rows.slice(0, normalizedLimit).map(mapSeriesCard),
+    latest: latestRows.slice(0, normalizedLimit).map(mapSeriesCard),
     dramaSpotlight,
-    weeklySchedule: getUpcomingScheduleDays(rows, 3, 6),
-    filters: getSeriesFilters(rows),
+    weeklySchedule: getUpcomingScheduleDays(scheduleRows, 3, 6),
+    filters,
   };
 }
 
@@ -673,22 +1107,21 @@ export async function getSeriesFilteredItems(filter: string, limit = 24, options
     return [];
   }
 
-  const rows = await getSeriesCatalog(Boolean(options.includeNsfw));
-  return rows
-    .filter((row) => {
-      if (normalizedFilter === 'anime' || normalizedFilter === 'drama' || normalizedFilter === 'donghua') {
-        return getSeriesType(row) === normalizedFilter;
-      }
-      return getCatalogCountry(row).toLowerCase() === normalizedFilter;
-    })
-    .slice(0, Math.max(1, limit))
-    .map(mapSeriesCard);
+  if (normalizedFilter === 'anime' || normalizedFilter === 'drama' || normalizedFilter === 'donghua') {
+    return getSeriesBrowseItems('type', normalizedFilter, limit, options);
+  }
+
+  return getSeriesBrowseItems('country', normalizedFilter, limit, options);
 }
 
 export async function getNsfwSeriesItems(limit = 24): Promise<SeriesCardItem[]> {
-  const rows = await getSeriesCatalog(true);
+  const rows = await querySeriesCatalogRows({
+    includeNsfw: true,
+    extraWhere: buildSeriesNsfwCondition('i'),
+    orderBy: 'i.updated_at desc',
+    limit: Math.max(1, limit),
+  });
   return rows
-    .filter(isSeriesCatalogNsfw)
     .slice(0, Math.max(1, limit))
     .map(mapSeriesCard);
 }
@@ -701,7 +1134,12 @@ export async function getNsfwSeriesPage(page = 1, limit = 24): Promise<{
   const safePage = Math.max(1, page);
   const start = (safePage - 1) * safeLimit;
   const end = start + safeLimit + 1;
-  const rows = (await getSeriesCatalog(true)).filter(isSeriesCatalogNsfw);
+  const rows = await querySeriesCatalogRows({
+    includeNsfw: true,
+    extraWhere: buildSeriesNsfwCondition('i'),
+    orderBy: 'i.updated_at desc',
+    limit: end,
+  });
   const slice = rows.slice(start, end);
 
   return {
@@ -727,6 +1165,18 @@ export async function searchSeriesCatalog(query: string, limit = 8, options: Vis
     const rows = await sql.unsafe<SeriesCatalogRow[]>(`
       select
         i.item_key,
+        coalesce(
+          case when coalesce(i.is_canonical, false) then i.item_key end,
+          (
+            select mil.canonical_item_key
+            from public.media_item_links mil
+            where mil.source_item_key = i.item_key
+            order by mil.is_primary desc, mil.priority desc, mil.updated_at desc
+            limit 1
+          ),
+          i.item_key
+        ) as canonical_item_key,
+        i.is_canonical,
         i.media_type,
         i.surface_type,
         i.presentation_type,
@@ -761,20 +1211,18 @@ export async function searchSeriesCatalog(query: string, limit = 8, options: Vis
         to_jsonb(i.genre_names) as canonical_genre_names,
         i.detail -> 'category_names' as category_names
       from public.media_items i
-      where (
-        i.surface_type = 'series'
-        or (i.surface_type = 'unknown' and i.media_type in ('anime', 'drama'))
-      )
+      where ${buildSeriesScopeCondition('i')}
         ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}
+        ${buildSeriesCanonicalShadowCondition('i')}
         and (
           search_vec @@ plainto_tsquery('simple', $1)
           or title ilike $2
         )
       order by score desc nulls last, updated_at desc
       limit $3
-    `, [trimmed, `%${trimmed}%`, Math.max(1, limit)]);
+    `, [trimmed, `%${trimmed}%`, getSeriesSearchCandidateLimit(limit)]);
 
-    return rows.map(mapSeriesCard);
+    return collapseCanonicalSeriesRows(rows, { limit: Math.max(1, limit) }).map(mapSeriesCard);
   });
 }
 
@@ -794,8 +1242,33 @@ export async function getSeriesDetailBySlug(slug: string, options: SeriesDetailO
     }
 
     const rows = await sql.unsafe<SeriesRow[]>(`
+      with matched_item as (
+        select
+          i.item_key as requested_item_key,
+          i.source as requested_source,
+          coalesce(
+            case when coalesce(i.is_canonical, false) then i.item_key end,
+            (
+              select mil.canonical_item_key
+              from public.media_item_links mil
+              where mil.source_item_key = i.item_key
+              order by mil.is_primary desc, mil.priority desc, mil.updated_at desc
+              limit 1
+            ),
+            i.item_key
+          ) as canonical_item_key
+        from public.media_items i
+        where ${buildSeriesScopeCondition('i')}
+          and i.slug = $1
+          ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}
+        order by coalesce(i.is_canonical, false) desc, i.updated_at desc
+        limit 1
+      )
       select
         i.item_key,
+        mi.requested_item_key,
+        mi.requested_source,
+        i.is_canonical,
         i.media_type,
         i.surface_type,
         i.presentation_type,
@@ -812,38 +1285,48 @@ export async function getSeriesDetailBySlug(slug: string, options: SeriesDetailO
         i.detail,
         e.payload as tmdb_payload,
         i.updated_at
-      from public.media_items i
+      from matched_item mi
+      join public.media_items i on i.item_key = mi.canonical_item_key
       left join public.media_item_enrichments e
         on e.item_key = i.item_key
        and e.provider = 'tmdb'
        and e.match_status = 'matched'
-      where (
-        i.surface_type = 'series'
-        or (i.surface_type = 'unknown' and i.media_type in ('anime', 'drama'))
-      )
-        and i.slug = $1
-        ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}
       limit 1
     `, [normalizedSlug]);
 
-    const row = rows[0];
+    const row = selectCanonicalSeriesRow(rows);
     if (!row) {
       return null;
     }
 
+    const preferredSourceItemKey = await readPreferredLinkedSourceItemKey(sql, row.item_key, {
+      requestedItemKey: row.requested_item_key,
+      requestedSource: row.requested_source,
+      includeNsfw: Boolean(options.includeNsfw),
+    });
+    const episodeItemKey = preferredSourceItemKey || row.item_key;
     const episodes = await sql.unsafe<Array<{
+      canonical_unit_key: string | null;
       slug: string;
       title: string;
       label: string;
       number: number | null;
     }>>(`
-      select u.slug, u.title, u.label, u.number
+      select
+        coalesce(cu.unit_key, u.unit_key) as canonical_unit_key,
+        coalesce(cu.slug, u.slug) as slug,
+        coalesce(cu.title, u.title) as title,
+        coalesce(cu.label, u.label) as label,
+        coalesce(cu.number, u.number) as number
       from public.media_units u
+      left join lateral (
+        ${buildCanonicalEpisodeLateralSubquery('cu', 'u')}
+      ) cu on true
       where u.item_key = $1
         and u.unit_type = 'episode'
-      order by u.number desc nulls last, u.updated_at desc
-    `, [row.item_key]);
-    const normalizedEpisodes = episodes.map((episode) => ({
+      order by coalesce(cu.number, u.number) desc nulls last, coalesce(cu.updated_at, u.updated_at) desc
+    `, [episodeItemKey]);
+    const normalizedEpisodes = collapseCanonicalEpisodeEntries(episodes).map((episode) => ({
       ...episode,
       title: collapseRepeatedSeriesTitle(episode.title),
       label: readText(episode.label),
@@ -854,11 +1337,12 @@ export async function getSeriesDetailBySlug(slug: string, options: SeriesDetailO
     const country = getRowCountry(row);
     const recommendations = options.includeRecommendations === false
       ? []
-      : selectSeriesRecommendations({
+      : await querySeriesRecommendationItems({
           currentSlug: row.slug,
           genres,
           country,
-          items: (await getSeriesCatalog(Boolean(options.includeNsfw))).map(mapSeriesCard),
+          includeNsfw: Boolean(options.includeNsfw),
+          limit: 8,
         });
 
     return {
@@ -905,13 +1389,12 @@ export async function getSeriesRecommendations({
   includeNsfw?: boolean;
   limit?: number;
 }): Promise<SeriesCardItem[]> {
-  const rows = await getSeriesCatalog(includeNsfw);
-  return selectSeriesRecommendations({
+  return querySeriesRecommendationItems({
     currentSlug,
     genres,
     country,
+    includeNsfw,
     limit,
-    items: rows.map(mapSeriesCard),
   });
 }
 
@@ -931,7 +1414,34 @@ export async function getSeriesEpisodeBySlug(slug: string, options: VisibilityOp
     }
 
     const rows = await sql.unsafe<SeriesEpisodeRow[]>(`
+      with matched_unit as (
+        select
+          u.unit_key as requested_unit_key,
+          i.source as requested_source,
+          coalesce(
+            case when coalesce(u.is_canonical, false) then u.unit_key end,
+            (
+              select mul.canonical_unit_key
+              from public.media_unit_links mul
+              where mul.source_unit_key = u.unit_key
+              order by mul.is_primary desc, mul.priority desc, mul.updated_at desc
+              limit 1
+            ),
+            u.unit_key
+          ) as canonical_unit_key
+        from public.media_units u
+        join public.media_items i on i.item_key = u.item_key
+        where ${buildSeriesScopeCondition('i')}
+          and u.slug = $1
+          and u.unit_type = 'episode'
+          ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}
+        order by coalesce(u.is_canonical, false) desc, u.updated_at desc
+        limit 1
+      )
       select
+        i.item_key,
+        mu.requested_unit_key,
+        mu.requested_source,
         i.media_type,
         i.origin_type,
         i.release_country,
@@ -947,45 +1457,79 @@ export async function getSeriesEpisodeBySlug(slug: string, options: VisibilityOp
         u.number,
         u.prev_slug,
         u.next_slug,
-        u.detail
-      from public.media_units u
+        u.detail,
+        mu.canonical_unit_key
+      from matched_unit mu
+      join public.media_units u on u.unit_key = mu.canonical_unit_key
       join public.media_items i on i.item_key = u.item_key
       left join public.media_item_enrichments e
         on e.item_key = i.item_key
        and e.provider = 'tmdb'
        and e.match_status = 'matched'
-      where (
-        i.surface_type = 'series'
-        or (i.surface_type = 'unknown' and i.media_type in ('anime', 'drama'))
-      )
-        and u.slug = $1
-        and u.unit_type = 'episode'
-        ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}
       limit 1
     `, [normalizedSlug]);
 
-    const row = rows[0];
+    const row = selectCanonicalSeriesRow(rows);
     if (!row) {
       return null;
     }
 
-    const playlist = await sql.unsafe<Array<{ slug: string; label: string; title: string; number: number | null }>>(`
-      select u.slug, u.label, u.title, u.number
+    const preferredSourceItemKey = await readPreferredLinkedSourceItemKey(sql, row.item_key, {
+      requestedSource: row.requested_source,
+      includeNsfw: Boolean(options.includeNsfw),
+    });
+    const playlistItemKey = preferredSourceItemKey || readText(row.item_key);
+    const playlist = await sql.unsafe<Array<{
+      canonical_unit_key: string | null;
+      slug: string;
+      label: string;
+      title: string;
+      number: number | null;
+    }>>(`
+      select
+        coalesce(cu.unit_key, u.unit_key) as canonical_unit_key,
+        coalesce(cu.slug, u.slug) as slug,
+        coalesce(cu.label, u.label) as label,
+        coalesce(cu.title, u.title) as title,
+        coalesce(cu.number, u.number) as number
       from public.media_units u
-      join public.media_items i on i.item_key = u.item_key
-      where i.slug = $1
-        and (
-          i.surface_type = 'series'
-          or (i.surface_type = 'unknown' and i.media_type in ('anime', 'drama'))
-        )
+      left join lateral (
+        ${buildCanonicalEpisodeLateralSubquery('cu', 'u')}
+      ) cu on true
+      where u.item_key = $1
         and u.unit_type = 'episode'
-      order by u.number desc nulls last, u.updated_at desc
-    `, [row.item_slug]);
+      order by coalesce(cu.number, u.number) desc nulls last, coalesce(cu.updated_at, u.updated_at) desc
+    `, [playlistItemKey]);
 
     const itemDetail = getSeriesItemDetailRecord(row);
     const episodeDetail = readRecord(row.detail);
-    const mirrors = parseVideoMirrors(episodeDetail);
-    const defaultUrl = resolvePrimaryVideoUrl(episodeDetail, mirrors);
+    const sourceDetail = await readPreferredLinkedSourceUnitDetail(sql, row.canonical_unit_key, {
+      requestedUnitKey: row.requested_unit_key,
+      linkedSourceItemKey: preferredSourceItemKey,
+      requestedSource: row.requested_source,
+      includeNsfw: Boolean(options.includeNsfw),
+    });
+    const sourceEpisodeDetail = {
+      ...episodeDetail,
+      ...sourceDetail,
+    };
+    const canonicalPlayback = await readCanonicalPlaybackOptions(sql, row.canonical_unit_key);
+    const playback = selectSeriesPlaybackSources({
+      requestedSlug: normalizedSlug,
+      canonicalSlug: row.slug,
+      sourceMirrors: parseVideoMirrors(sourceEpisodeDetail),
+      canonicalMirrors: canonicalPlayback.mirrors,
+      sourceDownloadGroups: parseVideoDownloads(sourceEpisodeDetail),
+      canonicalDownloadGroups: canonicalPlayback.downloadGroups,
+      sourceStreamUrl: readText(sourceEpisodeDetail.stream_url),
+    });
+    const collapsedPlaylist = collapseCanonicalEpisodeEntries(playlist);
+    const navigation = resolveSeriesEpisodeNavigation({
+      currentSlug: row.slug,
+      playlist: collapsedPlaylist,
+      prevSlug: row.prev_slug,
+      nextSlug: row.next_slug,
+    });
 
     return {
       slug: row.slug,
@@ -1000,14 +1544,14 @@ export async function getSeriesEpisodeBySlug(slug: string, options: VisibilityOp
       episodeNumber: row.number == null ? '' : String(row.number),
       synopsis: readText(itemDetail.synopsis) || readText(itemDetail.overview) || 'Synopsis is still being prepared.',
       detailHref: `/series/${row.item_slug}`,
-      mirrors,
-      defaultUrl,
-      canInlinePlayback: Boolean(defaultUrl),
-      externalUrl: defaultUrl,
-      downloadGroups: parseVideoDownloads(episodeDetail),
-      playlist,
-      prevEpisodeSlug: readText(row.prev_slug) || null,
-      nextEpisodeSlug: readText(row.next_slug) || null,
+      mirrors: playback.mirrors,
+      defaultUrl: playback.defaultUrl,
+      canInlinePlayback: Boolean(playback.defaultUrl),
+      externalUrl: playback.defaultUrl,
+      downloadGroups: playback.downloadGroups,
+      playlist: collapsedPlaylist,
+      prevEpisodeSlug: navigation.prevSlug,
+      nextEpisodeSlug: navigation.nextSlug,
     };
   });
 }

@@ -52,7 +52,7 @@ export function ShareButton({ title, theme = 'default', className }: ShareButton
         <Button 
           variant="outline" 
           size="icon" 
-          className={cn("rounded-2xl border-zinc-800 hover:bg-white/5 transition-all", className)}
+          className={cn("h-11 w-11 rounded-2xl border-zinc-800 hover:bg-white/5 transition-all", className)}
         >
           <Share2 className="w-5 h-5 text-zinc-400" />
         </Button>

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { Play } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
@@ -15,7 +15,13 @@ import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
 import { getSeriesDetailPageData } from './series-detail-data';
 import { SeriesEpisodeSection } from './SeriesEpisodeSection';
 import { buildMetadata, buildSeriesDetailJsonLd } from '@/lib/seo';
+import {
+  formatSeriesDetailEpisodeCount,
+  formatSeriesDetailRating,
+  formatSeriesDetailText,
+} from '@/lib/series-detail-presentation';
 import { getSeriesTheme } from '@/lib/series-presentation';
+import { resolveSeriesCanonicalRedirect } from '@/lib/adapters/series-canonical-utils';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -103,6 +109,11 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
     notFound();
   }
 
+  const redirectPath = resolveSeriesCanonicalRedirect('/series', slug, series);
+  if (redirectPath) {
+    redirect(redirectPath);
+  }
+
   const theme = getSeriesTheme(series.mediaType);
   const latestEpisodeHref = series.episodes[0] ? `/series/watch/${series.episodes[0].slug}` : null;
   const trailerEmbedUrl = getYouTubeEmbedUrl(series.trailerUrl);
@@ -148,12 +159,12 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
             eyebrow={series.seasonLabel}
             badges={series.genres.slice(0, 5)}
             metadata={[
-              { label: 'Rating', value: series.rating },
-              { label: 'Year', value: series.year || 'Tidak Tersedia' },
-              { label: 'Country', value: series.country || 'Tidak Tersedia' },
-              { label: 'Episodes', value: series.episodeCount || 'Tidak Tersedia' },
-              { label: 'Studio', value: series.studio || 'Tidak Tersedia' },
-              { label: 'Status', value: series.status || 'Tidak Tersedia' },
+              { label: 'Rating', value: formatSeriesDetailRating(series.rating) },
+              { label: 'Year', value: formatSeriesDetailText(series.year) },
+              { label: 'Country', value: formatSeriesDetailText(series.country) },
+              { label: 'Episodes', value: formatSeriesDetailEpisodeCount(series.episodeCount) },
+              { label: 'Studio', value: formatSeriesDetailText(series.studio) },
+              { label: 'Status', value: formatSeriesDetailText(series.status) },
             ]}
             controls={
               <DeferredHeroActions
