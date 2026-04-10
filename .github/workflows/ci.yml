@@ -39,11 +39,14 @@ jobs:
         run: npm run typecheck
 
       - name: Notify Discord on failure
-        if: failure() && secrets.DISCORD_WEBHOOK_URL != ''
+        if: failure()
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          if [ -z "${DISCORD_WEBHOOK_URL}" ]; then
+            exit 0
+          fi
           python3 - <<'PY'
           import json
           import os
@@ -93,11 +96,14 @@ jobs:
         run: npm run perf:budgets
 
       - name: Notify Discord on failure
-        if: failure() && secrets.DISCORD_WEBHOOK_URL != ''
+        if: failure()
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          if [ -z "${DISCORD_WEBHOOK_URL}" ]; then
+            exit 0
+          fi
           python3 - <<'PY'
           import json
           import os
