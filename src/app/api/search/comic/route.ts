@@ -1,4 +1,5 @@
 import { searchManga } from '@/lib/adapters/comic-server';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
@@ -18,8 +19,9 @@ export async function GET(request: Request) {
     });
   }
 
+  const includeNsfw = await resolveViewerNsfwAccess();
   const results = await searchManga(query, Number.isFinite(page) ? page : 1, limit, {
-    includeNsfw: false,
+    includeNsfw,
   })
     .then((response) => response.data || []);
 

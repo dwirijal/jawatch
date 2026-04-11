@@ -25,11 +25,11 @@ const bricolageGrotesque = Bricolage_Grotesque({
 export const metadata: Metadata = {
   metadataBase: SITE_URL,
   title: {
-    default: "dwizzyWEEB - Anime, Donghua, Drama, Film, Komik, dan Novel",
-    template: "%s | dwizzyWEEB"
+    default: "jawatch - Anime, Donghua, Drama, Film, Komik, dan Novel",
+    template: "%s | jawatch"
   },
   description: "Tempat nonton anime, donghua, drama, film, baca komik, dan novel subtitle Indonesia dalam satu katalog yang cepat dan rapi.",
-  applicationName: "dwizzyWEEB",
+  applicationName: "jawatch",
   keywords: [
     "anime subtitle indonesia",
     "donghua subtitle indonesia",
@@ -42,19 +42,19 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "dwizzyWEEB",
+    title: "jawatch",
   },
   openGraph: {
     type: "website",
     locale: "id_ID",
-    siteName: "dwizzyWEEB",
-    title: "dwizzyWEEB - Anime, Donghua, Drama, Film, Komik, dan Novel",
+    siteName: "jawatch",
+    title: "jawatch - Anime, Donghua, Drama, Film, Komik, dan Novel",
     description: "Tempat nonton anime, donghua, drama, film, baca komik, dan novel subtitle Indonesia dalam satu katalog yang cepat dan rapi.",
     images: ["/favicon.ico"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "dwizzyWEEB - Anime, Donghua, Drama, Film, Komik, dan Novel",
+    title: "jawatch - Anime, Donghua, Drama, Film, Komik, dan Novel",
     description: "Tempat nonton anime, donghua, drama, film, baca komik, dan novel subtitle Indonesia dalam satu katalog yang cepat dan rapi.",
     images: ["/favicon.ico"],
   },

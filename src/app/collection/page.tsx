@@ -3,17 +3,20 @@ import { Bookmark, Clock4 } from 'lucide-react';
 import { CollectionSections } from '@/app/collection/CollectionSections';
 import { DeferredAdSection } from '@/components/organisms/DeferredAdSection';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
+import { requireUser } from '@/lib/auth/session';
 
 export const metadata: Metadata = {
   title: 'Bookmarks',
-  description: 'Your saved content and recent watch progress on dwizzyWEEB.',
+  description: 'Your saved content and recent watch progress on jawatch.',
   robots: {
     index: false,
     follow: false,
   },
 };
 
-export default function CollectionPage() {
+export default async function CollectionPage() {
+  await requireUser('/collection');
+
   return (
     <main className="app-shell">
       <div className="app-container space-y-8 py-4 sm:py-6">

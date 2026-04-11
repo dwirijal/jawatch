@@ -7,8 +7,10 @@ import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { PendingLinkHint } from '@/components/atoms/PendingLinkHint';
 import { Paper } from '@/components/atoms/Paper';
+import { Typography } from '@/components/atoms/Typography';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { MediaWatchPage } from '@/components/organisms/MediaWatchPage';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { getSeriesEpisodeBySlug } from '@/lib/adapters/series';
 import { resolveSeriesCanonicalRedirect } from '@/lib/adapters/series-canonical-utils';
 import { buildMetadata, buildSeriesEpisodeJsonLd } from '@/lib/seo';
@@ -40,14 +42,15 @@ function stripSubtitleIndonesia(value: string): string {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const includeNsfw = await resolveViewerNsfwAccess();
   const episode = await getSeriesEpisodeBySlug(slug, {
-    includeNsfw: false,
+    includeNsfw,
   });
 
   if (!episode) {
     return buildMetadata({
       title: 'Episode Tidak Ditemukan',
-      description: 'Episode yang kamu cari tidak tersedia di katalog series dwizzyWEEB.',
+      description: 'Episode yang kamu cari tidak tersedia di katalog series jawatch.',
       path: `/series/watch/${slug}`,
       noIndex: true,
     });
@@ -70,8 +73,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SeriesWatchPage({ params }: PageProps) {
   const { slug } = await params;
+  const includeNsfw = await resolveViewerNsfwAccess();
   const episode = await getSeriesEpisodeBySlug(slug, {
-    includeNsfw: false,
+    includeNsfw,
   });
 
   if (!episode) {
@@ -126,15 +130,25 @@ export default async function SeriesWatchPage({ params }: PageProps) {
         }
         sidebar={
           <Paper tone="muted" shadow="sm" className="flex h-full min-h-0 flex-col gap-4 p-4 md:p-5">
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={theme} className="px-2 py-0.5 text-[10px]">{badgeText}</Badge>
                 <Badge variant="outline" className="px-2 py-0.5 text-[10px]">Episode {episode.episodeNumber || '?'}</Badge>
                 {episode.year ? <Badge variant="outline" className="px-2 py-0.5 text-[10px]">{episode.year}</Badge> : null}
-                {episode.country ? <Badge variant="outline" className="px-2 py-0.5 text-[10px]">{episode.country}</Badge> : null}
               </div>
-              <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">{episode.seriesTitle}</h2>
-              <p className="line-clamp-5 text-sm leading-6 text-zinc-400">{episode.synopsis}</p>
+              
+              <div className="space-y-1.5">
+                <Typography as="h2" size="xl" className="font-black leading-tight text-white">
+                  {episode.seriesTitle}
+                </Typography>
+                <Typography size="sm" className="font-bold text-zinc-500">
+                  {episode.title}
+                </Typography>
+              </div>
+
+              <Typography size="base" className="line-clamp-4 leading-relaxed text-zinc-400">
+                {episode.synopsis}
+              </Typography>
             </div>
 
             <div className="grid grid-cols-2 gap-2">

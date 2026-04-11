@@ -2,13 +2,12 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { Mic2, UserRound } from 'lucide-react';
+import { Mic2 } from 'lucide-react';
 import { BookCoverArt } from '@/components/atoms/BookCoverArt';
 import { Badge } from '@/components/atoms/Badge';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { Typography } from '@/components/atoms/Typography';
-import { getMovieMetadata } from '@/lib/enrichment';
 import { getHDThumbnail } from '@/lib/adapters/comic';
 import { cn, getMediaPosterAspectClass, THEME_CONFIG, ThemeType } from '@/lib/utils';
 
@@ -21,6 +20,7 @@ export interface MediaCardProps {
   badgeText?: string;
   theme?: ThemeType;
   className?: string;
+  prefetch?: boolean;
 }
 
 export interface CastItem {
@@ -100,6 +100,7 @@ export function MediaCard({
   badgeText,
   theme = 'default',
   className,
+  prefetch,
 }: MediaCardProps) {
   const [displayImage, setDisplayImage] = React.useState(normalizeCardImage(image, theme));
   const [retryCount, setRetryCount] = React.useState(0);
@@ -138,12 +139,6 @@ export function MediaCard({
   const handleImageError = async () => {
     if (theme === 'movie' && retryCount === 0) {
       setRetryCount(1);
-      const meta = await getMovieMetadata(title);
-      if (meta.poster) {
-        setDisplayImage(meta.poster);
-        setImageLoadFailed(false);
-        return;
-      }
     }
 
     setDisplayImage('');
@@ -152,7 +147,7 @@ export function MediaCard({
 
   const cardBody = (
     <div
-      className="refractive-border glass-noise relative h-full overflow-hidden rounded-[18px] bg-[#0a0a0f] shadow-[0_10px_28px_rgba(0,0,0,0.22)] transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
+      className="refractive-border glass-noise relative h-full overflow-hidden rounded-[var(--radius-2xl)] bg-[#0a0a0f] shadow-[0_10px_28px_rgba(0,0,0,0.22)] transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
       style={{ '--hover-glow': accent } as React.CSSProperties}
     >
         <div className="absolute -inset-2 bg-[var(--hover-glow)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-15" />
@@ -250,63 +245,64 @@ export function MediaCard({
   }
 
   return (
-    <Link href={href} className={wrapperClassName}>
+    <Link href={href} prefetch={prefetch} className={wrapperClassName}>
       {cardBody}
     </Link>
   );
 }
 
 export function CastCard({ item, theme, layout = 'grid' }: CastCardProps) {
-  const config = THEME_CONFIG[theme];
+  const config = THEME_CONFIG[theme] || THEME_CONFIG.default;
+  const initials = getInitials(item.name);
 
   if (layout === 'scroll') {
     return (
-      <Paper as="article" tone="muted" shadow="sm" padded={false} className="w-[144px] shrink-0 overflow-hidden">
-        <div
-          className={cn(
-            'relative aspect-[3/4] overflow-hidden border-b border-border-subtle bg-surface-2',
-            item.image ? '' : config.bg,
-            !item.image && config.bg
-          )}
-        >
+      <Paper
+        as="article"
+        tone="muted"
+        shadow="sm"
+        padded={false}
+        glassy
+        className="group relative w-[140px] shrink-0 overflow-hidden rounded-[var(--radius-2xl)] bg-[#0a0a0f] shadow-[0_10px_28px_rgba(0,0,0,0.22)] transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
+      >
+        <div className="relative aspect-[3/4] overflow-hidden">
           {item.image ? (
             <Image
               src={item.image}
               alt={item.name}
               fill
-              sizes="148px"
-              className="object-cover"
+              sizes="140px"
+              className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
               unoptimized
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <span className={cn('text-lg font-black uppercase tracking-tight', config.text)}>{getInitials(item.name)}</span>
+            <div className={cn('flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_65%),linear-gradient(160deg,rgba(24,24,32,0.98),rgba(10,10,15,1))]')}>
+              <span className={cn('text-xl font-black uppercase tracking-tighter opacity-42', config.text)}>
+                {initials}
+              </span>
             </div>
           )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent opacity-80" />
         </div>
 
-        <div className="space-y-1.5 p-3">
+        <div className="space-y-1.5 p-3.5">
           <div className="flex flex-wrap items-center gap-2">
-            {item.role ? <Badge variant={theme}>{item.role}</Badge> : null}
-            {!item.image ? (
-              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-600">
-                <UserRound className="h-3 w-3" /> Cast
-              </span>
+            {item.role ? (
+              <Badge variant={theme} className="px-1.5 py-0.5 text-[8px]">
+                {item.role}
+              </Badge>
             ) : null}
           </div>
 
-          <Typography as="h3" size="base" className="line-clamp-2 text-white">
+          <Typography as="h3" className="line-clamp-2 text-[14px] font-bold tracking-tight text-white/90">
             {item.name}
           </Typography>
 
           {item.secondary ? (
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">
-                {item.secondaryLabel || 'Featured'}
-              </p>
-              <p className="line-clamp-2 flex items-start gap-2 text-sm font-medium leading-relaxed text-zinc-300">
-                <Mic2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-500" />
-                <span>{item.secondary}</span>
+            <div className="flex items-center gap-1 opacity-60">
+              <Mic2 className="h-3 w-3 shrink-0 text-white/40" />
+              <p className="line-clamp-1 text-[10px] font-medium leading-tight text-white/70">
+                {item.secondary}
               </p>
             </div>
           ) : null}
@@ -321,11 +317,14 @@ export function CastCard({ item, theme, layout = 'grid' }: CastCardProps) {
       tone="muted"
       shadow="sm"
       interactive
-      className={cn('group flex gap-3 rounded-[var(--radius-sm)] p-3.5')}
+      glassy
+      className={cn(
+        'group flex items-center gap-3.5 rounded-[var(--radius-2xl)] bg-[#0a0a0f] p-3.5 shadow-[0_10px_28px_rgba(0,0,0,0.22)] transition-all duration-500 ease-out hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]'
+      )}
     >
       <div
         className={cn(
-          'relative flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-md)] border border-border-subtle bg-surface-2',
+          'relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-xl)] border border-white/5 bg-[#12121a] shadow-inner',
           !item.image && config.bg
         )}
       >
@@ -334,37 +333,33 @@ export function CastCard({ item, theme, layout = 'grid' }: CastCardProps) {
             src={item.image}
             alt={item.name}
             fill
-            sizes="80px"
-            className="object-cover"
+            sizes="64px"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
             unoptimized
           />
         ) : (
-          <span className={cn('text-lg font-black uppercase tracking-tight', config.text)}>{getInitials(item.name)}</span>
+          <span className={cn('text-lg font-black uppercase tracking-tighter opacity-50', config.text)}>{initials}</span>
         )}
       </div>
 
-      <div className="min-w-0 space-y-1.5">
+      <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          {item.role ? <Badge variant={theme}>{item.role}</Badge> : null}
-          {!item.image ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-600">
-              <UserRound className="h-3 w-3" /> Cast
-            </span>
+          {item.role ? (
+            <Badge variant={theme} className="px-1.5 py-0.5 text-[8px]">
+              {item.role}
+            </Badge>
           ) : null}
         </div>
 
-        <Typography as="h3" size="base" className="line-clamp-2 text-sm text-white">
+        <Typography as="h3" className="line-clamp-1 text-[15px] font-bold tracking-tight text-white/90">
           {item.name}
         </Typography>
 
         {item.secondary ? (
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">
-              {item.secondaryLabel || 'Featured'}
-            </p>
-            <p className="line-clamp-2 flex items-center gap-2 text-xs font-medium leading-relaxed text-zinc-300">
-              <Mic2 className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-              <span>{item.secondary}</span>
+          <div className="flex items-center gap-1.5 opacity-60">
+            <Mic2 className="h-3 w-3 shrink-0 text-white/40" />
+            <p className="line-clamp-1 text-[11px] font-medium leading-tight text-white/70">
+              {item.secondary}
             </p>
           </div>
         ) : null}

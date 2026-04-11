@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import SeriesPageClient from './SeriesPageClient';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { getSeriesHubData } from '@/lib/adapters/series';
 import { buildCollectionPageJsonLd, buildMetadata } from '@/lib/seo';
 
@@ -12,8 +13,9 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function SeriesPage() {
+  const includeNsfw = await resolveViewerNsfwAccess();
   const { popular, latest, dramaSpotlight, weeklySchedule, filters } = await getSeriesHubData(24, {
-    includeNsfw: false,
+    includeNsfw,
   }).catch(() => ({
     popular: [],
     latest: [],

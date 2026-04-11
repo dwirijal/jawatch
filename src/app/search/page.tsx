@@ -1,9 +1,17 @@
 import type { Metadata } from 'next';
 import SearchResultsPageClient from './SearchResultsPageClient';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { searchManga } from '@/lib/adapters/comic-server';
 import { searchMovieCatalog } from '@/lib/adapters/movie';
 import { searchSeriesCatalog } from '@/lib/adapters/series';
 import type { MangaSearchResult, MovieCardItem } from '@/lib/types';
+import {
+  formatComicCardSubtitle,
+  formatMovieCardMetaLine,
+  formatMovieCardSubtitle,
+  getComicCardBadgeText,
+  getMovieCardBadgeText,
+} from '@/lib/card-presentation';
 import {
   formatSeriesCardSubtitle,
   getSeriesBadgeText,
@@ -21,7 +29,7 @@ type SearchPageProps = {
 
 export const metadata: Metadata = buildMetadata({
   title: 'Pencarian',
-  description: 'Cari anime, film, komik, dan series di dwizzyWEEB.',
+  description: 'Cari anime, film, komik, dan series di jawatch.',
   path: '/search',
   noIndex: true,
 });
@@ -42,6 +50,7 @@ type SearchCardItem = {
   title: string;
   image: string;
   subtitle?: string;
+  metaLine?: string;
   badgeText?: string;
   theme: 'anime' | 'donghua' | 'drama' | 'movie' | 'manga';
 };
@@ -78,8 +87,9 @@ function mapMovieItems(items: MovieCardItem[]): SearchCardItem[] {
     href: `/movies/${item.slug}`,
     title: item.title,
     image: item.poster,
-    subtitle: [item.year, item.type?.toUpperCase()].filter(Boolean).join(' • ') || undefined,
-    badgeText: item.rating ? `★ ${item.rating}` : item.type?.toUpperCase(),
+    subtitle: formatMovieCardSubtitle(item),
+    metaLine: formatMovieCardMetaLine(item),
+    badgeText: getMovieCardBadgeText(),
     theme: 'movie',
   }));
 }
@@ -90,8 +100,8 @@ function mapComicItems(items: MangaSearchResult[]): SearchCardItem[] {
     href: `/comic/${item.slug}`,
     title: item.title,
     image: item.thumbnail || item.image,
-    subtitle: item.chapter || item.time_ago || undefined,
-    badgeText: item.type || 'Manga',
+    subtitle: formatComicCardSubtitle(item),
+    badgeText: getComicCardBadgeText(item),
     theme: 'manga',
   }));
 }
@@ -104,7 +114,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   if (query.length >= 2) {
     const domainLimit = type === 'all' ? 6 : 24;
-    const options = { includeNsfw: false };
+    const options = { includeNsfw: await resolveViewerNsfwAccess() };
 
     if (type === 'all' || type === 'series') {
       const seriesItems = await searchSeriesCatalog(query, domainLimit, options).catch(() => []);

@@ -25,7 +25,7 @@ jobs:
 
       - name: Run production smoke checks
         env:
-          BASE_URL: https://weebs.dwizzy.my.id
+          BASE_URL: https://jawatch.web.id
           SMOKE_TIMEOUT_MS: 15000
         run: node scripts/production-smoke-check.mjs
 
@@ -45,7 +45,7 @@ jobs:
 
           payload = {
               "content": (
-                  "dwizzyWEEB production smoke failed\n"
+                  "jawatch production smoke failed\n"
                   f"workflow: {os.environ['GITHUB_WORKFLOW']}\n"
                   f"job: smoke\n"
                   f"ref: {os.environ['GITHUB_REF_NAME']}\n"

@@ -22,6 +22,7 @@ type SearchCardItem = {
   title: string;
   image: string;
   subtitle?: string;
+  metaLine?: string;
   badgeText?: string;
   theme: Exclude<ThemeType, 'default'>;
 };
@@ -173,6 +174,7 @@ export default function SearchResultsPageClient({
                       image={item.image}
                       title={item.title}
                       subtitle={item.subtitle}
+                      metaLine={item.metaLine}
                       badgeText={item.badgeText}
                       theme={item.theme}
                     />

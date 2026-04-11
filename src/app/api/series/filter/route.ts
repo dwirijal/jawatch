@@ -1,4 +1,5 @@
 import { getSeriesFilteredItems } from '@/lib/adapters/series';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
@@ -17,8 +18,9 @@ export async function GET(request: Request) {
     });
   }
 
+  const includeNsfw = await resolveViewerNsfwAccess();
   const results = await getSeriesFilteredItems(value, limit, {
-    includeNsfw: false,
+    includeNsfw,
   }).catch(() => []);
 
   return Response.json(results, {

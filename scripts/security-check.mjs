@@ -25,7 +25,10 @@ assert.ok(!nextConfig.includes("hostname: '**'"), 'next/image wildcard host allo
 assert.ok(nextConfig.includes('configuredHosts.length > 0 ? configuredHosts : defaultImageRemoteHostPatterns'), 'next/image host allowlist must fall back to defaults when env is empty');
 assert.ok(!nextConfig.includes('fullUrl: true'), 'full fetch URL logging must stay disabled');
 assert.ok(!authOrigin.includes(".endsWith('.dwizzy.my.id')"), 'auth origin pinning must not allow sibling subdomains');
-assert.ok(authOrigin.includes("const ALLOWED_AUTH_HOSTS = new Set(['auth.dwizzy.my.id', 'localhost', '127.0.0.1']);"), 'auth origin must be exact-pinned to approved hosts');
+assert.ok(!authOrigin.includes('auth.dwizzy.my.id'), 'auth origin logic must not hardcode legacy auth.dwizzy.my.id host');
+assert.ok(authOrigin.includes("const CANONICAL_APP_HOST = 'jawatch.web.id';"), 'auth origin must define jawatch.web.id as canonical app host');
+assert.ok(authOrigin.includes('const DEFAULT_AUTH_ORIGIN = DEFAULT_APP_ORIGIN;'), 'auth origin must default to local app origin for embedded auth');
+assert.ok(authOrigin.includes('return authOrigin.origin === current.origin;'), 'browser auth bridge must require same-origin auth in embedded mode');
 assert.ok(novelReader.includes("import sanitizeHtml from 'sanitize-html'"), 'novel reader must use sanitize-html');
 assert.ok(!trackedFiles.some((file) => /^\.env/i.test(path.basename(file))), 'tracked .env files are not allowed');
 assert.ok(!trackedFiles.some((file) => /client_secret_.*\.json$/i.test(path.basename(file))), 'tracked OAuth client secret files are not allowed in this repo');

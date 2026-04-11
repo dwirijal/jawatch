@@ -1,6 +1,7 @@
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { getMangaChapter } from '@/lib/adapters/comic-server';
 import ComicChapterClient from './ComicChapterClient';
 
@@ -10,9 +11,10 @@ interface PageProps {
 
 export default async function ComicChapterPage({ params }: PageProps) {
   const { slug, chapter: chapterSlug } = await params;
+  const includeNsfw = await resolveViewerNsfwAccess();
 
   const chapter = await getMangaChapter(chapterSlug, {
-    includeNsfw: false,
+    includeNsfw,
   }).catch(() => null);
 
   if (!chapter) {

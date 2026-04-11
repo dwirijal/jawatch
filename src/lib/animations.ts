@@ -3,7 +3,7 @@ function staggerByIndex(step: number) {
 }
 
 /**
- * Premium Animation Presets for dwizzyWEEB
+ * Premium Animation Presets for jawatch
  * Centralized easing, durations, and motion patterns.
  */
 

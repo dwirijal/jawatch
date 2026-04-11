@@ -491,47 +491,6 @@ export async function getMovieGenreItems(
   return rows.slice(0, Math.max(1, limit)).map(mapMovieCard);
 }
 
-export async function getNsfwMovieItems(limit = 24): Promise<MovieCardItem[]> {
-  const normalizedLimit = Math.max(1, limit);
-  const rows = sortMovieRows(
-    await queryMovieCatalogRows({
-      includeNsfw: true,
-      extraWhere: buildMovieGenreMatchCondition('i', `'nsfw'`),
-      orderBy: 'i.score desc nulls last, coalesce(unit_counts.unit_count, 0) desc, i.updated_at desc',
-      limit: normalizedLimit * MOVIE_CANDIDATE_MULTIPLIER,
-    }),
-    'popular',
-  );
-  return rows
-    .slice(0, Math.max(1, limit))
-    .map(mapMovieCard);
-}
-
-export async function getNsfwMoviePage(page = 1, limit = 24): Promise<{
-  items: MovieCardItem[];
-  hasNext: boolean;
-}> {
-  const safeLimit = Math.max(1, limit);
-  const safePage = Math.max(1, page);
-  const start = (safePage - 1) * safeLimit;
-  const end = start + safeLimit + 1;
-  const rows = sortMovieRows(
-    await queryMovieCatalogRows({
-      includeNsfw: true,
-      extraWhere: buildMovieGenreMatchCondition('i', `'nsfw'`),
-      orderBy: 'i.score desc nulls last, coalesce(unit_counts.unit_count, 0) desc, i.updated_at desc',
-      limit: end * MOVIE_CANDIDATE_MULTIPLIER,
-    }),
-    'popular',
-  );
-  const slice = rows.slice(start, end);
-
-  return {
-    items: slice.slice(0, safeLimit).map(mapMovieCard),
-    hasNext: slice.length > safeLimit,
-  };
-}
-
 export async function searchMovieCatalog(
   query: string,
   limit = 8,
@@ -726,6 +685,12 @@ export async function getMovieWatchBySlug(slug: string, options: VisibilityOptio
         select
           i.item_key,
           coalesce(i.is_canonical, false) as is_canonical,
+          exists (
+            select 1
+            from public.media_units candidate_units
+            where candidate_units.item_key = i.item_key
+              and candidate_units.unit_type in ('movie', 'episode')
+          ) as has_units,
           i.slug as item_slug,
           i.title as item_title,
           i.media_type,
@@ -739,7 +704,7 @@ export async function getMovieWatchBySlug(slug: string, options: VisibilityOptio
          and e.match_status = 'matched'
         where ${buildMovieScopeCondition('i')}
           and i.slug = $1
-        order by coalesce(i.is_canonical, false) desc, i.updated_at desc
+        order by has_units desc, coalesce(i.is_canonical, false) desc, i.updated_at desc
         limit 1
       )
       select

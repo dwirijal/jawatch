@@ -1,4 +1,4 @@
-const DEFAULT_SITE_URL = 'https://weebs.dwizzy.my.id';
+const DEFAULT_SITE_URL = 'https://jawatch.web.id';
 
 function normalizeSiteUrl(value: string): string {
   return value.startsWith('http://') || value.startsWith('https://') ? value : `https://${value}`;

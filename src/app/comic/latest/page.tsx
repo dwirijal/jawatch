@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Sparkles } from 'lucide-react';
 import { buildComicBrowsePage } from '@/app/comic/buildComicBrowsePage';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { getNewManga } from '@/lib/adapters/comic-server';
 import { buildMetadata } from '@/lib/seo';
 
@@ -12,7 +13,8 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function ComicLatestPage() {
-  const latest = await getNewManga(1, 40, { includeNsfw: false }).catch(() => ({ comics: [] }));
+  const includeNsfw = await resolveViewerNsfwAccess();
+  const latest = await getNewManga(1, 40, { includeNsfw }).catch(() => ({ comics: [] }));
 
   return buildComicBrowsePage({
     title: 'Comic: Latest Releases',

@@ -1,6 +1,5 @@
 import 'server-only';
 
-import { getJikanEnrichment } from '@/lib/enrichment';
 import { normalizeComicImageUrl } from '@/lib/comic-media';
 import {
   buildComicCacheKey,
@@ -443,26 +442,6 @@ async function queryOngoingComics(limit = 24, includeNsfw = false): Promise<Mang
   return rows.map(mapComicCard);
 }
 
-async function queryNsfwComics(page = 1, limit = 24): Promise<MangaSearchResult[]> {
-  const safeLimit = Math.max(limit, 1);
-  const offset = Math.max(page - 1, 0) * safeLimit;
-  const sql = await getSql();
-  const rows = await sql.unsafe<ComicItemRow[]>(
-    `
-    select item_key, source, media_type, slug, title, cover_url, status, release_year, score, detail, updated_at
-    from public.media_items
-    where media_type in ('manga', 'manhwa', 'manhua')
-      and (${NSFW_SQL_CONDITION})
-    order by updated_at desc
-    limit $1
-    offset $2
-  `,
-    [safeLimit, offset],
-  );
-
-  return rows.map(mapComicCard);
-}
-
 async function queryComicSearch(query: string, page = 1, limit = 24, includeNsfw = false): Promise<MangaSearchResult[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) {
@@ -602,7 +581,7 @@ async function queryComicDetail(slug: string, includeNsfw = false): Promise<Mang
   const subtype = normalizeSubtype(currentRow.media_type, detail.type);
   const synopsis = readText(detail.synopsis);
   return {
-    creator: currentRow.source || 'dwizzyWEEB',
+    creator: currentRow.source || 'jawatch',
     slug: currentRow.slug,
     subtype,
     title: currentRow.title,
@@ -680,6 +659,52 @@ async function queryComicChapter(slug: string, includeNsfw = false): Promise<Cha
   };
 }
 
+async function queryComicJikanEnrichment(slug: string, includeNsfw = false): Promise<JikanEnrichment | null> {
+  const sql = await getSql();
+  const rows = await sql.unsafe<Array<{ payload: JsonRecord | null }>>(
+    `
+    select e.payload
+    from public.media_items i
+    join public.media_item_enrichments e on e.item_key = i.item_key
+    where i.slug = $1
+      and i.media_type in ('manga', 'manhwa', 'manhua')
+      and e.provider = 'jikan'
+      and e.match_status = 'matched'
+      ${buildVisibilityCondition(includeNsfw, 'i.detail')}
+    order by e.updated_at desc nulls last
+    limit 1
+  `,
+    [slug],
+  );
+
+  const payload = readRecord(rows[0]?.payload);
+  if (Object.keys(payload).length === 0) {
+    return null;
+  }
+
+  return {
+    malId: readNumber(payload.malId ?? payload.mal_id) ?? 0,
+    score: readNumber(payload.score) ?? 0,
+    rank: readNumber(payload.rank) ?? 0,
+    popularity: readNumber(payload.popularity) ?? 0,
+    synopsis: readText(payload.synopsis),
+    trailer_url: readText(payload.trailer_url),
+    status: readText(payload.status),
+    source: readText(payload.source),
+    rating: readText(payload.rating),
+    year: readNumber(payload.year),
+    season: readText(payload.season),
+    genres: readStringArray(payload.genres),
+    themes: readStringArray(payload.themes),
+    studios: readStringArray(payload.studios),
+    title: readText(payload.title),
+    url: readText(payload.url),
+    mediaType: 'manga',
+    chapters: readNumber(payload.chapters),
+    episodes: readNumber(payload.episodes),
+  };
+}
+
 async function recordComicAccess(params: {
   slug: string;
   subtype: MangaSubtype;
@@ -715,32 +740,6 @@ export async function getPopularManga(
   );
 
   return { comics };
-}
-
-export async function getNsfwComics(limit = 24): Promise<MangaSearchResult[]> {
-  return rememberComicCacheValue(
-    buildComicCacheKey('list', 'nsfw', limit),
-    LIST_CACHE_TTL_SECONDS,
-    () => queryNsfwComics(1, limit),
-  );
-}
-
-export async function getNsfwComicPage(page = 1, limit = 24): Promise<{
-  items: MangaSearchResult[];
-  hasNext: boolean;
-}> {
-  const safeLimit = Math.max(1, limit);
-  const safePage = Math.max(1, page);
-  const items = await rememberComicCacheValue(
-    buildComicCacheKey('list', 'nsfw', safePage, safeLimit),
-    LIST_CACHE_TTL_SECONDS,
-    () => queryNsfwComics(safePage, safeLimit + 1),
-  );
-
-  return {
-    items: items.slice(0, safeLimit),
-    hasNext: items.length > safeLimit,
-  };
 }
 
 export async function getNewManga(
@@ -838,6 +837,18 @@ export async function getMangaDetail(
   return detail;
 }
 
+export async function getComicJikanEnrichment(
+  slug: string,
+  options: { includeNsfw?: boolean } = {},
+): Promise<JikanEnrichment | null> {
+  const includeNsfw = options.includeNsfw === true;
+  return rememberComicCacheValue(
+    buildComicCacheKey('detail', 'jikan', getVisibilityCacheSegment(includeNsfw), slug),
+    DETAIL_CACHE_TTL_SECONDS,
+    () => queryComicJikanEnrichment(slug, includeNsfw),
+  );
+}
+
 export async function getMangaChapter(
   slug: string,
   options: { includeNsfw?: boolean; recordAccess?: boolean } = {},
@@ -904,5 +915,4 @@ export const filterMangaBySubtype = (items: MangaSearchResult[], subtype: MangaS
 
 export type NewManga = MangaSearchResult;
 export type RecommendationManga = MangaSearchResult;
-export { getJikanEnrichment };
 export type { ChapterDetail, JikanEnrichment, MangaDetail, MangaSearchResult, MangaSubtype };

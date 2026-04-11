@@ -18,6 +18,7 @@ import { SavedContentSection } from '@/components/organisms/SavedContentSection'
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { StaggerEntry } from '@/components/molecules/StaggerEntry';
+import { formatComicCardSubtitle, getComicCardBadgeText } from '@/lib/card-presentation';
 import type { MangaSearchResult, MangaSubtype } from '@/lib/types';
 
 const COMMON_GENRES = [
@@ -311,8 +312,8 @@ export default function ComicPageClient({
                 href={buildItemHref(routeBase, mangaItem)}
                 image={getHDThumbnail(mangaItem.image)}
                 title={mangaItem.title}
-                subtitle={mangaItem.chapter}
-                badgeText={`#${index + 1}`}
+                subtitle={formatComicCardSubtitle(mangaItem)}
+                badgeText={getComicCardBadgeText(mangaItem)}
                 theme="manga"
               />
             ))}
@@ -335,8 +336,8 @@ export default function ComicPageClient({
                 href={buildItemHref(routeBase, mangaItem)}
                 image={getHDThumbnail(mangaItem.image)}
                 title={mangaItem.title}
-                subtitle={mangaItem.time_ago}
-                badgeText={mangaItem.chapter}
+                subtitle={formatComicCardSubtitle(mangaItem)}
+                badgeText={getComicCardBadgeText(mangaItem)}
                 theme="manga"
               />
             ))}

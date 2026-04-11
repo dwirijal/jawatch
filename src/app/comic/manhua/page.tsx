@@ -8,7 +8,7 @@ const VARIANT: MangaSubtype = 'manhua';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Manhua Subtitle Indonesia',
-  description: 'Browse manhua subtitle Indonesia di dalam hub comic dwizzyWEEB.',
+  description: 'Browse manhua subtitle Indonesia di dalam hub comic jawatch.',
   path: '/comic/manhua',
 });
 

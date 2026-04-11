@@ -40,7 +40,7 @@ for (const token of [
 }
 
 assert.ok(moviesPageSource.includes(`from '@/lib/adapters/movie'`), 'movies page should use movie adapter');
-assert.ok(cardSource.includes(`from '@/lib/enrichment'`), 'Card should use enrichment layer for movie fallback metadata');
+assert.ok(!cardSource.includes(`from '@/lib/enrichment'`), 'Card should not depend on external enrichment at runtime');
 assert.ok(moviesClientSource.includes(`type="movie"`), 'movies client should still render movie hub');
 
 console.log('Movie adapter smoke checks passed.');

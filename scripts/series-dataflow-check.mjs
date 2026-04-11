@@ -11,6 +11,7 @@ const seriesAdapterPath = path.join(repoRoot, 'src', 'lib', 'adapters', 'series.
 const seriesPagePath = path.join(repoRoot, 'src', 'app', 'series', 'page.tsx');
 const seriesClientPath = path.join(repoRoot, 'src', 'app', 'series', 'SeriesPageClient.tsx');
 const seriesDetailPath = path.join(repoRoot, 'src', 'app', 'series', '[slug]', 'page.tsx');
+const seriesDetailDataPath = path.join(repoRoot, 'src', 'app', 'series', '[slug]', 'series-detail-data.ts');
 const seriesWatchPath = path.join(repoRoot, 'src', 'app', 'series', 'watch', '[slug]', 'page.tsx');
 const searchRoutePath = path.join(repoRoot, 'src', 'app', 'api', 'search', 'series', 'route.ts');
 const filterRoutePath = path.join(repoRoot, 'src', 'app', 'api', 'series', 'filter', 'route.ts');
@@ -19,6 +20,7 @@ const adapterSource = fs.readFileSync(seriesAdapterPath, 'utf8');
 const pageSource = fs.readFileSync(seriesPagePath, 'utf8');
 const clientSource = fs.readFileSync(seriesClientPath, 'utf8');
 const detailSource = fs.readFileSync(seriesDetailPath, 'utf8');
+const detailDataSource = fs.readFileSync(seriesDetailDataPath, 'utf8');
 const watchSource = fs.readFileSync(seriesWatchPath, 'utf8');
 const searchRouteSource = fs.readFileSync(searchRoutePath, 'utf8');
 const filterRouteSource = fs.readFileSync(filterRoutePath, 'utf8');
@@ -54,7 +56,8 @@ for (const token of [
 
 assert.ok(pageSource.includes(`from '@/lib/adapters/series'`), 'series page should use series adapter');
 assert.ok(clientSource.includes('Release Radar'), 'series client should render Release Radar');
-assert.ok(detailSource.includes(`from '@/lib/adapters/series'`), 'series detail page should use series adapter');
+assert.ok(detailSource.includes(`from './series-detail-data'`), 'series detail page should use cached series detail loader');
+assert.ok(detailDataSource.includes(`await import('../../../lib/adapters/series')`), 'series detail loader should use series adapter');
 assert.ok(watchSource.includes(`from '@/components/organisms/MediaWatchPage'`), 'series watch page should use shared MediaWatchPage');
 assert.ok(searchRouteSource.includes(`from '@/lib/adapters/series'`), 'series search route should use series adapter');
 assert.ok(filterRouteSource.includes(`from '@/lib/adapters/series'`), 'series filter route should use series adapter');

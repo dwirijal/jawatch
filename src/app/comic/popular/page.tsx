@@ -1,18 +1,20 @@
 import type { Metadata } from 'next';
 import { Flame } from 'lucide-react';
 import { buildComicBrowsePage } from '@/app/comic/buildComicBrowsePage';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { getPopularManga } from '@/lib/adapters/comic-server';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Komik Populer',
-  description: 'Lihat judul comic paling ramai dibaca dari manga, manhwa, dan manhua di hub dwizzyWEEB.',
+  description: 'Lihat judul comic paling ramai dibaca dari manga, manhwa, dan manhua di hub jawatch.',
   path: '/comic/popular',
   keywords: ['komik populer', 'manga populer', 'manhwa populer', 'manhua populer'],
 });
 
 export default async function ComicPopularPage() {
-  const popular = await getPopularManga(40, { includeNsfw: false }).catch(() => ({ comics: [] }));
+  const includeNsfw = await resolveViewerNsfwAccess();
+  const popular = await getPopularManga(40, { includeNsfw }).catch(() => ({ comics: [] }));
 
   return buildComicBrowsePage({
     title: 'Comic: Popular Right Now',

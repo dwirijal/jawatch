@@ -12,6 +12,7 @@ import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions'
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
 import { SeriesRecommendationsSection } from '@/components/organisms/SeriesRecommendationsSection';
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { getSeriesDetailPageData } from './series-detail-data';
 import { SeriesEpisodeSection } from './SeriesEpisodeSection';
 import { buildMetadata, buildSeriesDetailJsonLd } from '@/lib/seo';
@@ -80,12 +81,13 @@ function buildEpisodeQueryHref(slug: string, page: number, sort: EpisodeSortMode
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const series = await getSeriesDetailPageData(slug);
+  const includeNsfw = await resolveViewerNsfwAccess();
+  const series = await getSeriesDetailPageData(slug, { includeNsfw });
 
   if (!series) {
     return buildMetadata({
       title: 'Series Tidak Ditemukan',
-      description: 'Series yang kamu cari tidak tersedia di katalog dwizzyWEEB.',
+      description: 'Series yang kamu cari tidak tersedia di katalog jawatch.',
       path: `/series/${slug}`,
       noIndex: true,
     });
@@ -93,7 +95,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return buildMetadata({
     title: `${series.title} Subtitle Indonesia`,
-    description: `${series.synopsis} Tonton episode terbaru ${series.title}${series.country ? ` dari ${series.country}` : ''}${series.year ? ` rilis ${series.year}` : ''} di dwizzyWEEB.`,
+    description: `${series.synopsis} Tonton episode terbaru ${series.title}${series.country ? ` dari ${series.country}` : ''}${series.year ? ` rilis ${series.year}` : ''} di jawatch.`,
     path: `/series/${series.slug}`,
     image: series.poster,
     keywords: [...series.genres, series.country, series.mediaType].filter(Boolean),
@@ -103,7 +105,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function SeriesDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const series = await getSeriesDetailPageData(slug);
+  const includeNsfw = await resolveViewerNsfwAccess();
+  const series = await getSeriesDetailPageData(slug, { includeNsfw });
 
   if (!series) {
     notFound();

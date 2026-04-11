@@ -36,12 +36,10 @@ export function AuthMobileEntry() {
 
   const logoutRequest = buildLogoutRequest(redirectTarget);
   const returnTo = logoutRequest.body.get('returnTo') ?? '/';
-  const origin = logoutRequest.body.get('origin') ?? '';
 
   return (
     <form action={logoutRequest.url} method={logoutRequest.method}>
       <input type="hidden" name="returnTo" value={returnTo} />
-      <input type="hidden" name="origin" value={origin} />
       <button
         type="submit"
         className={cn(

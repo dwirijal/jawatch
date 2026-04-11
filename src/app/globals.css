@@ -133,6 +133,18 @@
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.015) 0%, transparent 100%);
     pointer-events: none;
   }
+
+  .bg-radial-gradient {
+    background-image: radial-gradient(circle at center, var(--tw-gradient-from) 0%, var(--tw-gradient-to) 100%);
+  }
+
+  .glass-morphism {
+    @apply backdrop-blur-md bg-white/[0.03] border border-white/[0.08];
+  }
+
+  .premium-shadow {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
 }
 
 [data-theme='anime'] {
@@ -192,7 +204,7 @@
   }
 
   .type-metadata {
-    @apply font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground;
+    @apply font-mono text-[11px] uppercase tracking-[0.24em] font-black text-zinc-500;
   }
 }
 

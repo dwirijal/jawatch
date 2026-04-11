@@ -31,6 +31,14 @@ const defaultImageRemoteHostPatterns = [
   "v2.samehadaku.how",
   "02.ikiru.wtf",
   "komikcast03.com",
+  "poster.janzhoutec.com",
+  "zshipubcdn.farsunpteltd.com",
+  "kreisnow.web.id",
+  "f005.backblazeb2.com",
+  "thumbnail.komiku.org",
+  "rebahinxxi.b-cdn.net",
+  "www.manhwaindo.my",
+  "static-v1.mydramawave.com",
 ];
 
 function readImageRemoteHostPatterns() {
@@ -63,7 +71,7 @@ const securityHeaders = [
       "base-uri 'self'",
       "object-src 'none'",
       "frame-ancestors 'none'",
-      "form-action 'self' https://auth.dwizzy.my.id",
+      "form-action 'self'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https:",
       "style-src 'self' 'unsafe-inline' https:",
@@ -138,7 +146,6 @@ const nextConfig: NextConfig = {
     localPatterns: [
       {
         pathname: '/api/comic/image',
-        search: '?url=*',
       },
     ],
     remotePatterns: imageRemoteHostPatterns.map((hostname) => ({

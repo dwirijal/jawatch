@@ -4,8 +4,24 @@ import postgres, { type Sql } from 'postgres';
 
 export type ComicDbClient = Sql<Record<string, unknown>>;
 
+function readPoolMax(): number {
+  const raw = process.env.COMIC_DB_POOL_MAX?.trim();
+  if (!raw) {
+    return 4;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return 4;
+  }
+
+  return parsed;
+}
+
 const COMIC_DB_OPTIONS = {
-  max: 1,
+  get max() {
+    return readPoolMax();
+  },
   prepare: false,
   idle_timeout: 20,
   connect_timeout: 10,
@@ -47,4 +63,3 @@ export async function closeComicDb(): Promise<void> {
     await client.end();
   }
 }
-

@@ -1,7 +1,8 @@
-// Contract: auth.dwizzy.my.id is the only auth authority consumed by dwizzyWEEB.
+// Embedded auth contract backed by Supabase.
 
 export interface AuthUser {
   id: string;
+  email?: string;
   displayName: string;
   avatarUrl?: string;
   provider?: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { BadgeAlert, Check, X, LogOut, UserRound } from 'lucide-react';
+import { Check, X, LogOut, UserRound } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/components/atoms/Link';
 import { ModalClose, ModalContent, ModalRoot, ModalTitle } from '@/components/atoms/Modal';
@@ -19,7 +19,6 @@ export function MobileMenuPanel() {
   const redirectTarget = useRedirectTarget();
   const logoutRequest = buildLogoutRequest(redirectTarget);
   const returnTo = logoutRequest.body.get('returnTo') ?? '/';
-  const origin = logoutRequest.body.get('origin') ?? '';
   const previousPathname = React.useRef(pathname);
 
   React.useEffect(() => {
@@ -37,7 +36,7 @@ export function MobileMenuPanel() {
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] text-zinc-500">Navigate</p>
               <ModalTitle className="mt-1 text-xl font-black uppercase tracking-[0.12em] text-white">
-                dwizzyWEEB
+                jawatch
               </ModalTitle>
             </div>
             <ModalClose className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 p-2 text-zinc-400 transition-colors hover:bg-surface-elevated hover:text-white">
@@ -96,27 +95,6 @@ export function MobileMenuPanel() {
                 </section>
               ))}
 
-              {session.authenticated && session.user ? (
-                <section className="space-y-3 border-t border-border-subtle pt-6">
-                  <div className="flex items-center gap-2">
-                    <BadgeAlert className="h-4 w-4 text-zinc-400" />
-                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">NSFW</h2>
-                  </div>
-                  <p className="text-xs text-zinc-500">Adult-tagged titles across series, movies, and comics.</p>
-                  <ModalClose asChild>
-                    <Link
-                      href="/nsfw"
-                      className="block rounded-[var(--radius-sm)] border border-transparent px-4 py-3 transition-colors hover:border-border-subtle hover:bg-surface-1"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-black uppercase tracking-[0.16em] text-white">Open NSFW hub</p>
-                      </div>
-                      <p className="mt-1 text-xs text-zinc-500">Visible only while you are signed in.</p>
-                    </Link>
-                  </ModalClose>
-                </section>
-              ) : null}
-
               <section className="space-y-3 border-t border-border-subtle pt-6">
                 <div className="flex items-center gap-2">
                   <ACCOUNT_PANEL_META.icon className="h-4 w-4 text-zinc-400" />
@@ -147,7 +125,6 @@ export function MobileMenuPanel() {
                     </div>
                     <form action={logoutRequest.url} method={logoutRequest.method}>
                       <input type="hidden" name="returnTo" value={returnTo} />
-                      <input type="hidden" name="origin" value={origin} />
                       <button
                         type="submit"
                         className="flex w-full items-center justify-between rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-4 text-left transition-colors hover:bg-surface-1"
@@ -161,7 +138,7 @@ export function MobileMenuPanel() {
                     </form>
                     <div className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-4 opacity-70">
                       <p className="text-sm font-black uppercase tracking-[0.16em] text-zinc-200">Account settings</p>
-                      <p className="mt-1 text-xs text-zinc-500">Coming later at account.dwizzy.my.id.</p>
+                      <p className="mt-1 text-xs text-zinc-500">Coming later on jawatch.</p>
                     </div>
                   </div>
                 )}

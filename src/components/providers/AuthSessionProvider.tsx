@@ -1,10 +1,11 @@
 'use client';
 
-// Contract: auth.dwizzy.my.id is the only auth authority consumed by dwizzyWEEB.
+// Contract: jawatch uses embedded Supabase auth state.
 
 import * as React from 'react';
 import { getAuthStatus } from '@/lib/auth-gateway';
 import type { AuthSessionState, AuthStatus } from '@/lib/auth-types';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 const INITIAL_STATE: AuthSessionState = {
   loading: true,
@@ -37,9 +38,22 @@ export function AuthSessionProvider({
 
   React.useEffect(() => {
     let cancelled = false;
+    const supabase = createSupabaseBrowserClient();
+    const setSignedOut = () => {
+      if (cancelled) {
+        return;
+      }
 
-    getAuthStatus()
-      .then((session) => {
+      setState({
+        loading: false,
+        authenticated: false,
+        user: null,
+      });
+    };
+
+    const loadStatus = async () => {
+      try {
+        const session = await getAuthStatus();
         if (cancelled) {
           return;
         }
@@ -49,21 +63,19 @@ export function AuthSessionProvider({
           authenticated: session.authenticated,
           user: session.user,
         });
-      })
-      .catch(() => {
-        if (cancelled) {
-          return;
-        }
+      } catch {
+        setSignedOut();
+      }
+    };
 
-        setState({
-          loading: false,
-          authenticated: false,
-          user: null,
-        });
-      });
+    void loadStatus();
+    const { data } = supabase.auth.onAuthStateChange(() => {
+      void loadStatus();
+    });
 
     return () => {
       cancelled = true;
+      data.subscription.unsubscribe();
     };
   }, []);
 

@@ -35,7 +35,6 @@ export function AuthNavEntry() {
 
   const logoutRequest = buildLogoutRequest(redirectTarget);
   const returnTo = logoutRequest.body.get('returnTo') ?? '/';
-  const origin = logoutRequest.body.get('origin') ?? '';
 
   return (
     <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-2 py-2">
@@ -48,7 +47,6 @@ export function AuthNavEntry() {
       </div>
       <form action={logoutRequest.url} method={logoutRequest.method}>
         <input type="hidden" name="returnTo" value={returnTo} />
-        <input type="hidden" name="origin" value={origin} />
         <Button
           type="submit"
           variant="outline"

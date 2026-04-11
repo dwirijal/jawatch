@@ -1,4 +1,4 @@
-const DEFAULT_BASE_URL = 'https://weebs.dwizzy.my.id';
+const DEFAULT_BASE_URL = 'https://jawatch.web.id';
 const REQUEST_TIMEOUT_MS = Number(process.env.SMOKE_TIMEOUT_MS || 15000);
 
 const checks = [
@@ -60,7 +60,7 @@ async function fetchWithTimeout(url) {
     const response = await fetch(url, {
       redirect: 'follow',
       headers: {
-        'user-agent': 'dwizzyWEEB Production Smoke/1.0',
+        'user-agent': 'jawatch Production Smoke/1.0',
         accept: 'text/html,application/xml,text/plain;q=0.9,*/*;q=0.8',
       },
       signal: controller.signal,

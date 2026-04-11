@@ -6,7 +6,7 @@ import { buildMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Drama Series Subtitle Indonesia',
-  description: 'Browse drama episodik subtitle Indonesia di dalam katalog series utama dwizzyWEEB.',
+  description: 'Browse drama episodik subtitle Indonesia di dalam katalog series utama jawatch.',
   path: '/series/drama',
 });
 

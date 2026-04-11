@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { useAuthSession } from '@/components/hooks/useAuthSession';
 import { useRedirectTarget } from '@/components/hooks/useRedirectTarget';
-import { buildLoginUrl } from '@/lib/auth-gateway';
 
 type AuthenticatedAction = () => void;
 
@@ -11,11 +10,23 @@ interface GateOptions {
   onBlocked?: () => void;
 }
 
+function sanitizeRelativePath(nextPath: string): string {
+  const candidate = nextPath.trim();
+  if (!candidate || !candidate.startsWith('/') || candidate.startsWith('//')) {
+    return '/';
+  }
+
+  return candidate;
+}
+
 export function useAuthGate() {
   const session = useAuthSession();
   const [noticeVisible, setNoticeVisible] = React.useState(false);
   const redirectTarget = useRedirectTarget();
-  const loginHref = React.useMemo(() => buildLoginUrl(redirectTarget), [redirectTarget]);
+  const loginHref = React.useMemo(() => {
+    const target = sanitizeRelativePath(redirectTarget);
+    return `/login?next=${encodeURIComponent(target)}`;
+  }, [redirectTarget]);
 
   const requireAuth = React.useCallback(
     (action: AuthenticatedAction, options?: GateOptions) => {

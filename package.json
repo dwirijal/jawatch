@@ -1,5 +1,5 @@
 {
-  "name": "temp_next",
+  "name": "jawatch",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -37,6 +37,8 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.103.0",
     "@vercel/analytics": "^2.0.1",
     "animejs": "^4.3.6",
     "clsx": "^2.1.1",

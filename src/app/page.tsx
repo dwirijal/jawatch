@@ -25,7 +25,7 @@ export default async function HomePage() {
       <JsonLd data={buildWebsiteJsonLd()} />
       <JsonLd
         data={buildCollectionPageJsonLd({
-          title: 'dwizzyWEEB Homepage',
+          title: 'jawatch Homepage',
           description: 'Homepage discovery anime, donghua, drama, film, komik, dan novel subtitle Indonesia.',
           path: '/',
           items: heroItems.map((item) => ({

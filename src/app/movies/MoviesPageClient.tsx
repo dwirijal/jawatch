@@ -10,6 +10,7 @@ import { SavedContentSection } from '@/components/organisms/SavedContentSection'
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { StaggerEntry } from '@/components/molecules/StaggerEntry';
+import { formatMovieCardMetaLine, formatMovieCardSubtitle, getMovieCardBadgeText } from '@/lib/card-presentation';
 import type { GenericMediaItem, MovieCardItem } from '@/lib/types';
 
 const MOVIE_GENRES = [
@@ -107,8 +108,9 @@ export default function MoviesPageClient({
                 href={`/movies/${item.slug}`}
                 image={item.poster}
                 title={item.title}
-                subtitle={`${item.year} • ${item.type.toUpperCase()}`}
-                badgeText={item.rating ? `★ ${item.rating}` : undefined}
+                subtitle={formatMovieCardSubtitle(item)}
+                metaLine={formatMovieCardMetaLine(item)}
+                badgeText={getMovieCardBadgeText()}
                 theme="movie"
               />
             ))}
@@ -125,8 +127,9 @@ export default function MoviesPageClient({
                 href={`/movies/${item.slug}`}
                 image={item.poster}
                 title={item.title}
-                subtitle={item.year}
-                badgeText={item.type}
+                subtitle={formatMovieCardSubtitle(item)}
+                metaLine={formatMovieCardMetaLine(item)}
+                badgeText={getMovieCardBadgeText()}
                 theme="movie"
               />
             ))}

@@ -77,7 +77,7 @@ export function buildMetadata({
       url: absoluteUrl(canonicalPath),
       title,
       description: normalizedDescription,
-      siteName: 'dwizzyWEEB',
+      siteName: 'jawatch',
       images: imageUrl ? [{ url: imageUrl }] : undefined,
     },
     twitter: {
@@ -110,7 +110,7 @@ export function buildWebsiteJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'dwizzyWEEB',
+    name: 'jawatch',
     url: absoluteUrl('/'),
     inLanguage: 'id-ID',
     potentialAction: {
@@ -138,7 +138,7 @@ export function buildCollectionPageJsonLd(options: {
     inLanguage: 'id-ID',
     isPartOf: {
       '@type': 'WebSite',
-      name: 'dwizzyWEEB',
+      name: 'jawatch',
       url: absoluteUrl('/'),
     },
     mainEntity: {

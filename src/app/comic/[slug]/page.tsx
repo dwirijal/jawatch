@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { getHDThumbnail, getJikanEnrichment, getMangaDetail } from '@/lib/adapters/comic-server';
+import { getComicJikanEnrichment, getHDThumbnail, getMangaDetail } from '@/lib/adapters/comic-server';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { JsonLd } from '@/components/atoms/JsonLd';
@@ -16,6 +16,7 @@ import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions'
 import { ReaderMediaDetailPage } from '@/components/organisms/ReaderMediaDetailPage';
 import { MetadataPanel } from '@/components/organisms/MetadataPanel';
 import { User, Activity, Layout, ShieldAlert, ChevronLeft, Play } from 'lucide-react';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { buildComicDetailJsonLd, buildMetadata } from '@/lib/seo';
 import ComicDetailHistoryTracker from './ComicDetailHistoryTracker';
 
@@ -29,14 +30,15 @@ function stripBahasaIndonesiaSuffix(value: string): string {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const includeNsfw = await resolveViewerNsfwAccess();
   const manga = await getMangaDetail(slug, {
-    includeNsfw: false,
+    includeNsfw,
   }).catch(() => null);
 
   if (!manga) {
     return buildMetadata({
       title: 'Comic Tidak Ditemukan',
-      description: 'Comic yang kamu cari tidak tersedia di katalog dwizzyWEEB.',
+      description: 'Comic yang kamu cari tidak tersedia di katalog jawatch.',
       path: `/comic/${slug}`,
       noIndex: true,
     });
@@ -48,7 +50,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return buildMetadata({
     title: `Baca ${title} Bahasa Indonesia`,
-    description: `${description} Temukan chapter terbaru ${title} dan baca online di dwizzyWEEB.`,
+    description: `${description} Temukan chapter terbaru ${title} dan baca online di jawatch.`,
     path: `/comic/${manga.slug}`,
     image,
     keywords: [...manga.genres.map((genre) => genre.name), manga.metadata.type, manga.metadata.author].filter(Boolean),
@@ -57,8 +59,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ComicDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const includeNsfw = await resolveViewerNsfwAccess();
   const manga = await getMangaDetail(slug, {
-    includeNsfw: false,
+    includeNsfw,
   }).catch(() => null);
 
   if (!manga) {
@@ -77,7 +80,7 @@ export default async function ComicDetailPage({ params }: PageProps) {
     );
   }
 
-  const enrichment = await getJikanEnrichment('manga', manga.title).catch(() => null);
+  const enrichment = await getComicJikanEnrichment(manga.slug).catch(() => null);
   const hdImage = getHDThumbnail(manga.image);
   const latestChapter = manga.chapters[0];
 
@@ -251,7 +254,7 @@ export default async function ComicDetailPage({ params }: PageProps) {
           <DetailSectionHeading title={`Chapter Index (${manga.chapters.length})`} theme="manga" />
           <Paper tone="muted" shadow="sm" padded={false}>
             <div className="max-h-[640px] overflow-y-auto">
-              {manga.chapters.map((chapter, index) => (
+              {manga.chapters.map((chapter) => (
                 <Link
                   key={chapter.slug}
                   href={`/comic/${slug}/${chapter.slug}`}
@@ -259,9 +262,15 @@ export default async function ComicDetailPage({ params }: PageProps) {
                 >
                   <div className="space-y-1">
                     <p className="font-semibold text-zinc-100">{chapter.chapter}</p>
-                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                      Chapter {manga.chapters.length - index}
-                    </p>
+                    {chapter.date ? (
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        {new Date(chapter.date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    ) : null}
                   </div>
                   <Badge variant="outline">Read</Badge>
                 </Link>

@@ -1,10 +1,10 @@
-## dwizzyWEEB
+## jawatch
 
-Next.js 16 app for the `weebs.dwizzy.my.id` frontend.
+Next.js 16 app for the `jawatch.web.id` frontend.
 
 ## Data Access Model
 
-`dwizzyWEEB` currently mixes two media read paths:
+`jawatch` currently mixes two media read paths:
 
 - comic surfaces (`manga`, `manhwa`, `manhua`) read directly from `DATABASE_URL`
 - the remaining media surfaces still read through the API gateway (default `https://api.dwizzy.my.id`)
@@ -16,7 +16,7 @@ Next.js 16 app for the `weebs.dwizzy.my.id` frontend.
 
 ## Getting Started
 
-Copy [.env.example](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/.env.example) to `.env.local` and set your gateway/app URLs.
+Copy `.env.example` to `.env.local` and set your gateway/app URLs.
 
 First, run the development server:
 
@@ -43,6 +43,16 @@ Main envs:
 - `SITE_URL` (canonical site URL for metadata/sitemap)
 - `NEXT_PUBLIC_SITE_URL` (client app origin fallback)
 
+Embedded auth envs (Supabase runtime authority for `jawatch`):
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SITE_URL` (recommended: `https://jawatch.web.id`)
+- `NEXT_PUBLIC_SITE_URL` (recommended: `https://jawatch.web.id`)
+
+`jawatch` embedded auth uses Supabase directly. `auth.dwizzy.my.id` is not a runtime authority for auth/session flows in this app.
+
 ## Verification
 
 Primary local verification flow:
@@ -59,9 +69,9 @@ This runs:
 - production build
 - route performance budgets
 
-Performance budgets are defined in [perf-budgets.json](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/perf-budgets.json). Operational notes live in [docs/performance-release-playbook.md](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/docs/performance-release-playbook.md).
+Performance budgets are defined in `perf-budgets.json`. Operational notes live in `docs/performance-release-playbook.md`.
 
-You can start editing the app from [src/app/page.tsx](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/src/app/page.tsx). The page auto-updates as you edit the file.
+You can start editing the app from `src/app/page.tsx`. The page auto-updates as you edit the file.
 
 ## Learn More
 
@@ -79,17 +89,22 @@ Preferred deployment target:
 - first-time auth: `npx vercel login`
 - link project: `npm run link:vercel`
 - production deploy: `npm run deploy:vercel`
-- project id: `prj_RLGnVJAUGiBdCLJk9kZkCZYHHDEk`
-- team id: `team_LkIeOkeNrl7eNLKUJUljLeaC`
+- project name: `jawatch`
+- project id: `prj_98bKwCd8PWLD0HpBHp8Fo9WFvCFy`
+- team id: `team_LkIeOkeNrl7eNLKUJUljLeaC` (`fudcourt`)
+- production domain: `jawatch.web.id`
 
 Recommended Vercel envs:
 
 - `DWIZZY_API_BASE_URL`
 - optional `NEXT_PUBLIC_DWIZZY_API_BASE_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
 - optional `SITE_URL`
 - optional `NEXT_PUBLIC_SITE_URL`
 
-`SITE_URL` automatically falls back to Vercel system envs like `VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`, then to `https://weebs.dwizzy.my.id`.
+`SITE_URL` automatically falls back to Vercel system envs like `VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`, then to `https://jawatch.web.id`.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
@@ -102,7 +117,7 @@ Cloudflare-specific deploy flows are still available, but no longer the primary 
 
 ## CI
 
-GitHub Actions CI is defined in [.github/workflows/ci.yml](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/.github/workflows/ci.yml).
+GitHub Actions CI is defined in `.github/workflows/ci.yml`.
 
 It currently gates:
 

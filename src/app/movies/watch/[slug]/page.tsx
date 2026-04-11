@@ -9,6 +9,7 @@ import { JsonLd } from '@/components/atoms/JsonLd';
 import { Paper } from '@/components/atoms/Paper';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { MediaWatchPage } from '@/components/organisms/MediaWatchPage';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { buildMetadata, buildMovieWatchJsonLd } from '@/lib/seo';
 import MovieWatchHistoryTracker from './MovieWatchHistoryTracker';
 
@@ -18,14 +19,15 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const includeNsfw = await resolveViewerNsfwAccess();
   const movie = await getMovieWatchBySlug(slug, {
-    includeNsfw: false,
+    includeNsfw,
   });
 
   if (!movie) {
     return buildMetadata({
       title: 'Film Tidak Ditemukan',
-      description: 'Film yang kamu cari tidak tersedia di katalog movie dwizzyWEEB.',
+      description: 'Film yang kamu cari tidak tersedia di katalog movie jawatch.',
       path: `/movies/watch/${slug}`,
       noIndex: true,
     });
@@ -33,7 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return buildMetadata({
     title: `Nonton ${movie.title} Subtitle Indonesia`,
-    description: `Streaming ${movie.title}${movie.quality ? ` kualitas ${movie.quality}` : ''}${movie.year ? ` rilis ${movie.year}` : ''} dengan subtitle Indonesia di dwizzyWEEB.`,
+    description: `Streaming ${movie.title}${movie.quality ? ` kualitas ${movie.quality}` : ''}${movie.year ? ` rilis ${movie.year}` : ''} dengan subtitle Indonesia di jawatch.`,
     path: `/movies/watch/${movie.slug}`,
     image: movie.poster,
   });
@@ -41,8 +43,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function MovieWatchPage({ params }: PageProps) {
   const { slug } = await params;
+  const includeNsfw = await resolveViewerNsfwAccess();
   const movie = await getMovieWatchBySlug(slug, {
-    includeNsfw: false,
+    includeNsfw,
   });
 
   if (!movie) {

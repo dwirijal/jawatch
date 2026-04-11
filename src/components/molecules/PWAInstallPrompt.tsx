@@ -8,7 +8,7 @@ import { Paper } from '@/components/atoms/Paper';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { resolveThemeFromPathname, ThemeType, cn } from '@/lib/utils';
 
-const PWA_PROMPT_SESSION_SEEN_KEY = 'dwizzyweeb:pwa-prompt-session-seen';
+const PWA_PROMPT_SESSION_SEEN_KEY = 'jawatch:pwa-prompt-session-seen';
 
 export function PWAInstallPrompt() {
   const { showPrompt, showIOSGuide, handleInstall, isStandalone } = usePWAInstall();
@@ -71,7 +71,7 @@ export function PWAInstallPrompt() {
 
           <div className="min-w-0 flex-1 space-y-0.5 md:space-y-1">
             <p className="hidden text-[10px] font-black uppercase tracking-[0.22em] text-accent md:block">Install App</p>
-            <h3 className="text-sm font-black leading-tight tracking-tight text-white md:text-base">Install dwizzyWEEB</h3>
+            <h3 className="text-sm font-black leading-tight tracking-tight text-white md:text-base">Install jawatch</h3>
             <p className="text-[11px] leading-4 text-zinc-400 md:hidden">
               {showIOSGuide ? 'Share, then Add to Home.' : 'Fast full-screen access.'}
             </p>
@@ -110,7 +110,7 @@ export function PWAInstallPrompt() {
                 installVariant === 'outline' ? 'border-border-subtle bg-surface-1 hover:bg-surface-elevated' : undefined
               )}
             >
-              Install dwizzyWEEB
+              Install jawatch
             </Button>
           )}
         </div>

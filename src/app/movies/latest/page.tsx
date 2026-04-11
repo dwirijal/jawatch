@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Sparkles } from 'lucide-react';
 import { buildMovieBrowsePage } from '@/app/movies/buildMovieBrowsePage';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { getMovieHomeSection } from '@/lib/adapters/movie';
 import { buildMetadata } from '@/lib/seo';
 
@@ -12,7 +13,8 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function MoviesLatestPage() {
-  const results = await getMovieHomeSection('latest', 40, { includeNsfw: false }).catch(() => []);
+  const includeNsfw = await resolveViewerNsfwAccess();
+  const results = await getMovieHomeSection('latest', 40, { includeNsfw }).catch(() => []);
 
   return buildMovieBrowsePage({
     title: 'Movies: Latest Releases',

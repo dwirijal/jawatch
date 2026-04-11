@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import MoviesPageClient from './MoviesPageClient';
 import { getMovieGenreItems, getMovieHubData } from '@/lib/adapters/movie';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { buildCollectionPageJsonLd, buildMetadata } from '@/lib/seo';
 
 type MoviesPageProps = {
@@ -33,8 +34,9 @@ export async function generateMetadata({ searchParams }: MoviesPageProps): Promi
 export default async function MoviesPage({ searchParams }: MoviesPageProps) {
   const params = await searchParams;
   const activeGenre = (params.genre || '').trim().slice(0, 64) || null;
+  const includeNsfw = await resolveViewerNsfwAccess();
   const options = {
-    includeNsfw: false,
+    includeNsfw,
   };
   const { popular, latest } = await getMovieHubData(24, options).catch(() => ({
     popular: [],

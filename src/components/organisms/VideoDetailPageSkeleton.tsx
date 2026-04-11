@@ -86,7 +86,7 @@ export function VideoDetailPageSkeleton({ theme, backLabel }: VideoDetailPageSke
                 <div className="media-grid" data-grid-density="default">
                   {Array.from({ length: 4 }).map((_, index) => (
                     <Paper key={index} tone="muted" shadow="sm" padded={false} className="overflow-hidden">
-                      <Skeleton className="aspect-[3/4] w-full rounded-none" />
+                      <Skeleton className={`${posterAspectClass} w-full rounded-none`} />
                       <div className="space-y-2 p-4">
                         <Skeleton className="h-4 w-5/6 rounded-full" />
                         <Skeleton className="h-3 w-2/3 rounded-full" />

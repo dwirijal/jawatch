@@ -54,7 +54,7 @@ jobs:
 
           payload = {
               "content": (
-                  "dwizzyWEEB CI quality failed\n"
+                  "jawatch CI quality failed\n"
                   f"workflow: {os.environ['GITHUB_WORKFLOW']}\n"
                   f"job: quality\n"
                   f"ref: {os.environ['GITHUB_REF_NAME']}\n"
@@ -111,7 +111,7 @@ jobs:
 
           payload = {
               "content": (
-                  "dwizzyWEEB CI build failed\n"
+                  "jawatch CI build failed\n"
                   f"workflow: {os.environ['GITHUB_WORKFLOW']}\n"
                   f"job: build\n"
                   f"ref: {os.environ['GITHUB_REF_NAME']}\n"

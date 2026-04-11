@@ -61,6 +61,7 @@ export function VideoDetailHeroFrame({
         />
         {backgroundLayer}
         <div className="absolute inset-0 bg-black/68" />
+        <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/20 to-black/80" />
       </div>
 
       <div className="relative z-10 flex h-full flex-col px-5 py-5 md:px-7 md:py-7">
@@ -110,7 +111,7 @@ export function VideoDetailHeroFrame({
               tone="muted"
               shadow="sm"
               padded={false}
-              className="min-h-[12rem] max-h-[16rem] w-full overflow-hidden bg-[#06070b] lg:max-h-none lg:min-h-0 lg:h-full lg:w-auto lg:justify-self-end"
+              className="min-h-[12rem] max-h-[16rem] w-full overflow-hidden bg-[#06070b] lg:max-h-none lg:min-h-0 lg:h-full lg:w-auto lg:justify-self-end premium-shadow"
             >
               <div className="relative h-full w-full lg:w-auto">
                 <Image
@@ -132,9 +133,9 @@ export function VideoDetailHeroFrame({
                 key={item.label}
                 tone="muted"
                 shadow="sm"
-                className={cn('px-3.5 py-3', isCompactGallery && 'rounded-[var(--radius-md)] px-3 py-2.5')}
+                className={cn('px-3.5 py-3 glass-morphism', isCompactGallery && 'rounded-[var(--radius-md)] px-3 py-2.5')}
               >
-                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">{item.label}</p>
+                <p className="type-metadata">{item.label}</p>
                 <p className={cn('mt-1.5 text-sm font-bold text-zinc-100', isCompactGallery && 'mt-1 text-[13px] leading-5')}>
                   {item.value}
                 </p>

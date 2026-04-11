@@ -9,7 +9,7 @@ import {
   getSeriesBadgeText,
   getSeriesTheme,
 } from '@/lib/series-presentation';
-import type { ThemeType } from '@/lib/utils';
+import { getMediaPosterAspectClass, type ThemeType } from '@/lib/utils';
 
 interface SeriesRecommendationsSectionProps {
   currentSlug: string;
@@ -46,7 +46,7 @@ export async function SeriesRecommendationsSection({
         {recommendations.map((item) => (
           <Link key={item.slug} href={`/series/${item.slug}`} prefetch={false} className="group block h-full">
             <Paper tone="muted" shadow="sm" padded={false} className="h-full overflow-hidden transition-transform duration-300 group-hover:-translate-y-1">
-              <div className="relative aspect-[3/4] overflow-hidden bg-surface-2">
+              <div className={`relative overflow-hidden bg-surface-2 ${getMediaPosterAspectClass(getSeriesTheme(item.type))}`}>
                 <Image
                   src={item.poster || '/favicon.ico'}
                   alt={item.title}

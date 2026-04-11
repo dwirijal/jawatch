@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Activity } from 'lucide-react';
 import { buildComicBrowsePage } from '@/app/comic/buildComicBrowsePage';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { getOngoingManga } from '@/lib/adapters/comic-server';
 import { buildMetadata } from '@/lib/seo';
 
@@ -12,7 +13,8 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function ComicOngoingPage() {
-  const results = await getOngoingManga(40, { includeNsfw: false }).catch(() => ({ comics: [] }));
+  const includeNsfw = await resolveViewerNsfwAccess();
+  const results = await getOngoingManga(40, { includeNsfw }).catch(() => ({ comics: [] }));
 
   return buildComicBrowsePage({
     title: 'Comic: Ongoing',

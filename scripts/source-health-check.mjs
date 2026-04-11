@@ -195,7 +195,11 @@ async function checkTmdb() {
 }
 
 async function main() {
-  const authOrigin = normalizeEnv('AUTH_ORIGIN') || normalizeEnv('NEXT_PUBLIC_AUTH_ORIGIN') || 'https://auth.dwizzy.my.id';
+  const authOrigin =
+    normalizeEnv('AUTH_ORIGIN') ||
+    normalizeEnv('NEXT_PUBLIC_AUTH_ORIGIN') ||
+    normalizeEnv('NEXT_PUBLIC_SITE_URL') ||
+    'https://jawatch.web.id';
   const gatewayOrigin = normalizeEnv('DWIZZY_API_BASE_URL') || normalizeEnv('NEXT_PUBLIC_DWIZZY_API_BASE_URL') || 'https://api.dwizzy.my.id';
 
   await Promise.all([

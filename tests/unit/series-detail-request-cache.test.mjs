@@ -37,3 +37,20 @@ test('does not mix cached results across slugs', async () => {
   assert.deepEqual(left, { slug: 'frieren' });
   assert.deepEqual(right, { slug: 'orb-on-the-movements-of-the-earth' });
 });
+
+test('does not mix in-flight cache across visibility modes for the same slug', async () => {
+  let calls = 0;
+  const loader = createSeriesDetailRequestCache(async (slug, options = {}) => {
+    calls += 1;
+    return { slug, includeNsfw: options.includeNsfw === true };
+  });
+
+  const [publicResult, authResult] = await Promise.all([
+    loader('solo-leveling', { includeNsfw: false }),
+    loader('solo-leveling', { includeNsfw: true }),
+  ]);
+
+  assert.equal(calls, 2);
+  assert.deepEqual(publicResult, { slug: 'solo-leveling', includeNsfw: false });
+  assert.deepEqual(authResult, { slug: 'solo-leveling', includeNsfw: true });
+});

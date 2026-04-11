@@ -1,6 +1,8 @@
 import 'server-only';
 
 import { unstable_cache } from 'next/cache';
+import { canAccessNsfw } from '@/lib/auth/adult-access';
+import { getProfileAdultFields } from '@/lib/auth/profile';
 import {
   extractSlugFromUrl,
   getHDThumbnail,
@@ -11,12 +13,21 @@ import {
 } from '@/lib/adapters/comic-server';
 import { getMovieHubData } from '@/lib/adapters/movie';
 import { getSeriesHubData } from '@/lib/adapters/series';
+import { getOrCreateUserPreferences } from '@/lib/server/user-preferences';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import {
   formatSeriesCardSubtitle,
   getSeriesBadgeText,
   getSeriesTheme,
   type SeriesCardItem,
 } from '@/lib/series-presentation';
+import {
+  formatComicCardSubtitle,
+  formatMovieCardMetaLine,
+  formatMovieCardSubtitle,
+  getComicCardBadgeText,
+  getMovieCardBadgeText,
+} from '@/lib/card-presentation';
 import type { MovieCardItem } from '@/lib/types';
 import type {
   HeroItem,
@@ -54,6 +65,28 @@ type ComicItemBuckets = {
   manhua: MixedRecommendationItem[];
   popular: MixedRecommendationItem[];
 };
+
+export async function resolveViewerNsfwAccess(): Promise<boolean> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      return false;
+    }
+
+    const [profile, preferences] = await Promise.all([
+      getProfileAdultFields(supabase, data.user.id),
+      getOrCreateUserPreferences(supabase, data.user.id),
+    ]);
+
+    return canAccessNsfw({
+      birthDate: profile?.birthDate ?? null,
+      adultContentEnabled: preferences.adultContentEnabled,
+    });
+  } catch {
+    return false;
+  }
+}
 
 function notNull<T>(value: T | null | undefined): value is T {
   return value !== null && value !== undefined;
@@ -105,8 +138,9 @@ function toMovieItem(item: MovieCardItem): MixedRecommendationItem | null {
     image: getHDThumbnail(item.poster || ''),
     href: `/movies/${item.slug}`,
     theme: 'movie',
-    subtitle: item.year || undefined,
-    badgeText: item.rating ? `★ ${item.rating}` : 'MOVIE',
+    subtitle: formatMovieCardSubtitle(item),
+    metaLine: formatMovieCardMetaLine(item),
+    badgeText: getMovieCardBadgeText(),
   };
 }
 
@@ -200,8 +234,8 @@ function toComicItem(item: MangaSearchResult): MixedRecommendationItem | null {
     image: getHDThumbnail(item.image || item.thumbnail || ''),
     href: `/comic/${slug}`,
     theme: 'manga',
-    subtitle: item.chapter || item.time_ago || undefined,
-    badgeText: item.type || undefined,
+    subtitle: formatComicCardSubtitle(item),
+    badgeText: getComicCardBadgeText(item),
   };
 }
 
@@ -359,5 +393,6 @@ const getAuthenticatedHomePageData = unstable_cache(
 );
 
 export async function getHomePageData(options: { includeNsfw?: boolean } = {}): Promise<HomePageData> {
-  return options.includeNsfw ? getAuthenticatedHomePageData() : getPublicHomePageData();
+  const includeNsfw = options.includeNsfw || await resolveViewerNsfwAccess();
+  return includeNsfw ? getAuthenticatedHomePageData() : getPublicHomePageData();
 }

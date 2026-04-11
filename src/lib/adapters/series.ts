@@ -804,36 +804,6 @@ function buildSeriesStatusMatchCondition(status: string): string {
   return `lower(coalesce(i.status, '')) = $1`;
 }
 
-function buildSeriesNsfwCondition(alias: string): string {
-  return `
-    (
-      coalesce(${alias}.is_nsfw, false)
-      or exists (
-        select 1
-        from jsonb_array_elements_text(
-          case
-            when jsonb_typeof(${alias}.detail->'genres') = 'array' then ${alias}.detail->'genres'
-            when jsonb_typeof(${alias}.detail->'genre_names') = 'array' then ${alias}.detail->'genre_names'
-            when jsonb_typeof(${alias}.detail->'category_names') = 'array' then ${alias}.detail->'category_names'
-            else '[]'::jsonb
-          end
-        ) as label_name(value)
-        where lower(label_name.value) = 'nsfw'
-      )
-      or exists (
-        select 1
-        from jsonb_array_elements_text(
-          case
-            when jsonb_typeof(${alias}.detail->'tags') = 'array' then ${alias}.detail->'tags'
-            else '[]'::jsonb
-          end
-        ) as tag_name(value)
-        where lower(tag_name.value) = 'nsfw'
-      )
-    )
-  `;
-}
-
 async function querySeriesCatalogRows(
   {
     includeNsfw,
@@ -1112,40 +1082,6 @@ export async function getSeriesFilteredItems(filter: string, limit = 24, options
   }
 
   return getSeriesBrowseItems('country', normalizedFilter, limit, options);
-}
-
-export async function getNsfwSeriesItems(limit = 24): Promise<SeriesCardItem[]> {
-  const rows = await querySeriesCatalogRows({
-    includeNsfw: true,
-    extraWhere: buildSeriesNsfwCondition('i'),
-    orderBy: 'i.updated_at desc',
-    limit: Math.max(1, limit),
-  });
-  return rows
-    .slice(0, Math.max(1, limit))
-    .map(mapSeriesCard);
-}
-
-export async function getNsfwSeriesPage(page = 1, limit = 24): Promise<{
-  items: SeriesCardItem[];
-  hasNext: boolean;
-}> {
-  const safeLimit = Math.max(1, limit);
-  const safePage = Math.max(1, page);
-  const start = (safePage - 1) * safeLimit;
-  const end = start + safeLimit + 1;
-  const rows = await querySeriesCatalogRows({
-    includeNsfw: true,
-    extraWhere: buildSeriesNsfwCondition('i'),
-    orderBy: 'i.updated_at desc',
-    limit: end,
-  });
-  const slice = rows.slice(start, end);
-
-  return {
-    items: slice.slice(0, safeLimit).map(mapSeriesCard),
-    hasNext: slice.length > safeLimit,
-  };
 }
 
 export async function searchSeriesCatalog(query: string, limit = 8, options: VisibilityOptions = {}): Promise<SeriesCardItem[]> {

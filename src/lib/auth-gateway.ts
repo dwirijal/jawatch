@@ -1,17 +1,9 @@
-// Contract: auth.dwizzy.my.id is the only auth authority consumed by dwizzyWEEB.
+// Contract: jawatch uses embedded Supabase auth routes.
 
-import type { AuthBridgeSessionResponse, AuthLogoutRequest, AuthStatus, AuthUser } from '@/lib/auth-types';
-import { canUseBrowserAuthBridge, resolveAllowedAppOrigin, resolveAuthOrigin } from '@/lib/auth-origin';
-import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
+import type { AuthLogoutRequest, AuthStatus, AuthUser } from '@/lib/auth-types';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 const DEFAULT_RETURN_PATH = '/';
-
-function shouldSkipBrowserSessionBridge(): boolean {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-  return !canUseBrowserAuthBridge(window.location.origin);
-}
 
 function sanitizeRelativePath(nextPath: string | undefined): string {
   const candidate = nextPath?.trim();
@@ -22,76 +14,116 @@ function sanitizeRelativePath(nextPath: string | undefined): string {
   return candidate;
 }
 
-function normalizeUser(user: AuthUser | null | undefined): AuthUser | null {
-  if (!user || typeof user.id !== 'string' || typeof user.displayName !== 'string') {
+function asString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function buildDisplayName(user: {
+  id: string;
+  email?: string;
+  user_metadata?: Record<string, unknown>;
+}): string {
+  const metadata = user.user_metadata ?? {};
+  const preferredName =
+    asString(metadata.display_name) ??
+    asString(metadata.full_name) ??
+    asString(metadata.name) ??
+    asString(metadata.user_name) ??
+    asString(metadata.preferred_username);
+
+  if (preferredName) {
+    return preferredName;
+  }
+
+  if (user.email) {
+    const [token] = user.email.split('@');
+    if (token && token.length > 0) {
+      return token;
+    }
+    return user.email;
+  }
+
+  return `user-${user.id.slice(0, 8)}`;
+}
+
+function normalizeUser(user: {
+  id?: string;
+  email?: string;
+  user_metadata?: Record<string, unknown>;
+  app_metadata?: Record<string, unknown>;
+  identities?: Array<{ provider?: string | null } | null>;
+} | null): AuthUser | null {
+  if (!user || typeof user.id !== 'string') {
     return null;
   }
+  const userId = user.id;
+
+  const providerFromAppMetadata = asString(user.app_metadata?.provider);
+  const providerFromIdentity = Array.isArray(user.identities)
+    ? user.identities.map((identity) => asString(identity?.provider)).find((provider) => provider !== undefined)
+    : undefined;
 
   return {
     id: user.id,
-    displayName: user.displayName,
-    avatarUrl: typeof user.avatarUrl === 'string' ? user.avatarUrl : undefined,
-    provider: typeof user.provider === 'string' ? user.provider : undefined,
+    email: asString(user.email),
+    displayName: buildDisplayName({
+      id: userId,
+      email: user.email,
+      user_metadata: user.user_metadata,
+    }),
+    avatarUrl:
+      asString(user.user_metadata?.avatar_url) ??
+      asString(user.user_metadata?.picture) ??
+      asString(user.user_metadata?.avatar),
+    provider: providerFromAppMetadata ?? providerFromIdentity,
   };
 }
 
-function buildSessionUrl(): string {
-  return new URL('/api/session', resolveAuthOrigin()).toString();
-}
+let browserClient: ReturnType<typeof createSupabaseBrowserClient> | null = null;
 
 function resolveAppOrigin(): string {
-  const candidate =
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://weebs.dwizzy.my.id';
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
 
-  return resolveAllowedAppOrigin(candidate);
+  return process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://jawatch.web.id';
 }
 
-// Browser-facing session bridge. The provider calls this with credentials included.
+// Browser-facing auth status helper. The provider calls this in the client.
 export async function getAuthStatus(): Promise<AuthStatus> {
-  if (shouldSkipBrowserSessionBridge()) {
+  if (typeof window === 'undefined') {
     return { authenticated: false, user: null };
   }
 
-  const response = await fetchWithTimeout(buildSessionUrl(), {
-    credentials: 'include',
-    cache: 'no-store',
-    timeoutMs: 2500,
-    headers: {
-      Accept: 'application/json',
-    },
-  });
+  if (!browserClient) {
+    browserClient = createSupabaseBrowserClient();
+  }
 
-  if (response.status === 401) {
+  const { data, error } = await browserClient.auth.getUser();
+  if (error) {
     return { authenticated: false, user: null };
   }
 
-  if (!response.ok) {
-    throw new Error(`Auth bridge request failed with status ${response.status}`);
-  }
-
-  const payload = (await response.json()) as AuthBridgeSessionResponse | null;
-  const user = normalizeUser(payload?.user ?? null);
+  const user = normalizeUser(data.user ?? null);
 
   return {
-    authenticated: payload?.authenticated === true && user !== null,
-    user: payload?.authenticated === true ? user : null,
+    authenticated: user !== null,
+    user,
   };
 }
 
 export function buildLoginUrl(nextPath: string): string {
-  const url = new URL('/login', resolveAuthOrigin());
+  const url = new URL('/login', resolveAppOrigin());
   url.searchParams.set('next', sanitizeRelativePath(nextPath));
-  url.searchParams.set('origin', resolveAppOrigin());
   return url.toString();
 }
 
 export function buildLogoutRequest(nextPath: string): AuthLogoutRequest {
-  const url = new URL('/logout', resolveAuthOrigin()).toString();
+  const appOrigin = resolveAppOrigin();
+  const url = new URL('/logout', appOrigin).toString();
   const body = new URLSearchParams();
   body.set('returnTo', sanitizeRelativePath(nextPath));
-  body.set('origin', resolveAppOrigin());
+  body.set('origin', appOrigin);
 
   return {
     url,

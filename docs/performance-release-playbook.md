@@ -18,7 +18,7 @@ npm run verify
 
 ## Route Budget Policy
 
-Bundle budgets are configured in [perf-budgets.json](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/perf-budgets.json).
+Bundle budgets are configured in `perf-budgets.json`.
 
 Current route groups:
 
@@ -26,7 +26,7 @@ Current route groups:
 - `detail`
 - `watch-read`
 
-The checker lives in [scripts/check-route-budgets.mjs](/home/dwizzy/workspace/projects/dwizzyOS/dwizzyWEEB/scripts/check-route-budgets.mjs).
+The checker lives in `scripts/check-route-budgets.mjs`.
 
 Useful commands:
 

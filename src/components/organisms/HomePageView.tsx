@@ -314,6 +314,7 @@ function RecommendationSection({
           image={item.image}
           title={item.title}
           subtitle={item.subtitle}
+          metaLine={item.metaLine}
           badgeText={item.badgeText}
           theme={item.theme || sectionTheme}
         />

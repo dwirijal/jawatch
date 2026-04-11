@@ -1,58 +1,3 @@
-import { fetchSankaJson } from '@/lib/media';
-
-function readObject(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
-}
-
-function readArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
-function readString(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
-}
-
-function readStringArray(value: unknown): string[] {
-  return readArray(value)
-    .map((item) => readString(item))
-    .filter(Boolean);
-}
-
-function titleFromSlug(slug: string): string {
-  return slug
-    .replace(/^\d+-/, '')
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-function stripEpisodeSuffix(title: string): string {
-  return title
-    .replace(/\s+EP\s+\d+$/i, '')
-    .replace(/\s*-\s*Episode\s+\d+$/i, '')
-    .trim();
-}
-
-function slugifyTitle(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
-export function extractDramaboxBookId(coverUrl: string): string {
-  const match = coverUrl.match(/\/(4\d{10})\//);
-  return match?.[1] ?? '';
-}
-
-export function isDramaboxBookId(value: string): boolean {
-  return /^4\d{10}$/.test(value.trim());
-}
-
-function qualityRank(label: string): number {
-  const parsed = Number.parseInt(label.replace(/[^0-9]/g, ''), 10);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
 export interface DramaCatalogCard {
   slug: string;
   title: string;
@@ -111,64 +56,59 @@ export interface DramaboxDetailData {
   totalEpisodes: string;
 }
 
-function normalizeDrachinCard(item: unknown): DramaCatalogCard | null {
-  const record = readObject(item);
-  const slug = readString(record.slug);
-  const title = stripEpisodeSuffix(readString(record.title) || titleFromSlug(slug));
-  const image = readString(record.poster) || readString(record.cover);
-  const subtitle = readString(record.episode_info) || readString(record.total_episode);
+type JsonRequestOptions = {
+  cache?: RequestCache;
+};
 
-  if (!slug || !title) {
-    return null;
-  }
-
-  return {
-    slug,
-    title,
-    image,
-    subtitle: subtitle || undefined,
-  };
+function isServerRuntime() {
+  return typeof window === 'undefined';
 }
 
-function normalizeDramaBoxCard(item: unknown): DramaCatalogCard | null {
-  const record = readObject(item);
-  const title = readString(record.judul) || readString(record.title);
-  const image = readString(record.cover) || readString(record.poster);
-  const candidateBookId = readString(record.bookId) || extractDramaboxBookId(image);
-  const bookId = isDramaboxBookId(candidateBookId) ? candidateBookId : '';
-  const slug = bookId || slugifyTitle(title);
-
-  if (!slug || !title) {
-    return null;
+function buildDramaApiUrl(path: string): string {
+  if (isServerRuntime()) {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim() || 'http://127.0.0.1:3000';
+    return `${baseUrl}${path}`;
   }
-
-  return {
-    slug,
-    title,
-    image,
-    subtitle: readString(record.total_episode) || undefined,
-    bookId: bookId || undefined,
-  };
+  return path;
 }
 
-function normalizeCardList(items: unknown, normalizer: (item: unknown) => DramaCatalogCard | null): DramaCatalogCard[] {
-  return readArray(items)
-    .map((item) => normalizer(item))
-    .filter((item): item is DramaCatalogCard => item !== null);
+async function fetchDramaJson<T>(path: string, options: JsonRequestOptions = {}): Promise<T> {
+  const response = await fetch(buildDramaApiUrl(path), {
+    headers: {
+      Accept: 'application/json',
+    },
+    cache: options.cache ?? 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Drama route ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+
+function readString(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function slugifyTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+export function extractDramaboxBookId(coverUrl: string): string {
+  const match = coverUrl.match(/\/(4\d{10})\//);
+  return match?.[1] ?? '';
+}
+
+export function isDramaboxBookId(value: string): boolean {
+  return /^4\d{10}$/.test(value.trim());
 }
 
 export async function getDrachinHome(): Promise<DrachinHomeData> {
-  const [homePayload, latestPayload, popularPayload] = await Promise.all([
-    fetchSankaJson<{ data?: { slider?: unknown[] } }>('/anime/drachin/home'),
-    fetchSankaJson<{ data?: unknown[] }>('/anime/drachin/latest?page=1'),
-    fetchSankaJson<{ data?: unknown[] }>('/anime/drachin/popular?page=1'),
-  ]);
-
-  return {
-    featured: normalizeCardList(readObject(homePayload).data ? readObject(homePayload.data).slider : [], normalizeDrachinCard),
-    latest: normalizeCardList(readObject(latestPayload).data, normalizeDrachinCard),
-    popular: normalizeCardList(readObject(popularPayload).data, normalizeDrachinCard),
-  };
+  return fetchDramaJson<DrachinHomeData>('/api/vertical-drama/home?entry=drachin');
 }
 
 export async function searchDrachin(query: string): Promise<DramaCatalogCard[]> {
@@ -176,114 +116,76 @@ export async function searchDrachin(query: string): Promise<DramaCatalogCard[]> 
   if (!trimmed) {
     return [];
   }
-
-  const payload = await fetchSankaJson<{ data?: unknown[] }>(`/anime/drachin/search/${encodeURIComponent(trimmed)}`);
-  return normalizeCardList(readObject(payload).data, normalizeDrachinCard);
+  return fetchDramaJson<DramaCatalogCard[]>(`/api/vertical-drama/search?q=${encodeURIComponent(trimmed)}`);
 }
 
 export async function getDrachinDetailBySlug(slug: string): Promise<DrachinDetailData | null> {
-  const payload = await fetchSankaJson<{ data?: Record<string, unknown> }>(`/anime/drachin/detail/${encodeURIComponent(slug)}`);
-  const data = readObject(payload.data);
-  if (Object.keys(data).length === 0) {
-    return null;
-  }
-
-  const episodes = readArray(data.episodes)
-    .map((item) => {
-      const record = readObject(item);
-      const index = readString(record.index);
-      const episode = readString(record.episode);
-      const episodeSlug = readString(record.slug) || slug;
-      return index ? { index, episode: episode || index, slug: episodeSlug } : null;
-    })
-    .filter((item): item is DrachinDetailEpisode => item !== null);
-
-  return {
-    slug,
-    title: stripEpisodeSuffix(readString(data.title) || titleFromSlug(slug)),
-    poster: readString(data.poster),
-    synopsis: readString(data.synopsis),
-    tags: readStringArray(data.tags),
-    totalEpisodes: Number.parseInt(readString(data.total_episodes), 10) || episodes.length,
-    episodes,
-  };
-}
-
-export async function getDrachinEpisodeBySlug(slug: string, index = 1): Promise<DrachinEpisodeData | null> {
-  const payload = await fetchSankaJson<{ data?: Record<string, unknown> }>(
-    `/anime/drachin/episode/${encodeURIComponent(slug)}?index=${encodeURIComponent(String(index))}`,
-  );
-  const data = readObject(payload.data);
-  if (Object.keys(data).length === 0) {
-    return null;
-  }
-
-  const mirrors = Object.entries(readObject(data.videos))
-    .map(([label, url]) => ({
-      label: label.toUpperCase(),
-      embed_url: readString(url),
-    }))
-    .filter((item) => item.embed_url)
-    .sort((left, right) => qualityRank(right.label) - qualityRank(left.label));
-
-  return {
-    slug,
-    title: readString(data.title) || `${titleFromSlug(slug)} Episode ${index}`,
-    episode: readString(data.episode) || String(index),
-    poster: readString(data.poster),
-    mirrors,
-    defaultUrl: mirrors[0]?.embed_url || '',
-  };
-}
-
-export async function getDramaboxHome(): Promise<DramaboxHomeData> {
-  const [latestPayload, trendingPayload] = await Promise.all([
-    fetchSankaJson<{ data?: unknown[] }>('/anime/dramabox/latest?page=1'),
-    fetchSankaJson<{ data?: unknown[] }>('/anime/dramabox/trending'),
-  ]);
-
-  return {
-    latest: normalizeCardList(readObject(latestPayload).data, normalizeDramaBoxCard),
-    trending: normalizeCardList(readObject(trendingPayload).data, normalizeDramaBoxCard),
-  };
-}
-
-export async function searchDramabox(query: string): Promise<DramaCatalogCard[]> {
-  const trimmed = query.trim();
+  const trimmed = slug.trim();
   if (!trimmed) {
-    return [];
-  }
-
-  const payload = await fetchSankaJson<{ data?: unknown[] }>(`/anime/dramabox/search?q=${encodeURIComponent(trimmed)}`);
-  return normalizeCardList(readObject(payload).data, normalizeDramaBoxCard);
-}
-
-export async function getDramaboxDetailByBookId(bookId: string): Promise<DramaboxDetailData | null> {
-  if (!isDramaboxBookId(bookId)) {
     return null;
   }
 
   try {
-    const payload = await fetchSankaJson<{ status?: string; data?: Record<string, unknown> }>(
-      `/anime/dramabox/detail?bookId=${encodeURIComponent(bookId)}`,
-    );
-    if (readString(payload.status).toLowerCase() !== 'success') {
-      return null;
-    }
-
-    const data = readObject(payload.data);
-    if (Object.keys(data).length === 0) {
-      return null;
-    }
-
-    return {
-      bookId,
-      title: readString(data.title) || readString(data.judul) || `DramaBox ${bookId}`,
-      cover: readString(data.cover) || readString(data.poster),
-      synopsis: readString(data.synopsis) || readString(data.description),
-      totalEpisodes: readString(data.total_episode) || readString(data.totalEpisodes),
-    };
+    return await fetchDramaJson<DrachinDetailData | null>(`/api/vertical-drama/detail?slug=${encodeURIComponent(trimmed)}`);
   } catch {
     return null;
   }
+}
+
+export async function getDrachinEpisodeBySlug(slug: string, index = 1): Promise<DrachinEpisodeData | null> {
+  const trimmed = slug.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    return await fetchDramaJson<DrachinEpisodeData | null>(
+      `/api/vertical-drama/episode?slug=${encodeURIComponent(trimmed)}&index=${encodeURIComponent(String(index))}`,
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function getDramaboxHome(): Promise<DramaboxHomeData> {
+  return fetchDramaJson<DramaboxHomeData>('/api/vertical-drama/home?entry=dramabox');
+}
+
+export async function searchDramabox(query: string): Promise<DramaCatalogCard[]> {
+  return searchDrachin(query);
+}
+
+export async function getDramaboxDetailByBookId(bookId: string): Promise<DramaboxDetailData | null> {
+  const trimmed = readString(bookId);
+  if (!trimmed) {
+    return null;
+  }
+
+  if (!isDramaboxBookId(trimmed)) {
+    return {
+      bookId: trimmed,
+      title: trimmed.replace(/-/g, ' '),
+      cover: '',
+      synopsis: '',
+      totalEpisodes: '',
+    };
+  }
+
+  return {
+    bookId: trimmed,
+    title: `DramaBox ${trimmed}`,
+    cover: '',
+    synopsis: '',
+    totalEpisodes: '',
+  };
+}
+
+export function normalizeDramaBoxCard(item: Pick<DramaCatalogCard, 'slug' | 'title' | 'image' | 'subtitle' | 'bookId'>): DramaCatalogCard {
+  const candidateBookId = readString(item.bookId) || extractDramaboxBookId(item.image);
+  const bookId = isDramaboxBookId(candidateBookId) ? candidateBookId : '';
+  return {
+    ...item,
+    slug: bookId || item.slug || slugifyTitle(item.title),
+    bookId: bookId || undefined,
+  };
 }

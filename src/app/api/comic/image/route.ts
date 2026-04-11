@@ -34,7 +34,7 @@ export async function GET(request: Request) {
   const upstream = await fetch(targetUrl, {
     headers: {
       Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-      'User-Agent': 'dwizzyWEEB-image-proxy/1.0',
+      'User-Agent': 'jawatch-image-proxy/1.0',
     },
     next: { revalidate: 60 * 60 * 24 },
   });

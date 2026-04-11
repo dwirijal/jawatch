@@ -68,8 +68,6 @@ export function VideoPlayer({
   currentUrl,
   onMirrorChange,
   showMirrorPanel = true,
-  title,
-  showTitleOverlay = true,
   theme = 'anime',
   format = 'landscape',
   onNext,
@@ -164,8 +162,22 @@ export function VideoPlayer({
         <div className="fixed inset-0 z-[140] bg-black/95 animate-in fade-in duration-500" onClick={toggleLights} />
       )}
 
+      {/* Ambient Glow Effect (YouTube Style) */}
+      {!isTheaterMode && (
+        <div 
+          className={cn(
+            "absolute inset-0 z-0 opacity-20 blur-[120px] transition-all duration-1000",
+            theme === 'anime' && 'bg-blue-600',
+            theme === 'donghua' && 'bg-red-600',
+            theme === 'movie' && 'bg-indigo-600',
+            theme === 'drama' && 'bg-rose-600'
+          )} 
+          style={{ transform: 'scale(1.1)' }}
+        />
+      )}
+
       <div className={cn(
-        "group relative overflow-hidden border border-border-subtle bg-surface-2 hard-shadow-md transition-all duration-700",
+        "group relative z-10 overflow-hidden border border-border-subtle bg-surface-2 hard-shadow-md transition-all duration-700",
         frameClassName,
         isLightsDimmed && !isTheaterMode && "ring-4 ring-zinc-100/10"
       )}>
@@ -199,18 +211,12 @@ export function VideoPlayer({
           </div>
         )}
         
+        {/* Title overlay removed for cleaner aesthetic as title exists in sidebar */}
+        
         <div className={cn(
-          "absolute top-4 left-4 right-4 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20",
-          isTheaterMode && "top-8 left-8 right-8"
+          "absolute top-4 right-4 flex justify-end items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20",
+          isTheaterMode && "top-8 right-8"
         )}>
-          {showTitleOverlay ? (
-            <div className="pointer-events-auto flex items-center gap-3 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/90 px-4 py-2 backdrop-blur-md">
-              <p className="text-xs font-black tracking-[0.08em] text-white">{title || 'Streaming Now'}</p>
-            </div>
-          ) : (
-            <div />
-          )}
-
           <div className="flex items-center gap-2 pointer-events-auto">
             {hasNext && onNext && (
               <Button variant={theme} size="icon" onClick={onNext} className="h-11 w-11 rounded-[var(--radius-sm)]" title="Next Episode">

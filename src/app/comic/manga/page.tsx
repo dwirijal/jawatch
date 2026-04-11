@@ -8,7 +8,7 @@ const VARIANT: MangaSubtype = 'manga';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Manga Subtitle Indonesia',
-  description: 'Browse manga subtitle Indonesia di dalam hub comic dwizzyWEEB.',
+  description: 'Browse manga subtitle Indonesia di dalam hub comic jawatch.',
   path: '/comic/manga',
 });
 

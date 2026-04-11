@@ -306,7 +306,7 @@ export function SearchModal() {
                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em]">to close</span>
                     </div>
                  </div>
-                 <Typography as="span" size="xs" uppercase className="font-black italic text-white/10 tracking-[0.3em]">dwizzyWEEB</Typography>
+                 <Typography as="span" size="xs" uppercase className="font-black italic text-white/10 tracking-[0.3em]">jawatch</Typography>
               </div>
             </Paper>
       </ModalContent>

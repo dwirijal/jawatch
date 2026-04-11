@@ -16,6 +16,8 @@ import { CastRail } from '@/components/organisms/CastRail';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
 import { VideoDetailHeroWithTrailer } from '@/components/organisms/VideoDetailHeroWithTrailer';
+import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
+import { formatMovieCardMetaLine, formatMovieCardSubtitle, getMovieCardBadgeText } from '@/lib/card-presentation';
 import { buildMetadata, buildMovieDetailJsonLd } from '@/lib/seo';
 
 interface PageProps {
@@ -24,14 +26,15 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const includeNsfw = await resolveViewerNsfwAccess();
   const movie = await getMovieDetailBySlug(slug, {
-    includeNsfw: false,
+    includeNsfw,
   });
 
   if (!movie) {
     return buildMetadata({
       title: 'Film Tidak Ditemukan',
-      description: 'Film yang kamu cari tidak tersedia di katalog dwizzyWEEB.',
+      description: 'Film yang kamu cari tidak tersedia di katalog jawatch.',
       path: `/movies/${slug}`,
       noIndex: true,
     });
@@ -39,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return buildMetadata({
     title: `${movie.title} Subtitle Indonesia`,
-    description: `${movie.synopsis} Streaming ${movie.title}${movie.year ? ` rilis ${movie.year}` : ''}${movie.quality ? ` kualitas ${movie.quality}` : ''} di dwizzyWEEB.`,
+    description: `${movie.synopsis} Streaming ${movie.title}${movie.year ? ` rilis ${movie.year}` : ''}${movie.quality ? ` kualitas ${movie.quality}` : ''} di jawatch.`,
     path: `/movies/${movie.slug}`,
     image: movie.poster,
     keywords: [...movie.genres, movie.director].filter(Boolean),
@@ -48,8 +51,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function MovieDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const includeNsfw = await resolveViewerNsfwAccess();
   const movie = await getMovieDetailBySlug(slug, {
-    includeNsfw: false,
+    includeNsfw,
   });
 
   if (!movie) {
@@ -193,8 +197,9 @@ export default async function MovieDetailPage({ params }: PageProps) {
                 href={`/movies/${item.slug}`}
                 image={item.poster}
                 title={item.title}
-                subtitle={item.year}
-                badgeText={item.rating ? `★ ${item.rating}` : undefined}
+                subtitle={formatMovieCardSubtitle(item)}
+                metaLine={formatMovieCardMetaLine(item)}
+                badgeText={getMovieCardBadgeText()}
                 theme="movie"
               />
             ))}

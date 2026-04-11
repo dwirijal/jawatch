@@ -14,6 +14,7 @@ import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeadin
 import { TitleBlock } from '@/components/atoms/TitleBlock';
 import { StaticBookCoverArt } from '@/components/atoms/StaticBookCoverArt';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
+import { Typography } from '@/components/atoms/Typography';
 import { buildMetadata, buildNovelDetailJsonLd } from '@/lib/seo';
 import Image from 'next/image';
 
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!novel) {
     return buildMetadata({
       title: 'Novel Tidak Ditemukan',
-      description: 'Novel yang kamu cari tidak tersedia di katalog dwizzyWEEB.',
+      description: 'Novel yang kamu cari tidak tersedia di katalog jawatch.',
       path: `/novel/${slug}`,
       noIndex: true,
     });
@@ -42,7 +43,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return buildMetadata({
     title: `Baca Novel ${novel.title} Bahasa Indonesia`,
-    description: `${novel.synopsis} Temukan chapter terbaru ${novel.title} dan baca novel online di dwizzyWEEB.`,
+    description: `${novel.synopsis} Temukan chapter terbaru ${novel.title} dan baca novel online di jawatch.`,
     path: `/novel/${novel.slug}`,
     image: novel.poster,
     keywords: [...novel.genres.map((genre) => genre.name), novel.info.author, novel.info.country].filter(Boolean),
@@ -81,10 +82,11 @@ export default async function NovelDetailPage({ params }: PageProps) {
                 alt=""
                 fill
                 sizes="100vw"
-                className="object-cover opacity-20 blur-2xl scale-110"
+                className="object-cover opacity-[0.12] blur-3xl scale-110"
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-background/80" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
             </div>
 
             <div className="relative z-10 px-5 py-5 md:px-6 md:py-6">
@@ -123,7 +125,7 @@ export default async function NovelDetailPage({ params }: PageProps) {
 
                   <div className="flex flex-wrap items-center gap-3">
                     {latestChapter ? (
-                      <Button size="lg" className="h-11 px-5 md:h-12 md:px-6" asChild>
+                      <Button variant="novel" size="lg" className="h-11 px-5 md:h-12 md:px-6" asChild>
                         <Link href={`/novel/${slug}/read/${latestChapter.slug}`}>
                           Read Latest
                           <ScrollText className="ml-2 h-4 w-4" />
@@ -163,7 +165,9 @@ export default async function NovelDetailPage({ params }: PageProps) {
         <section className="space-y-8">
         <DetailSectionHeading title="Overview" theme="novel" />
         <Paper tone="muted" shadow="sm" className="p-5 md:p-6">
-          <p className="text-sm leading-7 text-zinc-400 md:text-base">{novel.synopsis}</p>
+          <Typography size="base" className="text-zinc-400 leading-7 md:text-base">
+            {novel.synopsis}
+          </Typography>
         </Paper>
       </section>
 
@@ -197,13 +201,17 @@ export default async function NovelDetailPage({ params }: PageProps) {
                   </div>
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center justify-between gap-4">
-                      <p className="line-clamp-1 text-sm font-black tracking-wide text-white">{chapter.title}</p>
+                      <Typography as="p" size="base" className="line-clamp-1 font-black tracking-wide text-white">
+                        {chapter.title}
+                      </Typography>
                       <Badge variant="outline">
                         {extractNovelChapterNumber(chapter.title) ? `Ch ${extractNovelChapterNumber(chapter.title)}` : 'Special'}
                       </Badge>
                     </div>
                     {chapter.date ? (
-                      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-600">{chapter.date}</p>
+                      <Typography as="p" size="xs" className="font-black uppercase tracking-[0.24em] text-zinc-600">
+                        {chapter.date}
+                      </Typography>
                     ) : null}
                   </div>
                 </Link>

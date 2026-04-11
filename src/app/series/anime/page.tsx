@@ -6,7 +6,7 @@ import { buildMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Anime Subtitle Indonesia',
-  description: 'Browse anime subtitle Indonesia di dalam katalog series utama dwizzyWEEB.',
+  description: 'Browse anime subtitle Indonesia di dalam katalog series utama jawatch.',
   path: '/series/anime',
 });
 

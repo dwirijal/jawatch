@@ -6,7 +6,7 @@ import { buildMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Donghua Subtitle Indonesia',
-  description: 'Browse donghua subtitle Indonesia di dalam katalog series utama dwizzyWEEB.',
+  description: 'Browse donghua subtitle Indonesia di dalam katalog series utama jawatch.',
   path: '/series/donghua',
 });
 

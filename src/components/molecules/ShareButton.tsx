@@ -17,7 +17,7 @@ export function ShareButton({ title, theme = 'default', className }: ShareButton
   const [copied, setCopied] = React.useState(false);
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const shareText = `Check out ${title} on dwizzyWEEB!`;
+  const shareText = `Check out ${title} on jawatch!`;
 
   const onCopy = () => {
     navigator.clipboard.writeText(shareUrl);

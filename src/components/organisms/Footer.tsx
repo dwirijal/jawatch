@@ -28,7 +28,7 @@ export function Footer() {
                 <span className="text-xs font-black italic text-white">W</span>
               </div>
               <span className="text-lg font-black italic tracking-tighter">
-                dwizzyWEEB
+                jawatch
               </span>
             </Link>
             <p className="max-w-xs text-center text-xs leading-6 text-zinc-500 md:text-left">
@@ -69,7 +69,7 @@ export function Footer() {
 
         <div className="border-t border-border-subtle pt-6 text-center md:text-left">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-600">
-            &copy; {new Date().getFullYear()} dwizzyWEEB. All rights reserved.
+            &copy; {new Date().getFullYear()} jawatch. All rights reserved.
           </p>
         </div>
       </div>

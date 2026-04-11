@@ -7,6 +7,7 @@ import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { MediaHubTemplate } from '@/components/organisms/MediaHubTemplate';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { getNovelsByGenre } from '@/lib/adapters/novel';
+import { formatNovelCardSubtitle, getNovelCardBadgeText } from '@/lib/card-presentation';
 import type { GenericMediaItem, NovelGenre, NovelListItem } from '@/lib/types';
 
 interface NovelPageClientProps {
@@ -74,8 +75,8 @@ export default function NovelPageClient({ initialFeatured, initialLatest, genres
                 href={`/novel/${item.slug}`}
                 image={item.poster}
                 title={item.title}
-                subtitle={item.type}
-                badgeText={item.rating ? `★ ${item.rating}` : item.type}
+                subtitle={formatNovelCardSubtitle(item)}
+                badgeText={getNovelCardBadgeText()}
                 theme="novel"
               />
             ))}
@@ -90,8 +91,8 @@ export default function NovelPageClient({ initialFeatured, initialLatest, genres
                 href={`/novel/${item.slug}`}
                 image={item.poster}
                 title={item.title}
-                subtitle={item.latestChapter}
-                badgeText={item.type}
+                subtitle={formatNovelCardSubtitle(item)}
+                badgeText={getNovelCardBadgeText()}
                 theme="novel"
               />
             ))}

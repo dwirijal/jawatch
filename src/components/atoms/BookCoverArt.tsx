@@ -36,7 +36,7 @@ export function BookCoverArt({
   const palette = React.useMemo(() => getBookCoverPalette(title), [title]);
 
   return (
-    <div className={cn('relative h-full w-full overflow-hidden', className)}>
+    <div className={cn('relative h-full w-full overflow-hidden rounded-[var(--radius-lg)] refractive-border glass-noise', className)}>
       {shouldShowImage ? (
         <Image
           src={src as string}
