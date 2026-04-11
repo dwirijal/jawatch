@@ -19,6 +19,7 @@ Scope: Replace the legacy external auth bridge in `jawatch` with embedded auth b
 - Do not migrate media/catalog ownership from Aiven to Supabase.
 - Do not share cookies across `jawatch.web.id` and `auth.dwizzy.my.id`.
 - Do not keep `/nsfw` as a supported product surface.
+- Do not use Cloudflare Workers as the primary web app runtime for v1.
 
 ## Recommended Stack
 
@@ -29,6 +30,8 @@ Scope: Replace the legacy external auth bridge in `jawatch` with embedded auth b
 - User-owned data: Supabase Postgres with RLS
 - Media data: Aiven Postgres
 - Cache: Valkey/Redis and Upstash fallback where already used
+- Primary web runtime: Vercel for the Next.js app
+- Companion edge/async runtime: Cloudflare Workers via Wrangler where useful
 
 Rejected options:
 
@@ -53,6 +56,38 @@ Rejected options:
   - cache only
 
 This keeps identity centralized while keeping runtime behavior embedded in `jawatch`.
+
+## Cloudflare Workers Role
+
+Cloudflare Workers remain part of the `jawatch` architecture, but not as a replacement for Vercel in v1.
+
+Recommended role:
+
+- Vercel runs the main Next.js application
+- Supabase handles auth and user-owned data
+- Aiven handles media/catalog data
+- Cloudflare Workers handle optional companion workloads that are edge-heavy, async, or network-adjacent
+
+Good candidate workloads for Workers:
+
+- media proxy and normalization helpers
+- source-health or cache-warming cron jobs
+- webhook receivers
+- queue consumers for async jobs
+- request filtering, lightweight abuse controls, or bot shielding
+- network-edge utilities that should not live inside the main Next.js request path
+
+Not recommended for v1:
+
+- moving the entire `jawatch` web app runtime off Vercel
+- splitting core auth/session logic across both Vercel and Workers
+- storing primary user data in Workers-managed storage instead of Supabase
+
+Wrangler stays relevant in the repo for:
+
+- Cloudflare deployment fallback
+- previewing companion Workers locally
+- type generation for Cloudflare bindings
 
 ## Runtime Flow
 
@@ -239,6 +274,11 @@ OAuth provider secrets are configured in the Supabase dashboard, not in repo sou
 - `src/app/auth/callback/route.ts`
 - `src/app/logout/route.ts`
 
+Optional future Worker-side additions:
+
+- `workers/*` or another dedicated folder for companion Worker code
+- Worker config additions in `wrangler.jsonc` only when a concrete sidecar workload is introduced
+
 ## Files To Refactor
 
 - `src/lib/auth-gateway.ts`
@@ -360,6 +400,7 @@ for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 9. Apply NSFW filtering across listing/search/recommendation/detail.
 10. Make `/nsfw` routes return `404`.
 11. Remove remaining runtime dependence on the legacy auth bridge from `jawatch`.
+12. Evaluate whether any media-edge or async jobs should be extracted into companion Cloudflare Workers after auth migration is stable.
 
 ## Testing Requirements
 
@@ -374,6 +415,7 @@ for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 - logged-in adult with NSFW enabled can see NSFW content on normal routes
 - `/nsfw` and `/nsfw/*` return `404`
 - media reads continue to resolve from Aiven
+- if companion Workers are introduced later, they must not become the auth/session source of truth
 
 ## Open Risks
 
