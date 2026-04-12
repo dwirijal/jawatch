@@ -5,6 +5,9 @@ type UserPreferencesRow = {
   adult_content_enabled: boolean;
   subtitle_locale: string | null;
   theme: string | null;
+  adult_content_choice_set_at?: string | null;
+  newsletter_opt_in?: boolean;
+  community_opt_in?: boolean;
 };
 
 export type UserPreferences = {
@@ -15,6 +18,17 @@ export type UserPreferences = {
 };
 
 const USER_PREFERENCES_SELECT = "user_id,adult_content_enabled,subtitle_locale,theme";
+const USER_PREFERENCE_ONBOARDING_SELECT =
+  "user_id,adult_content_enabled,adult_content_choice_set_at,newsletter_opt_in,community_opt_in";
+const ONBOARDING_VALIDATION_MODULE_URL = new URL("../onboarding/validation.ts", import.meta.url).href;
+
+export type UserPreferenceOnboardingFields = {
+  userId: string;
+  adultContentEnabled: boolean;
+  adultContentChoiceSetAt: string | null;
+  newsletterOptIn: boolean;
+  communityOptIn: boolean;
+};
 
 function toUserPreferences(row: UserPreferencesRow): UserPreferences {
   return {
@@ -31,6 +45,16 @@ function buildDefaultRow(userId: string): UserPreferencesRow {
     adult_content_enabled: false,
     subtitle_locale: null,
     theme: null,
+  };
+}
+
+function toOnboardingPreferenceFields(row: UserPreferencesRow): UserPreferenceOnboardingFields {
+  return {
+    userId: row.user_id,
+    adultContentEnabled: Boolean(row.adult_content_enabled),
+    adultContentChoiceSetAt: row.adult_content_choice_set_at ?? null,
+    newsletterOptIn: Boolean(row.newsletter_opt_in),
+    communityOptIn: Boolean(row.community_opt_in),
   };
 }
 
@@ -99,4 +123,80 @@ export async function setAdultContentEnabled(
   }
 
   return toUserPreferences(data);
+}
+
+export async function getUserPreferenceOnboardingFields(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<UserPreferenceOnboardingFields | null> {
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .select(USER_PREFERENCE_ONBOARDING_SELECT)
+    .eq("user_id", userId)
+    .maybeSingle<UserPreferencesRow>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ? toOnboardingPreferenceFields(data) : null;
+}
+
+export async function setAdultContentChoice(
+  supabase: SupabaseClient,
+  userId: string,
+  input: {
+    adultContentEnabled: boolean;
+    adultContentChoiceSetAt?: string | Date;
+  },
+): Promise<UserPreferenceOnboardingFields> {
+  const { normalizeAdultChoiceTimestamp } = (await import(
+    ONBOARDING_VALIDATION_MODULE_URL
+  )) as typeof import("../onboarding/validation");
+  const adultContentChoiceSetAt = normalizeAdultChoiceTimestamp(input.adultContentChoiceSetAt);
+
+  const payload = {
+    user_id: userId,
+    adult_content_enabled: input.adultContentEnabled,
+    adult_content_choice_set_at: adultContentChoiceSetAt,
+  };
+
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .upsert(payload, { onConflict: "user_id" })
+    .select(USER_PREFERENCE_ONBOARDING_SELECT)
+    .single<UserPreferencesRow>();
+
+  if (error) {
+    throw error;
+  }
+
+  return toOnboardingPreferenceFields(data);
+}
+
+export async function setPreferenceOptIns(
+  supabase: SupabaseClient,
+  userId: string,
+  input: {
+    newsletterOptIn: boolean;
+    communityOptIn: boolean;
+  },
+): Promise<UserPreferenceOnboardingFields> {
+  const payload = {
+    user_id: userId,
+    newsletter_opt_in: input.newsletterOptIn,
+    community_opt_in: input.communityOptIn,
+  };
+
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .upsert(payload, { onConflict: "user_id" })
+    .select(USER_PREFERENCE_ONBOARDING_SELECT)
+    .single<UserPreferencesRow>();
+
+  if (error) {
+    throw error;
+  }
+
+  return toOnboardingPreferenceFields(data);
 }

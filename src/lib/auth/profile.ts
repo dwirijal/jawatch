@@ -14,10 +14,31 @@ type ProfileAdultFieldsRow = {
   age_verified_at: string | null;
 };
 
+type ProfileDisplayNameRow = {
+  id: string;
+  display_name: string | null;
+};
+
+type ProfileOnboardingCompletedRow = {
+  id: string;
+  onboarding_completed_at: string | null;
+};
+const ONBOARDING_VALIDATION_MODULE_URL = new URL("../onboarding/validation.ts", import.meta.url).href;
+
 export type ProfileAdultFields = {
   userId: string;
   birthDate: string | null;
   ageVerifiedAt: string | null;
+};
+
+export type ProfileDisplayName = {
+  userId: string;
+  displayName: string | null;
+};
+
+export type ProfileOnboardingCompletion = {
+  userId: string;
+  onboardingCompletedAt: string | null;
 };
 
 function asString(value: unknown): string | null {
@@ -107,13 +128,59 @@ export async function bootstrapProfileFromSession(supabase: SupabaseClient): Pro
   return bootstrapProfileForUser(supabase, data.user);
 }
 
-function toIsoDateOnly(value: string | Date): string | null {
-  const parsed = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
+export async function setProfileDisplayName(
+  supabase: SupabaseClient,
+  userId: string,
+  displayName: string,
+): Promise<ProfileDisplayName> {
+  const { assertValidDisplayName } = (await import(
+    ONBOARDING_VALIDATION_MODULE_URL
+  )) as typeof import("../onboarding/validation");
+  const normalizedDisplayName = assertValidDisplayName(displayName);
+  const payload = {
+    id: userId,
+    display_name: normalizedDisplayName,
+  };
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .upsert(payload, { onConflict: "id" })
+    .select("id,display_name")
+    .single<ProfileDisplayNameRow>();
+
+  if (error) {
+    throw error;
   }
 
-  return parsed.toISOString().slice(0, 10);
+  return {
+    userId: data.id,
+    displayName: data.display_name ?? null,
+  };
+}
+
+export async function setOnboardingCompletedAt(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<ProfileOnboardingCompletion> {
+  const payload = {
+    id: userId,
+    onboarding_completed_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .upsert(payload, { onConflict: "id" })
+    .select("id,onboarding_completed_at")
+    .single<ProfileOnboardingCompletedRow>();
+
+  if (error) {
+    throw error;
+  }
+
+  return {
+    userId: data.id,
+    onboardingCompletedAt: data.onboarding_completed_at ?? null,
+  };
 }
 
 export async function getProfileAdultFields(
@@ -149,10 +216,10 @@ export async function setProfileAdultFields(
     ageVerifiedAt?: string | Date | null;
   },
 ): Promise<ProfileAdultFields> {
-  const birthDate = toIsoDateOnly(input.birthDate);
-  if (!birthDate) {
-    throw new Error("Invalid birth date");
-  }
+  const { assertValidBirthDateAllowToday } = (await import(
+    ONBOARDING_VALIDATION_MODULE_URL
+  )) as typeof import("../onboarding/validation");
+  const birthDate = assertValidBirthDateAllowToday(input.birthDate);
 
   const ageVerifiedAt =
     input.ageVerifiedAt === undefined
