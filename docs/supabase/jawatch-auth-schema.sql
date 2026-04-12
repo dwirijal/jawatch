@@ -1,3 +1,5 @@
+create extension if not exists pgcrypto;
+
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text,
@@ -10,6 +12,11 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+-- Base table definitions above are the pre-onboarding bootstrap shape.
+-- Apply the migration section below for both fresh bootstrap and existing databases.
+alter table public.profiles
+add column if not exists onboarding_completed_at timestamptz;
+
 create table if not exists public.user_preferences (
   user_id uuid primary key references auth.users(id) on delete cascade,
   adult_content_enabled boolean not null default false,
@@ -17,6 +24,40 @@ create table if not exists public.user_preferences (
   theme text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+alter table public.user_preferences
+add column if not exists adult_content_choice_set_at timestamptz;
+
+alter table public.user_preferences
+add column if not exists newsletter_opt_in boolean not null default false;
+
+alter table public.user_preferences
+add column if not exists community_opt_in boolean not null default false;
+
+create table if not exists public.user_media_preferences (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  media_type text not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, media_type)
+);
+
+create table if not exists public.user_genre_preferences (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  genre_key text not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, genre_key)
+);
+
+create table if not exists public.user_title_seeds (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  media_type text,
+  source text not null default 'onboarding',
+  created_at timestamptz not null default now()
 );
 
 create table if not exists public.user_collections (
