@@ -10,6 +10,7 @@ interface UIState {
   isLightsDimmed: boolean;
   isNavbarHidden: boolean;
   isFooterHidden: boolean;
+  isCommandBarOpen: boolean;
   readerWidth: number; // 0 to 100 percentage
   setDevice: (device: DeviceType) => void;
   toggleSidebar: () => void;
@@ -19,6 +20,7 @@ interface UIState {
   setLightsDimmed: (isDimmed: boolean) => void;
   setNavbarHidden: (isHidden: boolean) => void;
   setFooterHidden: (isHidden: boolean) => void;
+  setCommandBarOpen: (isOpen: boolean) => void;
   setReaderWidth: (width: number) => void;
 }
 
@@ -30,6 +32,7 @@ export const useUIStore = create<UIState>((set) => ({
   isLightsDimmed: false,
   isNavbarHidden: false,
   isFooterHidden: false,
+  isCommandBarOpen: false,
   readerWidth: 100, // Default to full width
   setDevice: (device) => set({ device }),
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
@@ -39,5 +42,6 @@ export const useUIStore = create<UIState>((set) => ({
   setLightsDimmed: (isDimmed) => set({ isLightsDimmed: isDimmed }),
   setNavbarHidden: (isHidden) => set({ isNavbarHidden: isHidden }),
   setFooterHidden: (isHidden) => set({ isFooterHidden: isHidden }),
+  setCommandBarOpen: (isOpen) => set({ isCommandBarOpen: isOpen }),
   setReaderWidth: (width) => set({ readerWidth: width }),
 }));

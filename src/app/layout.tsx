@@ -5,6 +5,7 @@ import { CssBaseline } from "@/components/atoms/CssBaseline";
 import { Navbar } from "@/components/organisms/Navbar";
 import { Footer } from "@/components/organisms/Footer";
 import { ClientShell } from "@/components/organisms/ClientShell";
+import { CommandBar } from "@/components/organisms/CommandBar";
 import { SITE_URL } from "@/lib/site";
 
 const geistMono = Geist_Mono({
@@ -84,6 +85,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col text-foreground font-sans">
         <ClientShell />
+        <CommandBar />
         <Navbar />
         <main className="flex-1 min-h-screen pb-20 md:pb-0">{children}</main>
         <Footer />
