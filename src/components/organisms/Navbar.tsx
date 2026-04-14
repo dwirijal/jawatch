@@ -28,6 +28,8 @@ const NavbarAuthControls = dynamic(
 );
 
 export function Navbar() {
+  const isHidden = useUIStore((state) => state.isNavbarHidden);
+  if (isHidden) return null;
   const pathname = usePathname() || '/';
   const isSearchOpen = useUIStore((state) => state.isSearchOpen);
   const [searchModalMounted, setSearchModalMounted] = React.useState(false);

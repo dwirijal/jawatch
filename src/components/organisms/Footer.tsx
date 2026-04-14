@@ -1,6 +1,9 @@
+import { useUIStore } from "@/store/useUIStore";
 import { Link } from '@/components/atoms/Link';
 
 export function Footer() {
+  const isHidden = useUIStore((state) => state.isFooterHidden);
+  if (isHidden) return null;
   const navLinks = [
     { href: '/movies', label: 'Movies' },
     { href: '/series', label: 'Series' },

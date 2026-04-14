@@ -1,17 +1,20 @@
 'use client';
 
 import * as React from 'react';
-import { Clapperboard, Flame, Sparkles } from 'lucide-react';
+import { Clapperboard, Flame, Sparkles, Zap } from 'lucide-react';
 import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { MediaCard } from '@/components/atoms/Card';
 import { Badge } from '@/components/atoms/Badge';
 import { Paper } from '@/components/atoms/Paper';
+import { Button } from '@/components/atoms/Button';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { AdSection } from '@/components/organisms/AdSection';
+import { VerticalShortsPager } from '@/components/organisms/VerticalShortsPager';
 import { getDrachinHome, getDramaboxHome, type DrachinHomeData, type DramaboxHomeData } from '@/lib/adapters/drama';
 import { getDrachinPlaybackHref } from '@/lib/vertical-drama-store';
+import { useUIStore } from '@/store/useUIStore';
 
 const EMPTY_HOME: DrachinHomeData = {
   featured: [],
@@ -34,6 +37,10 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [resumeReady, setResumeReady] = React.useState(false);
+  const [isImmersive, setIsImmersive] = React.useState(false);
+  
+  const setNavbarHidden = useUIStore((state) => state.setNavbarHidden);
+  const setFooterHidden = useUIStore((state) => state.setFooterHidden);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -79,13 +86,39 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
     setResumeReady(true);
   }, []);
 
+  const handleEnterImmersive = () => {
+    setIsImmersive(true);
+    setNavbarHidden(true);
+    setFooterHidden(true);
+  };
+
+  const handleExitImmersive = () => {
+    setIsImmersive(false);
+    setNavbarHidden(false);
+    setFooterHidden(false);
+  };
+
+  if (isImmersive) {
+    const shorts = [...drachinData.featured, ...drachinData.popular].map(item => ({
+      id: item.slug,
+      slug: item.slug,
+      title: item.title,
+      subtitle: item.subtitle,
+      videoUrl: '', // Will be resolved by VideoPlayer internally or via mirrors
+      mirrors: [], // Handled by VideoPlayer logic
+    }));
+
+    return <VerticalShortsPager episodes={shorts as any} onExit={handleExitImmersive} />;
+  }
+
   const description =
     entry === 'dramabox'
       ? 'Alias route for the unified vertical-drama catalog.'
       : 'Vertical short-drama catalog built for fast scrolling, direct playback, and quick continuation.';
 
   const introCopy =
-    'Hub ini hanya menampilkan lane yang benar-benar tersedia dari provider: featured, latest, popular, dan trending. Tidak ada kategori buatan yang mencampur source berbeda ke bucket editorial baru.';
+    'Hub ini hanya menampilkan lane yang benar-benar tersedia dari provider: featured, latest, popular, dan trending.';
+
   const buildDramaboxDetailHref = (item: DramaboxHomeData['latest'][number]) => {
     const params = new URLSearchParams();
     params.set('title', item.title);
@@ -110,7 +143,18 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
         theme="drama"
         containerClassName="app-container-wide"
       >
-        <Badge variant="drama">Vertical Drama</Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="drama">Vertical Drama</Badge>
+          <Button 
+            size="sm" 
+            variant="drama" 
+            className="rounded-full shadow-lg shadow-accent/20"
+            onClick={handleEnterImmersive}
+          >
+            <Zap className="mr-2 h-4 w-4 fill-current" />
+            Immersive Feed
+          </Button>
+        </div>
       </MediaHubHeader>
 
       <main className="app-container-wide mt-8 space-y-10 sm:mt-10 md:space-y-12">
