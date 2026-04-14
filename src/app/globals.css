@@ -1,25 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --bg-deep: #0D140D;
-  --surface-forest: #1A241A;
-  --accent-sage: #8DA38D;
-  --accent-juniper: #4A5D4A;
-  --text-editorial: #FFFFFF;
-  --text-muted: #A3A3A3;
+  --background: #0D140D;
+  --surface-1: #1A241A;
+  --accent: #8DA38D;
+  --border-subtle: #4A5D4A;
+  --foreground: #FFFFFF;
+  --muted-foreground: #A3A3A3;
 
-  --background: #080808;
   --background-alt: #111111;
-  --foreground: #e0e0e0;
-  --muted-foreground: #a1a1aa;
-  --border-subtle: #242424;
-  --surface-1: #121212;
   --surface-2: #161616;
   --surface-elevated: #1d1d1d;
 
-  --accent: #3b82f6;
-  --accent-soft: rgba(59, 130, 246, 0.18);
-  --accent-strong: #2563eb;
+  --accent-soft: rgba(141, 163, 141, 0.18);
+  --accent-strong: #6B7F6B;
   --shadow-hard: #000000;
 
   --radius-sm: 0.7rem;
@@ -378,13 +372,6 @@
 
 @media (min-width: 768px) {
   :root {
-  --bg-deep: #0D140D;
-  --surface-forest: #1A241A;
-  --accent-sage: #8DA38D;
-  --accent-juniper: #4A5D4A;
-  --text-editorial: #FFFFFF;
-  --text-muted: #A3A3A3;
-
     --section-gap: 2.5rem;
     --card-columns: 4;
   }
@@ -398,13 +385,6 @@
 
 @media (min-width: 1200px) {
   :root {
-  --bg-deep: #0D140D;
-  --surface-forest: #1A241A;
-  --accent-sage: #8DA38D;
-  --accent-juniper: #4A5D4A;
-  --text-editorial: #FFFFFF;
-  --text-muted: #A3A3A3;
-
     --card-columns: 6;
   }
 
