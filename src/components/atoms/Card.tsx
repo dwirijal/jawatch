@@ -23,6 +23,7 @@ export interface MediaCardProps {
   className?: string;
   prefetch?: boolean;
   progress?: number;
+  rank?: number;
 }
 
 export interface CastItem {
@@ -104,6 +105,7 @@ export function MediaCard({
   className,
   prefetch,
   progress,
+  rank,
 }: MediaCardProps) {
   const [displayImage, setDisplayImage] = React.useState(normalizeCardImage(image, theme));
   const [retryCount, setRetryCount] = React.useState(0);
@@ -198,6 +200,14 @@ export function MediaCard({
           />
           <div className="absolute inset-x-0 top-0 h-px bg-white/12" />
           <div className="absolute inset-0 bg-white/[0.02] opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100" />
+
+          {theme === 'manga' && rank !== undefined && (
+            <div className="absolute -left-4 -bottom-4 z-10 select-none pointer-events-none overflow-hidden">
+              <span className="font-black text-[140px] leading-none text-white/15 italic tracking-tighter drop-shadow-[0_0_30px_rgba(141,163,141,0.4)]">
+                {rank}
+              </span>
+            </div>
+          )}
 
           {badgeText && (
             <div className="absolute left-4 top-4 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/68">

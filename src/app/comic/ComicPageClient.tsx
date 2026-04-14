@@ -309,6 +309,7 @@ export default function ComicPageClient({
             : popular.map((mangaItem, index) => (
               <MediaCard
                 key={index}
+                rank={index + 1}
                 href={buildItemHref(routeBase, mangaItem)}
                 image={getHDThumbnail(mangaItem.image)}
                 title={mangaItem.title}
