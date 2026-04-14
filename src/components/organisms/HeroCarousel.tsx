@@ -77,7 +77,7 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
   }, [hasMultipleSlides, isPaused, items.length]);
 
   if (items.length === 0) {
-    return <div className="h-[64vh] w-full animate-pulse rounded-[var(--radius-2xl)] bg-surface-1 md:h-[78vh]" />;
+    return <div className="h-[85vh] w-full animate-pulse rounded-[var(--radius-2xl)] bg-surface-1" />;
   }
 
   const active = items[index];
@@ -99,6 +99,9 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
         <Badge variant="solid" className="rounded-[var(--radius-sm)] px-3 py-1 text-[10px] text-black font-black tracking-widest">
           EDITORIAL CHOICE
         </Badge>
+        <div className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-accent/20 bg-accent/10 backdrop-blur-md px-3 py-1">
+          <span className="text-[10px] font-black text-accent tracking-widest">98% MATCH</span>
+        </div>
         <Badge variant={accentVariant} className="rounded-[var(--radius-sm)] px-3 py-1 text-[10px] font-black tracking-widest uppercase">
           {active.type}
         </Badge>
@@ -115,7 +118,7 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
             ref={titleRef}
             size="6xl"
             uppercase
-            className="max-w-[15ch] bg-gradient-to-br from-white via-white to-white/40 bg-clip-text leading-[0.85] tracking-[-0.06em]"
+            className="max-w-[12ch] font-black leading-[0.8] tracking-[-0.08em] text-white"
           >
             {active.title}
           </Typography>
@@ -220,7 +223,7 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div className="relative h-[68vh] overflow-hidden rounded-[var(--radius-2xl)] border border-white/5 bg-black shadow-2xl md:h-[82vh]">
+      <div className="relative h-[85vh] overflow-hidden rounded-[var(--radius-2xl)] border border-border-subtle bg-background shadow-2xl">
         {/* Editorial Background Layers */}
         <div className="absolute inset-0 overflow-hidden">
           <Image
@@ -228,15 +231,16 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
             alt={active.title}
             fill
             sizes="100vw"
-            className="object-cover opacity-[0.15] scale-110 blur-sm transition-transform duration-[10s] ease-linear group-hover:scale-100"
+            className="object-cover opacity-[0.25] scale-110 blur-[2px] transition-transform duration-[10s] ease-linear group-hover:scale-100"
             unoptimized
           />
           <div className="absolute inset-0 bg-noise opacity-[0.03] mix-blend-overlay" />
         </div>
         
-        <div className={cn('pointer-events-none absolute inset-0 bg-gradient-to-tr opacity-20', HERO_ACCENTS[active.type])} />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+        {/* Ambient Muted Green Overlays */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-accent/20 via-transparent to-transparent opacity-60" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
 
         <div className="app-container-wide relative z-10 h-full py-8 sm:py-10 lg:py-14">
           <div className="grid h-full grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-12">
