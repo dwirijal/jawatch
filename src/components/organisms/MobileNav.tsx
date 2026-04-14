@@ -29,7 +29,7 @@ export function MobileNav() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-[100] border-t border-border-subtle bg-background/95 pb-safe backdrop-blur-xl md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border-subtle/30 bg-background/90 pb-safe backdrop-blur-2xl md:hidden">
         <div className="app-container flex h-16 items-center justify-around gap-1">
           {MOBILE_NAV_ITEMS.map((item) => {
             if ('action' in item && item.action === 'search') {
@@ -38,7 +38,7 @@ export function MobileNav() {
                   key={item.key}
                   type="button"
                   onClick={() => setSearchOpen(true)}
-                  className="focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-zinc-500 transition-colors hover:bg-surface-1 hover:text-white"
+                  className="focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-muted-foreground transition-colors hover:text-accent"
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
@@ -52,7 +52,7 @@ export function MobileNav() {
                   key={item.key}
                   type="button"
                   onClick={() => setSidebarOpen(true)}
-                  className="focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-zinc-500 transition-colors hover:bg-surface-1 hover:text-white"
+                  className="focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-muted-foreground transition-colors hover:text-accent"
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
@@ -67,7 +67,7 @@ export function MobileNav() {
                 href={item.href!}
                 className={cn(
                   'focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 transition-colors',
-                  isActive ? 'bg-surface-1 text-white' : 'text-zinc-500 hover:bg-surface-1 hover:text-white'
+                  isActive ? 'text-accent' : 'text-muted-foreground hover:text-accent'
                 )}
               >
                 <item.icon className={cn('h-5 w-5', isActive && 'fill-current')} />

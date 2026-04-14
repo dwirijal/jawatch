@@ -29,19 +29,8 @@ const NavbarAuthControls = dynamic(
 export function Navbar() {
   const pathname = usePathname() || '/';
   const isSearchOpen = useUIStore((state) => state.isSearchOpen);
-  const [isSolid, setIsSolid] = React.useState(false);
   const [searchModalMounted, setSearchModalMounted] = React.useState(false);
   const [authControlsMounted, setAuthControlsMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    const onScroll = () => {
-      setIsSolid(window.scrollY > 20);
-    };
-
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   React.useEffect(() => {
     if (isSearchOpen) {
@@ -110,22 +99,18 @@ export function Navbar() {
       <SearchHotkeyListener />
       {searchModalMounted ? <SearchModal /> : null}
       <nav
-        data-scrolled={isSolid ? 'true' : 'false'}
         className={cn(
-          'sticky top-0 z-[160] hidden w-full border-b transition-all duration-500 ease-in-out md:block',
-          isSolid
-            ? 'border-border-subtle bg-background/80 py-0 backdrop-blur-2xl'
-            : 'border-transparent bg-transparent py-2'
+          'fixed top-0 z-50 hidden w-full border-b border-border-subtle/30 bg-background/80 backdrop-blur-3xl transition-all duration-500 ease-in-out md:block'
         )}
       >
-        <div className="app-container-wide flex h-16 items-center justify-between gap-6 lg:h-[4.5rem]">
+        <div className="app-container-wide flex h-16 items-center justify-between gap-6">
           <div className="flex min-w-0 items-center gap-6 xl:gap-10">
             <Link href="/" className="focus-tv group flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] border border-white/10 bg-surface-1 glass-noise refractive-border transition-transform group-hover:scale-105 active:scale-95">
-                <span className="text-xl font-black italic text-white">D</span>
+                <span className="text-xl font-black italic text-accent">D</span>
               </div>
-              <span className="hidden text-xl font-black uppercase tracking-[-0.04em] text-white sm:block lg:text-2xl">
-                dwizzy<span className="text-zinc-500">WEEB</span>
+              <span className="hidden text-xl font-black uppercase tracking-[-0.06em] text-accent sm:block lg:text-2xl">
+                dwizzy<span className="text-muted-foreground">WEEB</span>
               </span>
             </Link>
 
