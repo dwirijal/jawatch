@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { selectSeriesRecommendations } from '../../src/lib/series-recommendations.ts';
+import { resolveSeriesMediaType } from '../../src/lib/series-taxonomy.ts';
 
 function item(overrides) {
   return {
@@ -58,4 +59,28 @@ test('limits the result set to eight recommendations', () => {
   });
 
   assert.equal(results.length, 8);
+});
+
+test('keeps recommendations within the current series media type when provided', () => {
+  const results = selectSeriesRecommendations({
+    currentSlug: 'current-series',
+    currentType: 'anime',
+    genres: ['Action'],
+    country: 'Japan',
+    items: [
+      item({ slug: 'anime-match', title: 'Anime Match', type: 'anime', genres: 'Action', country: 'Japan' }),
+      item({ slug: 'drama-match', title: 'Drama Match', type: 'drama', genres: 'Action', country: 'Japan' }),
+      item({ slug: 'donghua-match', title: 'Donghua Match', type: 'donghua', genres: 'Action', country: 'Japan' }),
+    ],
+  });
+
+  assert.deepEqual(results.map((entry) => entry.slug), ['anime-match']);
+});
+
+test('resolves drama and donghua providers before falling back to anime', () => {
+  assert.equal(resolveSeriesMediaType({ originType: '', mediaType: 'anime', source: 'drakorid' }), 'drama');
+  assert.equal(resolveSeriesMediaType({ originType: '', mediaType: 'anime', source: 'dracinly' }), 'drama');
+  assert.equal(resolveSeriesMediaType({ originType: '', mediaType: 'anime', source: 'dramabox' }), 'drama');
+  assert.equal(resolveSeriesMediaType({ originType: '', mediaType: 'anime', source: 'anichin' }), 'donghua');
+  assert.equal(resolveSeriesMediaType({ originType: '', mediaType: 'anime', source: 'jikan' }), 'anime');
 });

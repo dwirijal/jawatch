@@ -12,9 +12,19 @@ interface BookmarkButtonProps {
   item: BookmarkItem;
   theme?: 'manga' | 'anime' | 'donghua' | 'movie' | 'drama';
   className?: string;
+  saveLabel?: string;
+  savedLabel?: string;
+  loadingLabel?: string;
 }
 
-export function BookmarkButton({ item, theme = 'anime', className }: BookmarkButtonProps) {
+export function BookmarkButton({
+  item,
+  theme = 'anime',
+  className,
+  saveLabel = 'Save',
+  savedLabel = 'Saved',
+  loadingLabel = 'Checking...',
+}: BookmarkButtonProps) {
   const [, setRefreshKey] = useState(0);
   const authGate = useAuthGate();
   const isSaved = authGate.authenticated && checkIsBookmarked(item.id);
@@ -50,7 +60,7 @@ export function BookmarkButton({ item, theme = 'anime', className }: BookmarkBut
         )}
       >
         <Bookmark className={cn("w-4 h-4", isSaved && "fill-current", isPending && "animate-pulse")} />
-        {isPending ? 'Checking...' : isSaved ? 'Saved' : 'Save'}
+        {isPending ? loadingLabel : isSaved ? savedLabel : saveLabel}
       </Button>
 
       {!authGate.authenticated && authGate.noticeVisible ? (

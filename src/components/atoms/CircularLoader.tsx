@@ -8,7 +8,7 @@ interface CircularLoaderProps {
   theme?: 'manga' | 'anime' | 'donghua' | 'movie' | 'default';
 }
 
-export function CircularLoader({ text = " • LOADING • DWIZZYWEEB • PLEASE WAIT • ", theme = 'default' }: CircularLoaderProps) {
+export function CircularLoader({ text = " • LOADING • JAWATCH • PLEASE WAIT • ", theme = 'default' }: CircularLoaderProps) {
   const colors = {
     manga: "text-orange-500",
     anime: "text-blue-500",

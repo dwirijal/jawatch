@@ -1,20 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/components/atoms/Link';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
 import { MOBILE_NAV_ITEMS } from '@/lib/navigation';
-
-const MobileMenuPanel = dynamic(
-  () => import('./MobileMenuPanel').then((mod) => mod.MobileMenuPanel),
-  {
-    ssr: false,
-    loading: () => null,
-  }
-);
+import { MobileMenuPanel } from './MobileMenuPanel';
 
 export function MobileNav() {
   const pathname = usePathname() || '/';

@@ -1,19 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import dynamic from 'next/dynamic';
 import type { BookmarkItem } from '@/lib/store';
 import type { ThemeType } from '@/lib/utils';
-
-const ShareButton = dynamic(
-  () => import('@/components/molecules/ShareButton').then((mod) => mod.ShareButton),
-  { ssr: false }
-);
-
-const BookmarkButton = dynamic(
-  () => import('@/components/organisms/BookmarkButton').then((mod) => mod.BookmarkButton),
-  { ssr: false }
-);
+import { ShareButton } from '@/components/molecules/ShareButton';
+import { BookmarkButton } from '@/components/organisms/BookmarkButton';
 
 interface DeferredHeroActionsProps {
   title: string;

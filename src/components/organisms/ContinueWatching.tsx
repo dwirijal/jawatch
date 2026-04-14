@@ -12,18 +12,26 @@ import { Progress } from '@/components/atoms/Progress';
 import { ScrollArea, ScrollBar } from '@/components/atoms/ScrollArea';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { useAuthGate } from '@/components/hooks/useAuthGate';
-import { getHistoryForAuth, HistoryItem } from '@/lib/store';
+import { getHistoryForAuth, HistoryItem, MediaType } from '@/lib/store';
 import { cn, THEME_CONFIG, ThemeType } from '@/lib/utils';
 
-export function ContinueWatching() {
+interface ContinueWatchingProps {
+  type?: MediaType;
+  title?: string;
+  limit?: number;
+}
+
+export function ContinueWatching({ type, title = 'Continue Watching', limit = 10 }: ContinueWatchingProps) {
   const authGate = useAuthGate();
   const [history, setHistory] = React.useState<HistoryItem[]>([]);
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    setHistory(getHistoryForAuth(authGate.authenticated).slice(0, 10));
+    const nextHistory = getHistoryForAuth(authGate.authenticated);
+    const filteredHistory = type ? nextHistory.filter((item) => item.type === type) : nextHistory;
+    setHistory(filteredHistory.slice(0, limit));
     setMounted(true);
-  }, [authGate.authenticated]);
+  }, [authGate.authenticated, limit, type]);
 
   // Use a deterministic "hash" instead of Math.random to satisfy linter purity rules
   const getProgress = (id: string) => {
@@ -39,12 +47,12 @@ export function ContinueWatching() {
   if (!authGate.authenticated) {
     return (
       <section className="animate-in space-y-4 fade-in slide-in-from-bottom-4 duration-700">
-        <SectionHeader title="Continue Watching" icon={Clock} />
+        <SectionHeader title={title} icon={Clock} />
 
         <AuthGateNotice
           compact
           loginHref={authGate.loginHref}
-          title="Continue watching is available after login"
+          title={`${title} is available after login`}
           description="Sign in to unlock your local watch progress on this device."
           actionLabel="Login"
         />
@@ -57,7 +65,7 @@ export function ContinueWatching() {
   return (
     <section className="animate-in space-y-4 fade-in slide-in-from-bottom-4 duration-700">
       <SectionHeader
-        title="Continue Watching"
+        title={title}
         icon={Clock}
         action={
           <Button variant="ghost" size="sm" className="hidden text-zinc-500 hover:text-white md:flex" asChild>

@@ -1,4 +1,4 @@
-import DrachinDetailClient from './DrachinDetailClient';
+import { redirect } from 'next/navigation';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -6,6 +6,5 @@ interface PageProps {
 
 export default async function DrachinDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  return <DrachinDetailClient slug={slug} />;
+  redirect(`/series/short/${slug}`);
 }
-

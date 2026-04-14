@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getAdultAccessState } from '@/lib/auth/adult-access';
-import { requireUser } from '@/lib/auth/session';
+import { requireCompletedOnboarding } from '@/lib/auth/session';
 import { getProfileAdultFields, setProfileAdultFields } from '@/lib/auth/profile';
 import { getOrCreateUserPreferences, setAdultContentEnabled } from '@/lib/server/user-preferences';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -30,7 +30,7 @@ function sanitizeBirthDateInput(value: FormDataEntryValue | null): string | null
 async function saveAdultAccessSettings(formData: FormData) {
   'use server';
 
-  const user = await requireUser('/account/age');
+  const user = await requireCompletedOnboarding('/account/age');
   const birthDate = sanitizeBirthDateInput(formData.get('birthDate'));
   const adultContentEnabled = formData.get('adultContentEnabled') === 'on';
 
@@ -53,7 +53,7 @@ export default async function AccountAgePage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const user = await requireUser('/account/age');
+  const user = await requireCompletedOnboarding('/account/age');
   const supabase = await createSupabaseServerClient();
   const [profileAdultFields, preferences] = await Promise.all([
     getProfileAdultFields(supabase, user.id),

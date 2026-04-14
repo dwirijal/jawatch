@@ -82,7 +82,7 @@ export function getDrachinPlaybackTarget(slug: string, fallbackIndex = 1): { hre
   const resume = getVerticalDramaProgress('drachin', slug);
   const episodeIndex = resume?.episodeIndex ?? fallbackIndex;
   return {
-    href: `/drachin/episode/${slug}?index=${episodeIndex}`,
+    href: `/series/short/watch/${slug}?index=${episodeIndex}`,
     episodeIndex,
   };
 }

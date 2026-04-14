@@ -123,7 +123,7 @@ function buildHomeSection(
     subtitle,
     iconKey,
     viewAllHref,
-    items: limitItems(items),
+    items: limitItems(uniqueById(items)),
   };
 }
 
@@ -348,9 +348,9 @@ async function buildHomePageData(includeNsfw: boolean): Promise<HomePageData> {
   ]).slice(0, SECTION_LIMIT);
 
   const sections: HomeRecommendationSection[] = [
-    buildHomeSection('series-latest', 'Latest Episodes', 'Semua judul episodik canonical: anime, donghua, dan drama hidup di satu lane series', 'series', seriesBuckets.latest, '/series'),
+    buildHomeSection('series-latest', 'Series Update Terbaru', 'Judul episodik yang paling baru diperbarui di katalog canonical', 'series', seriesBuckets.latest, '/series'),
     buildHomeSection('series-popular', 'Popular Across Series', 'Judul episodik paling ramai dari katalog series canonical', 'popular', seriesPopularItems, '/series'),
-    buildHomeSection('movie-latest', 'Movie Terbaru', 'Film terbaru siap ditonton', 'movie', movieLatestItems, '/movies'),
+    buildHomeSection('movie-latest', 'Movie Update Terbaru', 'Film yang paling baru diperbarui di katalog movie', 'movie', movieLatestItems, '/movies'),
     buildHomeSection('series-anime', 'Anime in Series', 'Lane anime Jepang yang sekarang dibaca dari series catalog yang sama', 'series', seriesBuckets.anime, '/series/anime'),
     buildHomeSection('series-radar', 'Release Radar', 'Jadwal mingguan yang diturunkan langsung dari release_day dan cadence di database', 'series', releaseRadarItems, '/series'),
     buildHomeSection('series-donghua', 'Donghua Spotlight', 'Animation dari China yang sekarang sepenuhnya masuk ke series canonical', 'series', seriesBuckets.donghua, '/series/donghua'),
@@ -358,9 +358,9 @@ async function buildHomePageData(includeNsfw: boolean): Promise<HomePageData> {
     buildHomeSection('series-japan', 'Japan Lane', 'Series dengan rilis Jepang dari taxonomy canonical', 'series', seriesBuckets.japan, '/series/country/japan'),
     buildHomeSection('series-china', 'China Lane', 'Series dari China, termasuk donghua dan live-action yang sudah ternormalisasi', 'series', seriesBuckets.china, '/series/country/china'),
     buildHomeSection('series-korea', 'South Korea Lane', 'Series Korea dari canonical metadata, terpisah dari short drama provider', 'series', seriesBuckets.korea, '/series/country/south-korea'),
-    buildHomeSection('manga-latest', 'Manga Terbaru', 'Chapter manga terbaru', 'manga', comicBuckets.manga, '/comic/manga'),
-    buildHomeSection('manhwa-latest', 'Manhwa Terbaru', 'Update manhwa terbaru', 'manhwa', comicBuckets.manhwa, '/comic/manhwa'),
-    buildHomeSection('manhua-latest', 'Manhua Terbaru', 'Update manhua terbaru', 'manhua', comicBuckets.manhua, '/comic/manhua'),
+    buildHomeSection('manga-latest', 'Manga Update Terbaru', 'Manga yang paling baru diperbarui di katalog comic', 'manga', comicBuckets.manga, '/comic/manga'),
+    buildHomeSection('manhwa-latest', 'Manhwa Update Terbaru', 'Manhwa yang paling baru diperbarui di katalog comic', 'manhwa', comicBuckets.manhwa, '/comic/manhwa'),
+    buildHomeSection('manhua-latest', 'Manhua Update Terbaru', 'Manhua yang paling baru diperbarui di katalog comic', 'manhua', comicBuckets.manhua, '/comic/manhua'),
     buildHomeSection('popular-media', 'Populer Media', 'Pilihan populer lintas kategori', 'popular', popularMedia),
     buildHomeSection('top-reading', 'Top Reading', 'Judul paling banyak dibaca saat ini', 'reading', comicBuckets.popular, '/comic'),
     buildHomeSection('community-lovers', 'Lovers by Community', 'Favorit komunitas dari tren terbaru', 'community', loversByCommunity),

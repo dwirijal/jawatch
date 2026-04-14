@@ -11,9 +11,15 @@ import { getDramaboxDetailByBookId, isDramaboxBookId, type DramaboxDetailData } 
 
 interface DramaboxDetailClientProps {
   bookId: string;
+  backHref?: string;
+  backLabel?: string;
 }
 
-export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientProps) {
+export default function DramaboxDetailClient({
+  bookId,
+  backHref = '/series/short',
+  backLabel = 'Back to Short Series',
+}: DramaboxDetailClientProps) {
   const searchParams = useSearchParams();
   const [detail, setDetail] = React.useState<DramaboxDetailData | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -72,7 +78,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
   }, [resolvedBookId]);
 
   return (
-    <VerticalSeriesDetailScaffold backHref="/drachin" backLabel="Back to Drama China">
+    <VerticalSeriesDetailScaffold backHref={backHref} backLabel={backLabel}>
         {loading ? (
           <Paper tone="muted" shadow="sm" className="p-6 md:p-8">
             <div className="animate-pulse space-y-4">
@@ -104,7 +110,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
                   <div className="space-y-2">
                     <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">{fallbackTitle}</h1>
                     <p className="max-w-3xl text-sm leading-7 text-zinc-400 md:text-base">
-                      This story is already part of Drama China. Episode playback for this title is still being prepared, so keep exploring the
+                      This story is already part of Short Series. Episode playback for this title is still being prepared, so keep exploring the
                       shared catalog while this page fills in.
                     </p>
                     {error ? <p className="text-xs leading-6 text-zinc-500">{error}</p> : null}
@@ -141,7 +147,7 @@ export default function DramaboxDetailClient({ bookId }: DramaboxDetailClientPro
                 <div className="space-y-2">
                   <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">{detail.title}</h1>
                   <p className="max-w-3xl text-sm leading-7 text-zinc-400 md:text-base">
-                    {detail.synopsis || 'This title page is still filling in. Browse another story from the shared drama hub and jump straight into playback when available.'}
+                    {detail.synopsis || 'This title page is still filling in. Browse another story from the shared short-series hub and jump straight into playback when available.'}
                   </p>
                 </div>
               </div>

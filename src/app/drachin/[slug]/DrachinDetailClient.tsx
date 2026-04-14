@@ -16,15 +16,16 @@ import { getDrachinPlaybackTarget, getVerticalDramaChunkIndex } from '@/lib/vert
 
 interface DrachinDetailClientProps {
   slug: string;
+  basePath?: string;
 }
 
 const EPISODE_CHUNK_SIZE = 20;
 
-export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) {
+export default function DrachinDetailClient({ slug, basePath = '/series/short' }: DrachinDetailClientProps) {
   const [detail, setDetail] = React.useState<DrachinDetailData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [playHref, setPlayHref] = React.useState(`/drachin/episode/${slug}?index=1`);
+  const [playHref, setPlayHref] = React.useState(`${basePath}/watch/${slug}?index=1`);
   const [resumeEpisodeIndex, setResumeEpisodeIndex] = React.useState(1);
   const [activeChunkIndex, setActiveChunkIndex] = React.useState(0);
 
@@ -112,7 +113,7 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
   const resumeLabel = resumeEpisodeIndex > 1 ? `Resume Episode ${resumeEpisodeIndex}` : 'Start Episode 1';
 
   return (
-    <VerticalSeriesDetailScaffold backHref="/drachin" backLabel="Back to Drama China">
+    <VerticalSeriesDetailScaffold backHref={basePath} backLabel="Back to Short Series">
         {loading ? (
           <Paper tone="muted" shadow="sm" className="p-6 md:p-8">
             <div className="animate-pulse space-y-4">
@@ -209,7 +210,7 @@ export default function DrachinDetailClient({ slug }: DrachinDetailClientProps) 
                   return (
                   <Paper key={`${episode.slug}:${episode.index}`} asChild tone="muted" shadow="sm" padded={false}>
                     <Link
-                      href={`/drachin/episode/${episode.slug}?index=${episode.index}`}
+                      href={`${basePath}/watch/${episode.slug}?index=${episode.index}`}
                       className={`flex min-h-[5rem] flex-col justify-between gap-2 p-4 transition-colors hover:bg-surface-elevated ${
                         isWatched ? 'opacity-80' : ''
                       } ${isResumeTarget ? 'ring-1 ring-rose-500/35' : ''}`}

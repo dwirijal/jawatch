@@ -144,7 +144,14 @@ function normalizeHomeSections(sections: HomeRecommendationSection[]): HomeRecom
   return sections
     .map((section) => {
       const layoutMode = getSectionLayoutConfig(section).mode;
-      const cappedItems = section.items.slice(0, HOME_SECTION_MAX_ITEMS);
+      const seen = new Set<string>();
+      const cappedItems = section.items.filter((item) => {
+        if (seen.has(item.id)) {
+          return false;
+        }
+        seen.add(item.id);
+        return true;
+      }).slice(0, HOME_SECTION_MAX_ITEMS);
 
       if (layoutMode === 'rail') {
         return {

@@ -139,7 +139,7 @@ export default function SeriesPageClient({
             ))}
         </SectionCard>
 
-        <SectionCard title="Latest Episodes" subtitle="Update terbaru dari anime, donghua, dan drama episodik" icon={Sparkles} mode="grid" gridDensity="default" viewAllHref="/series/ongoing">
+        <SectionCard title="Recently Updated Series" subtitle="Judul anime, donghua, dan drama episodik yang baru diperbarui" icon={Sparkles} mode="grid" gridDensity="default" viewAllHref="/series/ongoing">
           {initialLatest.length === 0
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`series-latest-${index}`} />)
             : initialLatest.slice(0, 12).map((item) => (

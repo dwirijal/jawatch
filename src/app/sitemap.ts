@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/site';
 import { buildComicCacheKey, rememberComicCacheValue } from '@/lib/server/comic-cache';
 import { getComicDb } from '@/lib/server/comic-db';
+import { resolveDynamicSitemapEntries } from './sitemap-utils';
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
 
@@ -24,8 +25,7 @@ const staticRoutes = [
   { path: '/comic/manhwa', priority: 0.85, changeFrequency: 'daily' },
   { path: '/comic/manhua', priority: 0.85, changeFrequency: 'daily' },
   { path: '/novel', priority: 0.8, changeFrequency: 'daily' },
-  { path: '/drachin', priority: 0.8, changeFrequency: 'daily' },
-  { path: '/dramabox', priority: 0.8, changeFrequency: 'daily' },
+  { path: '/series/short', priority: 0.85, changeFrequency: 'daily' },
 ] as const satisfies Array<{
   path: string;
   priority: number;
@@ -240,9 +240,9 @@ async function loadDynamicSitemapEntries(): Promise<SitemapEntry[]> {
     ...movieWatch.map((row) => toEntry(`/movies/watch/${row.slug}`, row.updated_at, 0.8, 'weekly')),
     ...comicDetails.map((row) => toEntry(`/comic/${row.slug}`, row.updated_at, 0.75, 'daily')),
     ...novelDetails.map((row) => toEntry(`/novel/${row.slug}`, row.updated_at, 0.7, 'daily')),
-    ...drachinDetails.map((row) => toEntry(`/drachin/${row.slug}`, row.updated_at, 0.7, 'daily')),
-    ...drachinEpisodes.map((row) => toEntry(`/drachin/episode/${row.slug}`, row.updated_at, 0.75, 'daily')),
-    ...dramaboxDetails.map((row) => toEntry(`/dramabox/${row.slug}`, row.updated_at, 0.7, 'weekly')),
+    ...drachinDetails.map((row) => toEntry(`/series/short/${row.slug}`, row.updated_at, 0.75, 'daily')),
+    ...drachinEpisodes.map((row) => toEntry(`/series/short/watch/${row.slug}`, row.updated_at, 0.8, 'daily')),
+    ...dramaboxDetails.map((row) => toEntry(`/series/short/dramabox/${row.slug}`, row.updated_at, 0.7, 'weekly')),
     ...seriesGenres.map((row) => toEntry(`/series/genre/${slugify(row.value)}`, row.updated_at, 0.65, 'weekly')),
     ...seriesCountries.map((row) => toEntry(`/series/country/${slugify(row.value)}`, row.updated_at, 0.65, 'weekly')),
     ...seriesYears.map((row) => toEntry(`/series/year/${row.value}`, row.updated_at, 0.65, 'weekly')),
@@ -254,10 +254,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     toEntry(path, new Date('2026-03-31T00:00:00Z'), priority, changeFrequency),
   );
 
-  const dynamicEntries = await rememberComicCacheValue(
-    buildComicCacheKey('seo', 'sitemap', 'v2'),
-    60 * 30,
-    loadDynamicSitemapEntries,
+  const dynamicEntries = await resolveDynamicSitemapEntries(() =>
+    rememberComicCacheValue(
+      buildComicCacheKey('seo', 'sitemap', 'v2'),
+      60 * 30,
+      loadDynamicSitemapEntries,
+    ),
   );
 
   return [...staticEntries, ...dynamicEntries];

@@ -3,6 +3,7 @@ import 'server-only';
 import { buildComicCacheKey, rememberComicCacheValue } from '@/lib/server/comic-cache';
 import { getComicDb } from '@/lib/server/comic-db';
 import type { MovieCardItem } from '@/lib/types';
+import { compareMovieUpdatedAtDesc } from '@/lib/adapters/movie-sort';
 import { buildVisibilityCondition } from '@/lib/adapters/video-db-common';
 import {
   buildDownloadGroups,
@@ -40,7 +41,7 @@ type MovieCatalogRow = {
   status: string;
   release_year: number | null;
   score: number;
-  updated_at: string;
+  updated_at: Date | string;
   unit_count?: number | null;
   poster_url?: string | null;
   detail_year?: string | null;
@@ -408,7 +409,7 @@ function sortMovieRows(rows: MovieCatalogRow[], section: 'popular' | 'latest' | 
   const nextRows = [...rows];
 
   if (section === 'latest') {
-    return nextRows.sort((left, right) => right.updated_at.localeCompare(left.updated_at));
+    return nextRows.sort(compareMovieUpdatedAtDesc);
   }
 
   return nextRows.sort((left, right) => {
@@ -422,7 +423,7 @@ function sortMovieRows(rows: MovieCatalogRow[], section: 'popular' | 'latest' | 
       genre_names: right.genre_names,
       category_names: right.category_names,
     }) + (right.score || 0) * 100 + (right.unit_count || 0) * 10;
-    return rightScore - leftScore || right.updated_at.localeCompare(left.updated_at);
+    return rightScore - leftScore || compareMovieUpdatedAtDesc(left, right);
   });
 }
 

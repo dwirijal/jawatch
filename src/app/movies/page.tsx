@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import MoviesPageClient from './MoviesPageClient';
-import { getMovieGenreItems, getMovieHubData } from '@/lib/adapters/movie';
 import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { buildCollectionPageJsonLd, buildMetadata } from '@/lib/seo';
+import { loadMoviePageData } from './movie-page-data';
 
 type MoviesPageProps = {
   searchParams: Promise<{
     genre?: string;
+    sort?: string;
   }>;
 };
 
@@ -34,17 +35,13 @@ export async function generateMetadata({ searchParams }: MoviesPageProps): Promi
 export default async function MoviesPage({ searchParams }: MoviesPageProps) {
   const params = await searchParams;
   const activeGenre = (params.genre || '').trim().slice(0, 64) || null;
+  const activeSort = (params.sort || '').trim().slice(0, 24) || null;
   const includeNsfw = await resolveViewerNsfwAccess();
-  const options = {
+  const { popular, latest, initialResults } = await loadMoviePageData({
+    activeGenre,
+    limit: 24,
     includeNsfw,
-  };
-  const { popular, latest } = await getMovieHubData(24, options).catch(() => ({
-    popular: [],
-    latest: [],
-  }));
-  const initialResults = activeGenre
-    ? await getMovieGenreItems(activeGenre, 24, options).catch(() => [])
-    : null;
+  });
 
   return (
     <>
@@ -67,6 +64,7 @@ export default async function MoviesPage({ searchParams }: MoviesPageProps) {
         initialLatest={latest}
         initialResults={initialResults}
         activeGenre={activeGenre}
+        activeSort={activeSort}
       />
     </>
   );

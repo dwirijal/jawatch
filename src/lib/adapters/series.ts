@@ -19,7 +19,7 @@ import {
   type VideoMirror,
   type VisibilityOptions,
 } from './video-db-common';
-import { readStringArray } from './video-db';
+import { readArray, readStringArray } from './video-db';
 import {
   getSeriesCanonicalFilters,
   getSeriesReleaseDayLabel,
@@ -30,6 +30,7 @@ import {
   type SeriesScheduleLane,
 } from '@/lib/series-presentation';
 import { selectSeriesRecommendations } from '@/lib/series-recommendations';
+import { resolveSeriesMediaType } from '@/lib/series-taxonomy';
 import {
   buildCanonicalEpisodeLateralSubquery,
   collapseCanonicalEpisodeEntries,
@@ -160,6 +161,8 @@ export type SeriesDetailData = {
   latestEpisode: string;
   studio: string;
   director: string;
+  cast: Array<{ name: string; role?: string; voice?: string }>;
+  productionTeam: string[];
   sourceLabel: string;
   episodes: Array<{ slug: string; title: string; label: string; number: number | null }>;
   recommendations: SeriesCardItem[];
@@ -401,20 +404,11 @@ function collapseRepeatedSeriesTitle(value: string): string {
 }
 
 function getSeriesType(row: Pick<SeriesRow, 'origin_type' | 'media_type' | 'source'> | Pick<SeriesEpisodeRow, 'origin_type' | 'media_type'>): SeriesMediaType {
-  const origin = readText(row.origin_type).toLowerCase();
-  if (origin === 'donghua') {
-    return 'donghua';
-  }
-  if (origin === 'drama') {
-    return 'drama';
-  }
-  if (origin === 'anime') {
-    return 'anime';
-  }
-  if ('source' in row && row.source === 'anichin') {
-    return 'donghua';
-  }
-  return row.media_type === 'drama' ? 'drama' : 'anime';
+  return resolveSeriesMediaType({
+    originType: row.origin_type,
+    mediaType: row.media_type,
+    source: 'source' in row ? row.source : null,
+  });
 }
 
 function getSeriesGenres(detail: JsonRecord): string[] {
@@ -480,6 +474,142 @@ function readFirstString(value: unknown): string {
     }
   }
   return '';
+}
+
+function readStringList(...values: unknown[]): string[] {
+  const seen = new Set<string>();
+  const output: string[] = [];
+
+  for (const value of values) {
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        const text = readText(entry);
+        if (!text) {
+          continue;
+        }
+        const normalized = text.trim();
+        if (!normalized || seen.has(normalized.toLowerCase())) {
+          continue;
+        }
+        seen.add(normalized.toLowerCase());
+        output.push(normalized);
+      }
+      continue;
+    }
+
+    const text = readText(value);
+    if (!text) {
+      continue;
+    }
+
+    for (const token of text.split(',')) {
+      const normalized = token.trim();
+      if (!normalized || seen.has(normalized.toLowerCase())) {
+        continue;
+      }
+      seen.add(normalized.toLowerCase());
+      output.push(normalized);
+    }
+  }
+
+  return output;
+}
+
+function parseSeriesCast(detail: JsonRecord, mediaType: SeriesMediaType): Array<{ name: string; role?: string; voice?: string }> {
+  const output: Array<{ name: string; role?: string; voice?: string }> = [];
+  const seen = new Set<string>();
+  const rawEntries = [
+    ...readArray(detail.cast),
+    ...readArray(detail.characters),
+  ];
+
+  for (const entry of rawEntries) {
+    const record = readRecord(entry);
+    const name = readText(record.name) || readText(record.character) || readText(record.title);
+    if (!name) {
+      continue;
+    }
+
+    const role = readText(record.role) || readText(record.character_name) || readText(record.character);
+    const voice = mediaType === 'anime'
+      ? readText(record.voice) || readText(record.voice_actor) || readText(record.seiyuu)
+      : '';
+    const dedupeKey = `${name.toLowerCase()}::${(role || '').toLowerCase()}::${(voice || '').toLowerCase()}`;
+
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
+
+    seen.add(dedupeKey);
+    output.push({
+      name,
+      role: role || undefined,
+      voice: voice || undefined,
+    });
+  }
+
+  return output.slice(0, 18);
+}
+
+function parseSeriesProductionTeam(detail: JsonRecord): string[] {
+  return readStringList(
+    detail.production,
+    detail.production_team,
+    detail.producers,
+    detail.staff,
+    detail.studios,
+    detail.network,
+  ).slice(0, 12);
+}
+
+function buildPublicSeriesEpisodeSlug({
+  seriesSlug,
+  episodeSlug,
+  label,
+  title,
+  number,
+}: {
+  seriesSlug: string;
+  episodeSlug: string;
+  label?: string | null;
+  title?: string | null;
+  number?: number | null;
+}): string {
+  const normalizedSeriesSlug = readText(seriesSlug);
+  const normalizedEpisodeSlug = readText(episodeSlug);
+
+  if (normalizedEpisodeSlug && !normalizedEpisodeSlug.includes(':') && normalizedEpisodeSlug.startsWith(`${normalizedSeriesSlug}-`)) {
+    return normalizedEpisodeSlug;
+  }
+
+  if (number != null && Number.isFinite(number)) {
+    return `${normalizedSeriesSlug}-episode-${String(number)}`;
+  }
+
+  const labelSlug = slugify(readText(label) || readText(title));
+  if (labelSlug) {
+    return `${normalizedSeriesSlug}-${labelSlug}`;
+  }
+
+  return normalizedEpisodeSlug || normalizedSeriesSlug;
+}
+
+function parsePublicSeriesEpisodeRequest(slug: string): { seriesSlug: string; episodeNumber: number } | null {
+  const normalized = readText(slug);
+  const match = normalized.match(/^(.*?)-(?:episode|ep)-(\d+(?:\.\d+)?)$/i);
+  if (!match) {
+    return null;
+  }
+
+  const episodeNumber = Number.parseFloat(match[2]);
+  if (!Number.isFinite(episodeNumber)) {
+    return null;
+  }
+
+  return {
+    seriesSlug: match[1],
+    episodeNumber,
+  };
 }
 
 function mergeCatalogLabels(...values: unknown[]): string[] {
@@ -758,9 +888,9 @@ function buildSeriesTypeMatchCondition(type: SeriesMediaType): string {
     return `(coalesce(i.origin_type, '') = 'donghua' or (coalesce(i.origin_type, '') = '' and i.source = 'anichin'))`;
   }
   if (type === 'drama') {
-    return `(coalesce(i.origin_type, '') = 'drama' or i.media_type = 'drama')`;
+    return `(coalesce(i.origin_type, '') = 'drama' or i.media_type = 'drama' or i.source in ('drakorid', 'dracinly', 'dramabox'))`;
   }
-  return `(coalesce(i.origin_type, '') = 'anime' or (coalesce(i.origin_type, '') not in ('donghua', 'drama') and i.source <> 'anichin' and i.media_type = 'anime'))`;
+  return `(coalesce(i.origin_type, '') = 'anime' or (coalesce(i.origin_type, '') not in ('donghua', 'drama') and i.source not in ('anichin', 'drakorid', 'dracinly', 'dramabox') and i.media_type = 'anime'))`;
 }
 
 function buildSeriesCountryMatchCondition(): string {
@@ -849,7 +979,7 @@ async function querySeriesFilterTokens(includeNsfw: boolean): Promise<string[]> 
     select distinct
       case
         when coalesce(i.origin_type, '') = 'donghua' or (coalesce(i.origin_type, '') = '' and i.source = 'anichin') then 'Donghua'
-        when coalesce(i.origin_type, '') = 'drama' or i.media_type = 'drama' then 'Drama'
+        when coalesce(i.origin_type, '') = 'drama' or i.media_type = 'drama' or i.source in ('drakorid', 'dracinly', 'dramabox') then 'Drama'
         else 'Anime'
       end as type_label,
       coalesce(
@@ -885,12 +1015,14 @@ async function querySeriesFilterTokens(includeNsfw: boolean): Promise<string[]> 
 async function querySeriesRecommendationItems(
   {
     currentSlug,
+    currentType,
     genres,
     country,
     includeNsfw,
     limit,
   }: {
     currentSlug: string;
+    currentType?: SeriesMediaType;
     genres: string[];
     country: string;
     includeNsfw: boolean;
@@ -905,6 +1037,10 @@ async function querySeriesRecommendationItems(
 
   const queryParams: unknown[] = [currentSlug];
   const predicates = ['i.slug <> $1'];
+
+  if (currentType) {
+    predicates.push(buildSeriesTypeMatchCondition(currentType));
+  }
 
   if (normalizedGenres.length > 0) {
     queryParams.push(normalizedGenres);
@@ -936,6 +1072,7 @@ async function querySeriesRecommendationItems(
 
   return selectSeriesRecommendations({
     currentSlug,
+    currentType,
     genres,
     country,
     limit: normalizedLimit,
@@ -1264,6 +1401,13 @@ export async function getSeriesDetailBySlug(slug: string, options: SeriesDetailO
     `, [episodeItemKey]);
     const normalizedEpisodes = collapseCanonicalEpisodeEntries(episodes).map((episode) => ({
       ...episode,
+      slug: buildPublicSeriesEpisodeSlug({
+        seriesSlug: row.slug,
+        episodeSlug: episode.slug,
+        label: episode.label,
+        title: episode.title,
+        number: episode.number,
+      }),
       title: collapseRepeatedSeriesTitle(episode.title),
       label: readText(episode.label),
     }));
@@ -1271,10 +1415,14 @@ export async function getSeriesDetailBySlug(slug: string, options: SeriesDetailO
     const detail = getSeriesDetailRecord(row);
     const genres = getSeriesGenres(detail);
     const country = getRowCountry(row);
+    const mediaType = getSeriesType(row);
+    const cast = parseSeriesCast(detail, mediaType);
+    const productionTeam = parseSeriesProductionTeam(detail);
     const recommendations = options.includeRecommendations === false
       ? []
       : await querySeriesRecommendationItems({
           currentSlug: row.slug,
+          currentType: mediaType,
           genres,
           country,
           includeNsfw: Boolean(options.includeNsfw),
@@ -1283,7 +1431,7 @@ export async function getSeriesDetailBySlug(slug: string, options: SeriesDetailO
 
     return {
       slug: row.slug,
-      mediaType: getSeriesType(row),
+      mediaType,
       title: collapseRepeatedSeriesTitle(row.title),
       poster: normalizePosterUrl(detail.poster_url, row.cover_url),
       backdrop: normalizePosterUrl(detail.backdrop_url, detail.poster_url, row.cover_url),
@@ -1295,9 +1443,9 @@ export async function getSeriesDetailBySlug(slug: string, options: SeriesDetailO
       synopsis: readText(detail.synopsis) || readText(detail.overview) || 'Synopsis is still being prepared.',
       country,
       seasonLabel: readText(detail.type) || (
-        getSeriesType(row) === 'donghua'
+        mediaType === 'donghua'
           ? 'Donghua Series'
-          : getSeriesType(row) === 'drama'
+          : mediaType === 'drama'
             ? 'Drama Series'
             : 'Anime Series'
       ),
@@ -1305,6 +1453,8 @@ export async function getSeriesDetailBySlug(slug: string, options: SeriesDetailO
       latestEpisode: getLatestEpisodeLabel(row),
       studio: readText(detail.studio) || readText(detail.studios) || readText(detail.network),
       director: readText(detail.director) || readFirstString(detail.directors),
+      cast,
+      productionTeam,
       sourceLabel: row.source,
       episodes: normalizedEpisodes,
       recommendations,
@@ -1314,12 +1464,14 @@ export async function getSeriesDetailBySlug(slug: string, options: SeriesDetailO
 
 export async function getSeriesRecommendations({
   currentSlug,
+  currentType,
   genres,
   country,
   includeNsfw = false,
   limit = 8,
 }: {
   currentSlug: string;
+  currentType?: SeriesMediaType;
   genres: string[];
   country: string;
   includeNsfw?: boolean;
@@ -1327,6 +1479,7 @@ export async function getSeriesRecommendations({
 }): Promise<SeriesCardItem[]> {
   return querySeriesRecommendationItems({
     currentSlug,
+    currentType,
     genres,
     country,
     includeNsfw,
@@ -1335,7 +1488,18 @@ export async function getSeriesRecommendations({
 }
 
 export async function getSeriesEpisodeBySlug(slug: string, options: VisibilityOptions = {}): Promise<SeriesEpisodeData | null> {
-  const normalizedSlug = slug.trim();
+  const normalizedSlug = (() => {
+    const trimmed = slug.trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    try {
+      return decodeURIComponent(trimmed);
+    } catch {
+      return trimmed;
+    }
+  })();
   if (!normalizedSlug) {
     return null;
   }
@@ -1349,7 +1513,9 @@ export async function getSeriesEpisodeBySlug(slug: string, options: VisibilityOp
       return null;
     }
 
-    const rows = await sql.unsafe<SeriesEpisodeRow[]>(`
+    const loadEpisodeRows = (query: string, params: unknown[]) => sql.unsafe<SeriesEpisodeRow[]>(query, params);
+
+    const exactMatchQuery = `
       with matched_unit as (
         select
           u.unit_key as requested_unit_key,
@@ -1403,7 +1569,71 @@ export async function getSeriesEpisodeBySlug(slug: string, options: VisibilityOp
        and e.provider = 'tmdb'
        and e.match_status = 'matched'
       limit 1
-    `, [normalizedSlug]);
+    `;
+
+    let rows = await loadEpisodeRows(exactMatchQuery, [normalizedSlug]);
+
+    if (rows.length === 0) {
+      const parsedPublicRequest = parsePublicSeriesEpisodeRequest(normalizedSlug);
+      if (parsedPublicRequest) {
+        rows = await loadEpisodeRows(`
+          with matched_unit as (
+            select
+              u.unit_key as requested_unit_key,
+              i.source as requested_source,
+              coalesce(
+                case when coalesce(u.is_canonical, false) then u.unit_key end,
+                (
+                  select mul.canonical_unit_key
+                  from public.media_unit_links mul
+                  where mul.source_unit_key = u.unit_key
+                  order by mul.is_primary desc, mul.priority desc, mul.updated_at desc
+                  limit 1
+                ),
+                u.unit_key
+              ) as canonical_unit_key
+            from public.media_units u
+            join public.media_items i on i.item_key = u.item_key
+            where ${buildSeriesScopeCondition('i')}
+              and i.slug = $1
+              and u.number = $2
+              and u.unit_type = 'episode'
+              ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}
+            order by coalesce(u.is_canonical, false) desc, u.updated_at desc
+            limit 1
+          )
+          select
+            i.item_key,
+            mu.requested_unit_key,
+            mu.requested_source,
+            i.media_type,
+            i.origin_type,
+            i.release_country,
+            i.slug as item_slug,
+            i.title as item_title,
+            i.cover_url,
+            i.release_year,
+            i.detail as item_detail,
+            e.payload as item_tmdb_payload,
+            u.slug,
+            u.title,
+            u.label,
+            u.number,
+            u.prev_slug,
+            u.next_slug,
+            u.detail,
+            mu.canonical_unit_key
+          from matched_unit mu
+          join public.media_units u on u.unit_key = mu.canonical_unit_key
+          join public.media_items i on i.item_key = u.item_key
+          left join public.media_item_enrichments e
+            on e.item_key = i.item_key
+           and e.provider = 'tmdb'
+           and e.match_status = 'matched'
+          limit 1
+        `, [parsedPublicRequest.seriesSlug, parsedPublicRequest.episodeNumber]);
+      }
+    }
 
     const row = selectCanonicalSeriesRow(rows);
     if (!row) {
@@ -1459,16 +1689,30 @@ export async function getSeriesEpisodeBySlug(slug: string, options: VisibilityOp
       canonicalDownloadGroups: canonicalPlayback.downloadGroups,
       sourceStreamUrl: readText(sourceEpisodeDetail.stream_url),
     });
-    const collapsedPlaylist = collapseCanonicalEpisodeEntries(playlist);
+    const publicSlug = buildPublicSeriesEpisodeSlug({
+      seriesSlug: row.item_slug,
+      episodeSlug: row.slug,
+      label: row.label,
+      title: row.title,
+      number: row.number,
+    });
+    const collapsedPlaylist = collapseCanonicalEpisodeEntries(playlist).map((entry) => ({
+      ...entry,
+      slug: buildPublicSeriesEpisodeSlug({
+        seriesSlug: row.item_slug,
+        episodeSlug: entry.slug,
+        label: entry.label,
+        title: entry.title,
+        number: entry.number,
+      }),
+    }));
     const navigation = resolveSeriesEpisodeNavigation({
-      currentSlug: row.slug,
+      currentSlug: publicSlug,
       playlist: collapsedPlaylist,
-      prevSlug: row.prev_slug,
-      nextSlug: row.next_slug,
     });
 
     return {
-      slug: row.slug,
+      slug: publicSlug,
       mediaType: getSeriesType(row),
       seriesSlug: row.item_slug,
       seriesTitle: collapseRepeatedSeriesTitle(row.item_title),

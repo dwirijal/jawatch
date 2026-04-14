@@ -18,7 +18,7 @@ interface VideoPlayerProps {
   title?: string;
   showTitleOverlay?: boolean;
   theme?: 'anime' | 'donghua' | 'movie' | 'drama';
-  format?: 'landscape' | 'vertical';
+  format?: 'landscape' | 'vertical' | 'shorts';
   onNext?: () => void;
   hasNext?: boolean;
   onEnded?: () => void;
@@ -87,9 +87,11 @@ export function VideoPlayer({
   const frameClassName =
     isTheaterMode && device !== 'mobile'
       ? 'h-full w-full rounded-none border-0'
-      : format === 'vertical'
-        ? 'mx-auto aspect-[9/16] w-full max-w-[26rem] rounded-[var(--radius-2xl)]'
-        : 'aspect-video rounded-[var(--radius-2xl)]';
+      : format === 'shorts'
+        ? 'h-full w-full rounded-none border-0'
+        : format === 'vertical'
+          ? 'mx-auto aspect-[9/16] w-full max-w-[26rem] rounded-[var(--radius-2xl)]'
+          : 'aspect-video rounded-[var(--radius-2xl)]';
 
   React.useEffect(() => {
     setDeadMirrors(getDeadMirrors());
@@ -155,8 +157,9 @@ export function VideoPlayer({
 
       return (
     <div className={cn(
-      "relative z-[150] space-y-4 md:space-y-6 transition-all duration-700 ease-in-out",
-      isTheaterMode && device !== 'mobile' ? "fixed inset-0 z-[200] flex flex-col space-y-0 bg-background p-0" : "w-full"
+      "relative z-[150] transition-all duration-700 ease-in-out",
+      isTheaterMode && device !== 'mobile' ? "fixed inset-0 z-[200] flex flex-col space-y-0 bg-background p-0" : "w-full h-full",
+      format !== 'shorts' && "space-y-4 md:space-y-6"
     )}>
       {isLightsDimmed && !isTheaterMode && (
         <div className="fixed inset-0 z-[140] bg-black/95 animate-in fade-in duration-500" onClick={toggleLights} />

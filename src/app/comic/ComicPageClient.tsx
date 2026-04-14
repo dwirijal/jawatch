@@ -49,8 +49,8 @@ const VARIANT_CONFIG: Record<MangaSubtype | 'all', {
     savedTitle: "Saved Comics",
     trendingTitle: "Trending in Manga",
     trendingSubtitle: "Most popular this week",
-    newestTitle: "New in Manga",
-    newestSubtitle: "Fresh manga chapters and updates",
+    newestTitle: "Updated in Manga",
+    newestSubtitle: "Recent manga catalog updates",
   },
   all: {
     title: "Comic Library",
@@ -58,8 +58,8 @@ const VARIANT_CONFIG: Record<MangaSubtype | 'all', {
     savedTitle: "Saved Comics",
     trendingTitle: "Trending Comics",
     trendingSubtitle: "Most popular across manga, manhwa, and manhua",
-    newestTitle: "New releases",
-    newestSubtitle: "Fresh chapter updates across all comic formats",
+    newestTitle: "Recent updates",
+    newestSubtitle: "Recently updated titles across all comic formats",
     browseSubtitle: "Jump into a specific comic subtype without leaving the hub.",
   },
   manhwa: {
@@ -68,8 +68,8 @@ const VARIANT_CONFIG: Record<MangaSubtype | 'all', {
     savedTitle: "Saved Comics",
     trendingTitle: "Trending in Manhwa",
     trendingSubtitle: "Most popular this week",
-    newestTitle: "New in Manhwa",
-    newestSubtitle: "Fresh manhwa chapters and updates",
+    newestTitle: "Updated in Manhwa",
+    newestSubtitle: "Recent manhwa catalog updates",
   },
   manhua: {
     title: "Comic Library: Manhua",
@@ -77,8 +77,8 @@ const VARIANT_CONFIG: Record<MangaSubtype | 'all', {
     savedTitle: "Saved Comics",
     trendingTitle: "Trending in Manhua",
     trendingSubtitle: "Most popular this week",
-    newestTitle: "New in Manhua",
-    newestSubtitle: "Fresh manhua chapters and updates",
+    newestTitle: "Updated in Manhua",
+    newestSubtitle: "Recent manhua catalog updates",
   },
 };
 
@@ -144,11 +144,11 @@ export default function ComicPageClient({
   const shelfBrowseCards = React.useMemo(
     () => [
       {
-        label: 'Latest',
+        label: 'Updated',
         route: '/comic/latest',
         badge: 'NEW',
         image: newest[0]?.image || newest[0]?.thumbnail || popular[0]?.image || popular[0]?.thumbnail || '',
-        subtitle: 'Open the newest chapter feed',
+        subtitle: 'Open the recently updated comic feed',
       },
       {
         label: 'Popular',

@@ -13,6 +13,19 @@ export type AdultEligibility = {
 };
 
 const DEFAULT_RETURN_PATH = '/';
+const ONBOARDING_PATH = '/onboarding';
+const PROXY_AUTH_EXEMPT_EXACT_PATHS = new Set(['/login', '/logout', '/onboarding']);
+const PROXY_AUTH_EXEMPT_PREFIXES = ['/auth/callback', '/login/', '/logout/', '/onboarding/'];
+const PROXY_STATIC_EXACT_PATHS = new Set([
+  '/ads.txt',
+  '/favicon.ico',
+  '/manifest.json',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/sw.js',
+]);
+const PROXY_PROTECTED_PREFIXES = ['/account/', '/collection/'];
+const PROXY_PROTECTED_EXACT_PATHS = new Set(['/account', '/collection']);
 
 function parseCookieHeader(cookieHeader: string): Array<{ name: string; value: string }> {
   return cookieHeader
@@ -47,6 +60,81 @@ function sanitizeRelativePath(nextPath: string | undefined): string {
   }
 
   return candidate;
+}
+
+export function resolvePostAuthRedirectPath(nextPath: string | undefined, onboardingComplete: boolean): string {
+  if (!onboardingComplete) {
+    return ONBOARDING_PATH;
+  }
+
+  return sanitizeRelativePath(nextPath);
+}
+
+export function getOnboardingGateRedirectPath(pathname: string | undefined, onboardingComplete: boolean): string | null {
+  if (onboardingComplete) {
+    return null;
+  }
+
+  const target = sanitizeRelativePath(pathname);
+  if (
+    target === ONBOARDING_PATH ||
+    target.startsWith(`${ONBOARDING_PATH}/`) ||
+    target.startsWith(`${ONBOARDING_PATH}?`)
+  ) {
+    return null;
+  }
+
+  return ONBOARDING_PATH;
+}
+
+export function isProxyProtectedPath(pathname: string): boolean {
+  if (PROXY_PROTECTED_EXACT_PATHS.has(pathname)) {
+    return true;
+  }
+
+  return PROXY_PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+function isProxyAuthRedirectExemptPath(pathname: string) {
+  if (PROXY_AUTH_EXEMPT_EXACT_PATHS.has(pathname)) {
+    return true;
+  }
+
+  return PROXY_AUTH_EXEMPT_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+function hasPublicFileExtension(pathname: string) {
+  const lastSlash = pathname.lastIndexOf('/');
+  const leaf = lastSlash >= 0 ? pathname.slice(lastSlash + 1) : pathname;
+  if (!leaf || leaf.startsWith('.')) {
+    return false;
+  }
+
+  return leaf.includes('.');
+}
+
+function isStaticOrPublicPath(pathname: string) {
+  if (pathname.startsWith('/_next/')) {
+    return true;
+  }
+
+  if (PROXY_STATIC_EXACT_PATHS.has(pathname)) {
+    return true;
+  }
+
+  return hasPublicFileExtension(pathname);
+}
+
+export function shouldBypassProxyAuthGates(pathname: string) {
+  if (isProxyAuthRedirectExemptPath(pathname)) {
+    return true;
+  }
+
+  if (isProxyProtectedPath(pathname)) {
+    return false;
+  }
+
+  return isStaticOrPublicPath(pathname);
 }
 
 function buildDisplayName(user: User): string {
@@ -215,4 +303,30 @@ export async function requireUser(nextPath = '/'): Promise<AuthUser> {
   const target = sanitizeRelativePath(nextPath);
   redirect(`/login?next=${encodeURIComponent(target)}`);
   throw new Error('UNAUTHENTICATED_REDIRECT');
+}
+
+export async function requireCompletedOnboarding(nextPath = '/'): Promise<AuthUser> {
+  const user = await requireUser(nextPath);
+  const { createSupabaseServerClient } = await import('@/lib/supabase/server');
+  const { getOnboardingStatus } = await import('@/lib/onboarding/server');
+  let isComplete = false;
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const status = await getOnboardingStatus(supabase, user.id);
+    isComplete = status.complete;
+  } catch {
+    const { redirect } = await import('next/navigation');
+    redirect('/?onboarding_error=1');
+    throw new Error('ONBOARDING_STATUS_ERROR_REDIRECT');
+  }
+
+  const redirectPath = getOnboardingGateRedirectPath(nextPath, isComplete);
+  if (!redirectPath) {
+    return user;
+  }
+
+  const { redirect } = await import('next/navigation');
+  redirect(redirectPath);
+  throw new Error('ONBOARDING_REQUIRED_REDIRECT');
 }

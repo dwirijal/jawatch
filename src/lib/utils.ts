@@ -96,6 +96,8 @@ export function resolveThemeFromPathname(pathname?: string | null): ThemeType {
   if (pathname === '/movies' || pathname.startsWith('/movies/')) return 'movie';
   if (pathname === '/series' || pathname.startsWith('/series/')) return 'drama';
   if (
+    pathname === '/series/short' ||
+    pathname.startsWith('/series/short/') ||
     pathname === '/drachin' ||
     pathname.startsWith('/drachin/') ||
     pathname === '/dramabox' ||

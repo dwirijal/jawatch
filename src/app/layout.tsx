@@ -50,13 +50,13 @@ export const metadata: Metadata = {
     siteName: "jawatch",
     title: "jawatch - Anime, Donghua, Drama, Film, Komik, dan Novel",
     description: "Tempat nonton anime, donghua, drama, film, baca komik, dan novel subtitle Indonesia dalam satu katalog yang cepat dan rapi.",
-    images: ["/favicon.ico"],
+    images: ["/logo.png"],
   },
   twitter: {
     card: "summary_large_image",
     title: "jawatch - Anime, Donghua, Drama, Film, Komik, dan Novel",
     description: "Tempat nonton anime, donghua, drama, film, baca komik, dan novel subtitle Indonesia dalam satu katalog yang cepat dan rapi.",
-    images: ["/favicon.ico"],
+    images: ["/logo.png"],
   },
 };
 

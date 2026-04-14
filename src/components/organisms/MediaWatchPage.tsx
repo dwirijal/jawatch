@@ -1,11 +1,10 @@
 import * as React from 'react';
 import { LayoutGrid } from 'lucide-react';
-import { AdSection } from '@/components/organisms/AdSection';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
-import { CommunityCTA } from '@/components/molecules/CommunityCTA';
-import MediaDownloadOptionsPanel, { type MediaDownloadGroup } from '@/components/organisms/MediaDownloadOptionsPanel';
+import type { MovieDownloadGroup } from '@/lib/adapters/movie';
 import { HorizontalPlayerPage } from '@/components/organisms/HorizontalPlayerPage';
+import { MediaWatchExtras } from '@/components/organisms/MediaWatchExtras';
 
 interface MediaWatchPageProps {
   historyTracker?: React.ReactNode;
@@ -18,7 +17,7 @@ interface MediaWatchPageProps {
   theme: 'anime' | 'donghua' | 'movie' | 'drama';
   stage: React.ReactNode;
   sidebar: React.ReactNode;
-  downloadGroups: MediaDownloadGroup[];
+  downloadGroups: MovieDownloadGroup[];
   community: {
     mediaId: string;
     title: string;
@@ -64,9 +63,7 @@ export function MediaWatchPage({
         stage={stage}
         sidebar={sidebar}
       >
-        <MediaDownloadOptionsPanel groups={downloadGroups} accent="indigo" />
-        <AdSection theme={theme} />
-        <CommunityCTA mediaId={community.mediaId} title={community.title} type={community.type} theme={community.theme} />
+        <MediaWatchExtras downloadGroups={downloadGroups} community={community} theme={theme} />
         {children}
       </HorizontalPlayerPage>
     </>

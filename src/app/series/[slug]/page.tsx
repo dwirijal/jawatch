@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { Play } from 'lucide-react';
+import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
@@ -118,6 +119,8 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
   }
 
   const theme = getSeriesTheme(series.mediaType);
+  const seriesCast = series.cast ?? [];
+  const productionTeam = series.productionTeam ?? [];
   const latestEpisodeHref = series.episodes[0] ? `/series/watch/${series.episodes[0].slug}` : null;
   const trailerEmbedUrl = getYouTubeEmbedUrl(series.trailerUrl);
   const episodeSort = normalizeEpisodeSort(resolvedSearchParams?.sort);
@@ -217,6 +220,60 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
         </Paper>
       </section>
 
+        {seriesCast.length > 0 ? (
+          <section id="cast" className="space-y-8">
+          <DetailSectionHeading
+            title={series.mediaType === 'anime' ? 'Cast & Seiyuu' : 'Cast'}
+            theme={theme}
+            aside={<Badge variant="outline">{seriesCast.length} Available</Badge>}
+          />
+          <Paper tone="muted" shadow="sm" className="p-5 md:p-6">
+            <div className="grid gap-3 md:grid-cols-2">
+              {seriesCast.map((person) => (
+                <div
+                  key={`${person.name}-${person.role || ''}-${person.voice || ''}`}
+                  className="rounded-[var(--radius-md)] border border-border-subtle bg-surface-2 px-4 py-3"
+                >
+                  <p className="text-sm font-semibold text-white">{person.name}</p>
+                  {person.role ? <p className="mt-1 text-xs text-zinc-400">{person.role}</p> : null}
+                  {person.voice ? <p className="mt-1 text-xs text-zinc-500">Seiyuu: {person.voice}</p> : null}
+                </div>
+              ))}
+            </div>
+          </Paper>
+          </section>
+        ) : null}
+
+        {productionTeam.length > 0 || series.studio || series.director ? (
+          <section id="production" className="space-y-8">
+          <DetailSectionHeading title="Production" theme={theme} />
+          <Paper tone="muted" shadow="sm" className="space-y-4 p-5 md:p-6">
+            <div className="grid gap-3 md:grid-cols-2">
+              {series.studio ? (
+                <div className="rounded-[var(--radius-md)] border border-border-subtle bg-surface-2 px-4 py-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Studio</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{series.studio}</p>
+                </div>
+              ) : null}
+              {series.director ? (
+                <div className="rounded-[var(--radius-md)] border border-border-subtle bg-surface-2 px-4 py-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Director</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{series.director}</p>
+                </div>
+              ) : null}
+            </div>
+
+            {productionTeam.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {productionTeam.map((entry) => (
+                  <Badge key={entry} variant="outline">{entry}</Badge>
+                ))}
+              </div>
+            ) : null}
+          </Paper>
+          </section>
+        ) : null}
+
         {trailerEmbedUrl ? (
           <section id="trailer" className="space-y-8">
           <DetailSectionHeading title="Trailer" theme={theme} />
@@ -257,6 +314,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
         <Suspense fallback={null}>
           <SeriesRecommendationsSection
             currentSlug={series.slug}
+            mediaType={series.mediaType}
             genres={series.genres}
             country={series.country}
             theme={theme}

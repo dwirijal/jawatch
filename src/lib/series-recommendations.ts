@@ -2,6 +2,7 @@ import type { SeriesCardItem } from './series-presentation';
 
 interface SelectSeriesRecommendationsOptions {
   currentSlug: string;
+  currentType?: SeriesCardItem['type'];
   genres: string[];
   country: string;
   items: SeriesCardItem[];
@@ -19,6 +20,7 @@ function normalizeGenreSet(value: string[] | string): Set<string> {
 
 export function selectSeriesRecommendations({
   currentSlug,
+  currentType,
   genres,
   country,
   items,
@@ -28,7 +30,7 @@ export function selectSeriesRecommendations({
   const normalizedCountry = country.trim().toLowerCase();
 
   return items
-    .filter((item) => item.slug !== currentSlug)
+    .filter((item) => item.slug !== currentSlug && (!currentType || item.type === currentType))
     .map((item) => {
       const overlap = [...normalizeGenreSet(item.genres || '')].filter((genre) => currentGenreSet.has(genre)).length;
       const countryBoost = item.country?.trim().toLowerCase() === normalizedCountry ? 1 : 0;

@@ -1,11 +1,13 @@
 import { Link } from '@/components/atoms/Link';
+import { useUIStore } from '@/store/useUIStore';
 
 export function Footer() {
+  const isFooterHidden = useUIStore((state) => state.isFooterHidden);
   const navLinks = [
     { href: '/movies', label: 'Movies' },
     { href: '/series', label: 'Series' },
-    { href: '/series', label: 'Donghua in Series' },
-    { href: '/drachin', label: 'Drama China' },
+    { href: '/series/donghua', label: 'Donghua in Series' },
+    { href: '/series/short', label: 'Short Series' },
     { href: '/comic', label: 'Comic' },
     { href: '/comic/manga', label: 'Manga' },
     { href: '/comic/manhwa', label: 'Manhwa' },
@@ -18,6 +20,10 @@ export function Footer() {
     { label: 'DMCA' },
   ];
 
+  if (isFooterHidden) {
+    return null;
+  }
+
   return (
     <footer className="w-full border-t border-border-subtle bg-background py-10 md:py-12">
       <div className="app-container-wide flex flex-col gap-10">
@@ -25,14 +31,14 @@ export function Footer() {
           <div className="flex flex-col items-center gap-3 md:items-start">
             <Link href="/" className="group flex items-center gap-2.5">
               <div className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 transition-colors group-hover:bg-surface-elevated">
-                <span className="text-xs font-black italic text-white">W</span>
+                <span className="text-xs font-black italic text-white">J</span>
               </div>
               <span className="text-lg font-black italic tracking-tighter">
                 jawatch
               </span>
             </Link>
             <p className="max-w-xs text-center text-xs leading-6 text-zinc-500 md:text-left">
-              Your premium destination for movies, unified series, short drama, and the full comic library.
+              Your premium destination for movies, unified series, short series, and the full comic library.
             </p>
           </div>
 

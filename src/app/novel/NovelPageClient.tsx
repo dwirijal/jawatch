@@ -3,6 +3,9 @@
 import * as React from 'react';
 import { FileText, Sparkles } from 'lucide-react';
 import { MediaCard } from '@/components/atoms/Card';
+import { Badge } from '@/components/atoms/Badge';
+import { Link } from '@/components/atoms/Link';
+import { Paper } from '@/components/atoms/Paper';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { MediaHubTemplate } from '@/components/organisms/MediaHubTemplate';
 import { SectionCard } from '@/components/organisms/SectionCard';
@@ -66,6 +69,26 @@ export default function NovelPageClient({ initialFeatured, initialLatest, genres
       }}
     >
       <div className="app-section-stack">
+        {initialFeatured.length === 0 && initialLatest.length === 0 ? (
+          <Paper tone="muted" shadow="sm" className="space-y-4 p-5 md:p-6">
+            <Badge variant="outline">Novel Beta</Badge>
+            <div className="space-y-2">
+              <h2 className="text-xl font-black text-white">Novel catalog is being filled.</h2>
+              <p className="max-w-2xl text-sm leading-6 text-zinc-400">
+                The reading route is staying online, but the main shelves are still light. Comic and series already have fuller catalogs while novel data is being prepared.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/comic" className="inline-flex items-center justify-center rounded-[var(--radius-sm)] bg-white px-4 py-2 text-sm font-black text-black transition-colors hover:bg-zinc-200">
+                Browse Comic
+              </Link>
+              <Link href="/series" className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-2 text-sm font-black text-zinc-200 transition-colors hover:bg-surface-elevated hover:text-white">
+                Browse Series
+              </Link>
+            </div>
+          </Paper>
+        ) : null}
+
         <SectionCard title="Featured Novels" subtitle="Fresh shelves from SakuraNovel" mode="rail" railVariant="default">
           {initialFeatured.length === 0
             ? Array.from({ length: 8 }).map((_, index) => <SkeletonCard key={`featured-novel-${index}`} />)

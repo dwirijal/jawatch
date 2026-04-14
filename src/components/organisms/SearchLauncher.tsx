@@ -1,6 +1,6 @@
 'use client';
 
-import { Command, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { useUIStore } from '@/store/useUIStore';
 
@@ -16,10 +16,6 @@ export function SearchLauncher() {
       <div className="flex items-center gap-2">
         <Search className="h-4 w-4 text-zinc-500" />
         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Search Discovery</span>
-      </div>
-      <div className="flex items-center gap-1 rounded-[var(--radius-xs)] border border-white/10 bg-white/5 px-1.5 py-0.5">
-        <Command className="h-2.5 w-2.5 opacity-50" />
-        <span className="text-[9px] font-black">K</span>
       </div>
     </Button>
   );

@@ -6,7 +6,7 @@ const routes = [
   '/manga',
   '/movies',
   '/donghua',
-  '/drachin',
+  '/series/short',
   '/novel',
   '/search?q=naruto&type=all',
 ];

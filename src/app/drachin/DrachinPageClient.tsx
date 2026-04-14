@@ -1,17 +1,20 @@
 'use client';
 
 import * as React from 'react';
-import { Clapperboard, Flame, Sparkles } from 'lucide-react';
+import { Clapperboard, Flame, Sparkles, Play, ArrowLeft, Loader2 } from 'lucide-react';
 import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { MediaCard } from '@/components/atoms/Card';
 import { Badge } from '@/components/atoms/Badge';
 import { Paper } from '@/components/atoms/Paper';
+import { Button } from '@/components/atoms/Button';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { AdSection } from '@/components/organisms/AdSection';
-import { getDrachinHome, getDramaboxHome, type DrachinHomeData, type DramaboxHomeData } from '@/lib/adapters/drama';
+import { VerticalShortsPager, type ShortDrama } from '@/components/organisms/VerticalShortsPager';
+import { getDrachinHome, getDramaboxHome, getDrachinEpisodeBySlug, type DrachinHomeData, type DramaboxHomeData } from '@/lib/adapters/drama';
 import { getDrachinPlaybackHref } from '@/lib/vertical-drama-store';
+import { useUIStore } from '@/store/useUIStore';
 
 const EMPTY_HOME: DrachinHomeData = {
   featured: [],
@@ -26,14 +29,20 @@ const EMPTY_DRAMABOX_HOME: DramaboxHomeData = {
 
 interface DrachinPageClientProps {
   entry?: 'drachin' | 'dramabox';
+  basePath?: string;
 }
 
-export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClientProps) {
+export default function DrachinPageClient({ entry = 'drachin', basePath = '/series/short' }: DrachinPageClientProps) {
   const [drachinData, setDrachinData] = React.useState<DrachinHomeData>(EMPTY_HOME);
   const [dramaboxData, setDramaboxData] = React.useState<DramaboxHomeData>(EMPTY_DRAMABOX_HOME);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [resumeReady, setResumeReady] = React.useState(false);
+  
+  const [viewMode, setViewMode] = React.useState<'hub' | 'shorts'>('hub');
+  const [shortsData, setShortsData] = React.useState<ShortDrama[]>([]);
+  const [loadingShorts, setLoadingShorts] = React.useState(false);
+  const { setNavbarHidden, setFooterHidden } = useUIStore();
 
   React.useEffect(() => {
     let cancelled = false;
@@ -79,13 +88,75 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
     setResumeReady(true);
   }, []);
 
+  const enterShortsMode = async () => {
+    setLoadingShorts(true);
+    setViewMode('shorts');
+    setNavbarHidden(true);
+    setFooterHidden(true);
+    
+    // Fetch first episode for each featured drama
+    const featured = drachinData.featured.slice(0, 12);
+    const shorts = await Promise.all(
+      featured.map(async (item): Promise<ShortDrama | null> => {
+        try {
+          const ep = await getDrachinEpisodeBySlug(item.slug, 1);
+          if (ep) {
+            return {
+              slug: item.slug,
+              title: item.title,
+              image: item.image,
+              subtitle: item.subtitle,
+              mirrors: ep.mirrors,
+              defaultUrl: ep.defaultUrl,
+            };
+          }
+        } catch (e) {
+          console.error(`Failed to fetch mirrors for ${item.slug}`, e);
+        }
+        return null;
+      })
+    );
+    
+    const validShorts = shorts.filter((s): s is ShortDrama => s !== null);
+    setShortsData(validShorts);
+    setLoadingShorts(false);
+  };
+
+  const exitShortsMode = () => {
+    setViewMode('hub');
+    setNavbarHidden(false);
+    setFooterHidden(false);
+  };
+
+  if (viewMode === 'shorts') {
+    return (
+      <div className="fixed inset-0 z-[500] bg-black">
+        <button 
+          onClick={exitShortsMode}
+          className="absolute top-6 left-6 z-[600] h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/60 transition-all active:scale-95"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+
+        {loadingShorts ? (
+          <div className="h-full w-full flex flex-col items-center justify-center gap-4">
+            <Loader2 className="w-10 h-10 text-rose-600 animate-spin" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 animate-pulse">Initializing Immersive Feed...</p>
+          </div>
+        ) : (
+          <VerticalShortsPager shorts={shortsData} />
+        )}
+      </div>
+    );
+  }
+
   const description =
     entry === 'dramabox'
-      ? 'Alias route for the unified vertical-drama catalog.'
-      : 'Vertical short-drama catalog built for fast scrolling, direct playback, and quick continuation.';
+      ? 'Alias route for the unified short-series catalog.'
+      : 'Vertical short-series catalog inside the broader series domain, built for fast scrolling, direct playback, and quick continuation.';
 
   const introCopy =
-    'Hub ini hanya menampilkan lane yang benar-benar tersedia dari provider: featured, latest, popular, dan trending. Tidak ada kategori buatan yang mencampur source berbeda ke bucket editorial baru.';
+    'Hub ini hanya menampilkan lane yang benar-benar tersedia dari provider: featured, latest, popular, dan trending. Semua judul tetap berada di domain series, tetapi playback dan browsing-nya memakai contract vertical short-video.';
   const buildDramaboxDetailHref = (item: DramaboxHomeData['latest'][number]) => {
     const params = new URLSearchParams();
     params.set('title', item.title);
@@ -98,19 +169,31 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
     if (item.bookId) {
       params.set('bookId', item.bookId);
     }
-    return `/dramabox/${item.bookId || item.slug}?${params.toString()}`;
+    return `${basePath}/dramabox/${item.bookId || item.slug}?${params.toString()}`;
   };
 
   return (
     <div className="app-shell" data-theme="drama">
       <MediaHubHeader
-        title="Drama China"
+        title="Short Series"
         description={description}
         icon={Clapperboard}
         theme="drama"
         containerClassName="app-container-wide"
       >
-        <Badge variant="drama">Vertical Drama</Badge>
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge variant="drama">Vertical Short</Badge>
+          <Button 
+            variant="drama" 
+            size="sm" 
+            className="h-8 rounded-full px-4 text-[10px] font-black uppercase tracking-widest"
+            onClick={enterShortsMode}
+            disabled={loading || drachinData.featured.length === 0}
+          >
+            <Play className="mr-2 h-3 w-3 fill-current" />
+            Immersive Feed
+          </Button>
+        </div>
       </MediaHubHeader>
 
       <main className="app-container-wide mt-8 space-y-10 sm:mt-10 md:space-y-12">
@@ -135,7 +218,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
               : drachinData.featured.map((item) => (
                 <MediaCard
                   key={`featured-${item.slug}`}
-                  href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
+                  href={resumeReady ? getDrachinPlaybackHref(item.slug) : `${basePath}/watch/${item.slug}?index=1`}
                   image={item.image}
                   title={item.title}
                   subtitle={item.subtitle}
@@ -150,7 +233,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
               : drachinData.latest.map((item) => (
                 <MediaCard
                   key={`latest-${item.slug}`}
-                  href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
+                  href={resumeReady ? getDrachinPlaybackHref(item.slug) : `${basePath}/watch/${item.slug}?index=1`}
                   image={item.image}
                   title={item.title}
                   subtitle={item.subtitle}
@@ -180,7 +263,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
               : drachinData.popular.map((item) => (
                   <MediaCard
                     key={`popular-${item.slug}`}
-                    href={resumeReady ? getDrachinPlaybackHref(item.slug) : `/drachin/episode/${item.slug}?index=1`}
+                    href={resumeReady ? getDrachinPlaybackHref(item.slug) : `${basePath}/watch/${item.slug}?index=1`}
                     image={item.image}
                     title={item.title}
                     subtitle={item.subtitle}

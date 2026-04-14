@@ -18,6 +18,7 @@ import { NavbarAuthControls } from './NavbarAuthControls';
 export function Navbar() {
   const pathname = usePathname() || '/';
   const isSearchOpen = useUIStore((state) => state.isSearchOpen);
+  const isNavbarHidden = useUIStore((state) => state.isNavbarHidden);
   const [isSolid, setIsSolid] = React.useState(false);
   const [searchModalMounted, setSearchModalMounted] = React.useState(false);
   const [authControlsMounted, setAuthControlsMounted] = React.useState(false);
@@ -93,6 +94,10 @@ export function Navbar() {
       }
     };
   }, [authControlsMounted]);
+
+  if (isNavbarHidden) {
+    return null;
+  }
 
   return (
     <>

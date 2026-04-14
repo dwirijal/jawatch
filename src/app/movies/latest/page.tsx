@@ -6,10 +6,10 @@ import { getMovieHomeSection } from '@/lib/adapters/movie';
 import { buildMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildMetadata({
-  title: 'Film Terbaru',
-  description: 'Lihat film subtitle Indonesia yang paling baru masuk katalog dan paling cepat diperbarui.',
+  title: 'Film Update Terbaru',
+  description: 'Lihat film subtitle Indonesia yang paling baru diperbarui di katalog movie.',
   path: '/movies/latest',
-  keywords: ['film terbaru', 'movie terbaru', 'rilis film terbaru'],
+  keywords: ['film update terbaru', 'movie update terbaru', 'katalog movie terbaru'],
 });
 
 export default async function MoviesLatestPage() {
@@ -17,11 +17,11 @@ export default async function MoviesLatestPage() {
   const results = await getMovieHomeSection('latest', 40, { includeNsfw }).catch(() => []);
 
   return buildMovieBrowsePage({
-    title: 'Movies: Latest Releases',
-    description: 'Rak khusus untuk film-film terbaru yang baru masuk atau baru diperbarui di katalog movie.',
+    title: 'Movies: Recently Updated',
+    description: 'Rak khusus untuk film yang paling baru diperbarui di katalog movie.',
     path: '/movies/latest',
     icon: Sparkles,
-    eyebrow: 'Latest Shelf',
+    eyebrow: 'Updated Shelf',
     results,
   });
 }

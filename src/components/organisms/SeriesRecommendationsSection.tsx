@@ -8,11 +8,13 @@ import {
   formatSeriesCardSubtitle,
   getSeriesBadgeText,
   getSeriesTheme,
+  type SeriesMediaType,
 } from '@/lib/series-presentation';
 import { getMediaPosterAspectClass, type ThemeType } from '@/lib/utils';
 
 interface SeriesRecommendationsSectionProps {
   currentSlug: string;
+  mediaType: SeriesMediaType;
   genres: string[];
   country: string;
   theme: Extract<ThemeType, 'anime' | 'donghua' | 'drama'>;
@@ -20,12 +22,14 @@ interface SeriesRecommendationsSectionProps {
 
 export async function SeriesRecommendationsSection({
   currentSlug,
+  mediaType,
   genres,
   country,
   theme,
 }: SeriesRecommendationsSectionProps) {
   const recommendations = await getSeriesRecommendations({
     currentSlug,
+    currentType: mediaType,
     genres,
     country,
     includeNsfw: false,
