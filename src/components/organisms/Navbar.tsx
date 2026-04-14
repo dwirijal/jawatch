@@ -1,30 +1,19 @@
 'use client';
 
 import * as React from 'react';
-import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { cn } from '@/lib/utils';
-import { DESKTOP_NAV_ITEMS } from '@/lib/navigation';
+import { EDITORIAL_NAV_ITEMS } from '@/lib/navigation';
 import { DesktopNavGroup } from './DesktopNavGroup';
 import { useUIStore } from '@/store/useUIStore';
 import { SearchHotkeyListener } from './SearchHotkeyListener';
 import { SearchLauncher } from './SearchLauncher';
-
-const SearchModal = dynamic(
-  () => import('./SearchModal').then((mod) => mod.SearchModal),
-  { ssr: false }
-);
-
-const NavbarAuthControls = dynamic(
-  () => import('./NavbarAuthControls').then((mod) => mod.NavbarAuthControls),
-  {
-    ssr: false,
-    loading: () => <div className="h-10 w-32 animate-pulse rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1" />,
-  }
-);
+import { SearchModal } from './SearchModal';
+import { NavbarAuthControls } from './NavbarAuthControls';
 
 export function Navbar() {
   const pathname = usePathname() || '/';
@@ -122,33 +111,45 @@ export function Navbar() {
           <div className="flex min-w-0 items-center gap-6 xl:gap-10">
             <Link href="/" className="focus-tv group flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] border border-white/10 bg-surface-1 glass-noise refractive-border transition-transform group-hover:scale-105 active:scale-95">
-                <span className="text-xl font-black italic text-white">D</span>
+                <span className="text-xl font-black italic text-white">J</span>
               </div>
               <span className="hidden text-xl font-black uppercase tracking-[-0.04em] text-white sm:block lg:text-2xl">
-                dwizzy<span className="text-zinc-500">WEEB</span>
+                ja<span className="text-zinc-500">watch</span>
               </span>
             </Link>
 
             <div className="flex items-center gap-1 rounded-[var(--radius-md)] border border-white/5 bg-black/20 p-1 backdrop-blur-md">
-              {DESKTOP_NAV_ITEMS.map((item) =>
-                item.type === 'group' ? (
-                  <DesktopNavGroup key={item.key} group={item.group} active={item.match(pathname)} pathname={pathname} />
-                ) : (
+              {EDITORIAL_NAV_ITEMS.map((item) => {
+                const isActive = item.href === '/' 
+                  ? pathname === '/' 
+                  : pathname === item.href || (item.href !== '/' && pathname.startsWith(`${item.href}/`));
+                
+                // Special case for Shorts vs Series to avoid double active state
+                const isSeries = item.key === 'series';
+                const isActuallyActive = isSeries 
+                  ? (isActive && !pathname.startsWith('/series/short'))
+                  : isActive;
+
+                return (
                   <Link
                     key={item.key}
                     href={item.href}
                     className={cn(
                       'focus-tv relative flex items-center gap-2 rounded-[var(--radius-sm)] px-4 py-2 text-[11px] font-black uppercase tracking-[0.15em] transition-all',
-                      item.match(pathname)
-                        ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]'
-                        : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                      isActuallyActive ? 'text-white' : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <item.icon className={cn('h-3.5 w-3.5', item.match(pathname) ? 'text-black' : 'text-zinc-500')} />
-                    {item.label}
+                    {isActuallyActive && (
+                      <motion.div
+                        layoutId="active-tab"
+                        className="absolute inset-0 rounded-[var(--radius-sm)] bg-accent shadow-[0_0_20px_var(--accent-soft)]"
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                    <span className="relative z-10">{item.label}</span>
                   </Link>
-                )
-              )}
+                );
+              })}
               {authControlsMounted ? (
                 <NavbarAuthControls />
               ) : (

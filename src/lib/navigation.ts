@@ -42,7 +42,7 @@ const VIDEO_GROUP: NavigationGroup = {
     { label: 'Series', href: '/series', description: 'Anime, donghua, and episodic drama from the unified catalog.' },
     { label: 'Donghua in Series', href: '/series/donghua', description: 'Chinese animation shelf inside the canonical series catalog.' },
     { label: 'Drama in Series', href: '/series/drama', description: 'Live-action episodic drama shelf inside the canonical series catalog.' },
-    { label: 'Drama China', href: '/drachin', description: 'Unified vertical short-drama hub.' },
+    { label: 'Short Series', href: '/series/short', description: 'Vertical short-series hub inside the canonical series family.' },
   ],
 };
 
@@ -57,13 +57,12 @@ const KOMIK_GROUP: NavigationGroup = {
     { label: 'Manga', href: '/comic/manga', description: 'Japanese manga shelf inside the comic hub.' },
     { label: 'Manhwa', href: '/comic/manhwa', description: 'Korean webtoon and manhwa shelf inside the comic hub.' },
     { label: 'Manhua', href: '/comic/manhua', description: 'Chinese manhua shelf inside the comic hub.' },
-    { label: 'Comic US', description: 'Coming soon.' },
   ],
 };
 
 const NOVEL_GROUP: NavigationGroup = {
   key: 'novel',
-  label: 'Novel',
+  label: 'Read',
   icon: FileText,
   description: 'Novel shelves and long-form reading surfaces.',
   isActive: startsWithPath,
@@ -75,6 +74,14 @@ const NOVEL_GROUP: NavigationGroup = {
 function startsWithPath(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
+export const EDITORIAL_NAV_ITEMS = [
+  { label: 'Movies', href: '/movies', key: 'movies' },
+  { label: 'Series', href: '/series', key: 'series' },
+  { label: 'Comics', href: '/comic', key: 'comics' },
+  { label: 'Shorts', href: '/series/short', key: 'shorts' },
+  { label: 'Novels', href: '/novel', key: 'novels' },
+];
 
 export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
   {
