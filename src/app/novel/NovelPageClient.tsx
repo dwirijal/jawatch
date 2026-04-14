@@ -66,10 +66,10 @@ export default function NovelPageClient({ initialFeatured, initialLatest, genres
       }}
     >
       <div className="app-section-stack">
-        <SectionCard title="Featured Novels" subtitle="Fresh shelves from SakuraNovel" mode="rail" railVariant="default">
+        <SectionCard title="Featured Novels" subtitle="Fresh shelves from SakuraNovel" mode="rail" railVariant="comfortable">
           {initialFeatured.length === 0
             ? Array.from({ length: 8 }).map((_, index) => <SkeletonCard key={`featured-novel-${index}`} />)
-            : initialFeatured.map((item) => (
+            : initialFeatured.map((item, index) => (
               <MediaCard
                 key={item.slug}
                 href={`/novel/${item.slug}`}
@@ -78,6 +78,7 @@ export default function NovelPageClient({ initialFeatured, initialLatest, genres
                 subtitle={formatNovelCardSubtitle(item)}
                 badgeText={getNovelCardBadgeText()}
                 theme="novel"
+                progress={index === 0 ? 45 : undefined}
               />
             ))}
         </SectionCard>

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
+import { BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBookCoverPalette, splitBookTitle } from '@/components/atoms/book-cover-art-palette';
 
@@ -11,6 +12,7 @@ interface BookCoverArtProps {
   subtitle?: string;
   sizes?: string;
   priority?: boolean;
+  progress?: number;
   className?: string;
   imageClassName?: string;
 }
@@ -21,6 +23,7 @@ export function BookCoverArt({
   subtitle,
   sizes = '208px',
   priority = false,
+  progress,
   className,
   imageClassName,
 }: BookCoverArtProps) {
@@ -34,6 +37,10 @@ export function BookCoverArt({
   const coverSubtitle = subtitle || splitTitle.subtitle;
   const shouldShowImage = Boolean(src?.trim()) && !imageFailed;
   const palette = React.useMemo(() => getBookCoverPalette(title), [title]);
+
+  const radius = 14;
+  const circumference = 2 * Math.PI * radius;
+  const offset = progress !== undefined ? circumference - (progress / 100) * circumference : 0;
 
   return (
     <div className={cn('relative h-full w-full overflow-hidden rounded-[var(--radius-lg)] refractive-border glass-noise', className)}>
@@ -71,6 +78,44 @@ export function BookCoverArt({
       )}
 
       <div className="pointer-events-none absolute inset-0" style={{ background: palette.overlay }} />
+
+      {progress !== undefined && progress > 0 && (
+        <div className="absolute bottom-3 right-3 h-10 w-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/10 z-10">
+          <svg className="h-8 w-8 -rotate-90 transform">
+            <circle
+              cx="16"
+              cy="16"
+              r={radius}
+              stroke="currentColor"
+              strokeWidth="2.5"
+              fill="transparent"
+              className="text-white/10"
+            />
+            <circle
+              cx="16"
+              cy="16"
+              r={radius}
+              stroke="var(--accent)"
+              strokeWidth="2.5"
+              fill="transparent"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+              className="transition-all duration-700 ease-out"
+            />
+          </svg>
+          <span className="absolute text-[8px] font-black text-white/90">{Math.round(progress)}%</span>
+        </div>
+      )}
+
+      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 z-20">
+        <div className="flex flex-col items-center gap-2 transform translate-y-4 transition-transform duration-300 group-hover:translate-y-0 group-focus-within:translate-y-0">
+          <div className="h-12 w-12 rounded-full bg-[var(--accent)] flex items-center justify-center shadow-xl">
+            <BookOpen className="h-6 w-6 text-black" />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white drop-shadow-md">Resume Reading</span>
+        </div>
+      </div>
     </div>
   );
 }

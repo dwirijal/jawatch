@@ -8,6 +8,7 @@ import { Badge } from '@/components/atoms/Badge';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { Typography } from '@/components/atoms/Typography';
+import { Progress } from '@/components/atoms/Progress';
 import { getHDThumbnail } from '@/lib/adapters/comic';
 import { cn, getMediaPosterAspectClass, THEME_CONFIG, ThemeType } from '@/lib/utils';
 
@@ -21,6 +22,7 @@ export interface MediaCardProps {
   theme?: ThemeType;
   className?: string;
   prefetch?: boolean;
+  progress?: number;
 }
 
 export interface CastItem {
@@ -101,6 +103,7 @@ export function MediaCard({
   theme = 'default',
   className,
   prefetch,
+  progress,
 }: MediaCardProps) {
   const [displayImage, setDisplayImage] = React.useState(normalizeCardImage(image, theme));
   const [retryCount, setRetryCount] = React.useState(0);
@@ -154,13 +157,21 @@ export function MediaCard({
 
         <div className="relative h-full overflow-hidden">
           {theme === 'novel' ? (
-            <BookCoverArt
-              src={displayImage}
-              title={title}
-              subtitle={effectiveSubtitle}
-              sizes="(max-width: 500px) 48vw, (max-width: 768px) 33vw, (max-width: 1200px) 20vw, 12vw"
-              imageClassName="transition-transform duration-700 ease-out group-hover:scale-[1.028]"
-            />
+            <React.Fragment>
+              <BookCoverArt
+                src={displayImage}
+                title={title}
+                subtitle={effectiveSubtitle}
+                progress={progress}
+                sizes="(max-width: 500px) 48vw, (max-width: 768px) 33vw, (max-width: 1200px) 20vw, 12vw"
+                imageClassName="transition-transform duration-700 ease-out group-hover:scale-[1.028]"
+              />
+              {progress !== undefined && (
+                <div className="absolute inset-x-0 bottom-0 z-10">
+                  <Progress value={progress} theme="novel" className="h-1 bg-black/40" />
+                </div>
+              )}
+            </React.Fragment>
           ) : displayImage && !imageLoadFailed ? (
             <Image
               src={displayImage}
