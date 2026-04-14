@@ -113,6 +113,15 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
   },
 ];
 
+
+export const EDITORIAL_NAV_ITEMS = [
+  { label: 'Movies', href: '/movies' },
+  { label: 'Series', href: '/series' },
+  { label: 'Comics', href: '/comic' },
+  { label: 'Shorts', href: '/series/short' },
+  { label: 'Novels', href: '/novel' },
+];
+
 export const MOBILE_NAV_ITEMS = [
   { key: 'home', label: 'Home', href: '/', icon: Home },
   { key: 'search', label: 'Search', icon: Search, action: 'search' as const },
