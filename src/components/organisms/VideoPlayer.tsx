@@ -1,11 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { Maximize, Minimize, Lightbulb, LightbulbOff, RefreshCw, Layers, AlertCircle, SkipForward, Play } from 'lucide-react';
-import { cn, ThemeType } from '@/lib/utils';
+import { Maximize, Minimize, Lightbulb, LightbulbOff, RefreshCw, Layers, AlertCircle, SkipForward } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/atoms/Button';
 import { Paper } from '@/components/atoms/Paper';
-import { Switch } from '@/components/atoms/Switch';
 import { useUIStore } from '@/store/useUIStore';
 import { reportDeadMirror, getDeadMirrors } from '@/lib/store';
 

@@ -1,11 +1,10 @@
-import type { CSSProperties } from 'react';
 import { AdSection } from '@/components/organisms/AdSection';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { MediaCard } from '@/components/atoms/Card';
 import { HeroCarousel } from '@/components/organisms/HeroCarousel';
 import { type ThemeType } from '@/lib/utils';
 import type { CardRailVariant } from '@/components/molecules/card/CardRail';
-import type { HeroItem, HomeRecommendationSection, MixedRecommendationItem } from '@/app/home-page-types';
+import type { HeroItem, HomeRecommendationSection } from '@/app/home-page-types';
 
 type HomePageClientProps = {
   heroItems: HeroItem[];

@@ -1,3 +1,5 @@
+'use client';
+
 import { useUIStore } from "@/store/useUIStore";
 import { Link } from '@/components/atoms/Link';
 
@@ -8,7 +10,7 @@ export function Footer() {
     { href: '/movies', label: 'Movies' },
     { href: '/series', label: 'Series' },
     { href: '/series', label: 'Donghua in Series' },
-    { href: '/drachin', label: 'Drama China' },
+    { href: '/series/short', label: 'Short Series' },
     { href: '/comic', label: 'Comic' },
     { href: '/comic/manga', label: 'Manga' },
     { href: '/comic/manhwa', label: 'Manhwa' },

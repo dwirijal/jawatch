@@ -19,6 +19,7 @@ interface DrachinEpisodeClientProps {
   episodeIndex: number;
   detail: DrachinDetailData;
   episode: DrachinEpisodeData;
+  basePath?: string;
 }
 
 export default function DrachinEpisodeClient({
@@ -26,6 +27,7 @@ export default function DrachinEpisodeClient({
   episodeIndex,
   detail,
   episode,
+  basePath = '/series/short',
 }: DrachinEpisodeClientProps) {
   const router = useRouter();
   const [autoNextCountdown, setAutoNextCountdown] = React.useState<number | null>(null);
@@ -37,7 +39,7 @@ export default function DrachinEpisodeClient({
   const currentIndex = detail?.episodes.findIndex((item) => item.index === String(episodeIndex)) ?? -1;
   const previousEpisode = currentIndex > 0 && detail ? detail.episodes[currentIndex - 1] : null;
   const nextEpisode = currentIndex >= 0 && detail && currentIndex < detail.episodes.length - 1 ? detail.episodes[currentIndex + 1] : null;
-  const nextEpisodeHref = nextEpisode ? `/drachin/episode/${nextEpisode.slug}?index=${nextEpisode.index}` : null;
+  const nextEpisodeHref = nextEpisode ? `${basePath}/watch/${nextEpisode.slug}?index=${nextEpisode.index}` : null;
   const followingEpisodes =
     currentIndex >= 0 && detail
       ? detail.episodes.slice(currentIndex + 1, currentIndex + 9)
@@ -69,7 +71,7 @@ export default function DrachinEpisodeClient({
 
   return (
     <VerticalPlayerPage
-      backHref="/drachin"
+      backHref={basePath}
       eyebrow="Now Watching"
       title={detail.title}
       subtitle={
@@ -80,8 +82,8 @@ export default function DrachinEpisodeClient({
       }
       headerActions={
         <Button variant="outline" size="sm" asChild className="hidden md:inline-flex">
-          <Link href="/drachin">
-            <LayoutGrid className="mr-2 h-4 w-4" /> Drama Hub
+          <Link href={basePath}>
+            <LayoutGrid className="mr-2 h-4 w-4" /> Short Hub
           </Link>
         </Button>
       }
@@ -127,11 +129,11 @@ export default function DrachinEpisodeClient({
 
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/drachin/${slug}`}>Story Page</Link>
+                    <Link href={`${basePath}/${slug}`}>Story Page</Link>
                   </Button>
                   {previousEpisode ? (
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/drachin/episode/${previousEpisode.slug}?index=${previousEpisode.index}`}>Previous</Link>
+                      <Link href={`${basePath}/watch/${previousEpisode.slug}?index=${previousEpisode.index}`}>Previous</Link>
                     </Button>
                   ) : null}
                   {nextEpisodeHref ? (
@@ -164,7 +166,7 @@ export default function DrachinEpisodeClient({
                       asChild
                       className={`w-full ${isWatched && !isActive ? 'opacity-75' : ''}`}
                     >
-                      <Link href={`/drachin/episode/${item.slug}?index=${item.index}`}>
+                      <Link href={`${basePath}/watch/${item.slug}?index=${item.index}`}>
                         {isWatched && !isActive ? <Check className="h-3.5 w-3.5" /> : null}
                         EP {item.episode}
                       </Link>
@@ -225,7 +227,7 @@ export default function DrachinEpisodeClient({
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {followingEpisodes.map((item) => (
             <Paper key={`${item.slug}:${item.index}`} asChild tone="muted" shadow="sm" padded={false}>
-              <Link href={`/drachin/episode/${item.slug}?index=${item.index}`} className="flex min-h-[7rem] flex-col justify-between gap-3 p-4 transition-colors hover:bg-surface-elevated">
+              <Link href={`${basePath}/watch/${item.slug}?index=${item.index}`} className="flex min-h-[7rem] flex-col justify-between gap-3 p-4 transition-colors hover:bg-surface-elevated">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">Up Next</p>
                   <h3 className="text-lg font-semibold tracking-tight text-white">Episode {item.episode}</h3>

@@ -1,5 +1,15 @@
 export type VerticalDramaProvider = 'drachin' | 'dramabox';
 
+export const DEFAULT_VERTICAL_DRAMA_BASE_PATH = '/series/short';
+
+type DramaboxHrefInput = {
+  slug: string;
+  title: string;
+  image?: string;
+  subtitle?: string;
+  bookId?: string;
+};
+
 type ResumeEntry = {
   episodeIndex: number;
   updatedAt: number;
@@ -78,15 +88,54 @@ export function isVerticalDramaEpisodeWatched(
   return episodeIndex <= resume.episodeIndex;
 }
 
-export function getDrachinPlaybackTarget(slug: string, fallbackIndex = 1): { href: string; episodeIndex: number } {
+export function buildVerticalDramaStoryHref(slug: string, basePath = DEFAULT_VERTICAL_DRAMA_BASE_PATH): string {
+  return `${basePath}/${slug}`;
+}
+
+export function buildVerticalDramaWatchHref(
+  slug: string,
+  basePath = DEFAULT_VERTICAL_DRAMA_BASE_PATH,
+  fallbackIndex = 1,
+): string {
+  return `${basePath}/watch/${slug}?index=${fallbackIndex}`;
+}
+
+export function buildVerticalDramaDramaboxHref(
+  item: DramaboxHrefInput,
+  basePath = DEFAULT_VERTICAL_DRAMA_BASE_PATH,
+): string {
+  const params = new URLSearchParams();
+  params.set('title', item.title);
+  if (item.image) {
+    params.set('image', item.image);
+  }
+  if (item.subtitle) {
+    params.set('subtitle', item.subtitle);
+  }
+  if (item.bookId) {
+    params.set('bookId', item.bookId);
+  }
+
+  return `${basePath}/dramabox/${item.bookId || item.slug}?${params.toString()}`;
+}
+
+export function getDrachinPlaybackTarget(
+  slug: string,
+  fallbackIndex = 1,
+  basePath = DEFAULT_VERTICAL_DRAMA_BASE_PATH,
+): { href: string; episodeIndex: number } {
   const resume = getVerticalDramaProgress('drachin', slug);
   const episodeIndex = resume?.episodeIndex ?? fallbackIndex;
   return {
-    href: `/drachin/episode/${slug}?index=${episodeIndex}`,
+    href: buildVerticalDramaWatchHref(slug, basePath, episodeIndex),
     episodeIndex,
   };
 }
 
-export function getDrachinPlaybackHref(slug: string, fallbackIndex = 1): string {
-  return getDrachinPlaybackTarget(slug, fallbackIndex).href;
+export function getDrachinPlaybackHref(
+  slug: string,
+  fallbackIndex = 1,
+  basePath = DEFAULT_VERTICAL_DRAMA_BASE_PATH,
+): string {
+  return getDrachinPlaybackTarget(slug, fallbackIndex, basePath).href;
 }
