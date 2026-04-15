@@ -26,10 +26,10 @@ const bricolageGrotesque = Bricolage_Grotesque({
 export const metadata: Metadata = {
   metadataBase: SITE_URL,
   title: {
-    default: "jawatch - Anime, Donghua, Drama, Film, Komik, dan Novel",
+    default: "jawatch - Anime, Donghua, Drama, Film, dan Komik",
     template: "%s | jawatch"
   },
-  description: "Tempat nonton anime, donghua, drama, film, baca komik, dan novel subtitle Indonesia dalam satu katalog yang cepat dan rapi.",
+  description: "Tempat nonton anime, donghua, drama, dan film serta baca komik bahasa Indonesia dalam satu katalog yang cepat dan rapi.",
   applicationName: "jawatch",
   keywords: [
     "anime subtitle indonesia",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     "drama asia subtitle indonesia",
     "film subtitle indonesia",
     "komik indonesia",
-    "novel online indonesia",
+    "baca komik indonesia",
   ],
   manifest: "/manifest.json",
   appleWebApp: {
@@ -49,14 +49,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "id_ID",
     siteName: "jawatch",
-    title: "jawatch - Anime, Donghua, Drama, Film, Komik, dan Novel",
-    description: "Tempat nonton anime, donghua, drama, film, baca komik, dan novel subtitle Indonesia dalam satu katalog yang cepat dan rapi.",
+    title: "jawatch - Anime, Donghua, Drama, Film, dan Komik",
+    description: "Tempat nonton anime, donghua, drama, dan film serta baca komik bahasa Indonesia dalam satu katalog yang cepat dan rapi.",
     images: ["/logo.png"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "jawatch - Anime, Donghua, Drama, Film, Komik, dan Novel",
-    description: "Tempat nonton anime, donghua, drama, film, baca komik, dan novel subtitle Indonesia dalam satu katalog yang cepat dan rapi.",
+    title: "jawatch - Anime, Donghua, Drama, Film, dan Komik",
+    description: "Tempat nonton anime, donghua, drama, dan film serta baca komik bahasa Indonesia dalam satu katalog yang cepat dan rapi.",
     images: ["/logo.png"],
   },
 };
