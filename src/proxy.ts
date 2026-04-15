@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { normalizeVaultAwareNextPath } from "@/lib/auth/next-path";
 import { getOnboardingGateRedirectPath, isProxyProtectedPath, shouldBypassProxyAuthGates } from "@/lib/auth/session";
 import { getOnboardingStatus } from "@/lib/onboarding/server";
 import { refreshSupabaseSession } from "@/lib/supabase/middleware";
@@ -34,8 +35,8 @@ const BLOCKED_PREFIXES = [
   "/webjars/",
 ];
 
-const SESSION_REFRESH_PREFIXES = ["/account/", "/auth/", "/collection/", "/logout/"];
-const SESSION_REFRESH_EXACT_PATHS = new Set(["/account", "/auth", "/collection", "/login", "/logout"]);
+const SESSION_REFRESH_PREFIXES = ["/account/", "/auth/", "/collection/", "/logout/", "/vault/"];
+const SESSION_REFRESH_EXACT_PATHS = new Set(["/account", "/auth", "/collection", "/login", "/logout", "/vault"]);
 
 function shouldRefreshSupabaseSession(pathname: string) {
   if (SESSION_REFRESH_EXACT_PATHS.has(pathname)) {
@@ -175,7 +176,7 @@ export async function proxy(request: NextRequest) {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
+    loginUrl.searchParams.set("next", normalizeVaultAwareNextPath(pathname + request.nextUrl.search));
     const loginRedirect = NextResponse.redirect(loginUrl);
     cloneCookies(response, loginRedirect);
     return loginRedirect;

@@ -14,7 +14,7 @@ export default async function OnboardingPage({
   const status = await getOnboardingStatus(supabase, user.id);
 
   if (status.complete) {
-    redirect('/');
+    redirect('/vault');
   }
 
   const resolvedSearchParams = await searchParams;

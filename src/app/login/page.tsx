@@ -1,16 +1,6 @@
 import { redirect } from 'next/navigation';
+import { normalizeVaultAwareNextPath } from '@/lib/auth/next-path';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-
-const DEFAULT_RETURN_PATH = '/';
-
-function sanitizeRelativePath(nextPath: string | undefined): string {
-  const candidate = nextPath?.trim();
-  if (!candidate || !candidate.startsWith('/') || candidate.startsWith('//')) {
-    return DEFAULT_RETURN_PATH;
-  }
-
-  return candidate;
-}
 
 function resolveAppOrigin(): string {
   return process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim() || 'https://jawatch.web.id';
@@ -18,7 +8,7 @@ function resolveAppOrigin(): string {
 
 function buildAuthCallbackUrl(nextPath: string): string {
   const callbackUrl = new URL('/auth/callback', resolveAppOrigin());
-  callbackUrl.searchParams.set('next', sanitizeRelativePath(nextPath));
+  callbackUrl.searchParams.set('next', normalizeVaultAwareNextPath(nextPath));
   return callbackUrl.toString();
 }
 
@@ -35,7 +25,7 @@ async function signInWithOAuth(provider: 'google' | 'discord', nextPath: string)
   });
 
   if (error || !data.url) {
-    redirect(`/login?next=${encodeURIComponent(sanitizeRelativePath(nextPath))}&error=oauth`);
+    redirect(`/login?next=${encodeURIComponent(normalizeVaultAwareNextPath(nextPath))}&error=oauth`);
   }
 
   redirect(data.url);
@@ -47,7 +37,7 @@ async function signInWithMagicLink(formData: FormData) {
   const emailValue = formData.get('email');
   const nextValue = formData.get('next');
   const email = typeof emailValue === 'string' ? emailValue.trim() : '';
-  const nextPath = typeof nextValue === 'string' ? sanitizeRelativePath(nextValue) : DEFAULT_RETURN_PATH;
+  const nextPath = normalizeVaultAwareNextPath(typeof nextValue === 'string' ? nextValue : undefined);
 
   if (!email) {
     redirect(`/login?next=${encodeURIComponent(nextPath)}&error=email`);
@@ -79,7 +69,7 @@ export default async function LoginPage({
   const rawError = resolvedSearchParams.error;
   const rawSent = resolvedSearchParams.sent;
 
-  const nextPath = sanitizeRelativePath(typeof rawNext === 'string' ? rawNext : undefined);
+  const nextPath = normalizeVaultAwareNextPath(typeof rawNext === 'string' ? rawNext : undefined);
   const errorCode = typeof rawError === 'string' ? rawError : '';
   const sent = rawSent === '1';
 
@@ -88,7 +78,7 @@ export default async function LoginPage({
       <div className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 p-6">
         <h1 className="text-xl font-black uppercase tracking-[0.16em] text-white">Login Jawatch</h1>
         <p className="mt-2 text-sm text-zinc-400">
-          Login with Google, Discord, or request an email magic link.
+          Login with Google, Discord, or request an email magic link to continue into your Vault.
         </p>
       </div>
 

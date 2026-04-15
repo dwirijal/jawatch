@@ -165,5 +165,5 @@ export async function saveOptInsAndFinishOnboarding(formData: FormData) {
     redirect(`/onboarding?step=${requiredStepRedirect}&error=required`);
   }
 
-  redirect('/');
+  redirect('/vault');
 }
