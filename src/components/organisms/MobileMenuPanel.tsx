@@ -38,6 +38,7 @@ export function MobileMenuPanel() {
               <ModalTitle className="mt-1 text-xl font-black uppercase tracking-[0.12em] text-white">
                 jawatch
               </ModalTitle>
+              <p className="mt-2 text-xs text-zinc-500">Watch, read, and vault.</p>
             </div>
             <ModalClose className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 p-2 text-zinc-400 transition-colors hover:bg-surface-elevated hover:text-white">
               <X className="h-5 w-5" />
@@ -46,7 +47,16 @@ export function MobileMenuPanel() {
 
           <div className="flex-1 overflow-y-auto px-5 py-6">
             <div className="space-y-8">
-              {MOBILE_MENU_GROUPS.map((group) => (
+              {MOBILE_MENU_GROUPS.map((group) => {
+                const activeHref = group.items.reduce<string | undefined>((current, candidate) => {
+                  if (!candidate.href || !group.isActive?.(pathname, candidate.href)) {
+                    return current;
+                  }
+
+                  return !current || candidate.href.length > current.length ? candidate.href : current;
+                }, undefined);
+
+                return (
                 <section key={group.key} className="space-y-3">
                   <div className="flex items-center gap-2">
                     <group.icon className="h-4 w-4 text-zinc-400" />
@@ -55,7 +65,7 @@ export function MobileMenuPanel() {
                   <p className="text-xs text-zinc-500">{group.description}</p>
                   <div className="space-y-2">
                     {group.items.map((item) => {
-                      const itemActive = Boolean(item.href && group.isActive?.(pathname, item.href));
+                      const itemActive = item.href === activeHref;
 
                       return item.href ? (
                         <ModalClose asChild key={item.label}>
@@ -93,7 +103,8 @@ export function MobileMenuPanel() {
                     })}
                   </div>
                 </section>
-              ))}
+                );
+              })}
 
               <section className="space-y-3 border-t border-border-subtle pt-6">
                 <div className="flex items-center gap-2">

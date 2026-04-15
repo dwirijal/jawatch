@@ -7,11 +7,10 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { cn } from '@/lib/utils';
-import { EDITORIAL_NAV_ITEMS } from '@/lib/navigation';
-import { DesktopNavGroup } from './DesktopNavGroup';
+import { DESKTOP_NAV_ITEMS } from '@/lib/navigation';
 import { useUIStore } from '@/store/useUIStore';
+import { DesktopNavGroup } from './DesktopNavGroup';
 import { SearchHotkeyListener } from './SearchHotkeyListener';
-import { SearchLauncher } from './SearchLauncher';
 import { SearchModal } from './SearchModal';
 import { NavbarAuthControls } from './NavbarAuthControls';
 
@@ -106,76 +105,77 @@ export function Navbar() {
       <nav
         data-scrolled={isSolid ? 'true' : 'false'}
         className={cn(
-          'sticky top-0 z-[160] hidden w-full border-b transition-all duration-500 ease-in-out md:block',
+          'sticky top-0 z-[160] hidden w-full border-b transition-all duration-700 ease-in-out md:block',
           isSolid
-            ? 'border-border-subtle bg-background/80 py-0 backdrop-blur-2xl'
-            : 'border-transparent bg-transparent py-2'
+            ? 'border-zinc-200 bg-white/80 py-0 backdrop-blur-xl'
+            : 'border-transparent bg-transparent py-4'
         )}
       >
-        <div className="app-container-wide flex h-16 items-center justify-between gap-6 lg:h-[4.5rem]">
-          <div className="flex min-w-0 items-center gap-6 xl:gap-10">
-            <Link href="/" className="focus-tv group flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] border border-white/10 bg-surface-1 glass-noise refractive-border transition-transform group-hover:scale-105 active:scale-95">
-                <span className="text-xl font-black italic text-white">J</span>
-              </div>
-              <span className="hidden text-xl font-black uppercase tracking-[-0.04em] text-white sm:block lg:text-2xl">
-                ja<span className="text-zinc-500">watch</span>
+        <div className="app-container-wide flex h-20 items-center justify-between gap-10">
+          <div className="flex min-w-0 items-center gap-12">
+            <Link href="/" className="focus-tv group flex items-center gap-4">
+              <span className="flex flex-col leading-none">
+                <span className="font-[var(--font-heading)] text-3xl tracking-tight text-zinc-900 lg:text-4xl">
+                  Ja<span className="italic text-zinc-400">watch</span>
+                </span>
               </span>
             </Link>
 
-            <div className="flex items-center gap-1 rounded-[var(--radius-md)] border border-white/5 bg-black/20 p-1 backdrop-blur-md">
-              {EDITORIAL_NAV_ITEMS.map((item) => {
-                const isActive = item.href === '/' 
-                  ? pathname === '/' 
-                  : pathname === item.href || (item.href !== '/' && pathname.startsWith(`${item.href}/`));
-                
-                // Special case for Shorts vs Series to avoid double active state
-                const isSeries = item.key === 'series';
-                const isActuallyActive = isSeries 
-                  ? (isActive && !pathname.startsWith('/series/short'))
-                  : isActive;
+            <div className="flex items-center gap-2">
+              {DESKTOP_NAV_ITEMS.map((item) => {
+                if (item.type === 'group') {
+                  return (
+                    <DesktopNavGroup
+                      key={item.key}
+                      active={item.match(pathname)}
+                      group={item.group}
+                      pathname={pathname}
+                    />
+                  );
+                }
+
+                const isActive = item.match(pathname);
 
                 return (
                   <Link
                     key={item.key}
                     href={item.href}
                     className={cn(
-                      'focus-tv relative flex items-center gap-2 rounded-[var(--radius-sm)] px-4 py-2 text-[11px] font-black uppercase tracking-[0.15em] transition-all',
-                      isActuallyActive ? 'text-white' : 'text-muted-foreground hover:text-foreground'
+                      'focus-tv relative flex items-center gap-2 rounded-full px-6 py-2.5 text-[11px] font-bold uppercase tracking-[0.25em] transition-all duration-500',
+                      isActive ? 'text-zinc-900' : 'text-zinc-400 hover:text-zinc-900'
                     )}
                   >
-                    {isActuallyActive && (
+                    {isActive && (
                       <motion.div
                         layoutId="active-tab"
-                        className="absolute inset-0 rounded-[var(--radius-sm)] bg-accent shadow-[0_0_20px_var(--accent-soft)]"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                        className="absolute inset-0 rounded-full bg-zinc-100 shadow-sm"
+                        transition={{ type: 'spring', bounce: 0.1, duration: 0.8 }}
                       />
                     )}
                     <span className="relative z-10">{item.label}</span>
                   </Link>
                 );
               })}
-              {authControlsMounted ? (
-                <NavbarAuthControls />
-              ) : (
-                <div className="h-10 w-32 animate-pulse rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1" />
-              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden xl:block">
-              <SearchLauncher />
+          <div className="flex items-center gap-6">
+            <div className="hidden lg:block">
+              {authControlsMounted ? (
+                <NavbarAuthControls />
+              ) : (
+                <div className="h-10 w-24 animate-pulse rounded-full bg-zinc-100" />
+              )}
             </div>
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => useUIStore.getState().setSearchOpen(true)}
-              className="focus-tv rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 text-zinc-400 hover:bg-surface-elevated hover:text-white xl:hidden"
+              className="focus-tv rounded-full text-zinc-900 hover:bg-zinc-100"
               aria-label="Open search"
             >
-              <Search className="h-4 w-4" />
+              <Search className="h-5 w-5" />
             </Button>
           </div>
         </div>

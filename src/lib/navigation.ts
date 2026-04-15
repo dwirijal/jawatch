@@ -10,7 +10,7 @@ export type NavigationGroup = {
   description: string;
   icon: typeof Home;
   isActive?: (pathname: string, href: string) => boolean;
-  key: 'video' | 'komik' | 'novel';
+  key: 'watch' | 'read' | 'vault';
   label: string;
   items: NavigationLeafItem[];
 };
@@ -19,7 +19,7 @@ export type NavigationPrimaryItem =
   | {
       href: string;
       icon: typeof Home;
-      key: 'home' | 'bookmark';
+      key: 'home' | 'vault';
       label: string;
       match: (pathname: string) => boolean;
       type: 'link';
@@ -31,56 +31,76 @@ export type NavigationPrimaryItem =
       type: 'group';
     };
 
-const VIDEO_GROUP: NavigationGroup = {
-  key: 'video',
-  label: 'Video',
-  icon: Clapperboard,
-  description: 'Watch-first library across film and animation.',
-  isActive: startsWithPath,
-  items: [
-    { label: 'Film', href: '/movies', description: 'Movies and watch pages.' },
-    { label: 'Series', href: '/series', description: 'Anime, donghua, and episodic drama from the unified catalog.' },
-    { label: 'Donghua in Series', href: '/series/donghua', description: 'Chinese animation shelf inside the canonical series catalog.' },
-    { label: 'Drama in Series', href: '/series/drama', description: 'Live-action episodic drama shelf inside the canonical series catalog.' },
-    { label: 'Short Series', href: '/series/short', description: 'Vertical short-series hub inside the canonical series family.' },
-  ],
-};
-
-const KOMIK_GROUP: NavigationGroup = {
-  key: 'komik',
-  label: 'Komik',
-  icon: BookOpen,
-  description: 'Read-first surfaces for comics and serialized panels.',
-  isActive: startsWithPath,
-  items: [
-    { label: 'Comic', href: '/comic', description: 'Unified comic hub across manga, manhwa, and manhua.' },
-    { label: 'Manga', href: '/comic/manga', description: 'Japanese manga shelf inside the comic hub.' },
-    { label: 'Manhwa', href: '/comic/manhwa', description: 'Korean webtoon and manhwa shelf inside the comic hub.' },
-    { label: 'Manhua', href: '/comic/manhua', description: 'Chinese manhua shelf inside the comic hub.' },
-  ],
-};
-
-const NOVEL_GROUP: NavigationGroup = {
-  key: 'novel',
-  label: 'Read',
-  icon: FileText,
-  description: 'Novel shelves and long-form reading surfaces.',
-  isActive: startsWithPath,
-  items: [
-    { label: 'Novel', href: '/novel', description: 'Readable web novel catalog and chapter flow.' },
-  ],
-};
-
 function startsWithPath(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function startsWithAnyPath(pathname: string, hrefs: readonly string[]): boolean {
+  return hrefs.some((href) => startsWithPath(pathname, href));
+}
+
+function createGroupPathMatcher(pathAliases: Record<string, readonly string[]>) {
+  return (pathname: string, href: string) => startsWithAnyPath(pathname, pathAliases[href] ?? [href]);
+}
+
+const WATCH_PATH_ALIASES: Record<string, readonly string[]> = {
+  '/watch': ['/watch'],
+  '/watch/movies': ['/watch/movies', '/movies'],
+  '/watch/series': ['/watch/series', '/series'],
+  '/watch/shorts': ['/watch/shorts', '/series/short'],
+};
+
+const READ_PATH_ALIASES: Record<string, readonly string[]> = {
+  '/read': ['/read'],
+  '/read/comics': ['/read/comics', '/comic'],
+};
+
+const VAULT_PATH_ALIASES: Record<string, readonly string[]> = {
+  '/collection': ['/collection'],
+};
+
+const WATCH_GROUP: NavigationGroup = {
+  key: 'watch',
+  label: 'Watch',
+  icon: Clapperboard,
+  description: 'Movies, series, and shorts in one watch surface.',
+  isActive: createGroupPathMatcher(WATCH_PATH_ALIASES),
+  items: [
+    { label: 'Watch Home', href: '/watch', description: 'Entry point for the watch hub.' },
+    { label: 'Movies', href: '/watch/movies', description: 'Film catalog and playback entry.' },
+    { label: 'Series', href: '/watch/series', description: 'Episodic anime, donghua, and drama.' },
+    { label: 'Shorts', href: '/watch/shorts', description: 'Vertical short-form playback.' },
+  ],
+};
+
+const READ_GROUP: NavigationGroup = {
+  key: 'read',
+  label: 'Read',
+  icon: BookOpen,
+  description: 'Comics and long-form reading in one reading surface.',
+  isActive: createGroupPathMatcher(READ_PATH_ALIASES),
+  items: [
+    { label: 'Read Home', href: '/read', description: 'Entry point for the reading hub.' },
+    { label: 'Comics', href: '/read/comics', description: 'Manga, manhwa, and manhua shelf.' },
+  ],
+};
+
+const VAULT_GROUP: NavigationGroup = {
+  key: 'vault',
+  label: 'Vault',
+  icon: BookMarked,
+  description: 'Saved content, history, and account-adjacent surfaces.',
+  isActive: createGroupPathMatcher(VAULT_PATH_ALIASES),
+  items: [
+    { label: 'Vault', href: '/collection', description: 'Open your saved library.' },
+  ],
+};
+
 export const EDITORIAL_NAV_ITEMS = [
-  { label: 'Movies', href: '/movies', key: 'movies' },
-  { label: 'Series', href: '/series', key: 'series' },
-  { label: 'Comics', href: '/comic', key: 'comics' },
-  { label: 'Shorts', href: '/series/short', key: 'shorts' },
-  { label: 'Novels', href: '/novel', key: 'novels' },
+  { label: 'Home', href: '/', key: 'home' },
+  { label: 'Watch', href: '/watch', key: 'watch' },
+  { label: 'Read', href: '/read', key: 'read' },
+  { label: 'Vault', href: '/collection', key: 'vault' },
 ];
 
 export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
@@ -93,27 +113,21 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
     match: (pathname) => pathname === '/',
   },
   {
-    key: 'video',
+    key: 'watch',
     type: 'group',
-    group: VIDEO_GROUP,
-    match: (pathname) => ['/movies', '/series', '/drachin', '/dramabox'].some((href) => startsWithPath(pathname, href)),
+    group: WATCH_GROUP,
+    match: (pathname) => startsWithAnyPath(pathname, ['/watch', '/movies', '/series', '/series/short']),
   },
   {
-    key: 'komik',
+    key: 'read',
     type: 'group',
-    group: KOMIK_GROUP,
-    match: (pathname) => startsWithPath(pathname, '/comic'),
+    group: READ_GROUP,
+    match: (pathname) => startsWithAnyPath(pathname, ['/read', '/comic']),
   },
   {
-    key: 'novel',
-    type: 'group',
-    group: NOVEL_GROUP,
-    match: (pathname) => startsWithPath(pathname, '/novel'),
-  },
-  {
-    key: 'bookmark',
+    key: 'vault',
     type: 'link',
-    label: 'Bookmark',
+    label: 'Vault',
     href: '/collection',
     icon: BookMarked,
     match: (pathname) => startsWithPath(pathname, '/collection'),
@@ -122,12 +136,12 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
 
 export const MOBILE_NAV_ITEMS = [
   { key: 'home', label: 'Home', href: '/', icon: Home },
+  { key: 'watch', label: 'Watch', href: '/watch', icon: Clapperboard },
   { key: 'search', label: 'Search', icon: Search, action: 'search' as const },
-  { key: 'bookmark', label: 'Bookmark', href: '/collection', icon: BookMarked },
-  { key: 'menu', label: 'Menu', icon: UserRound, action: 'menu' as const },
+  { key: 'vault', label: 'Vault', href: '/collection', icon: BookMarked },
 ];
 
-export const MOBILE_MENU_GROUPS: NavigationGroup[] = [VIDEO_GROUP, KOMIK_GROUP, NOVEL_GROUP];
+export const MOBILE_MENU_GROUPS: NavigationGroup[] = [WATCH_GROUP, READ_GROUP, VAULT_GROUP];
 
 export const ACCOUNT_PANEL_META = {
   label: 'Account',
