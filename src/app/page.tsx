@@ -6,7 +6,7 @@ import { buildCollectionPageJsonLd, buildMetadata, buildWebsiteJsonLd } from '@/
 
 export const metadata: Metadata = buildMetadata({
   title: 'jawatch Home',
-  description: 'Temukan watch, read, dan vault surfaces untuk anime, donghua, drama Asia, film, komik, dan novel subtitle Indonesia dalam satu homepage yang cepat untuk discovery harian.',
+  description: 'Temukan watch, read, dan vault surfaces untuk anime, donghua, drama Asia, film, dan komik subtitle Indonesia dalam satu homepage yang cepat untuk discovery harian.',
   path: '/',
   keywords: [
     'watch subtitle indonesia',
@@ -17,7 +17,7 @@ export const metadata: Metadata = buildMetadata({
     'drama asia subtitle indonesia',
     'film subtitle indonesia',
     'komik manga manhwa manhua',
-    'novel online indonesia',
+    'komik subtitle indonesia',
   ],
 });
 
@@ -31,7 +31,7 @@ export default async function HomePage() {
       <JsonLd
         data={buildCollectionPageJsonLd({
           title: 'jawatch Home',
-          description: 'Homepage discovery for watch, read, and vault surfaces across anime, donghua, drama, film, komik, dan novel subtitle Indonesia.',
+          description: 'Homepage discovery for watch, read, and vault surfaces across anime, donghua, drama, film, dan komik subtitle Indonesia.',
           path: '/',
           items: heroItems.map((item) => ({
             name: item.title,

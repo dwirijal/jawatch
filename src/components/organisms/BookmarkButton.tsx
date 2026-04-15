@@ -68,7 +68,7 @@ export function BookmarkButton({
           compact
           loginHref={authGate.loginHref}
           title="Login to save"
-          description="Sign in to keep bookmarks in your collection."
+          description="Sign in to keep bookmarks in your vault."
           actionLabel="Login"
         />
       ) : null}

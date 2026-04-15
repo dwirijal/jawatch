@@ -15,7 +15,7 @@ interface SavedContentSectionProps {
   limit?: number;
 }
 
-export function SavedContentSection({ type, title = "Your Collection", limit }: SavedContentSectionProps) {
+export function SavedContentSection({ type, title = "Your Vault", limit }: SavedContentSectionProps) {
   const authGate = useAuthGate();
   const [items, setItems] = React.useState<BookmarkItem[]>([]);
   const [mounted, setMounted] = React.useState(false);
@@ -55,7 +55,7 @@ export function SavedContentSection({ type, title = "Your Collection", limit }: 
           compact
           loginHref={authGate.loginHref}
           title="Saved content is available after login"
-          description="Sign in to unlock your personal collection. Once you are in, your existing local-only saved content behavior stays the same."
+          description="Sign in to unlock your personal vault. Once you are in, your existing local-only saved content behavior stays the same."
           actionLabel="Login"
         />
       </section>
