@@ -53,10 +53,11 @@ const WATCH_PATH_ALIASES: Record<string, readonly string[]> = {
 const READ_PATH_ALIASES: Record<string, readonly string[]> = {
   '/read': ['/read'],
   '/read/comics': ['/read/comics', '/comic'],
+  '/read/novels': ['/read/novels', '/novel'],
 };
 
 const VAULT_PATH_ALIASES: Record<string, readonly string[]> = {
-  '/collection': ['/collection'],
+  '/vault': ['/vault', '/collection'],
 };
 
 const WATCH_GROUP: NavigationGroup = {
@@ -92,7 +93,7 @@ const VAULT_GROUP: NavigationGroup = {
   description: 'Saved content, history, and account-adjacent surfaces.',
   isActive: createGroupPathMatcher(VAULT_PATH_ALIASES),
   items: [
-    { label: 'Vault', href: '/collection', description: 'Open your saved library.' },
+    { label: 'Vault', href: '/vault', description: 'Open your saved library.' },
   ],
 };
 
@@ -100,7 +101,7 @@ export const EDITORIAL_NAV_ITEMS = [
   { label: 'Home', href: '/', key: 'home' },
   { label: 'Watch', href: '/watch', key: 'watch' },
   { label: 'Read', href: '/read', key: 'read' },
-  { label: 'Vault', href: '/collection', key: 'vault' },
+  { label: 'Vault', href: '/vault', key: 'vault' },
 ];
 
 export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
@@ -128,9 +129,9 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
     key: 'vault',
     type: 'link',
     label: 'Vault',
-    href: '/collection',
+    href: '/vault',
     icon: BookMarked,
-    match: (pathname) => startsWithPath(pathname, '/collection'),
+    match: (pathname) => startsWithAnyPath(pathname, ['/vault', '/collection']),
   },
 ];
 
@@ -138,7 +139,7 @@ export const MOBILE_NAV_ITEMS = [
   { key: 'home', label: 'Home', href: '/', icon: Home },
   { key: 'watch', label: 'Watch', href: '/watch', icon: Clapperboard },
   { key: 'search', label: 'Search', icon: Search, action: 'search' as const },
-  { key: 'vault', label: 'Vault', href: '/collection', icon: BookMarked },
+  { key: 'vault', label: 'Vault', href: '/vault', icon: BookMarked },
 ];
 
 export const MOBILE_MENU_GROUPS: NavigationGroup[] = [WATCH_GROUP, READ_GROUP, VAULT_GROUP];

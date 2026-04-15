@@ -13,6 +13,9 @@ function getPrimaryNavLabels(items) {
 
 test('top-level navigation exposes Home, Watch, Read, and Vault', () => {
   assert.deepEqual(getPrimaryNavLabels(DESKTOP_NAV_ITEMS), ['Home', 'Watch', 'Read', 'Vault']);
+
+  const vaultItem = DESKTOP_NAV_ITEMS.find((item) => item.key === 'vault');
+  assert.equal(vaultItem && 'href' in vaultItem ? vaultItem.href : null, '/vault');
 });
 
 test('mobile nav keeps search as an action and avoids legacy top-level labels', () => {
@@ -24,11 +27,22 @@ test('mobile nav keeps search as an action and avoids legacy top-level labels', 
     MOBILE_NAV_ITEMS.map((item) => item.label),
     ['Home', 'Watch', 'Search', 'Vault'],
   );
+  assert.deepEqual(
+    MOBILE_NAV_ITEMS.map((item) => ('href' in item ? item.href : null)),
+    ['/', '/watch', null, '/vault'],
+  );
 });
 
 test('mobile menu groups expose the new Watch, Read, and Vault sections', () => {
   assert.deepEqual(
     MOBILE_MENU_GROUPS.map((group) => group.label),
     ['Watch', 'Read', 'Vault'],
+  );
+
+  const vaultGroup = MOBILE_MENU_GROUPS.find((group) => group.key === 'vault');
+  assert.ok(vaultGroup);
+  assert.deepEqual(
+    vaultGroup?.items.map((item) => item.href),
+    ['/vault'],
   );
 });

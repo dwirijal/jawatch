@@ -24,8 +24,8 @@ const PROXY_STATIC_EXACT_PATHS = new Set([
   '/sitemap.xml',
   '/sw.js',
 ]);
-const PROXY_PROTECTED_PREFIXES = ['/account/', '/collection/'];
-const PROXY_PROTECTED_EXACT_PATHS = new Set(['/account', '/collection']);
+const PROXY_PROTECTED_PREFIXES = ['/account/', '/collection/', '/vault/'];
+const PROXY_PROTECTED_EXACT_PATHS = new Set(['/account', '/collection', '/vault']);
 
 function parseCookieHeader(cookieHeader: string): Array<{ name: string; value: string }> {
   return cookieHeader

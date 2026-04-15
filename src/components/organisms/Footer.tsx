@@ -18,7 +18,6 @@ const FOOTER_GROUPS = [
     links: [
       { href: '/read', label: 'Read Home' },
       { href: '/read/comics', label: 'Comics' },
-      { href: '/novel', label: 'Stories' },
     ],
   },
   {
@@ -26,7 +25,7 @@ const FOOTER_GROUPS = [
     links: [
       { href: '/', label: 'Home' },
       { href: '/search', label: 'Search' },
-      { href: '/collection', label: 'Vault' },
+      { href: '/vault', label: 'Vault' },
       { href: '/login', label: 'Login' },
     ],
   },
