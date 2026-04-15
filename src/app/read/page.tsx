@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { BookOpen } from 'lucide-react';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
@@ -38,7 +37,7 @@ export default function ReadPage() {
       <MediaHubHeader
         title="Read"
         description="Jump into comics from the unified reading surface."
-        icon={BookOpen}
+        iconName="book-open"
         theme="manga"
         eyebrow="Reading Hub"
       />

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Clapperboard } from 'lucide-react';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
@@ -48,7 +47,7 @@ export default function WatchPage() {
       <MediaHubHeader
         title="Watch"
         description="Jump into movies, series, or shorts without leaving the unified watch surface."
-        icon={Clapperboard}
+        iconName="clapperboard"
         theme="movie"
         eyebrow="Media Hub"
       />
