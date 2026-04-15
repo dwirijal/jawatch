@@ -335,6 +335,19 @@ These labels are semantic product surfaces, not decorative copy.
 - support / donation
 - controlled download interstitials
 
+### 20.1.1 Ad Network Baseline
+- V1 display ads are expected to integrate with Google AdSense.
+- Current AdSense publisher account:
+  - `ca-pub-8868090753979495`
+- Global app shell should include:
+  - AdSense account meta tag:
+    - `<meta name="google-adsense-account" content="ca-pub-8868090753979495">`
+  - AdSense script loaded once at the app/root level, not injected repeatedly per component:
+    - `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8868090753979495`
+- Root `ads.txt` should publish:
+  - `google.com, pub-8868090753979495, DIRECT, f08c47fec0942fa0`
+- Publisher ID is public-facing config, not a secret.
+
 ### 20.2 Display Ads
 - may appear on:
   - home

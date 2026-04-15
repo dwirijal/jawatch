@@ -281,6 +281,13 @@ Redesign Jawatch from a source-shaped product into a mode-first media product wi
   - display ads
   - support / donation
   - controlled download interstitials
+- Ad network baseline for V1:
+  - Google AdSense
+  - publisher account: `ca-pub-8868090753979495`
+  - global account meta tag required
+  - root-level AdSense script should load once
+  - root `ads.txt` should publish:
+    - `google.com, pub-8868090753979495, DIRECT, f08c47fec0942fa0`
 - Monetization must not alter canonical content routes or break the main watch/read flow.
 - Display ads may also appear in players and readers as long as they do not materially obstruct the core content experience.
 - Support / donation entry may exist on all pages, but with tiered intensity:
