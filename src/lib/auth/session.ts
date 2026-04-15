@@ -12,8 +12,9 @@ export type AdultEligibility = {
   ageVerified: boolean;
 };
 
-const DEFAULT_RETURN_PATH = '/';
 const ONBOARDING_PATH = '/onboarding';
+const DEFAULT_RETURN_PATH = '/';
+const VAULT_SAVED_PATH = '/vault/saved';
 const PROXY_AUTH_EXEMPT_EXACT_PATHS = new Set(['/login', '/logout', '/onboarding']);
 const PROXY_AUTH_EXEMPT_PREFIXES = ['/auth/callback', '/login/', '/logout/', '/onboarding/'];
 const PROXY_STATIC_EXACT_PATHS = new Set([
@@ -62,12 +63,26 @@ function sanitizeRelativePath(nextPath: string | undefined): string {
   return candidate;
 }
 
+function isLegacyCollectionPath(pathname: string): boolean {
+  return pathname === '/collection' || pathname.startsWith('/collection?') || pathname.startsWith('/collection/');
+}
+
+export function normalizeVaultAwareNextPath(nextPath: string | undefined): string {
+  const candidate = sanitizeRelativePath(nextPath);
+
+  if (isLegacyCollectionPath(candidate)) {
+    return VAULT_SAVED_PATH;
+  }
+
+  return candidate;
+}
+
 export function resolvePostAuthRedirectPath(nextPath: string | undefined, onboardingComplete: boolean): string {
   if (!onboardingComplete) {
     return ONBOARDING_PATH;
   }
 
-  return sanitizeRelativePath(nextPath);
+  return normalizeVaultAwareNextPath(nextPath);
 }
 
 export function getOnboardingGateRedirectPath(pathname: string | undefined, onboardingComplete: boolean): string | null {
@@ -75,7 +90,7 @@ export function getOnboardingGateRedirectPath(pathname: string | undefined, onbo
     return null;
   }
 
-  const target = sanitizeRelativePath(pathname);
+  const target = normalizeVaultAwareNextPath(pathname);
   if (
     target === ONBOARDING_PATH ||
     target.startsWith(`${ONBOARDING_PATH}/`) ||
@@ -300,7 +315,7 @@ export async function requireUser(nextPath = '/'): Promise<AuthUser> {
   }
 
   const { redirect } = await import('next/navigation');
-  const target = sanitizeRelativePath(nextPath);
+  const target = normalizeVaultAwareNextPath(nextPath);
   redirect(`/login?next=${encodeURIComponent(target)}`);
   throw new Error('UNAUTHENTICATED_REDIRECT');
 }

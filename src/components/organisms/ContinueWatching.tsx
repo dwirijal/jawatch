@@ -69,7 +69,7 @@ export function ContinueWatching({ type, title = 'Continue Watching', limit = 10
         icon={Clock}
         action={
           <Button variant="ghost" size="sm" className="hidden text-zinc-500 hover:text-white md:flex" asChild>
-            <Link href="/vault">
+            <Link href="/vault/history">
               View Full History <ChevronRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
