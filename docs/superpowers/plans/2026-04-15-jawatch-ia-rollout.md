@@ -8,6 +8,8 @@
 
 **Tech Stack:** Next.js 16 App Router, React 19, TypeScript, Supabase Auth, `postgres`, OpenSearch, Cloudflare Workers, Playwright, Node test runner
 
+**Build/Deploy Rule:** Do not rely on `next build` or other local production builds for this rollout. Build validation must happen via Vercel preview/staging deployments, never Vercel production until explicitly approved.
+
 ---
 
 ## File Structure Lock-In
@@ -418,7 +420,7 @@ to reflect the approved SEO policy:
 Run:
 - `rtk node --test tests/unit/search-indexability.test.mjs`
 - `rtk node --test tests/unit/next-config.test.mjs`
-- `rtk npm run build`
+- deploy or update a Vercel preview/staging deployment and verify the deployment reaches `Ready`
 
 Expected: PASS
 
@@ -497,7 +499,7 @@ The page must include:
 
 Run:
 - `rtk node --test tests/unit/adsense-config.test.mjs`
-- `rtk npm run build`
+- deploy or update a Vercel preview/staging deployment and verify the deployment reaches `Ready`
 
 Expected: PASS
 
@@ -611,7 +613,7 @@ Prefer server redirects at route entrypoints rather than client-side hacks. Keep
 Run:
 - `rtk npm run test:unit`
 - `rtk npx playwright test`
-- `rtk npm run build`
+- deploy or update a Vercel preview/staging deployment and verify the deployment reaches `Ready`
 - `rtk npm run test:security`
 
 Expected: PASS
