@@ -1,4 +1,5 @@
 import { BookMarked, BookOpen, Clapperboard, Home, Play, Search, UserRound, Zap } from 'lucide-react';
+import { SHORTS_HUB_ENABLED } from './shorts-paths.js';
 
 export type NavigationLeafItem = {
   description: string;
@@ -63,13 +64,17 @@ const WATCH_GROUP: NavigationGroup = {
   key: 'watch',
   label: 'Watch',
   icon: Clapperboard,
-  description: 'Movies, series, and shorts in one watch surface.',
+  description: SHORTS_HUB_ENABLED
+    ? 'Movies, series, and shorts in one watch surface.'
+    : 'Movies and series in one watch surface.',
   isActive: createGroupPathMatcher(WATCH_PATH_ALIASES),
   items: [
     { label: 'Watch Home', href: '/watch', description: 'Entry point for the watch hub.' },
     { label: 'Movies', href: '/watch/movies', description: 'Film catalog and playback entry.' },
     { label: 'Series', href: '/watch/series', description: 'Episodic anime, donghua, and drama.' },
-    { label: 'Shorts', href: '/watch/shorts', description: 'Vertical short-form playback.' },
+    ...(SHORTS_HUB_ENABLED
+      ? [{ label: 'Shorts', href: '/watch/shorts', description: 'Vertical short-form playback.' }]
+      : []),
   ],
 };
 

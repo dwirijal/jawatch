@@ -38,6 +38,27 @@ Each adapter:
 
 ## Route Families
 
+### Browse Hubs
+
+Used by:
+
+- `/watch/movies`
+- `/watch/series`
+- `/read/comics`
+
+Shared shell:
+
+- `MediaHubTemplate`
+- `MediaHubHeader`
+
+Rules:
+
+- shared order is `hero -> personal block (optional) -> hub content stack`
+- hero stays single-item spotlight only, never a control strip
+- personal block is composed from existing modules like `ContinueWatching` and `SavedContentSection`
+- hub-specific discovery stays route-owned inside the content stack
+- do not create parallel browse-shell components when the existing hub shell can be extended
+
 ### Horizontal Media Detail
 
 Used by:

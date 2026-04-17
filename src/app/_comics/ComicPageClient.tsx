@@ -11,11 +11,17 @@ import {
 } from "@/lib/adapters/comic";
 import { pickSubtypePosterImage } from '@/lib/comic-media';
 import { incrementInterest } from '@/lib/store';
-import { BookOpen, Sparkles } from "lucide-react";
+import { BookOpen, Play, Sparkles } from "lucide-react";
+import { Button } from '@/components/atoms/Button';
+import { Link } from '@/components/atoms/Link';
 import { MediaCard } from "@/components/atoms/Card";
-import { MediaHubTemplate } from '@/components/organisms/MediaHubTemplate';
+import { BookmarkButton } from '@/components/organisms/BookmarkButton';
+import { ContinueWatching } from '@/components/organisms/ContinueWatching';
+import { MediaHubTemplate, type MediaHubHero } from '@/components/organisms/MediaHubTemplate';
 import { SavedContentSection } from '@/components/organisms/SavedContentSection';
+import { GenreFilter } from '@/components/molecules/GenreFilter';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
+import { StateInfo } from '@/components/molecules/StateInfo';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { StaggerEntry } from '@/components/molecules/StaggerEntry';
 import { formatComicCardSubtitle, getComicCardBadgeText } from '@/lib/card-presentation';
@@ -118,6 +124,60 @@ export default function ComicPageClient({
   const [loading, setLoading] = React.useState(false);
   const [bootstrapping, setBootstrapping] = React.useState(popular.length === 0 || newest.length === 0);
   const [activeGenre, setActiveGenre] = React.useState<string | null>(null);
+  const spotlightComic = newest[0] ?? popular[0] ?? initialNewest[0] ?? initialPopular[0] ?? null;
+  const spotlightBadges = React.useMemo(() => {
+    if (!spotlightComic) {
+      return isAllVariant ? [] : [variant.toUpperCase()];
+    }
+
+    const badges = [
+      getComicCardBadgeText(spotlightComic),
+      ...spotlightComic.genre.split(',').map((genre) => genre.trim()).filter(Boolean).slice(0, 2),
+    ];
+    return Array.from(new Set(badges)).slice(0, 3);
+  }, [isAllVariant, spotlightComic, variant]);
+  const comicHero = React.useMemo<MediaHubHero>(() => ({
+    title: spotlightComic?.title || config.title,
+    description: spotlightComic?.description?.trim()
+      || (isAllVariant
+        ? 'Browse manga, manhwa, and manhua in one calmer reading shell with the same hero rhythm and section spacing.'
+        : `Focused ${variant} shelf inside the canonical comics hub.`),
+    label: isAllVariant ? 'Featured comic' : `${variant} spotlight`,
+    meta: [
+      spotlightComic ? getComicCardBadgeText(spotlightComic) : isAllVariant ? 'COMIC' : variant.toUpperCase(),
+      formatComicCardSubtitle(spotlightComic || { chapter: undefined, time_ago: undefined }),
+    ].filter(Boolean).join(' • '),
+    image: spotlightComic ? getHDThumbnail(spotlightComic.image) : '',
+    imageAlt: spotlightComic?.title || config.title,
+    badges: spotlightBadges,
+    actions: spotlightComic ? (
+      <>
+        <Button variant="manga" className="whitespace-nowrap" asChild>
+          <Link href={buildItemHref(routeBase, spotlightComic)}>
+            <Play className="h-4 w-4 fill-current" /> Read Now
+          </Link>
+        </Button>
+        <BookmarkButton
+          theme="manga"
+          className="whitespace-nowrap border-white/14 bg-black/24 text-white hover:bg-white/12"
+          saveLabel="Add to Library"
+          item={{
+            id: extractSlugFromUrl(spotlightComic.link),
+            type: 'manga',
+            title: spotlightComic.title,
+            image: getHDThumbnail(spotlightComic.image),
+            timestamp: 0,
+          }}
+        />
+      </>
+    ) : (
+      <Button variant="manga" className="whitespace-nowrap" asChild>
+        <Link href="/read/comics#popular">
+          <Play className="h-4 w-4 fill-current" /> Browse Comics
+        </Link>
+      </Button>
+    ),
+  }), [config.title, isAllVariant, routeBase, spotlightBadges, spotlightComic, variant]);
   const subtypeBrowseCards = React.useMemo(
     () => [
       {
@@ -247,18 +307,87 @@ export default function ComicPageClient({
       icon={BookOpen}
       theme="manga"
       eyebrow={eyebrow}
-      genres={COMMON_GENRES}
-      results={results}
-      loading={loading}
+      results={null}
+      loading={false}
       error={null}
-      activeGenre={activeGenre}
-      onGenreClick={handleGenreClick}
-      onClearResults={() => {
-        setResults(null);
-        setActiveGenre(null);
-      }}
+      hero={comicHero}
+      personalSection={(
+        <>
+          <ContinueWatching type="manga" title="Continue Reading Comics" hideWhenUnavailable />
+          <SavedContentSection type="manga" title={config.savedTitle} hideWhenUnavailable />
+        </>
+      )}
     >
-      <StaggerEntry className="app-section-stack" delay={100}>
+      <StaggerEntry className="contents" delay={100}>
+        <section className="surface-panel relative overflow-hidden p-4 md:p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top_left,var(--theme-manga-surface),transparent_74%)]" />
+
+          <div className="relative z-10 flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Comic browse</p>
+                <h2 className="font-[var(--font-heading)] text-2xl font-bold tracking-[-0.05em] text-white md:text-[1.85rem]">
+                  Filter genre lanes here, then continue through the shared reading shelves below.
+                </h2>
+              </div>
+              {activeGenre ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setResults(null);
+                    setActiveGenre(null);
+                  }}
+                  className="shrink-0"
+                >
+                  Clear Genre
+                </Button>
+              ) : null}
+            </div>
+
+            <GenreFilter
+              genres={COMMON_GENRES.slice(0, 12)}
+              activeGenre={activeGenre}
+              onGenreClick={handleGenreClick}
+              theme="manga"
+              layout="rail"
+            />
+          </div>
+        </section>
+
+        {results ? (
+          <SectionCard
+            title={activeGenre ? `Genre: ${activeGenre}` : 'Comic Results'}
+            subtitle={loading ? 'Loading the selected comic lane...' : 'Filtered comic picks from the selected genre lane.'}
+            mode="grid"
+            gridDensity="default"
+          >
+            {loading
+              ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`genre-loading-${index}`} />)
+              : results.length > 0
+                ? results.map((mangaItem, index) => (
+                  <MediaCard
+                    key={`${mangaItem.slug}-${index}`}
+                    href={buildItemHref(routeBase, mangaItem)}
+                    image={getHDThumbnail(mangaItem.image)}
+                    title={mangaItem.title}
+                    subtitle={formatComicCardSubtitle(mangaItem)}
+                    badgeText={getComicCardBadgeText(mangaItem)}
+                    theme="manga"
+                  />
+                ))
+                : (
+                  <div className="col-span-full">
+                    <StateInfo
+                      title="No Comics Found"
+                      description="Try a different genre or clear the current lane to return to the main comic shelves."
+                    />
+                  </div>
+                )}
+          </SectionCard>
+        ) : null}
+
         <SectionCard
           title="Browse By Shelf"
           subtitle={
@@ -319,8 +448,6 @@ export default function ComicPageClient({
               />
             ))}
         </SectionCard>
-
-        <SavedContentSection type="manga" title={config.savedTitle} />
 
         <SectionCard
           id="latest"

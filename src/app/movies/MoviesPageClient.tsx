@@ -1,16 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
-import { CalendarDays, Flame, Info, Play, SlidersHorizontal, Star } from 'lucide-react';
+import { CalendarDays, Clapperboard, Flame, Info, Play, SlidersHorizontal, Star } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { MediaCard } from '@/components/atoms/Card';
 import { Link } from '@/components/atoms/Link';
 import { BookmarkButton } from '@/components/organisms/BookmarkButton';
 import { ContinueWatching } from '@/components/organisms/ContinueWatching';
-import { DeferredAdSection } from '@/components/organisms/DeferredAdSection';
+import { MediaHubTemplate, type MediaHubHero } from '@/components/organisms/MediaHubTemplate';
 import { SavedContentSection } from '@/components/organisms/SavedContentSection';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { SectionCard } from '@/components/organisms/SectionCard';
@@ -139,89 +137,92 @@ export default function MoviesPageClient({
     router.push(buildMoviesHref(activeGenre, sortMode));
   }, [activeGenre, buildMoviesHref, router]);
 
-  const featuredGenres = featuredMovie?.genres
-    ? featuredMovie.genres.split(',').map((genre) => genre.trim()).filter(Boolean).slice(0, 3)
-    : [];
+  const featuredGenres = React.useMemo(
+    () => (featuredMovie?.genres
+      ? featuredMovie.genres.split(',').map((genre) => genre.trim()).filter(Boolean).slice(0, 3)
+      : []),
+    [featuredMovie],
+  );
+  const heroMeta = [
+    featuredMovie?.year,
+    featuredMovie?.rating && featuredMovie.rating !== 'N/A' ? `Rating ${featuredMovie.rating}` : null,
+    featuredMovie?.status,
+  ].filter(Boolean).join(' • ');
+  const movieHero = React.useMemo<MediaHubHero>(() => ({
+    title: featuredMovie?.title || 'Movie Hub',
+    description: activeGenre
+      ? `Feature films from the ${activeGenre} shelf land here first, followed by your personal lane and the full movie catalog rhythm.`
+      : 'Feature films with fresh catalog movement, clearer shelf scanning, and direct handoff into the movie library below.',
+    label: activeGenre ? `${activeGenre} spotlight` : 'Featured movie',
+    meta: heroMeta || 'Feature film spotlight',
+    image: featuredMovie?.poster || initialLatest[0]?.poster || initialPopular[0]?.poster || '',
+    imageAlt: featuredMovie?.title || 'Featured movie poster',
+    badges: featuredGenres,
+    actions: featuredMovie ? (
+      <>
+        <Button variant="movie" className="whitespace-nowrap" asChild>
+          <Link href={`/movies/${featuredMovie.slug}`}>
+            <Play className="h-4 w-4 fill-current" /> Watch Now
+          </Link>
+        </Button>
+        <Button variant="outline" className="whitespace-nowrap border-white/14 bg-black/20 text-white hover:bg-white/10 hover:text-white" asChild>
+          <Link href={`/movies/${featuredMovie.slug}`}>
+            <Info className="h-4 w-4" /> Details
+          </Link>
+        </Button>
+        <BookmarkButton
+          theme="movie"
+          className="whitespace-nowrap border-white/14 bg-black/24 text-white hover:bg-white/12"
+          saveLabel="Add to List"
+          item={{
+            id: featuredMovie.slug,
+            type: 'movie',
+            title: featuredMovie.title,
+            image: featuredMovie.poster,
+            timestamp: 0,
+          }}
+        />
+      </>
+    ) : (
+      <Button variant="movie" className="whitespace-nowrap" asChild>
+        <Link href="/watch/movies#popular">
+          <Play className="h-4 w-4 fill-current" /> Browse Movies
+        </Link>
+      </Button>
+    ),
+  }), [activeGenre, featuredGenres, featuredMovie, heroMeta, initialLatest, initialPopular]);
 
   return (
-    <main className="app-shell" data-theme="movie" data-view-mode="compact">
-      <section className="relative isolate min-h-[18rem] overflow-hidden border-b border-white/10 bg-black md:min-h-[32rem]">
-        {featuredMovie ? (
-          <Image
-            src={featuredMovie.poster || '/placeholder-poster.jpg'}
-            alt={featuredMovie.title}
-            fill
-            priority
-            className="object-cover opacity-55"
-            sizes="100vw"
-            unoptimized
-          />
+    <MediaHubTemplate
+      title="Movie Hub"
+      description="Feature films with direct access to recent catalog movement and calmer shelf scanning."
+      icon={Clapperboard}
+      theme="movie"
+      eyebrow="Movie Desk"
+      results={null}
+      loading={false}
+      error={null}
+      hero={movieHero}
+      personalSection={(
+        <>
+          <ContinueWatching type="movie" title="Continue Watching Movies" hideWhenUnavailable />
+          <SavedContentSection type="movie" title="Saved Movies" hideWhenUnavailable />
+        </>
+      )}
+    >
+      <StaggerEntry className="contents" delay={100}>
+        {filteredResults ? (
+          <SectionCard
+            title={activeGenre ? `Genre: ${activeGenre}` : 'Movie Results'}
+            subtitle={`Sorted by ${SORT_OPTIONS.find((option) => option.value === activeSortMode)?.label ?? 'Popular'}`}
+            mode="grid"
+            gridDensity="default"
+            viewAllHref={buildMoviesHref(null, 'popular')}
+          >
+            <MovieCardList items={filteredResults} skeletonKey="filtered" limit={24} />
+          </SectionCard>
         ) : null}
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/20" />
-        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background to-transparent" />
 
-        <div className="app-container-wide relative z-10 flex min-h-[18rem] items-end pb-7 pt-24 md:min-h-[32rem] md:pb-9">
-          <div className="max-w-3xl space-y-4 rounded-[var(--radius-2xl)] border border-white/10 bg-black/25 p-4 backdrop-blur-md md:p-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="movie" className="w-fit">Featured Movie</Badge>
-              <Badge variant="outline">Movie Desk</Badge>
-              {activeGenre ? <Badge variant="outline">{activeGenre}</Badge> : null}
-            </div>
-            <div className="space-y-2">
-              <h1 className="max-w-3xl text-3xl font-black tracking-[0.01em] text-white sm:text-4xl md:text-5xl">
-                {featuredMovie?.title || 'Movies'}
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-zinc-300 md:text-base">
-                {[
-                  featuredMovie?.year,
-                  featuredMovie?.rating && featuredMovie.rating !== 'N/A' ? `Rating ${featuredMovie.rating}` : null,
-                  featuredGenres.join(', '),
-                ].filter(Boolean).join(' • ') || 'Movie picks ready for the next watch session.'}
-              </p>
-            </div>
-            {featuredGenres.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {featuredGenres.map((genre) => (
-                  <span
-                    key={genre}
-                    className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-200"
-                  >
-                    {genre}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-            {featuredMovie ? (
-              <div className="flex flex-wrap items-center gap-3">
-                <Button variant="movie" className="whitespace-nowrap" asChild>
-                  <Link href={`/movies/${featuredMovie.slug}`}>
-                    <Play className="h-4 w-4 fill-current" /> Watch Now
-                  </Link>
-                </Button>
-                <Button variant="outline" className="whitespace-nowrap" asChild>
-                  <Link href={`/movies/${featuredMovie.slug}`}>
-                    <Info className="h-4 w-4" /> Details
-                  </Link>
-                </Button>
-                <BookmarkButton
-                  theme="movie"
-                  className="whitespace-nowrap"
-                  saveLabel="Add to List"
-                  item={{
-                    id: featuredMovie.slug,
-                    type: 'movie',
-                    title: featuredMovie.title,
-                    image: featuredMovie.poster,
-                    timestamp: 0,
-                  }}
-                />
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </section>
-
-      <div className="app-container-wide space-y-8 pb-12 pt-5 md:space-y-10 md:pt-7">
         <section className="surface-panel relative overflow-hidden p-4 md:p-5">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top_left,var(--theme-movie-surface),transparent_74%)]" />
 
@@ -280,25 +281,6 @@ export default function MoviesPageClient({
           </div>
         </section>
 
-        <div className="hidden md:block">
-          <DeferredAdSection />
-        </div>
-
-        <StaggerEntry className="app-section-stack" delay={100}>
-          {filteredResults ? (
-            <SectionCard
-              title={activeGenre ? `Genre: ${activeGenre}` : 'Movie Results'}
-              subtitle={`Sorted by ${SORT_OPTIONS.find((option) => option.value === activeSortMode)?.label ?? 'Popular'}`}
-              mode="grid"
-              gridDensity="default"
-              viewAllHref={buildMoviesHref(null, 'popular')}
-            >
-              <MovieCardList items={filteredResults} skeletonKey="filtered" limit={24} />
-            </SectionCard>
-          ) : null}
-
-          <ContinueWatching type="movie" title="Continue Watching Movies" />
-
         <SectionCard title="Browse By Shelf" subtitle="Fast lanes for recent movement and high-demand titles." mode="rail" railVariant="compact">
           {shelfBrowseCards.map((item) => (
             <MediaCard
@@ -316,8 +298,6 @@ export default function MoviesPageClient({
         <SectionCard id="popular" title="Popular Now" subtitle="Top trending this month" icon={Flame} mode="grid" gridDensity="default" viewAllHref="/watch/movies#popular">
           <MovieCardList items={initialPopular} skeletonKey="popular" />
         </SectionCard>
-
-        <SavedContentSection type="movie" title="Saved Movies" />
 
         <SectionCard id="latest" title="Recently Updated" subtitle="Fresh catalog changes" icon={CalendarDays} mode="grid" gridDensity="default" viewAllHref="/watch/movies#latest">
           <MovieCardList items={initialLatest} skeletonKey="latest" />
@@ -370,7 +350,6 @@ export default function MoviesPageClient({
           </div>
         </section>
       </StaggerEntry>
-      </div>
-    </main>
+    </MediaHubTemplate>
   );
 }

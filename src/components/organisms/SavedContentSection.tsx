@@ -10,15 +10,27 @@ import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { THEME_CONFIG } from '@/lib/utils';
 
 interface SavedContentSectionProps {
-  type?: MediaType;
+  type?: MediaType | MediaType[];
   title?: string;
   limit?: number;
+  hideWhenUnavailable?: boolean;
+  themeOverride?: keyof typeof THEME_CONFIG;
 }
 
-export function SavedContentSection({ type, title = "Your Vault", limit }: SavedContentSectionProps) {
+export function SavedContentSection({
+  type,
+  title = "Your Vault",
+  limit,
+  hideWhenUnavailable = false,
+  themeOverride,
+}: SavedContentSectionProps) {
   const authGate = useAuthGate();
   const [items, setItems] = React.useState<BookmarkItem[]>([]);
   const [mounted, setMounted] = React.useState(false);
+  const mediaTypes = React.useMemo(
+    () => (Array.isArray(type) ? type : type ? [type] : null),
+    [type],
+  );
 
   React.useEffect(() => {
     if (!authGate.authenticated) {
@@ -29,16 +41,20 @@ export function SavedContentSection({ type, title = "Your Vault", limit }: Saved
 
     setMounted(true);
     const allBookmarks = getBookmarks();
-    const filtered = type ? allBookmarks.filter(b => b.type === type) : allBookmarks;
+    const filtered = mediaTypes ? allBookmarks.filter((bookmark) => mediaTypes.includes(bookmark.type)) : allBookmarks;
     setItems(limit ? filtered.slice(0, limit) : filtered);
-  }, [authGate.authenticated, limit, type]);
+  }, [authGate.authenticated, limit, mediaTypes]);
 
   if (!mounted || authGate.loading) return null;
 
-  const theme = type || 'default';
+  const theme = themeOverride || (mediaTypes?.length === 1 ? mediaTypes[0] : 'default');
   const config = THEME_CONFIG[theme];
 
   if (!authGate.authenticated) {
+    if (hideWhenUnavailable) {
+      return null;
+    }
+
     return (
       <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 md:space-y-8">
         <SectionHeader

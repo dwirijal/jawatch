@@ -1,3 +1,5 @@
+import { SHORTS_HUB_ENABLED } from '../shorts-paths.js';
+
 const NON_INDEXABLE_PREFIXES = [
   '/api',
   '/_next',
@@ -16,7 +18,7 @@ const INDEXABLE_STATIC_PATHS = new Set([
   '/watch',
   '/watch/movies',
   '/watch/series',
-  '/watch/shorts',
+  ...(SHORTS_HUB_ENABLED ? ['/watch/shorts'] : []),
   '/read',
   '/read/comics',
 ]);

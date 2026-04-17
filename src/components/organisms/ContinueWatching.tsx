@@ -16,22 +16,32 @@ import { getHistoryForAuth, HistoryItem, MediaType } from '@/lib/store';
 import { cn, THEME_CONFIG, ThemeType } from '@/lib/utils';
 
 interface ContinueWatchingProps {
-  type?: MediaType;
+  type?: MediaType | MediaType[];
   title?: string;
   limit?: number;
+  hideWhenUnavailable?: boolean;
 }
 
-export function ContinueWatching({ type, title = 'Continue Watching', limit = 10 }: ContinueWatchingProps) {
+export function ContinueWatching({
+  type,
+  title = 'Continue Watching',
+  limit = 10,
+  hideWhenUnavailable = false,
+}: ContinueWatchingProps) {
   const authGate = useAuthGate();
   const [history, setHistory] = React.useState<HistoryItem[]>([]);
   const [mounted, setMounted] = React.useState(false);
+  const mediaTypes = React.useMemo(
+    () => (Array.isArray(type) ? type : type ? [type] : null),
+    [type],
+  );
 
   React.useEffect(() => {
     const nextHistory = getHistoryForAuth(authGate.authenticated);
-    const filteredHistory = type ? nextHistory.filter((item) => item.type === type) : nextHistory;
+    const filteredHistory = mediaTypes ? nextHistory.filter((item) => mediaTypes.includes(item.type)) : nextHistory;
     setHistory(filteredHistory.slice(0, limit));
     setMounted(true);
-  }, [authGate.authenticated, limit, type]);
+  }, [authGate.authenticated, limit, mediaTypes]);
 
   // Use a deterministic "hash" instead of Math.random to satisfy linter purity rules
   const getProgress = (id: string) => {
@@ -45,6 +55,10 @@ export function ContinueWatching({ type, title = 'Continue Watching', limit = 10
   if (!mounted || authGate.loading) return null;
 
   if (!authGate.authenticated) {
+    if (hideWhenUnavailable) {
+      return null;
+    }
+
     return (
       <section className="animate-in space-y-4 fade-in slide-in-from-bottom-4 duration-700">
         <SectionHeader title={title} icon={Clock} />

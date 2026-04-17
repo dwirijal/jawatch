@@ -1,17 +1,21 @@
 'use client';
 
 import * as React from 'react';
-import { Activity, Calendar, Clapperboard, Flame, Sparkles, Timer } from 'lucide-react';
+import { Activity, Calendar, Clapperboard, Flame, Info, Play, Sparkles, Timer } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/atoms/Button';
+import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { MediaCard } from '@/components/atoms/Card';
+import { BookmarkButton } from '@/components/organisms/BookmarkButton';
+import { ContinueWatching } from '@/components/organisms/ContinueWatching';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
-import { MediaHubTemplate } from '@/components/organisms/MediaHubTemplate';
+import { MediaHubTemplate, type MediaHubHero } from '@/components/organisms/MediaHubTemplate';
+import { SavedContentSection } from '@/components/organisms/SavedContentSection';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StaggerEntry } from '@/components/molecules/StaggerEntry';
 import { cn } from '@/lib/utils';
-import type { GenericMediaItem } from '@/lib/types';
 import {
   formatSeriesCardSubtitle,
   formatSeriesNextRelease,
@@ -68,6 +72,7 @@ export default function SeriesPageClient({
   const router = useRouter();
   const today = React.useMemo(() => getCurrentReleaseDay(), []);
   const [activeRadarDay, setActiveRadarDay] = React.useState<string | null>(today);
+  const seriesTheme = activeFilter === 'anime' ? 'anime' : activeFilter === 'donghua' ? 'donghua' : 'drama';
   const filteredPopular = React.useMemo(() => filterSeriesItemsByType(initialPopular, activeFilter), [activeFilter, initialPopular]);
   const filteredLatest = React.useMemo(() => filterSeriesItemsByType(initialLatest, activeFilter), [activeFilter, initialLatest]);
   const filteredDramaSpotlight = React.useMemo(() => filterSeriesItemsByType(initialDramaSpotlight, activeFilter), [activeFilter, initialDramaSpotlight]);
@@ -76,6 +81,65 @@ export default function SeriesPageClient({
     [activeFilter, initialLatest],
   );
   const activeRadarLane = initialWeeklySchedule.find((lane) => lane.day === activeRadarDay) ?? initialWeeklySchedule[0] ?? null;
+  const spotlightSeries = filteredLatest[0] ?? filteredPopular[0] ?? initialLatest[0] ?? initialPopular[0] ?? null;
+  const spotlightBadges = React.useMemo(
+    () => (spotlightSeries?.genres
+      ? spotlightSeries.genres.split(',').map((genre) => genre.trim()).filter(Boolean).slice(0, 3)
+      : []),
+    [spotlightSeries],
+  );
+  const seriesHero = React.useMemo<MediaHubHero>(() => ({
+    title: spotlightSeries?.title || 'Series Hub',
+    description: activeFilter
+      ? `Latest ${activeFilter} releases stay in focus here before you drop into your personal lane and the episodic shelves below.`
+      : 'Anime, donghua, and drama now share one calmer episodic shell with the same hero rhythm and faster shelf scanning.',
+    label: activeFilter ? `${activeFilter} spotlight` : 'Featured series',
+    meta: spotlightSeries
+      ? [getSeriesBadgeText(spotlightSeries.type), formatSeriesCardSubtitle(spotlightSeries), spotlightSeries.rating ? `Rating ${spotlightSeries.rating}` : null]
+          .filter(Boolean)
+          .join(' • ')
+      : 'Episodic spotlight',
+    image: spotlightSeries?.poster || initialLatest[0]?.poster || initialPopular[0]?.poster || '',
+    imageAlt: spotlightSeries?.title || 'Featured series poster',
+    badges: spotlightBadges,
+    actions: spotlightSeries ? (
+      <>
+        <Button variant={seriesTheme} className="whitespace-nowrap" asChild>
+          <Link href={`/series/${spotlightSeries.slug}`}>
+            <Play className="h-4 w-4 fill-current" /> Watch Now
+          </Link>
+        </Button>
+        <Button variant="outline" className="whitespace-nowrap border-white/14 bg-black/20 text-white hover:bg-white/10 hover:text-white" asChild>
+          <Link href={`/series/${spotlightSeries.slug}`}>
+            <Info className="h-4 w-4" /> Details
+          </Link>
+        </Button>
+        <BookmarkButton
+          theme={getCardTheme(spotlightSeries)}
+          className="whitespace-nowrap border-white/14 bg-black/24 text-white hover:bg-white/12"
+          saveLabel="Add to List"
+          item={{
+            id: spotlightSeries.slug,
+            type: spotlightSeries.type,
+            title: spotlightSeries.title,
+            image: spotlightSeries.poster,
+            timestamp: 0,
+          }}
+        />
+      </>
+    ) : (
+      <Button variant={seriesTheme} className="whitespace-nowrap" asChild>
+        <Link href="/watch/series#popular">
+          <Play className="h-4 w-4 fill-current" /> Browse Series
+        </Link>
+      </Button>
+    ),
+  }), [activeFilter, initialLatest, initialPopular, seriesTheme, spotlightBadges, spotlightSeries]);
+  const typeFilters = React.useMemo(() => {
+    const preferred = ['Anime', 'Donghua', 'Drama'];
+    const available = new Set(filters.map((filter) => filter.trim().toLowerCase()));
+    return preferred.filter((filter) => available.has(filter.toLowerCase()));
+  }, [filters]);
   const shelfBrowseCards = React.useMemo(
     () => [
       {
@@ -105,20 +169,73 @@ export default function SeriesPageClient({
   return (
     <MediaHubTemplate
       title="Series Hub"
-      description="Anime, donghua, dan drama episodik sekarang hidup di satu katalog canonical. Filter-nya membaca origin type dan negara rilis langsung dari database."
+      description="Anime, donghua, and drama stay inside one canonical episodic surface."
       icon={Clapperboard}
-      theme="drama"
+      theme={seriesTheme}
       eyebrow="Episodic Desk"
-      genres={filters}
-      results={null as GenericMediaItem[] | null}
+      results={null}
       loading={false}
       error={null}
-      activeGenre={null}
-      onGenreClick={handleFilterClick}
-      onClearResults={undefined}
-      resultHrefBuilder={(item) => `/series/${item.slug}`}
+      hero={seriesHero}
+      personalSection={(
+        <>
+          <ContinueWatching type={['anime', 'donghua', 'drama']} title="Continue Watching Series" hideWhenUnavailable />
+          <SavedContentSection
+            type={['anime', 'donghua', 'drama']}
+            title="Saved Series"
+            hideWhenUnavailable
+            themeOverride="drama"
+          />
+        </>
+      )}
     >
-      <div className="app-section-stack">
+      <StaggerEntry className="contents" delay={100}>
+        <section className="surface-panel relative overflow-hidden p-4 md:p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top_left,var(--theme-drama-surface),transparent_74%)]" />
+
+          <div className="relative z-10 flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Series browse</p>
+                <h2 className="font-[var(--font-heading)] text-2xl font-bold tracking-[-0.05em] text-white md:text-[1.85rem]">
+                  Switch episodic lanes here, then scan the shared shelves below.
+                </h2>
+              </div>
+              <div className="hidden items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-zinc-500 md:flex">
+                <Activity className="h-4 w-4" />
+                Browse
+              </div>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              <Button
+                type="button"
+                variant={activeFilter ? 'outline' : seriesTheme}
+                size="sm"
+                onClick={() => handleFilterClick('all')}
+                className="shrink-0"
+              >
+                All
+              </Button>
+              {typeFilters.map((filter) => {
+                const normalizedFilter = filter.toLowerCase() as NonNullable<SeriesPageClientProps['activeFilter']>;
+                return (
+                  <Button
+                    key={filter}
+                    type="button"
+                    variant={activeFilter === normalizedFilter ? getSeriesTheme(normalizedFilter) : 'outline'}
+                    size="sm"
+                    onClick={() => handleFilterClick(filter)}
+                    className="shrink-0"
+                  >
+                    {filter}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
         <SectionCard title="Browse By Shelf" subtitle="Open focused series lanes for ongoing titles or the full canonical list." icon={Activity} mode="rail" railVariant="compact">
           {shelfBrowseCards.map((item) => (
             <MediaCard
@@ -239,13 +356,12 @@ export default function SeriesPageClient({
                   ) : null}
                 </Paper>
               </div>
-            )}
+                )}
         </div>
 
-        <SectionCard title="Donghua Spotlight" subtitle="Donghua canonical dari series catalog dengan update paling aktif" icon={Sparkles} mode="grid" gridDensity="default">
-          {initialDonghuaSpotlight.length === 0
-            ? Array.from({ length: 8 }).map((_, index) => <SkeletonCard key={`series-donghua-${index}`} />)
-            : initialDonghuaSpotlight.map((item) => (
+        {initialDonghuaSpotlight.length > 0 ? (
+          <SectionCard title="Donghua Spotlight" subtitle="Donghua canonical dari series catalog dengan update paling aktif" icon={Sparkles} mode="grid" gridDensity="default">
+            {initialDonghuaSpotlight.map((item) => (
               <MediaCard
                 key={item.slug}
                 href={`/series/${item.slug}`}
@@ -256,12 +372,12 @@ export default function SeriesPageClient({
                 theme="donghua"
               />
             ))}
-        </SectionCard>
+          </SectionCard>
+        ) : null}
 
-        <SectionCard title="Drama Spotlight" subtitle="Drama episodik paling aktif dari lane live-action canonical" icon={Clapperboard} mode="grid" gridDensity="default">
-          {filteredDramaSpotlight.length === 0
-            ? Array.from({ length: 8 }).map((_, index) => <SkeletonCard key={`series-drama-${index}`} />)
-            : filteredDramaSpotlight.slice(0, 8).map((item) => (
+        {filteredDramaSpotlight.length > 0 ? (
+          <SectionCard title="Drama Spotlight" subtitle="Drama episodik paling aktif dari lane live-action canonical" icon={Clapperboard} mode="grid" gridDensity="default">
+            {filteredDramaSpotlight.slice(0, 8).map((item) => (
               <MediaCard
                 key={item.slug}
                 href={`/series/${item.slug}`}
@@ -272,8 +388,9 @@ export default function SeriesPageClient({
                 theme="drama"
               />
             ))}
-        </SectionCard>
-      </div>
+          </SectionCard>
+        ) : null}
+      </StaggerEntry>
     </MediaHubTemplate>
   );
 }
