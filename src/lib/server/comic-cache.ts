@@ -41,9 +41,9 @@ function normalizeEnvValue(value: string | undefined): string {
 
 function readRedisConfig(): RedisConfig | null {
   const url =
+    normalizeEnvValue(process.env.AIVEN_VALKEY_URL) ||
     normalizeEnvValue(process.env.VALKEY_URL) ||
-    normalizeEnvValue(process.env.REDIS_URL) ||
-    normalizeEnvValue(process.env.AIVEN_VALKEY_URL);
+    normalizeEnvValue(process.env.REDIS_URL);
 
   if (!url) {
     return null;

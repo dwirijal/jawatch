@@ -7,9 +7,14 @@
       "name": "landing-listing",
       "routePatterns": [
         "^/$",
+        "^/(watch|read)$",
+        "^/watch/(movies|series|shorts)$",
+        "^/read/comics$",
         "^/(series|movies|novel|comic|search|collection|nsfw|drachin|dramabox)$",
         "^/series/(anime|donghua|drama|list|drachin|country/\\[country\\]|genre/\\[genre\\]|year/\\[year\\])$",
-        "^/comic/(manga|manhua|manhwa)$"
+        "^/series/(ongoing|short)$",
+        "^/comic/(latest|ongoing|popular|manga|manhua|manhwa)$",
+        "^/movies/(latest|popular)$"
       ],
       "budgets": {
         "healthy": {
@@ -17,12 +22,12 @@
           "rawBytes": 550000
         },
         "warn": {
-          "gzipBytes": 190000,
-          "rawBytes": 650000
+          "gzipBytes": 315000,
+          "rawBytes": 1065000
         },
         "fail": {
-          "gzipBytes": 220000,
-          "rawBytes": 725000
+          "gzipBytes": 330000,
+          "rawBytes": 1120000
         }
       }
     },
@@ -30,6 +35,7 @@
       "name": "detail",
       "routePatterns": [
         "^/(series|movies|comic|novel)/\\[slug\\]$",
+        "^/(comics|shorts)/\\[slug\\]$",
         "^/nsfw/(series|movies|comic)/\\[slug\\]$",
         "^/drachin/\\[slug\\]$",
         "^/dramabox/\\[bookId\\]$"
@@ -40,12 +46,12 @@
           "rawBytes": 575000
         },
         "warn": {
-          "gzipBytes": 205000,
-          "rawBytes": 675000
+          "gzipBytes": 320000,
+          "rawBytes": 1085000
         },
         "fail": {
-          "gzipBytes": 230000,
-          "rawBytes": 760000
+          "gzipBytes": 335000,
+          "rawBytes": 1130000
         }
       }
     },
@@ -53,6 +59,8 @@
       "name": "watch-read",
       "routePatterns": [
         "^/(series|movies)/watch/\\[slug\\]$",
+        "^/series/short/watch/\\[slug\\]$",
+        "^/(comics|shorts)/\\[slug\\]/(chapters|episodes)/\\[(chapterSlug|episodeSlug)\\]$",
         "^/nsfw/(series|movies)/watch/\\[slug\\]$",
         "^/comic/\\[slug\\]/\\[chapter\\]$",
         "^/nsfw/comic/\\[slug\\]/\\[chapter\\]$",
@@ -65,12 +73,12 @@
           "rawBytes": 540000
         },
         "warn": {
-          "gzipBytes": 190000,
-          "rawBytes": 620000
+          "gzipBytes": 310000,
+          "rawBytes": 1060000
         },
         "fail": {
-          "gzipBytes": 220000,
-          "rawBytes": 710000
+          "gzipBytes": 325000,
+          "rawBytes": 1100000
         }
       }
     }

@@ -77,16 +77,3 @@ export function isVerticalDramaEpisodeWatched(
 
   return episodeIndex <= resume.episodeIndex;
 }
-
-export function getDrachinPlaybackTarget(slug: string, fallbackIndex = 1): { href: string; episodeIndex: number } {
-  const resume = getVerticalDramaProgress('drachin', slug);
-  const episodeIndex = resume?.episodeIndex ?? fallbackIndex;
-  return {
-    href: `/series/short/watch/${slug}?index=${episodeIndex}`,
-    episodeIndex,
-  };
-}
-
-export function getDrachinPlaybackHref(slug: string, fallbackIndex = 1): string {
-  return getDrachinPlaybackTarget(slug, fallbackIndex).href;
-}

@@ -93,7 +93,7 @@ Each increment must land in a working state before the next begins.
 - Test: `tests/unit/navigation-ia.test.mjs`
 - Test: `tests/e2e/ia-routes.spec.ts`
 
-- [ ] **Step 1: Write failing unit tests for the new IA vocabulary**
+- [x] **Step 1: Write failing unit tests for the new IA vocabulary**
 
 ```js
 import test from "node:test";
@@ -116,7 +116,7 @@ test("mobile nav keeps search as an action instead of a top-level page link", ()
 Run: `rtk node --test tests/unit/navigation-ia.test.mjs`
 Expected: FAIL because the current nav still exposes `Video`, `Komik`, `Novel`, and `Bookmark`.
 
-- [ ] **Step 3: Add the new route pages as IA shells**
+- [x] **Step 3: Add the new route pages as IA shells**
 
 Create browse entrypoints that reuse existing browse builders first:
 
@@ -136,7 +136,7 @@ export default function ReadLandingPage() {
 
 Use existing browse/page builders where possible; avoid rewriting data loaders in this task.
 
-- [ ] **Step 4: Rewrite navigation to the new IA**
+- [x] **Step 4: Rewrite navigation to the new IA**
 
 Update `src/lib/navigation.ts` to expose:
 - `Home`
@@ -147,7 +147,7 @@ Update `src/lib/navigation.ts` to expose:
 
 Update consumers in `Navbar`, `MobileNav`, `MobileMenuPanel`, and `Footer` so they render these new items without leaking legacy `/collection`, `/comic`, `/series/short`, or `/novel` language into top-level chrome.
 
-- [ ] **Step 5: Add an E2E route smoke test**
+- [x] **Step 5: Add an E2E route smoke test**
 
 ```ts
 import { expect, test } from "@playwright/test";
@@ -161,7 +161,7 @@ test("watch and read landings render without crashing", async ({ page }) => {
 });
 ```
 
-- [ ] **Step 6: Run verification**
+- [x] **Step 6: Run verification**
 
 Run:
 - `rtk node --test tests/unit/navigation-ia.test.mjs`
@@ -192,7 +192,7 @@ git commit -m "feat: add mode-first navigation shell"
 - Test: `tests/unit/onboarding-session.test.mjs`
 - Test: `tests/e2e/auth-proxy.spec.ts`
 
-- [ ] **Step 1: Write failing redirect/gate tests for Vault**
+- [x] **Step 1: Write failing redirect/gate tests for Vault**
 
 Add assertions that incomplete users and signed-out users are redirected through `/vault/*`, not `/collection`.
 
@@ -217,7 +217,7 @@ Run:
 
 Expected: FAIL on `/vault/*` assumptions because current protected surface is `/collection`.
 
-- [ ] **Step 3: Create the Vault route family**
+- [x] **Step 3: Create the Vault route family**
 
 Implement pages with minimal composition first:
 - `/vault` overview shell
@@ -227,7 +227,7 @@ Implement pages with minimal composition first:
 
 For the first increment, reuse existing `CollectionSections` and auth helpers where possible instead of rewriting stateful content.
 
-- [ ] **Step 4: Update auth gates and redirects**
+- [x] **Step 4: Update auth gates and redirects**
 
 Modify:
 - `src/lib/auth/session.ts`
@@ -236,11 +236,11 @@ Modify:
 
 So safe `next` paths and protected prefixes recognize `/vault/*` as the personal area. Keep `/collection` temporarily as a compatibility shim that redirects to `/vault/saved`.
 
-- [ ] **Step 5: Wire onboarding post-auth behavior to Vault-aware destinations**
+- [x] **Step 5: Wire onboarding post-auth behavior to Vault-aware destinations**
 
 Keep onboarding logic intact, but migrate post-auth and post-onboarding destinations away from `/collection`.
 
-- [ ] **Step 6: Run verification**
+- [x] **Step 6: Run verification**
 
 Run:
 - `rtk node --test tests/unit/onboarding-session.test.mjs`
@@ -270,7 +270,7 @@ git commit -m "feat: migrate personal surfaces to vault"
 - Test: `tests/unit/catalog-availability.test.mjs`
 - Test: `tests/unit/catalog-resume.test.mjs`
 
-- [ ] **Step 1: Write failing unit tests for availability**
+- [x] **Step 1: Write failing unit tests for availability**
 
 ```js
 import test from "node:test";
@@ -282,7 +282,7 @@ test("title with live units but missing some data is partial", () => {
 });
 ```
 
-- [ ] **Step 2: Write failing unit tests for resume**
+- [x] **Step 2: Write failing unit tests for resume**
 
 ```js
 import test from "node:test";
@@ -309,7 +309,7 @@ Run:
 
 Expected: FAIL because the contract modules do not exist yet.
 
-- [ ] **Step 4: Implement canonical public contract helpers**
+- [x] **Step 4: Implement canonical public contract helpers**
 
 Create `public-contract.ts` with normalized title/unit surface types such as:
 
@@ -331,7 +331,7 @@ export type PublicUnit = {
 
 Keep this module free of UI concerns.
 
-- [ ] **Step 5: Implement availability and resume helpers**
+- [x] **Step 5: Implement availability and resume helpers**
 
 Keep the rules in one place:
 - `resolveAvailabilityState(...)`
@@ -339,7 +339,7 @@ Keep the rules in one place:
 
 Then adapt movie/series/comic adapters to emit canonical readiness rather than ad hoc booleans.
 
-- [ ] **Step 6: Run verification**
+- [x] **Step 6: Run verification**
 
 Run:
 - `rtk node --test tests/unit/catalog-availability.test.mjs`
@@ -371,7 +371,7 @@ git commit -m "feat: add canonical availability and resume contracts"
 - Test: `tests/unit/search-indexability.test.mjs`
 - Test: `tests/unit/next-config.test.mjs`
 
-- [ ] **Step 1: Write failing indexability tests**
+- [x] **Step 1: Write failing indexability tests**
 
 ```js
 import test from "node:test";
@@ -392,7 +392,7 @@ test("canonical title pages are indexable", () => {
 Run: `rtk node --test tests/unit/search-indexability.test.mjs`
 Expected: FAIL because the helper does not exist.
 
-- [ ] **Step 3: Extract search contract and grouped result model**
+- [x] **Step 3: Extract search contract and grouped result model**
 
 Create a single grouped title-level result contract:
 
@@ -402,7 +402,7 @@ export type SearchGroupKey = "top" | "movies" | "series" | "shorts" | "comics";
 
 Use it in `src/app/search/page.tsx` and `SearchResultsPageClient.tsx`. Do not expose raw source rows to the UI.
 
-- [ ] **Step 4: Update crawl/index rules**
+- [x] **Step 4: Update crawl/index rules**
 
 Modify:
 - `src/app/robots.ts`
@@ -415,7 +415,7 @@ to reflect the approved SEO policy:
 - title-first indexability
 - prepare for `google-adsense-account` meta tag in the root layout
 
-- [ ] **Step 5: Run verification**
+- [x] **Step 5: Run verification**
 
 Run:
 - `rtk node --test tests/unit/search-indexability.test.mjs`
@@ -443,7 +443,7 @@ git commit -m "feat: add title-first search and indexability policy"
 - Create: `workers/download-interstitial/wrangler.jsonc`
 - Create: `tests/unit/adsense-config.test.mjs`
 
-- [ ] **Step 1: Write failing tests for AdSense config**
+- [x] **Step 1: Write failing tests for AdSense config**
 
 ```js
 import test from "node:test";
@@ -461,7 +461,7 @@ test("ads.txt contains the AdSense publisher declaration", () => {
 Run: `rtk node --test tests/unit/adsense-config.test.mjs`
 Expected: FAIL until `ads.txt` and layout metadata are updated.
 
-- [ ] **Step 3: Add AdSense root integration**
+- [x] **Step 3: Add AdSense root integration**
 
 Update `src/app/layout.tsx` to include:
 - `<meta name="google-adsense-account" content="ca-pub-8868090753979495" />`
@@ -469,7 +469,7 @@ Update `src/app/layout.tsx` to include:
 
 Do not allow component-level duplicate script injection.
 
-- [ ] **Step 4: Add first-party download interstitial worker**
+- [x] **Step 4: Add first-party download interstitial worker**
 
 Create a separate worker entry such as:
 
@@ -495,7 +495,7 @@ The page must include:
 - continue opens target in a new tab
 - button becomes unavailable afterward until refresh
 
-- [ ] **Step 5: Run verification**
+- [x] **Step 5: Run verification**
 
 Run:
 - `rtk node --test tests/unit/adsense-config.test.mjs`
@@ -524,7 +524,7 @@ git commit -m "feat: add adsense baseline and download interstitial worker"
 - Create: `src/lib/admin/unit-overrides.ts`
 - Test: `tests/e2e/admin-shell.spec.ts`
 
-- [ ] **Step 1: Write a failing route smoke test for admin**
+- [x] **Step 1: Write a failing route smoke test for admin**
 
 ```ts
 import { expect, test } from "@playwright/test";
@@ -543,7 +543,7 @@ test("admin titles and units routes render a shell", async ({ page }) => {
 Run: `rtk npx playwright test tests/e2e/admin-shell.spec.ts`
 Expected: FAIL because the routes do not exist yet.
 
-- [ ] **Step 3: Add the custom admin shell**
+- [x] **Step 3: Add the custom admin shell**
 
 Implement `/admin`, `/admin/titles`, and `/admin/units` as split-but-connected surfaces. Keep v1 narrow:
 - title search/filter
@@ -553,7 +553,7 @@ Implement `/admin`, `/admin/titles`, and `/admin/units` as split-but-connected s
 
 Do not build full edit forms in this task; land the shell first.
 
-- [ ] **Step 4: Add minimal override storage interfaces**
+- [x] **Step 4: Add minimal override storage interfaces**
 
 Create narrow helpers that support:
 - canonical release date override
@@ -563,7 +563,7 @@ Create narrow helpers that support:
 
 Keep persistence details behind `title-overrides.ts` and `unit-overrides.ts`.
 
-- [ ] **Step 5: Run verification**
+- [x] **Step 5: Run verification**
 
 Run: `rtk npx playwright test tests/e2e/admin-shell.spec.ts`
 Expected: PASS
@@ -590,7 +590,7 @@ git commit -m "feat: add custom admin titles and units shell"
 - Test: `tests/e2e/smoke.spec.ts`
 - Test: `tests/e2e/media-detail.spec.ts`
 
-- [ ] **Step 1: Write a checklist test for legacy route compatibility**
+- [x] **Step 1: Write a checklist test for legacy route compatibility**
 
 Add smoke assertions for the legacy surfaces that must redirect or remain stable during rollout:
 - `/collection` -> `/vault/saved`
@@ -604,11 +604,11 @@ Run:
 
 Expected: FAIL on unimplemented redirect/alias behavior.
 
-- [ ] **Step 3: Add compatibility shims and route redirects**
+- [x] **Step 3: Add compatibility shims and route redirects**
 
 Prefer server redirects at route entrypoints rather than client-side hacks. Keep old URLs working while canonical UI/link generation moves to the new IA.
 
-- [ ] **Step 4: Run full verification**
+- [x] **Step 4: Run full verification**
 
 Run:
 - `rtk npm run test:unit`

@@ -28,7 +28,7 @@ export function AuthGateNotice({
       tone="muted"
       shadow="sm"
       className={cn(
-        'text-zinc-100',
+        'text-foreground',
         compact ? 'flex items-start gap-3 px-3 py-3' : 'flex flex-col gap-4 px-5 py-5 md:px-6 md:py-6',
         className
       )}
@@ -36,7 +36,7 @@ export function AuthGateNotice({
       <span
         aria-hidden="true"
         className={cn(
-          'flex shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-300',
+          'flex shrink-0 items-center justify-center rounded-xl border border-border-subtle bg-surface-elevated text-muted-foreground',
           compact ? 'mt-0.5 h-9 w-9' : 'h-11 w-11'
         )}
       >
@@ -44,10 +44,10 @@ export function AuthGateNotice({
       </span>
 
       <div className={cn('min-w-0', compact ? 'flex-1' : 'space-y-2')}>
-        <p className={cn('font-black uppercase tracking-[0.18em] text-white', compact ? 'text-[11px]' : 'text-sm')}>
+        <p className={cn('font-black uppercase tracking-[0.18em] text-foreground', compact ? 'text-[11px]' : 'text-sm')}>
           {title}
         </p>
-        <p className={cn('text-zinc-400', compact ? 'mt-1 text-xs leading-5' : 'text-sm leading-6')}>
+        <p className={cn('text-muted-foreground', compact ? 'mt-1 text-xs leading-5' : 'text-sm leading-6')}>
           {description}
         </p>
       </div>
@@ -56,7 +56,7 @@ export function AuthGateNotice({
         asChild
         size={compact ? 'sm' : 'default'}
         className={cn(
-          'shrink-0 border-border-subtle bg-white text-zinc-950 hover:bg-zinc-50',
+          'shrink-0 border-border-subtle bg-foreground text-background hover:brightness-95',
           compact ? 'self-center px-3' : 'self-start'
         )}
       >

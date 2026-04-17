@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 const movieAdapterPath = path.join(__dirname, '..', 'src', 'lib', 'adapters', 'movie.ts');
 const enrichmentPath = path.join(__dirname, '..', 'src', 'lib', 'enrichment.ts');
 const moviesPagePath = path.join(__dirname, '..', 'src', 'app', 'movies', 'page.tsx');
+const moviesPageDataPath = path.join(__dirname, '..', 'src', 'app', 'movies', 'movie-page-data.ts');
 const moviesClientPath = path.join(__dirname, '..', 'src', 'app', 'movies', 'MoviesPageClient.tsx');
 const cardPath = path.join(__dirname, '..', 'src', 'components', 'atoms', 'Card.tsx');
 const apiPath = path.join(__dirname, '..', 'src', 'lib', 'api.ts');
@@ -18,6 +19,7 @@ assert.equal(fs.existsSync(apiPath), false, 'legacy src/lib/api.ts should be rem
 const adapterSource = fs.readFileSync(movieAdapterPath, 'utf8');
 const enrichmentSource = fs.readFileSync(enrichmentPath, 'utf8');
 const moviesPageSource = fs.readFileSync(moviesPagePath, 'utf8');
+const moviesPageDataSource = fs.readFileSync(moviesPageDataPath, 'utf8');
 const moviesClientSource = fs.readFileSync(moviesClientPath, 'utf8');
 const cardSource = fs.readFileSync(cardPath, 'utf8');
 
@@ -39,7 +41,10 @@ for (const token of [
   assert.ok(enrichmentSource.includes(token), `movie enrichment is missing: ${token}`);
 }
 
-assert.ok(moviesPageSource.includes(`from '@/lib/adapters/movie'`), 'movies page should use movie adapter');
+assert.ok(
+  moviesPageSource.includes(`from './movie-page-data'`) && moviesPageDataSource.includes(`@/lib/adapters/movie`),
+  'movies page should use movie adapter through movie-page-data',
+);
 assert.ok(!cardSource.includes(`from '@/lib/enrichment'`), 'Card should not depend on external enrichment at runtime');
 assert.ok(moviesClientSource.includes(`type="movie"`), 'movies client should still render movie hub');
 

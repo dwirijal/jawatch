@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Bookmark, Clock4, History, UserRound } from 'lucide-react';
-import { CollectionSections } from '@/app/collection/CollectionSections';
+import { CollectionSections } from '@/app/_vault/CollectionSections';
 import { DeferredAdSection } from '@/components/organisms/DeferredAdSection';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { Link } from '@/components/atoms/Link';

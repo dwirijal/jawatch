@@ -23,7 +23,7 @@ export function ImageReaderScaffold({
   children,
 }: ImageReaderScaffoldProps) {
   return (
-    <div className="app-shell bg-background text-white">
+    <div className="app-shell bg-background text-foreground">
       <header className="sticky top-0 z-[160] border-b border-border-subtle bg-surface-1/95 backdrop-blur-xl transition-all">
         <div className="app-container flex items-center justify-between gap-3 py-2.5 sm:py-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -33,8 +33,8 @@ export function ImageReaderScaffold({
               </Link>
             </Button>
             <div className="min-w-0">
-              <h1 className="line-clamp-1 text-sm font-semibold tracking-tight text-white md:text-base">{title}</h1>
-              {subtitle ? <div className="text-xs text-zinc-500">{subtitle}</div> : null}
+              <h1 className="line-clamp-1 text-sm font-semibold tracking-tight text-foreground md:text-base">{title}</h1>
+              {subtitle ? <div className="text-xs text-muted-foreground">{subtitle}</div> : null}
             </div>
           </div>
 

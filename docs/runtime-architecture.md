@@ -17,19 +17,17 @@ Metadata layer.
 
 - enriches movie visuals from TMDB
 - enriches anime/manga metadata from Jikan
-- enriches novel covers from Google Books and Open Library
 - must stay optional: page flow cannot depend on enrichment success
 
 ### `src/lib/adapters/*`
 
 Domain orchestration layer.
 
-- anime
 - comic
-- donghua
+- drama / shorts
 - movie
-- novel
-- random
+- search
+- series
 
 Each adapter:
 
@@ -44,9 +42,8 @@ Each adapter:
 
 Used by:
 
-- `/anime/[slug]`
-- `/donghua/[slug]`
 - `/movies/[slug]`
+- `/series/[slug]`
 
 Shared shell:
 
@@ -57,9 +54,8 @@ Shared shell:
 
 Used by:
 
-- `/anime/episode/[slug]`
-- `/donghua/episode/[episodeSlug]`
-- `/movies/watch/[slug]`
+- `/movies/[slug]` inline player section
+- `/series/[slug]/episodes/[episodeSlug]`
 
 Shared shell:
 
@@ -75,8 +71,7 @@ Desktop rule:
 
 Used by:
 
-- `/drachin/[slug]`
-- `/dramabox/[bookId]`
+- `/shorts/[slug]`
 
 Shared shell:
 
@@ -86,7 +81,7 @@ Shared shell:
 
 Used by:
 
-- `/drachin/episode/[slug]`
+- `/shorts/[slug]/episodes/[episodeSlug]`
 
 Shared shell:
 
@@ -96,8 +91,7 @@ Shared shell:
 
 Used by:
 
-- `/manga/[slug]`
-- `/novel/[slug]`
+- `/comics/[slug]`
 
 Shared shell:
 
@@ -107,31 +101,11 @@ Shared shell:
 
 Used by:
 
-- `/manga/[slug]/[chapter]`
+- `/comics/[slug]/chapters/[chapterSlug]`
 
 Shared shell:
 
 - `ImageReaderScaffold`
-
-### Text Reader
-
-Used by:
-
-- `/novel/[slug]/read/[chapter]`
-
-Shared shell:
-
-- `TextReaderScaffold`
-
-### Download Flow
-
-Used by:
-
-- `/anime/batch/[slug]`
-
-Shared shell:
-
-- `DownloadMediaPage`
 
 ## Image Policy
 
@@ -142,9 +116,9 @@ Shared shell:
 - ignore raw Kanata poster URLs
 - catalog/detail poster ratio: `2:3`
 
-### Anime
+### Series
 
-- content source: Sanka Samehadaku
+- content source: normalized series catalog including anime, donghua, and drama rows
 - poster ratio: `3:4`
 
 ### Comic / Manga
@@ -152,22 +126,10 @@ Shared shell:
 - content source: Sanka comic family
 - poster ratio: `3:4`
 
-### Donghua
-
-- content source: Kanata Anichin
-- poster ratio: `3:4`
-
 ### Vertical Drama
 
 - content source: Sanka vertical drama family
 - poster ratio: `9:16`
-
-### Novel
-
-- content source: SakuraNovel via Sanka
-- cover reliability is unstable because upstream host can block image access
-- ratio: `210:297`
-- fallback surface uses decorative book-cover rendering with title on cover
 
 ## Important Rules
 
@@ -176,3 +138,5 @@ Shared shell:
 - Do not route movie poster handling through comic thumbnail helpers.
 - Keep `enrichment.ts` optional and server-safe.
 - Keep provider failures degradable into empty/error state, not runtime crashes.
+- Keep public IA canonical: watch browse lives under `/watch/*`, reader browse under `/read/*`, and title/unit routes under `/movies`, `/series`, `/shorts`, and `/comics`.
+- Do not reintroduce legacy redirect shims for removed public route families.

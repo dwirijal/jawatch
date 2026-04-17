@@ -1,0 +1,7 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "jawatch-download-interstitial",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-16",
+  "workers_dev": true
+}

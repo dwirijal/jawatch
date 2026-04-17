@@ -1,24 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { usePathname } from 'next/navigation';
 
 const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-8868090753979495';
-const ADULT_ZONE_IDS = [
-  process.env.NEXT_PUBLIC_EXOCLICK_ZONE_HORIZONTAL,
-  process.env.NEXT_PUBLIC_EXOCLICK_ZONE_VERTICAL,
-  process.env.NEXT_PUBLIC_EXOCLICK_ZONE_SQUARE,
-].filter(Boolean);
 
 declare global {
   interface Window {
     adsbygoogle?: unknown[];
     __dwizzyAutoAdsStarted?: boolean;
   }
-}
-
-function removeScript(id: string) {
-  document.getElementById(id)?.remove();
 }
 
 function appendScript({
@@ -91,47 +81,7 @@ function scheduleDeferredWork(task: () => void) {
 }
 
 export function AdNetworkScripts() {
-  const pathname = usePathname() || '/';
-  const isNsfwRoute = pathname === '/nsfw' || pathname.startsWith('/nsfw/');
-  const previousBoundaryRef = React.useRef<boolean | null>(null);
-
   React.useEffect(() => {
-    const reloadMarker = '__dwizzy_ad_boundary_reload__';
-    const targetBoundary = isNsfwRoute ? 'nsfw' : 'sfw';
-
-    if (previousBoundaryRef.current !== null && previousBoundaryRef.current !== isNsfwRoute) {
-      if (window.sessionStorage.getItem(reloadMarker) !== targetBoundary) {
-        window.sessionStorage.setItem(reloadMarker, targetBoundary);
-        window.location.replace(window.location.href);
-        return;
-      }
-    }
-
-    previousBoundaryRef.current = isNsfwRoute;
-    window.sessionStorage.removeItem(reloadMarker);
-  }, [isNsfwRoute]);
-
-  React.useEffect(() => {
-    if (isNsfwRoute) {
-      removeScript('dwizzy-adsense-script');
-
-      if (ADULT_ZONE_IDS.length === 0) {
-        return;
-      }
-
-      return scheduleDeferredWork(() => {
-        appendScript({
-          id: 'dwizzy-exoclick-script',
-          src: 'https://a.magsrv.com/ad-provider.js',
-          onLoad: () => {
-            window.dispatchEvent(new Event('dwizzy:adult-ads-ready'));
-          },
-        });
-      });
-    }
-
-    removeScript('dwizzy-exoclick-script');
-
     if (!ADSENSE_CLIENT) {
       return;
     }
@@ -157,7 +107,7 @@ export function AdNetworkScripts() {
         },
       });
     });
-  }, [isNsfwRoute]);
+  }, []);
 
   return null;
 }

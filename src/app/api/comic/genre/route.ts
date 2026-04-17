@@ -1,5 +1,6 @@
 import { getMangaByGenre } from '@/lib/adapters/comic-server';
 import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
+import { resolveComicRouteIncludeNsfw } from '@/lib/server/comic-route-access';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
 export async function GET(request: Request) {
@@ -19,7 +20,8 @@ export async function GET(request: Request) {
     });
   }
 
-  const payload = await getMangaByGenre(genre, page, limit, { includeNsfw: false }).catch(() => ({ comics: [] }));
+  const includeNsfw = await resolveComicRouteIncludeNsfw(request);
+  const payload = await getMangaByGenre(genre, page, limit, { includeNsfw }).catch(() => ({ comics: [] }));
 
   return Response.json(payload, {
     headers: buildPrivateCacheControl(),

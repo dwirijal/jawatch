@@ -1,61 +1,77 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cn, THEME_CONFIG, ThemeType } from "@/lib/utils"
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cn, THEME_CONFIG, type ThemeType } from "@/lib/utils";
+
+type ButtonVariant =
+  | ThemeType
+  | "primary"
+  | "secondary"
+  | "quiet"
+  | "ghost"
+  | "media"
+  | "danger"
+  | "outline"
+  | "link";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ThemeType | "ghost" | "outline" | "link";
+  variant?: ButtonVariant;
   size?: "default" | "sm" | "lg" | "icon";
   asChild?: boolean;
 }
 
+const SIZE_CLASS: Record<NonNullable<ButtonProps["size"]>, string> = {
+  default: "h-11 px-4 text-sm",
+  sm: "h-9 px-3.5 text-xs",
+  lg: "h-12 px-5 text-sm md:h-14 md:px-6 md:text-base",
+  icon: "h-11 w-11",
+};
+
+const VARIANT_CLASS: Record<Exclude<ButtonVariant, ThemeType>, string> = {
+  primary:
+    "border-transparent bg-[linear-gradient(135deg,var(--accent)_0%,var(--accent-strong)_100%)] text-[var(--accent-contrast)] shadow-[0_24px_55px_-36px_var(--shadow-color-strong)] hover:-translate-y-0.5 hover:brightness-[1.03]",
+  secondary:
+    "border-border-subtle bg-surface-elevated text-foreground shadow-[0_18px_38px_-34px_var(--shadow-color)] hover:-translate-y-0.5 hover:border-border-strong hover:bg-surface-1",
+  quiet:
+    "border-transparent bg-accent-soft text-foreground hover:-translate-y-0.5 hover:bg-surface-1",
+  ghost:
+    "border-transparent bg-transparent text-muted-foreground hover:border-border-subtle hover:bg-surface-1 hover:text-foreground",
+  media:
+    "border-white/12 bg-black/34 text-white shadow-[0_28px_70px_-42px_rgba(0,0,0,0.58)] backdrop-blur-xl hover:bg-black/48",
+  danger:
+    "border-transparent bg-rose-600 text-white shadow-[0_22px_50px_-34px_rgba(225,29,72,0.5)] hover:-translate-y-0.5 hover:bg-rose-500",
+  outline:
+    "border-border-strong bg-transparent text-foreground hover:border-border-strong hover:bg-surface-1",
+  link: "h-auto rounded-none border-transparent bg-transparent px-0 py-0 text-foreground hover:text-[var(--accent-strong)]",
+};
+
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
+  ({ className, variant = "primary", size = "default", asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    const config = (variant in THEME_CONFIG) ? THEME_CONFIG[variant as ThemeType] : null;
-
-    const baseStyles = "inline-flex shrink-0 items-center justify-center gap-2 rounded-[var(--radius-sm)] text-sm font-black tracking-[0.02em] transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50";
-    
-    const sizes = {
-      default: "h-10 px-4.5 py-2",
-      sm: "h-8 px-3.5 text-[11px]",
-      lg: "h-12 px-6 text-sm",
-      icon: "h-10 w-10",
-    };
-
-    const variants = {
-      theme: config ? `${config.primary} text-white hard-shadow-sm hover:brightness-110 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)] group overflow-hidden relative` : "",
-      ghost: "bg-transparent text-zinc-400 hover:bg-surface-1 hover:text-white",
-      outline: "border border-border-subtle bg-surface-1 text-zinc-100 hover:bg-surface-elevated hover:text-white",
-      link: "h-auto rounded-none px-0 py-0 text-zinc-400 underline-offset-4 hover:text-white hover:underline",
-    };
+    const isThemeVariant = variant in THEME_CONFIG;
+    const themeConfig = isThemeVariant ? THEME_CONFIG[variant as ThemeType] : null;
 
     return (
       <Comp
         ref={ref}
         className={cn(
-          baseStyles,
-          variant !== "link" && sizes[size],
-          config ? variants.theme : variants[variant as keyof typeof variants],
-          className
+          "focus-tv inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-md)] border font-semibold tracking-[0.01em] transition-[background,border-color,color,box-shadow,transform,filter] duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
+          variant !== "link" && SIZE_CLASS[size],
+          isThemeVariant
+            ? cn(
+                "border-transparent hover:-translate-y-0.5 hover:brightness-[1.03]",
+                themeConfig?.primary,
+                themeConfig?.contrast,
+                themeConfig?.shadow,
+              )
+            : VARIANT_CLASS[variant as Exclude<ButtonVariant, ThemeType>],
+          className,
         )}
         {...props}
-      >
-        {asChild ? (
-          props.children
-        ) : (
-          <>
-            {props.children}
-            {config && (
-              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-inherit">
-                <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-25deg] transition-all duration-1000 group-hover:left-[150%]" />
-              </div>
-            )}
-          </>
-        )}
-      </Comp>
-    )
-  }
-)
-Button.displayName = "Button"
+      />
+    );
+  },
+);
 
-export { Button }
+Button.displayName = "Button";
+
+export { Button };

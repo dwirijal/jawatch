@@ -1,5 +1,6 @@
 import { getMovieGenreItems } from '@/lib/adapters/movie';
 import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
+import { resolveComicRouteIncludeNsfw } from '@/lib/server/comic-route-access';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
 export async function GET(request: Request) {
@@ -17,8 +18,9 @@ export async function GET(request: Request) {
     });
   }
 
+  const includeNsfw = await resolveComicRouteIncludeNsfw(request);
   const results = await getMovieGenreItems(genre, limit, {
-    includeNsfw: false,
+    includeNsfw,
   }).catch(() => []);
   return Response.json(results, {
     headers: buildPrivateCacheControl(),

@@ -15,11 +15,3 @@ test('signed-out /vault/saved redirects to /login with next parameter', async ({
   await expect(page.locator('body')).toBeVisible();
   await expect(page.locator('body')).not.toContainText(/Application error|Internal Server Error/i);
 });
-
-test('signed-out /collection redirects to vault-aware login next parameter', async ({ page }) => {
-  await page.goto('/collection', { waitUntil: 'domcontentloaded' });
-
-  await expect(page).toHaveURL(/\/login\?next=%2Fvault%2Fsaved(?:$|&)/);
-  await expect(page.locator('body')).toBeVisible();
-  await expect(page.locator('body')).not.toContainText(/Application error|Internal Server Error/i);
-});

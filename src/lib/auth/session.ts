@@ -14,7 +14,6 @@ export type AdultEligibility = {
 
 const ONBOARDING_PATH = '/onboarding';
 const DEFAULT_RETURN_PATH = '/';
-const VAULT_SAVED_PATH = '/vault/saved';
 const PROXY_AUTH_EXEMPT_EXACT_PATHS = new Set(['/login', '/logout', '/onboarding']);
 const PROXY_AUTH_EXEMPT_PREFIXES = ['/auth/callback', '/login/', '/logout/', '/onboarding/'];
 const PROXY_STATIC_EXACT_PATHS = new Set([
@@ -25,8 +24,8 @@ const PROXY_STATIC_EXACT_PATHS = new Set([
   '/sitemap.xml',
   '/sw.js',
 ]);
-const PROXY_PROTECTED_PREFIXES = ['/account/', '/collection/', '/vault/'];
-const PROXY_PROTECTED_EXACT_PATHS = new Set(['/account', '/collection', '/vault']);
+const PROXY_PROTECTED_PREFIXES = ['/account/', '/vault/'];
+const PROXY_PROTECTED_EXACT_PATHS = new Set(['/account', '/vault']);
 
 function parseCookieHeader(cookieHeader: string): Array<{ name: string; value: string }> {
   return cookieHeader
@@ -63,18 +62,8 @@ function sanitizeRelativePath(nextPath: string | undefined): string {
   return candidate;
 }
 
-function isLegacyCollectionPath(pathname: string): boolean {
-  return pathname === '/collection' || pathname.startsWith('/collection?') || pathname.startsWith('/collection/');
-}
-
 export function normalizeVaultAwareNextPath(nextPath: string | undefined): string {
-  const candidate = sanitizeRelativePath(nextPath);
-
-  if (isLegacyCollectionPath(candidate)) {
-    return VAULT_SAVED_PATH;
-  }
-
-  return candidate;
+  return sanitizeRelativePath(nextPath);
 }
 
 export function resolvePostAuthRedirectPath(nextPath: string | undefined, onboardingComplete: boolean): string {

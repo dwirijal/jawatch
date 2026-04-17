@@ -305,7 +305,7 @@ test('linked source unit selection stays pinned to the chosen source item on can
   assert.equal(selected?.unit_key, 'unit-a');
 });
 
-test('watch redirect path points old source slugs to canonical episode slugs', () => {
+test('canonical episode selection prefers canonical episode slugs', () => {
   const resolved = selectCanonicalSeriesRow([
     {
       item_key: 'source-episode',
@@ -324,16 +324,6 @@ test('watch redirect path points old source slugs to canonical episode slugs', (
   ]);
 
   assert.equal(resolved?.slug, 'canonical-episode-1');
-  assert.equal(
-    buildSeriesCanonicalRedirectPath('/series/watch', 'old-source-episode-1', 'canonical-episode-1'),
-    '/series/watch/canonical-episode-1',
-  );
-  assert.equal(
-    resolveSeriesCanonicalRedirect('/series/watch', 'old-source-episode-1', {
-      slug: 'canonical-episode-1',
-    }),
-    '/series/watch/canonical-episode-1',
-  );
 });
 
 test('canonical episode lists drop duplicate source rows that map to the same canonical unit', () => {

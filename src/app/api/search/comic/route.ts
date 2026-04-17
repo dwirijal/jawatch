@@ -1,6 +1,6 @@
 import { searchManga } from '@/lib/adapters/comic-server';
-import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
+import { resolveComicRouteIncludeNsfw } from '@/lib/server/comic-route-access';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
 export async function GET(request: Request) {
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     });
   }
 
-  const includeNsfw = await resolveViewerNsfwAccess();
+  const includeNsfw = await resolveComicRouteIncludeNsfw(request);
   const results = await searchManga(query, Number.isFinite(page) ? page : 1, limit, {
     includeNsfw,
   })

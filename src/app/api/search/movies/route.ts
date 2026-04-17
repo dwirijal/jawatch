@@ -1,6 +1,7 @@
 import { searchMovieCatalog } from '@/lib/adapters/movie';
 import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
+import { resolveComicRouteIncludeNsfw } from '@/lib/server/comic-route-access';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
 export async function GET(request: Request) {
@@ -18,7 +19,9 @@ export async function GET(request: Request) {
     });
   }
 
-  const includeNsfw = await resolveViewerNsfwAccess();
+  const includeNsfw = request.headers.get('x-comic-origin-token')
+    ? await resolveComicRouteIncludeNsfw(request)
+    : await resolveViewerNsfwAccess();
   const results = await searchMovieCatalog(query, limit, {
     includeNsfw,
   }).catch(() => []);

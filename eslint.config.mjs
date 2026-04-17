@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     // Project specific ignores:
     ".open-next/**",
     ".superpowers/**",
+    ".worktrees/**",
     "public/*.js",
     "playwright-report/**",
     "test-results/**",

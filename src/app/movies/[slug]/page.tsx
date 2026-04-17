@@ -13,14 +13,17 @@ import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeadin
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
+import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';
 import {
   formatMovieCardMetaLine,
   formatMovieCardSubtitle,
   getMovieCardBadgeText,
 } from '@/lib/card-presentation';
+import { isReservedMovieSlug } from '@/lib/canonical-route-guards';
 import { buildMetadata, buildMovieDetailJsonLd } from '@/lib/seo';
 import { getMovieDetailPageData } from './movie-detail-data';
+import { getMovieWatchPageData } from '../movie-watch-data';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -53,6 +56,15 @@ function getYouTubeEmbedUrl(url: string | null | undefined): string | null {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  if (isReservedMovieSlug(slug)) {
+    return buildMetadata({
+      title: 'Film Tidak Ditemukan',
+      description: 'Film yang kamu cari tidak tersedia di katalog jawatch.',
+      path: `/movies/${slug}`,
+      noIndex: true,
+    });
+  }
+
   const includeNsfw = await resolveViewerNsfwAccess();
   const movie = await getMovieDetailPageData(slug, includeNsfw);
 
@@ -76,14 +88,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function MovieDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  if (isReservedMovieSlug(slug)) {
+    notFound();
+  }
+
   const includeNsfw = await resolveViewerNsfwAccess();
-  const movie = await getMovieDetailPageData(slug, includeNsfw);
+  const [movie, watch] = await Promise.all([
+    getMovieDetailPageData(slug, includeNsfw),
+    getMovieWatchPageData(slug, includeNsfw),
+  ]);
 
   if (!movie) {
     notFound();
   }
 
-  const watchHref = `/movies/watch/${slug}`;
+  const watchHref = watch?.canInlinePlayback ? '#player' : watch?.externalUrl || movie.externalUrl || `/movies/${slug}`;
   const trailerEmbedUrl = getYouTubeEmbedUrl(movie.trailerUrl);
 
   return (
@@ -105,8 +124,8 @@ export default async function MovieDetailPage({ params }: PageProps) {
         hero={
           <VideoDetailHero
             theme="movie"
-            backHref="/movies"
-            backLabel="Back to Movies"
+            backHref="/watch/movies"
+            backLabel="Back to Watch Movies"
             poster={movie.poster}
             title={movie.title}
             eyebrow={movie.quality}
@@ -151,6 +170,24 @@ export default async function MovieDetailPage({ params }: PageProps) {
             <p className="text-sm leading-7 text-zinc-400 md:text-base">{movie.synopsis}</p>
           </Paper>
         </section>
+
+        {watch?.canInlinePlayback ? (
+          <section id="player" className="scroll-mt-28 space-y-8">
+            <DetailSectionHeading
+              title="Player"
+              theme="movie"
+              aside={<Badge variant="outline">{watch.mirrors.length} Mirrors</Badge>}
+            />
+            <Paper tone="muted" shadow="sm" padded={false} className="overflow-hidden p-3 md:p-4">
+              <VideoPlayer
+                mirrors={watch.mirrors}
+                defaultUrl={watch.defaultUrl}
+                title={watch.title}
+                theme="movie"
+              />
+            </Paper>
+          </section>
+        ) : null}
 
         {trailerEmbedUrl ? (
           <section id="trailer" className="space-y-8">

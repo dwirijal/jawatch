@@ -14,6 +14,7 @@ interface EpisodeListItem {
 }
 
 interface SeriesEpisodeSectionProps {
+  seriesSlug: string;
   theme: Extract<ThemeType, 'anime' | 'donghua' | 'drama'>;
   episodeCount: number;
   currentPage: number;
@@ -29,6 +30,7 @@ interface SeriesEpisodeSectionProps {
 }
 
 export function SeriesEpisodeSection({
+  seriesSlug,
   theme,
   episodeCount,
   currentPage,
@@ -98,7 +100,7 @@ export function SeriesEpisodeSection({
             asChild
           >
             <Link
-              href={`/series/watch/${episode.slug}`}
+              href={`/series/${seriesSlug}/episodes/${episode.slug}`}
               prefetch={false}
               className="relative flex h-full flex-col items-start justify-between gap-3"
             >

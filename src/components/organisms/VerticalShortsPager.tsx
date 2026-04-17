@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { VideoPlayer } from './VideoPlayer';
-import { cn } from '@/lib/utils';
 import { Share2, User, Link as LinkIcon, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 

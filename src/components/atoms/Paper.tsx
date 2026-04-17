@@ -48,7 +48,7 @@ export function Paper({
         SHADOW_CLASS[shadow],
         glassy && 'refractive-border glass-noise border-none',
         padded && 'p-4 md:p-5',
-        interactive && 'transition-all duration-300 hover:-translate-y-1 hover:border-white/20',
+        interactive && 'transition-all duration-300 hover:-translate-y-1 hover:border-border-strong',
         className
       )}
       {...props}

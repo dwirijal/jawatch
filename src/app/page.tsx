@@ -23,6 +23,12 @@ export const metadata: Metadata = buildMetadata({
 
 export const dynamic = 'force-dynamic';
 
+function toHomeJsonLdUrl(item: { id: string; type: string }) {
+  if (item.type === 'movie') return `/movies/${item.id}`;
+  if (item.type === 'series') return `/series/${item.id}`;
+  return `/comics/${item.id}`;
+}
+
 export default async function HomePage() {
   const { sections, heroItems } = await getHomePageData({ includeNsfw: false });
   return (
@@ -35,7 +41,7 @@ export default async function HomePage() {
           path: '/',
           items: heroItems.map((item) => ({
             name: item.title,
-            url: item.type === 'movie' ? `/movies/${item.id}` : item.type === 'series' ? `/series/${item.id}` : `/${item.type}/${item.id}`,
+            url: toHomeJsonLdUrl(item),
             image: item.image || item.banner,
           })),
         })}

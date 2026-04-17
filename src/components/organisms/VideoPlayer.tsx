@@ -85,13 +85,14 @@ export function VideoPlayer({
   const accent = THEME_ACCENT[theme];
   const useNativePlayer = isDirectMediaUrl(activeUrl || '');
   const frameClassName =
-    isTheaterMode && device !== 'mobile'
+    format === 'shorts'
       ? 'h-full w-full rounded-none border-0'
-      : format === 'shorts'
-        ? 'h-full w-full rounded-none border-0'
-        : format === 'vertical'
-          ? 'mx-auto aspect-[9/16] w-full max-w-[26rem] rounded-[var(--radius-2xl)]'
-          : 'aspect-video rounded-[var(--radius-2xl)]';
+      : format === 'vertical'
+        ? 'mx-auto aspect-[9/16] w-full max-w-[26rem] rounded-[var(--radius-2xl)]'
+        : cn(
+            'aspect-video rounded-[var(--radius-2xl)] md:rounded-[calc(var(--radius-2xl)+0.5rem)]',
+            isTheaterMode && 'md:rounded-[2rem]'
+          );
 
   React.useEffect(() => {
     setDeadMirrors(getDeadMirrors());
@@ -156,10 +157,9 @@ export function VideoPlayer({
     'h-11 w-11 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/90 text-white backdrop-blur-md hover:bg-surface-elevated';
 
       return (
-    <div className={cn(
-      "relative z-[150] transition-all duration-700 ease-in-out",
-      isTheaterMode && device !== 'mobile' ? "fixed inset-0 z-[200] flex flex-col space-y-0 bg-background p-0" : "w-full h-full",
-      format !== 'shorts' && "space-y-4 md:space-y-6"
+      <div className={cn(
+        "relative z-[150] w-full h-full transition-all duration-500 ease-out",
+        format !== 'shorts' && "space-y-4 md:space-y-6"
     )}>
       {isLightsDimmed && !isTheaterMode && (
         <div className="fixed inset-0 z-[140] bg-black/95 animate-in fade-in duration-500" onClick={toggleLights} />
@@ -182,6 +182,7 @@ export function VideoPlayer({
       <div className={cn(
         "group relative z-10 overflow-hidden border border-border-subtle bg-surface-2 hard-shadow-md transition-all duration-700",
         frameClassName,
+        isTheaterMode && format === 'landscape' && 'border-white/15 shadow-[0_30px_120px_rgba(0,0,0,0.28)]',
         isLightsDimmed && !isTheaterMode && "ring-4 ring-zinc-100/10"
       )}>
         {activeUrl ? (
@@ -234,36 +235,37 @@ export function VideoPlayer({
             )}
           </div>
         </div>
-
-        {isTheaterMode && (
-          <div className="absolute top-8 right-8 z-30 pointer-events-auto md:hidden">
-             <Button variant="ghost" size="icon" onClick={toggleTheater} className="h-14 w-14 rounded-full border border-border-subtle bg-surface-1/90 text-white shadow-2xl backdrop-blur-md hover:bg-surface-elevated">
-                <Minimize className="w-6 h-6" />
-             </Button>
-          </div>
-        )}
       </div>
 
       {!isTheaterMode && showMirrorPanel && (
-        <Paper tone="muted" shadow="sm" className={cn("p-4 md:p-6 transition-all", isLightsDimmed && "opacity-20 hover:opacity-100")}>
-          <div className="mb-4 flex flex-col justify-between gap-4 md:mb-5 md:flex-row md:items-center">
+        <Paper tone="muted" shadow="sm" className={cn("p-3 md:p-6 transition-all", isLightsDimmed && "opacity-20 hover:opacity-100")}>
+          <div className="mb-3 flex items-center justify-between gap-3 md:mb-5">
             <div className="flex items-center gap-3">
               <div className={cn("rounded-lg p-2", accent.panel)}>
-                <Layers className="w-4 h-4" />
+                <Layers className="h-4 w-4" />
               </div>
               <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Watch Options</h2>
             </div>
-            <div className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-2">
+            <div className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-1.5">
                 <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Auto Play</span>
                 <Switch checked={autoPlay} onClick={() => setAutoPlay(!autoPlay)} className={!autoPlay ? 'bg-zinc-700' : undefined} />
              </div>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:gap-3">
             {mirrors.map((mirror, idx) => {
               const isDead = deadMirrors.includes(mirror.embed_url);
               const isActive = activeUrl === mirror.embed_url;
               return (
-                <Button key={idx} variant={isActive ? theme as ThemeType : "outline"} onClick={() => handleMirrorChange(mirror.embed_url, mirror.label)} className={cn("relative overflow-hidden rounded-[var(--radius-sm)] px-6 text-[10px] uppercase tracking-[0.1em]", !isActive && "border-border-subtle bg-surface-1 hover:bg-surface-elevated", isDead && !isActive && "opacity-40 grayscale")}>
+                <Button
+                  key={idx}
+                  variant={isActive ? theme as ThemeType : "outline"}
+                  onClick={() => handleMirrorChange(mirror.embed_url, mirror.label)}
+                  className={cn(
+                    "relative min-w-0 overflow-hidden rounded-[var(--radius-sm)] px-3 text-[10px] uppercase tracking-[0.1em] md:px-6",
+                    !isActive && "border-border-subtle bg-surface-1 hover:bg-surface-elevated",
+                    isDead && !isActive && "opacity-40 grayscale"
+                  )}
+                >
                   <div className="flex items-center gap-2 relative z-10">
                     {isDead ? <AlertCircle className="w-3 h-3 text-red-500" /> : <Play className={cn("w-3 h-3", isActive ? "fill-white" : "fill-zinc-500")} />}
                     {presentMirrorLabel(mirror.label, idx)}

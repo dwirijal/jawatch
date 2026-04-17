@@ -28,6 +28,7 @@ import {
   getComicCardBadgeText,
   getMovieCardBadgeText,
 } from '@/lib/card-presentation';
+import { buildSearchWarmDocuments, warmSearchIndexDocuments } from '@/lib/search/search-service';
 import type { MovieCardItem } from '@/lib/types';
 import type {
   HeroItem,
@@ -38,8 +39,9 @@ import type {
 const SECTION_LIMIT = 12;
 const SECTION_SOURCE_LIMIT = 24;
 const HOME_FEED_REVALIDATE_SECONDS = 60 * 5;
+const HOME_FEED_CACHE_VERSION = 'ia-v2';
 const HERO_TYPE_BY_ROUTE = {
-  comic: 'manga',
+  comics: 'manga',
   movies: 'movie',
   series: 'series',
 } as const;
@@ -232,7 +234,7 @@ function toComicItem(item: MangaSearchResult): MixedRecommendationItem | null {
     id: `manga:${slug}`,
     title: item.title,
     image: getHDThumbnail(item.image || item.thumbnail || ''),
-    href: `/comic/${slug}`,
+    href: `/comics/${slug}`,
     theme: 'manga',
     subtitle: formatComicCardSubtitle(item),
     badgeText: getComicCardBadgeText(item),
@@ -280,6 +282,47 @@ function bucketComicItems(
   return buckets;
 }
 
+function extractHeroRating(metaLine?: string): string {
+  const trimmed = metaLine?.trim();
+  if (!trimmed) {
+    return 'N/A';
+  }
+
+  const match = trimmed.match(/([0-9]+(?:\.[0-9]+)?)/);
+  return match?.[1] || 'N/A';
+}
+
+function extractHeroTags(item: MixedRecommendationItem, fallbackType: string): string[] {
+  const seen = new Set<string>();
+  const tags: string[] = [];
+  const candidates = [
+    item.badgeText,
+    ...(item.subtitle?.split('•').map((part) => part.trim()) ?? []),
+  ];
+
+  for (const candidate of candidates) {
+    const trimmed = candidate?.trim();
+    if (!trimmed || trimmed.toUpperCase() === 'N/A') {
+      continue;
+    }
+
+    const normalized = trimmed.replace(/^★\s*/, '');
+    const key = normalized.toLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    tags.push(normalized);
+
+    if (tags.length >= 3) {
+      return tags;
+    }
+  }
+
+  return tags.length > 0 ? tags : [fallbackType.toUpperCase()];
+}
+
 function recommendationToHero(item: MixedRecommendationItem): HeroItem | null {
   if (!item.image) return null;
   const segments = item.href.split('/').filter(Boolean);
@@ -295,8 +338,8 @@ function recommendationToHero(item: MixedRecommendationItem): HeroItem | null {
     banner: item.image,
     description: item.subtitle || 'Discover your next favorite title.',
     type,
-    tags: [item.badgeText || type.toUpperCase(), 'Recommended'].filter(Boolean).slice(0, 3),
-    rating: item.badgeText?.replace(/^★\s*/, '') || 'N/A',
+    tags: extractHeroTags(item, type),
+    rating: extractHeroRating(item.metaLine),
   };
 }
 
@@ -313,6 +356,22 @@ async function buildHomePageData(includeNsfw: boolean): Promise<HomePageData> {
     getPopularManga(40, { includeNsfw }).catch(() => ({ comics: [] })),
     getNewManga(1, 40, { includeNsfw }).catch(() => ({ comics: [] })),
   ]);
+
+  void warmSearchIndexDocuments(buildSearchWarmDocuments({
+    series: [
+      ...seriesHub.popular.slice(0, 16),
+      ...seriesHub.latest.slice(0, 16),
+      ...seriesHub.dramaSpotlight.slice(0, 8),
+    ],
+    movies: [
+      ...movieHub.popular.slice(0, 16),
+      ...movieHub.latest.slice(0, 16),
+    ],
+    comics: [
+      ...(mangaPopularResponse.comics || []).slice(0, 16),
+      ...(mangaLatestResponse.comics || []).slice(0, 16),
+    ],
+  }));
 
   const seriesBuckets = bucketSeriesItems(seriesHub.latest);
   const seriesPopularItems = seriesHub.popular.map(toSeriesItem).filter(notNull).slice(0, SECTION_SOURCE_LIMIT);
@@ -348,21 +407,21 @@ async function buildHomePageData(includeNsfw: boolean): Promise<HomePageData> {
   ]).slice(0, SECTION_LIMIT);
 
   const sections: HomeRecommendationSection[] = [
-    buildHomeSection('series-latest', 'Series Update Terbaru', 'Judul episodik yang paling baru diperbarui di katalog canonical', 'series', seriesBuckets.latest, '/series'),
-    buildHomeSection('series-popular', 'Popular Across Series', 'Judul episodik paling ramai dari katalog series canonical', 'popular', seriesPopularItems, '/series'),
-    buildHomeSection('movie-latest', 'Movie Update Terbaru', 'Film yang paling baru diperbarui di katalog movie', 'movie', movieLatestItems, '/movies'),
-    buildHomeSection('series-anime', 'Anime in Series', 'Lane anime Jepang yang sekarang dibaca dari series catalog yang sama', 'series', seriesBuckets.anime, '/series/anime'),
-    buildHomeSection('series-radar', 'Release Radar', 'Jadwal mingguan yang diturunkan langsung dari release_day dan cadence di database', 'series', releaseRadarItems, '/series'),
-    buildHomeSection('series-donghua', 'Donghua Spotlight', 'Animation dari China yang sekarang sepenuhnya masuk ke series canonical', 'series', seriesBuckets.donghua, '/series/donghua'),
-    buildHomeSection('series-drama', 'Drama Spotlight', 'Drama episodik canonical dari database, tetap terpisah dari Drachin', 'series', seriesDramaItems, '/series'),
-    buildHomeSection('series-japan', 'Japan Lane', 'Series dengan rilis Jepang dari taxonomy canonical', 'series', seriesBuckets.japan, '/series/country/japan'),
-    buildHomeSection('series-china', 'China Lane', 'Series dari China, termasuk donghua dan live-action yang sudah ternormalisasi', 'series', seriesBuckets.china, '/series/country/china'),
-    buildHomeSection('series-korea', 'South Korea Lane', 'Series Korea dari canonical metadata, terpisah dari short drama provider', 'series', seriesBuckets.korea, '/series/country/south-korea'),
-    buildHomeSection('manga-latest', 'Manga Update Terbaru', 'Manga yang paling baru diperbarui di katalog comic', 'manga', comicBuckets.manga, '/comic/manga'),
-    buildHomeSection('manhwa-latest', 'Manhwa Update Terbaru', 'Manhwa yang paling baru diperbarui di katalog comic', 'manhwa', comicBuckets.manhwa, '/comic/manhwa'),
-    buildHomeSection('manhua-latest', 'Manhua Update Terbaru', 'Manhua yang paling baru diperbarui di katalog comic', 'manhua', comicBuckets.manhua, '/comic/manhua'),
+    buildHomeSection('series-latest', 'Series Update Terbaru', 'Judul episodik yang paling baru diperbarui di katalog canonical', 'series', seriesBuckets.latest, '/watch/series#latest'),
+    buildHomeSection('series-popular', 'Popular Across Series', 'Judul episodik paling ramai dari katalog series canonical', 'popular', seriesPopularItems, '/watch/series#popular'),
+    buildHomeSection('movie-latest', 'Movie Update Terbaru', 'Film yang paling baru diperbarui di katalog movie', 'movie', movieLatestItems, '/watch/movies#latest'),
+    buildHomeSection('series-anime', 'Anime in Series', 'Lane anime Jepang yang sekarang dibaca dari series catalog yang sama', 'series', seriesBuckets.anime, '/watch/series?type=anime'),
+    buildHomeSection('series-radar', 'Release Radar', 'Jadwal mingguan yang diturunkan langsung dari release_day dan cadence di database', 'series', releaseRadarItems, '/watch/series#release-radar'),
+    buildHomeSection('series-donghua', 'Donghua Spotlight', 'Animation dari China yang sekarang sepenuhnya masuk ke series canonical', 'series', seriesBuckets.donghua, '/watch/series?type=donghua'),
+    buildHomeSection('series-drama', 'Drama Spotlight', 'Drama episodik canonical dari database, tetap terpisah dari short-drama provider', 'series', seriesDramaItems, '/watch/series?type=drama'),
+    buildHomeSection('series-japan', 'Japan Lane', 'Series dengan rilis Jepang dari taxonomy canonical', 'series', seriesBuckets.japan, '/watch/series?type=anime'),
+    buildHomeSection('series-china', 'China Lane', 'Series dari China, termasuk donghua dan live-action yang sudah ternormalisasi', 'series', seriesBuckets.china, '/watch/series?type=donghua'),
+    buildHomeSection('series-korea', 'South Korea Lane', 'Series Korea dari canonical metadata, terpisah dari short-drama provider', 'series', seriesBuckets.korea, '/watch/series?type=drama'),
+    buildHomeSection('manga-latest', 'Manga Update Terbaru', 'Manga yang paling baru diperbarui di katalog comic', 'manga', comicBuckets.manga, '/read/comics?type=manga'),
+    buildHomeSection('manhwa-latest', 'Manhwa Update Terbaru', 'Manhwa yang paling baru diperbarui di katalog comic', 'manhwa', comicBuckets.manhwa, '/read/comics?type=manhwa'),
+    buildHomeSection('manhua-latest', 'Manhua Update Terbaru', 'Manhua yang paling baru diperbarui di katalog comic', 'manhua', comicBuckets.manhua, '/read/comics?type=manhua'),
     buildHomeSection('popular-media', 'Populer Media', 'Pilihan populer lintas kategori', 'popular', popularMedia),
-    buildHomeSection('top-reading', 'Top Reading', 'Judul paling banyak dibaca saat ini', 'reading', comicBuckets.popular, '/comic'),
+    buildHomeSection('top-reading', 'Top Reading', 'Judul paling banyak dibaca saat ini', 'reading', comicBuckets.popular, '/read/comics'),
     buildHomeSection('community-lovers', 'Lovers by Community', 'Favorit komunitas dari tren terbaru', 'community', loversByCommunity),
     buildHomeSection('fresh-week', 'Fresh This Week', 'Rangkuman rilisan baru yang lagi naik', 'fresh', freshThisWeek),
   ];
@@ -382,13 +441,13 @@ async function buildHomePageData(includeNsfw: boolean): Promise<HomePageData> {
 
 const getPublicHomePageData = unstable_cache(
   async () => buildHomePageData(false),
-  ['home-page-data', 'public'],
+  ['home-page-data', HOME_FEED_CACHE_VERSION, 'public'],
   { revalidate: HOME_FEED_REVALIDATE_SECONDS },
 );
 
 const getAuthenticatedHomePageData = unstable_cache(
   async () => buildHomePageData(true),
-  ['home-page-data', 'auth'],
+  ['home-page-data', HOME_FEED_CACHE_VERSION, 'auth'],
   { revalidate: HOME_FEED_REVALIDATE_SECONDS },
 );
 

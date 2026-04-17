@@ -4,11 +4,12 @@ import { Button } from '@/components/atoms/Button';
 import { Badge } from '@/components/atoms/Badge';
 import { MediaCard } from '@/components/atoms/Card';
 import { Link } from '@/components/atoms/Link';
-import { AdSection } from '@/components/organisms/AdSection';
+import { ContinueWatching } from '@/components/organisms/ContinueWatching';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { type ThemeType } from '@/lib/utils';
 import type { CardRailVariant } from '@/components/molecules/card/CardRail';
 import type { HeroItem, HomeRecommendationSection, MixedRecommendationItem } from '@/app/home-page-types';
+import { curateHomeSections } from '@/lib/home-curation';
 
 type HomePageClientProps = {
   heroItems: HeroItem[];
@@ -37,8 +38,13 @@ const HERO_DESC_CLAMP_STYLE: CSSProperties = {
   overflow: 'hidden',
 };
 
-const HOME_SECTION_MAX_ITEMS = 12;
-const HOME_SECTION_MIN_ITEMS = 4;
+const HERO_FALLBACK_DESCRIPTION = 'Curated picks from the unified Jawatch catalog, tuned for long watch and long read sessions.';
+const HOME_LANE_LINKS = [
+  { href: '/watch/movies', label: 'Movies' },
+  { href: '/watch/series', label: 'Series' },
+  { href: '/read/comics', label: 'Comics' },
+  { href: '/watch/shorts', label: 'Shorts' },
+] as const;
 
 const HOMEPAGE_SECTION_LAYOUTS: Partial<Record<string, SectionLayoutConfig>> = {
   'fresh-week': { mode: 'rail', railVariant: 'default', gridDensity: 'dense' },
@@ -140,31 +146,28 @@ function getSectionLayoutConfig(section: HomeRecommendationSection): SectionLayo
   };
 }
 
-function normalizeHomeSections(sections: HomeRecommendationSection[]): HomeRecommendationSection[] {
-  return sections
-    .map((section) => {
-      const layoutMode = getSectionLayoutConfig(section).mode;
-      const seen = new Set<string>();
-      const cappedItems = section.items.filter((item) => {
-        if (seen.has(item.id)) {
-          return false;
-        }
-        seen.add(item.id);
-        return true;
-      }).slice(0, HOME_SECTION_MAX_ITEMS);
+function normalizeHeroValue(value: string | undefined, fallback: string) {
+  const trimmed = value?.trim() || '';
+  if (!trimmed || trimmed.toUpperCase() === 'N/A') {
+    return fallback;
+  }
 
-      if (layoutMode === 'rail') {
-        return {
-          ...section,
-          items: cappedItems,
-        };
-      }
-      return {
-        ...section,
-        items: cappedItems,
-      };
-    })
-    .filter((section) => section.items.length >= HOME_SECTION_MIN_ITEMS);
+  return trimmed;
+}
+
+function getHeroAuxiliaryTags(item: HeroItem) {
+  const themeLabel = getThemeLabel(item.type).toLowerCase();
+  const seen = new Set<string>();
+
+  return item.tags.filter((tag) => {
+    const normalized = tag.trim().toLowerCase();
+    if (!normalized || normalized === themeLabel || normalized === 'recommended' || seen.has(normalized)) {
+      return false;
+    }
+
+    seen.add(normalized);
+    return true;
+  }).slice(0, 2);
 }
 
 function toDetailHref(item: HeroItem) {
@@ -174,6 +177,10 @@ function toDetailHref(item: HeroItem) {
 
   if (item.type === 'series') {
     return `/series/${item.id}`;
+  }
+
+  if (item.type === 'manga') {
+    return `/comics/${item.id}`;
   }
 
   return `/${item.type}/${item.id}`;
@@ -188,69 +195,103 @@ function HeroStage({
 }) {
   const itemVariant = item.type === 'series' ? 'drama' : item.type;
   const heroImage = item.image || item.banner || '/favicon.ico';
+  const description = normalizeHeroValue(item.description, HERO_FALLBACK_DESCRIPTION);
+  const rating = normalizeHeroValue(item.rating, '');
+  const auxiliaryTags = getHeroAuxiliaryTags(item);
+  const primaryContext = auxiliaryTags[0] || 'Cinematic pick';
+  const secondaryContext = auxiliaryTags[1] || null;
 
   return (
-    <section className="surface-panel-elevated relative overflow-hidden bg-[linear-gradient(145deg,rgba(13,15,20,0.98),rgba(10,10,12,0.94))]">
-      <div className="absolute inset-x-0 top-0 h-px bg-white/8" />
-      <div className="absolute inset-y-0 right-0 hidden w-[34%] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_65%)] lg:block" />
+    <section className="surface-panel-elevated relative overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top_left,rgba(209,168,111,0.16),transparent_68%)]" />
 
-      <div className="relative z-10 px-4 py-5 sm:px-5 sm:py-6 lg:px-6 lg:py-7">
-        <div className="grid min-h-[26rem] grid-cols-1 gap-5 lg:min-h-[30rem] lg:grid-cols-[minmax(0,1.7fr)_minmax(16rem,20rem)] lg:items-stretch lg:gap-8">
-          <div className="flex min-w-0 flex-col justify-between gap-5">
-            <div className="max-w-[42rem] space-y-3 sm:space-y-4">
-            <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-200">
+      <div className="relative z-10 grid gap-5 p-4 sm:gap-6 sm:p-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(17rem,20rem)] lg:items-center lg:gap-8 lg:p-8">
+        <div className="order-1 flex min-w-0 flex-col gap-6 lg:justify-between">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant="solid" className="text-[10px]">Featured</Badge>
               <Badge variant={itemVariant} className="text-[10px]">{getThemeLabel(item.type)}</Badge>
-              <Badge variant="outline" className="text-[10px]">★ {item.rating || 'N/A'}</Badge>
-              {item.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="outline" className="text-[10px]">{tag}</Badge>
-              ))}
+              {rating ? <Badge variant="outline" className="text-[10px]">★ {rating}</Badge> : null}
             </div>
 
-            <h1 className="type-display text-white" style={HERO_TITLE_CLAMP_STYLE}>
-              {item.title}
-            </h1>
+            <div className="space-y-3">
+              <h1
+                className="max-w-4xl font-[var(--font-heading)] text-[clamp(2.3rem,7vw,4.4rem)] font-bold leading-[0.94] tracking-[-0.06em] text-foreground"
+                style={HERO_TITLE_CLAMP_STYLE}
+              >
+                {item.title}
+              </h1>
 
-            <p className="max-w-[36rem] text-sm leading-6 text-zinc-200/88 sm:text-base sm:leading-7" style={HERO_DESC_CLAMP_STYLE}>
-              {item.description}
-            </p>
+              <p className="max-w-[40rem] text-base leading-7 text-muted-foreground" style={HERO_DESC_CLAMP_STYLE}>
+                {description}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+              <span>{primaryContext}</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-border-strong" />
+              <span>{rating ? `Rated ${rating}` : 'Fresh today'}</span>
+              {secondaryContext ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-border-strong" />
+                  <span>{secondaryContext}</span>
+                </>
+              ) : null}
+            </div>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <Button variant={itemVariant} size="lg" asChild className="w-full sm:w-auto">
-                <Link href={toDetailHref(item)}>Start Watching</Link>
+              <Button variant="primary" size="lg" asChild className="w-full sm:w-auto">
+                <Link href={toDetailHref(item)}>{item.type === 'manga' ? 'Start reading' : 'Start watching'}</Link>
               </Button>
-              <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
-                <Link href={toDetailHref(item)}>View Detail</Link>
+              <Button variant="secondary" size="lg" asChild className="w-full sm:w-auto">
+                <Link href={toDetailHref(item)}>View detail</Link>
               </Button>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {HOME_LANE_LINKS.map((lane) => (
+                <Link
+                  key={lane.href}
+                  href={lane.href}
+                  className="focus-tv inline-flex min-h-11 items-center rounded-full border border-border-subtle bg-surface-1 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-muted-foreground transition hover:bg-surface-elevated hover:text-foreground"
+                >
+                  {lane.label}
+                </Link>
+              ))}
             </div>
           </div>
 
-            {secondaryItems.length > 0 ? (
-              <div className="grid gap-2 sm:grid-cols-3">
+          {secondaryItems.length > 0 ? (
+            <div className="hidden space-y-3 border-t border-border-subtle pt-4 lg:block">
+              <p className="type-kicker">Continue browsing</p>
+              <div className="grid gap-3 md:grid-cols-3">
                 {secondaryItems.map((secondary) => {
                   const secondaryVariant = secondary.type === 'series' ? 'drama' : secondary.type;
+                  const secondaryRating = normalizeHeroValue(secondary.rating, '');
 
                   return (
                     <Link
                       key={secondary.id}
                       href={toDetailHref(secondary)}
-                      className="surface-panel group flex items-center gap-3 p-2.5 transition-colors hover:bg-surface-elevated"
+                      className="group flex min-w-0 items-center gap-3 rounded-[var(--radius-lg)] border border-border-subtle bg-surface-1 p-3 transition-colors hover:bg-surface-elevated"
                     >
-                      <div className="relative h-[4.5rem] w-[3.25rem] shrink-0 overflow-hidden rounded-[var(--radius-md)] border border-border-subtle bg-surface-2">
+                      <div className="relative h-[4.75rem] w-[3.4rem] shrink-0 overflow-hidden rounded-[var(--radius-md)] border border-border-subtle bg-surface-2">
                         <Image
                           src={secondary.image || secondary.banner || '/favicon.ico'}
                           alt={secondary.title}
                           fill
-                          sizes="104px"
+                          sizes="108px"
                           className="object-cover"
                         />
                       </div>
-                      <div className="min-w-0 flex-1 space-y-1.5">
+                      <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex items-center gap-2">
                           <Badge variant={secondaryVariant} className="text-[10px]">{getThemeLabel(secondary.type)}</Badge>
-                          <span className="text-[10px] font-semibold text-zinc-400">★ {secondary.rating || 'N/A'}</span>
+                          {secondaryRating ? (
+                            <span className="text-[10px] font-semibold text-muted-foreground">★ {secondaryRating}</span>
+                          ) : null}
                         </div>
-                        <h3 className="line-clamp-2 text-sm font-black tracking-tight text-white group-hover:text-zinc-100">
+                        <h3 className="line-clamp-2 text-sm font-black tracking-tight text-foreground">
                           {secondary.title}
                         </h3>
                       </div>
@@ -258,37 +299,42 @@ function HeroStage({
                   );
                 })}
               </div>
-            ) : null}
-          </div>
-
-          <div className="hidden lg:flex lg:items-end lg:justify-end">
-            <Link
-              href={toDetailHref(item)}
-              className="surface-panel group relative flex h-full w-full max-w-[19rem] overflow-hidden bg-surface-2"
-            >
-              <Image
-                src={heroImage}
-                alt={item.title}
-                fill
-                sizes="(min-width: 1024px) 304px, 70vw"
-                priority
-                fetchPriority="high"
-                quality={60}
-                className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-4">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-300">
-                    {item.tags[0] || 'Rilis Baru'}
-                  </p>
-                  <p className="line-clamp-2 text-sm font-black tracking-tight text-white">
-                    {item.title}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          </div>
+            </div>
+          ) : null}
         </div>
+
+        <Link
+          href={toDetailHref(item)}
+          className="focus-tv group relative order-2 overflow-hidden rounded-[var(--radius-xl)] border border-border-subtle bg-[#0d1015]"
+        >
+          <div className="relative aspect-[16/9] w-full sm:aspect-[7/5] lg:aspect-[4/5]">
+            <Image
+              src={heroImage}
+              alt={item.title}
+              fill
+              sizes="(min-width: 1024px) 336px, (min-width: 640px) 92vw, 100vw"
+              priority
+              fetchPriority="high"
+              quality={72}
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/12 to-transparent lg:hidden" />
+          <div className="absolute left-4 top-4 flex flex-wrap items-center gap-2 lg:hidden">
+            <Badge variant="solid" className="text-[10px]">Featured</Badge>
+            <Badge variant={itemVariant} className="text-[10px]">{getThemeLabel(item.type)}</Badge>
+          </div>
+          <div className="absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 sm:p-5 lg:block">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="solid" className="text-[10px]">Featured</Badge>
+              <Badge variant={itemVariant} className="text-[10px]">{getThemeLabel(item.type)}</Badge>
+            </div>
+            <p className="mt-3 line-clamp-2 text-lg font-black tracking-tight text-white">{item.title}</p>
+            <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-300">
+              {primaryContext}
+            </p>
+          </div>
+        </Link>
       </div>
     </section>
   );
@@ -347,22 +393,19 @@ function SectionGrid({ sections }: { sections: HomeRecommendationSection[] }) {
 export function HomePageView({ heroItems, sections }: HomePageClientProps) {
   const featuredHero = heroItems[0];
   const secondaryHeroes = heroItems.slice(1, 4);
-  const normalizedSections = normalizeHomeSections(sections);
+  const curatedSections = curateHomeSections(sections);
 
   return (
     <main className="app-shell relative overflow-hidden" data-view-mode="compact">
       <div className="relative z-10 app-container-wide flex flex-col gap-6 py-3 sm:gap-8 sm:py-5 lg:gap-10">
-        <div className="flex flex-col gap-6 sm:gap-8 lg:gap-10">
+        <div className="flex flex-col gap-7 sm:gap-9 lg:gap-10">
           {featuredHero ? (
             <HeroStage item={featuredHero} secondaryItems={secondaryHeroes} />
           ) : (
             <section className="surface-panel h-[44vh] animate-pulse" />
           )}
-          <AdSection
-            title="Partner Spotlight"
-            subtitle="Featured campaigns and partner placements that keep the same compact editorial rhythm as the rest of the homepage."
-          />
-          <SectionGrid sections={normalizedSections} />
+          <ContinueWatching title="Continue Your Session" limit={8} />
+          <SectionGrid sections={curatedSections} />
         </div>
       </div>
     </main>

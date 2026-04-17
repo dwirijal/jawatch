@@ -3,6 +3,10 @@ import type {
   MangaSubtype,
 } from '@/lib/types';
 import { normalizeComicImageUrl } from '@/lib/comic-media';
+import {
+  normalizeComicListPayload,
+  normalizeComicSearchPayload,
+} from '@/lib/adapters/comic-response';
 
 type SearchResponse = {
   data: MangaSearchResult[];
@@ -43,20 +47,24 @@ export const searchManga = async (q: string, p = 1) => {
     return { data: [] };
   }
 
-  const data = await fetchComicJson<MangaSearchResult[]>(
+  const payload = await fetchComicJson<unknown>(
     `/api/search/comic?q=${encodeURIComponent(trimmed)}&page=${Math.max(p, 1)}`,
   );
-  return { data } satisfies SearchResponse;
+  return normalizeComicSearchPayload(payload) satisfies SearchResponse;
 };
 
 export const getPopularManga = async () =>
-  fetchComicJson<ComicListResponse>('/api/comic/popular?limit=40');
+  normalizeComicListPayload(await fetchComicJson<unknown>('/api/comic/popular?limit=40')) satisfies ComicListResponse;
 
 export const getNewManga = async (p = 1, l = 10) =>
-  fetchComicJson<ComicListResponse>(`/api/comic/latest?page=${Math.max(p, 1)}&limit=${Math.max(l, 1)}`);
+  normalizeComicListPayload(
+    await fetchComicJson<unknown>(`/api/comic/latest?page=${Math.max(p, 1)}&limit=${Math.max(l, 1)}`),
+  ) satisfies ComicListResponse;
 
 export const getMangaByGenre = async (g: string, p = 1) =>
-  fetchComicJson<ComicListResponse>(`/api/comic/genre?genre=${encodeURIComponent(g)}&page=${Math.max(p, 1)}`);
+  normalizeComicListPayload(
+    await fetchComicJson<unknown>(`/api/comic/genre?genre=${encodeURIComponent(g)}&page=${Math.max(p, 1)}`),
+  ) satisfies ComicListResponse;
 
 export const getMangaSubtype = (item: Pick<MangaSearchResult, 'type' | 'subtype'>): MangaSubtype => {
   const subtype = item.subtype?.toLowerCase() ?? '';

@@ -3,13 +3,18 @@ const REQUEST_TIMEOUT_MS = Number(process.env.SMOKE_TIMEOUT_MS || 15000);
 
 const checks = [
   { path: '/', kind: 'html', label: 'home' },
-  { path: '/movies', kind: 'html', label: 'movies hub' },
-  { path: '/series', kind: 'html', label: 'series hub' },
-  { path: '/comic', kind: 'html', label: 'comic hub' },
-  { path: '/series/ongoing', kind: 'html', label: 'series ongoing' },
-  { path: '/comic/latest', kind: 'html', label: 'comic latest' },
+  { path: '/watch', kind: 'html', label: 'watch hub' },
+  { path: '/watch/movies', kind: 'html', label: 'movies browse' },
+  { path: '/watch/series', kind: 'html', label: 'series browse' },
+  { path: '/watch/shorts', kind: 'html', label: 'shorts browse' },
+  { path: '/read', kind: 'html', label: 'read hub' },
+  { path: '/read/comics', kind: 'html', label: 'comics browse' },
   { path: '/sitemap.xml', kind: 'xml', label: 'sitemap' },
   { path: '/robots.txt', kind: 'text', label: 'robots' },
+  { path: '/movies/latest', kind: 'removed', label: 'removed movies latest', expectedStatus: 404 },
+  { path: '/series/short', kind: 'removed', label: 'removed series short', expectedStatus: 404 },
+  { path: '/comic/magic-emperor', kind: 'removed', label: 'removed comic detail', expectedStatus: 404 },
+  { path: '/manga/magic-emperor', kind: 'removed', label: 'removed manga detail', expectedStatus: 404 },
 ];
 
 function normalizeBaseUrl(value) {
@@ -82,10 +87,13 @@ async function main() {
 
     try {
       const { response, body, durationMs } = await fetchWithTimeout(url);
-      const contentTypeOk = expectContentType(response.headers, check.kind);
-      const bodyOk = expectBody(body, check.kind);
+      const expectedStatus = check.expectedStatus ?? 200;
+      const statusOk = response.status === expectedStatus;
+      const shouldInspectBody = expectedStatus >= 200 && expectedStatus < 300;
+      const contentTypeOk = shouldInspectBody ? expectContentType(response.headers, check.kind) : true;
+      const bodyOk = shouldInspectBody ? expectBody(body, check.kind) : true;
 
-      if (!response.ok || !contentTypeOk || !bodyOk) {
+      if (!statusOk || !contentTypeOk || !bodyOk) {
         failures.push({
           label: check.label,
           path: check.path,
@@ -93,7 +101,7 @@ async function main() {
           contentType: response.headers.get('content-type') || '',
           durationMs,
           reason: [
-            !response.ok ? `unexpected status ${response.status}` : null,
+            !statusOk ? `unexpected status ${response.status}, expected ${expectedStatus}` : null,
             !contentTypeOk ? `unexpected content-type` : null,
             !bodyOk ? `missing expected body markers` : null,
           ].filter(Boolean).join(', '),

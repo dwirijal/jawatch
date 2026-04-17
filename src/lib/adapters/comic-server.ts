@@ -1,14 +1,32 @@
 import 'server-only';
 
+import {
+  buildComicItemScopeCondition,
+  buildComicReadyChapterCondition,
+  buildComicReadyItemCondition,
+  buildComicVisibilityCondition,
+} from '@/lib/adapters/comic-db-contract';
 import { normalizeComicImageUrl } from '@/lib/comic-media';
 import {
   buildComicCacheKey,
   getComicSortedSetDescending,
   incrementComicSortedSet,
   rememberComicCacheValue,
+  setComicCacheValue,
 } from '@/lib/server/comic-cache';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 import { getComicDb } from '@/lib/server/comic-db';
+import {
+  buildComicGatewayUrl,
+  readComicOriginSharedToken,
+  shouldUseComicGateway,
+} from '@/lib/server/comic-origin';
 import { trackComicAnalyticsEvent } from '@/lib/server/comic-analytics';
+import {
+  normalizeComicListPayload,
+  normalizeComicSearchPayload,
+  shouldRewriteNormalizedComicPayload,
+} from '@/lib/adapters/comic-response';
 import type {
   ChapterDetail,
   JikanEnrichment,
@@ -76,29 +94,6 @@ const ONGOING_COMIC_SQL_CONDITION = `
   or lower(coalesce(status, '')) like '%ongoing%'
   or lower(coalesce(status, '')) like '%airing%'
 `;
-const NSFW_SQL_CONDITION = `
-  exists (
-    select 1
-    from jsonb_array_elements_text(
-      case
-        when jsonb_typeof(detail->'genres') = 'array' then detail->'genres'
-        else '[]'::jsonb
-      end
-    ) as genre_name(value)
-    where lower(genre_name.value) = 'nsfw'
-  )
-  or exists (
-    select 1
-    from jsonb_array_elements_text(
-      case
-        when jsonb_typeof(detail->'tags') = 'array' then detail->'tags'
-        else '[]'::jsonb
-      end
-    ) as tag_name(value)
-    where lower(tag_name.value) = 'nsfw'
-  )
-`;
-
 function readRecord(value: unknown): JsonRecord {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as JsonRecord) : {};
 }
@@ -128,26 +123,8 @@ function readStringArray(value: unknown): string[] {
     .filter(Boolean);
 }
 
-function hasNsfwTag(detail: JsonRecord): boolean {
-  const genres = readStringArray(detail.genres).map((entry) => entry.toLowerCase());
-  if (genres.includes('nsfw')) {
-    return true;
-  }
-
-  const tags = readStringArray(detail.tags).map((entry) => entry.toLowerCase());
-  return tags.includes('nsfw');
-}
-
 function getVisibilityCacheSegment(includeNsfw: boolean): 'auth' | 'public' {
   return includeNsfw ? 'auth' : 'public';
-}
-
-function buildVisibilityCondition(includeNsfw: boolean, detailColumn = 'detail'): string {
-  if (includeNsfw) {
-    return '';
-  }
-
-  return `and not (${NSFW_SQL_CONDITION.replaceAll('detail', detailColumn)})`;
 }
 
 function toTitleCase(value: string): string {
@@ -195,7 +172,7 @@ function mapComicCard(row: ComicItemRow): MangaSearchResult {
   const title = readText(row.title);
   const slug = readText(row.slug);
   const cover = getHDThumbnail(readText(row.cover_url));
-  const href = `/comic/${slug}`;
+  const href = `/comics/${slug}`;
 
   return {
     title,
@@ -256,7 +233,7 @@ function mapComicChapters(rows: ComicChapterRow[]): MangaDetail['chapters'] {
   return sortComicChapterRows(rows).map((row) => ({
     chapter: readText(row.label) || readText(row.title),
     slug: readText(row.slug),
-    link: `/comic/${readText(row.slug)}`,
+    link: `/comics/${readText(row.slug)}`,
     date: readText(row.published_at),
   }));
 }
@@ -274,7 +251,7 @@ function buildFallbackRecommendations(
       return {
         title: readText(row.title),
         slug: readText(row.slug),
-        link: `/comic/${readText(row.slug)}`,
+        link: `/comics/${readText(row.slug)}`,
         image: getHDThumbnail(readText(row.cover_url)),
         type: toTitleCase(subtype),
         subtype,
@@ -322,6 +299,63 @@ async function getSql() {
   return sql;
 }
 
+async function fetchComicGatewayJson<T>(
+  path: string,
+  params?: Record<string, string | number | boolean | undefined>,
+): Promise<T> {
+  const headers = new Headers({
+    Accept: 'application/json',
+  });
+
+  const token = readComicOriginSharedToken();
+  if (token) {
+    headers.set('x-comic-origin-token', token);
+  }
+
+  const response = await fetchWithTimeout(buildComicGatewayUrl(path, params), {
+    headers,
+    cache: 'no-store',
+    timeoutMs: 10_000,
+    retries: 1,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Comic gateway ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+
+async function rememberComicListPayload(
+  key: string,
+  ttlSeconds: number,
+  loader: () => Promise<unknown>,
+): Promise<{ comics: MangaSearchResult[] }> {
+  const payload = await rememberComicCacheValue<unknown>(key, ttlSeconds, loader);
+  const normalized = normalizeComicListPayload(payload);
+
+  if (shouldRewriteNormalizedComicPayload(payload)) {
+    void setComicCacheValue(key, normalized, ttlSeconds);
+  }
+
+  return normalized;
+}
+
+async function rememberComicSearchPayload(
+  key: string,
+  ttlSeconds: number,
+  loader: () => Promise<unknown>,
+): Promise<{ data: MangaSearchResult[] }> {
+  const payload = await rememberComicCacheValue<unknown>(key, ttlSeconds, loader);
+  const normalized = normalizeComicSearchPayload(payload);
+
+  if (shouldRewriteNormalizedComicPayload(payload)) {
+    void setComicCacheValue(key, normalized, ttlSeconds);
+  }
+
+  return normalized;
+}
+
 async function getComicRowsBySlugs(slugs: string[], includeNsfw: boolean): Promise<ComicItemRow[]> {
   if (slugs.length === 0) {
     return [];
@@ -331,10 +365,11 @@ async function getComicRowsBySlugs(slugs: string[], includeNsfw: boolean): Promi
   const placeholders = slugs.map((_, index) => `$${index + 1}`).join(', ');
   const rows = await sql.unsafe<ComicItemRow[]>(
     `
-    select item_key, source, media_type, slug, title, cover_url, status, release_year, score, detail, updated_at
-    from public.media_items
-    where media_type in ('manga', 'manhwa', 'manhua') and slug in (${placeholders})
-      ${buildVisibilityCondition(includeNsfw)}
+    select m.item_key, m.source, m.media_type, m.slug, m.title, m.cover_url, m.status, m.release_year, m.score, m.detail, m.updated_at
+    from public.media_items m
+    where ${buildComicItemScopeCondition('m')} and m.slug in (${placeholders})
+      ${buildComicVisibilityCondition(includeNsfw, 'm')}
+      and ${buildComicReadyItemCondition('m')}
   `,
     slugs,
   );
@@ -361,10 +396,10 @@ async function getPopularFallbackRows(limit: number, includeNsfw: boolean): Prom
   return sql.unsafe<ComicItemRow[]>(
     `
     with chapter_stats as (
-      select item_key, count(*)::int as chapter_count, max(updated_at) as latest_chapter_update
-      from public.media_units
-      where unit_type = 'chapter'
-      group by item_key
+      select u.item_key, count(*)::int as chapter_count, max(u.updated_at) as latest_chapter_update
+      from public.media_units u
+      where ${buildComicReadyChapterCondition('u')}
+      group by u.item_key
     )
     select
       m.item_key,
@@ -380,9 +415,9 @@ async function getPopularFallbackRows(limit: number, includeNsfw: boolean): Prom
       m.updated_at,
       coalesce(chapter_stats.chapter_count, 0) as chapter_count
     from public.media_items m
-    left join chapter_stats on chapter_stats.item_key = m.item_key
-    where m.media_type in ('manga', 'manhwa', 'manhua')
-      ${buildVisibilityCondition(includeNsfw, 'm.detail')}
+    join chapter_stats on chapter_stats.item_key = m.item_key
+    where ${buildComicItemScopeCondition('m')}
+      ${buildComicVisibilityCondition(includeNsfw, 'm')}
     order by coalesce(chapter_stats.chapter_count, 0) desc, m.updated_at desc
     limit $1
   `,
@@ -395,10 +430,11 @@ async function queryLatestComics(page = 1, limit = 24, includeNsfw = false): Pro
   const sql = await getSql();
   const rows = await sql.unsafe<ComicItemRow[]>(
     `
-    select item_key, source, media_type, slug, title, cover_url, status, release_year, score, detail, updated_at
-    from public.media_items
-    where media_type in ('manga', 'manhwa', 'manhua')
-      ${buildVisibilityCondition(includeNsfw)}
+    select m.item_key, m.source, m.media_type, m.slug, m.title, m.cover_url, m.status, m.release_year, m.score, m.detail, m.updated_at
+    from public.media_items m
+    where ${buildComicItemScopeCondition('m')}
+      ${buildComicVisibilityCondition(includeNsfw, 'm')}
+      and ${buildComicReadyItemCondition('m')}
     order by updated_at desc
     limit $1 offset $2
   `,
@@ -428,11 +464,12 @@ async function queryOngoingComics(limit = 24, includeNsfw = false): Promise<Mang
   const sql = await getSql();
   const rows = await sql.unsafe<ComicItemRow[]>(
     `
-    select item_key, source, media_type, slug, title, cover_url, status, release_year, score, detail, updated_at
-    from public.media_items
-    where media_type in ('manga', 'manhwa', 'manhua')
+    select m.item_key, m.source, m.media_type, m.slug, m.title, m.cover_url, m.status, m.release_year, m.score, m.detail, m.updated_at
+    from public.media_items m
+    where ${buildComicItemScopeCondition('m')}
       and (${ONGOING_COMIC_SQL_CONDITION})
-      ${buildVisibilityCondition(includeNsfw)}
+      ${buildComicVisibilityCondition(includeNsfw, 'm')}
+      and ${buildComicReadyItemCondition('m')}
     order by updated_at desc
     limit $1
   `,
@@ -453,17 +490,18 @@ async function queryComicSearch(query: string, page = 1, limit = 24, includeNsfw
   const sql = await getSql();
   const rows = await sql.unsafe<ComicItemRow[]>(
     `
-    select item_key, source, media_type, slug, title, cover_url, status, release_year, score, detail, updated_at
-    from public.media_items
-    where media_type in ('manga', 'manhwa', 'manhua')
+    select m.item_key, m.source, m.media_type, m.slug, m.title, m.cover_url, m.status, m.release_year, m.score, m.detail, m.updated_at
+    from public.media_items m
+    where ${buildComicItemScopeCondition('m')}
       and (
-        search_vec @@ plainto_tsquery('simple', $1)
-        or title ilike $2
+        m.search_vec @@ plainto_tsquery('simple', $1)
+        or m.title ilike $2
       )
-      ${buildVisibilityCondition(includeNsfw)}
+      ${buildComicVisibilityCondition(includeNsfw, 'm')}
+      and ${buildComicReadyItemCondition('m')}
     order by
-      ts_rank_cd(search_vec, plainto_tsquery('simple', $1)) desc,
-      updated_at desc
+      ts_rank_cd(m.search_vec, plainto_tsquery('simple', $1)) desc,
+      m.updated_at desc
     limit $3 offset $4
   `,
     [trimmed, ilikeQuery, Math.max(limit, 1), offset],
@@ -482,21 +520,22 @@ async function queryGenreComics(genre: string, page = 1, limit = 24, includeNsfw
   const sql = await getSql();
   const rows = await sql.unsafe<ComicItemRow[]>(
     `
-    select item_key, source, media_type, slug, title, cover_url, status, release_year, score, detail, updated_at
-    from public.media_items
-    where media_type in ('manga', 'manhwa', 'manhua')
+    select m.item_key, m.source, m.media_type, m.slug, m.title, m.cover_url, m.status, m.release_year, m.score, m.detail, m.updated_at
+    from public.media_items m
+    where ${buildComicItemScopeCondition('m')}
       and exists (
         select 1
         from jsonb_array_elements_text(
           case
-            when jsonb_typeof(detail->'genres') = 'array' then detail->'genres'
+            when jsonb_typeof(m.detail->'genres') = 'array' then m.detail->'genres'
             else '[]'::jsonb
           end
         ) as genre_name(value)
         where lower(genre_name.value) = lower($1)
       )
-      ${buildVisibilityCondition(includeNsfw)}
-    order by updated_at desc
+      ${buildComicVisibilityCondition(includeNsfw, 'm')}
+      and ${buildComicReadyItemCondition('m')}
+    order by m.updated_at desc
     limit $2 offset $3
   `,
     [trimmed, Math.max(limit, 1), offset],
@@ -512,12 +551,13 @@ async function querySubtypePosterMap(includeNsfw = false): Promise<Partial<Recor
     select distinct on (media_type)
       media_type,
       cover_url
-    from public.media_items
-    where media_type in ('manga', 'manhwa', 'manhua')
-      and cover_url is not null
-      and cover_url <> ''
-      ${buildVisibilityCondition(includeNsfw)}
-    order by media_type, updated_at desc
+    from public.media_items m
+    where ${buildComicItemScopeCondition('m')}
+      and m.cover_url is not null
+      and m.cover_url <> ''
+      ${buildComicVisibilityCondition(includeNsfw, 'm')}
+      and ${buildComicReadyItemCondition('m')}
+    order by m.media_type, m.updated_at desc
   `,
     [],
   );
@@ -536,10 +576,11 @@ async function queryComicDetail(slug: string, includeNsfw = false): Promise<Mang
   const sql = await getSql();
   const itemRows = await sql.unsafe<ComicItemRow[]>(
     `
-    select item_key, source, media_type, slug, title, cover_url, status, release_year, score, detail, updated_at
-    from public.media_items
-    where media_type in ('manga', 'manhwa', 'manhua') and slug = $1
-      ${buildVisibilityCondition(includeNsfw)}
+    select m.item_key, m.source, m.media_type, m.slug, m.title, m.cover_url, m.status, m.release_year, m.score, m.detail, m.updated_at
+    from public.media_items m
+    where ${buildComicItemScopeCondition('m')} and m.slug = $1
+      ${buildComicVisibilityCondition(includeNsfw, 'm')}
+      and ${buildComicReadyItemCondition('m')}
     limit 1
   `,
     [slug],
@@ -550,23 +591,28 @@ async function queryComicDetail(slug: string, includeNsfw = false): Promise<Mang
   }
 
   const detail = readRecord(currentRow.detail);
-  const chapters = await sql<ComicChapterRow[]>`
+  const chapters = await sql.unsafe<ComicChapterRow[]>(
+    `
     select slug, title, label, number, prev_slug, next_slug, published_at, detail
-    from public.media_units
-    where item_key = ${currentRow.item_key} and unit_type = 'chapter'
+    from public.media_units u
+    where u.item_key = $1
+      and ${buildComicReadyChapterCondition('u')}
     order by number desc nulls last, published_at desc nulls last, slug desc
-  `;
+  `,
+    [currentRow.item_key],
+  );
 
   const currentGenres = readStringArray(detail.genres);
   let similarRows: ComicItemRow[] = [];
   if (currentGenres.length > 0) {
     similarRows = await sql.unsafe<ComicItemRow[]>(
       `
-      select item_key, source, media_type, slug, title, cover_url, status, release_year, score, detail, updated_at
-      from public.media_items
-      where media_type in ('manga', 'manhwa', 'manhua') and slug <> $1
-        ${buildVisibilityCondition(includeNsfw)}
-      order by updated_at desc
+      select m.item_key, m.source, m.media_type, m.slug, m.title, m.cover_url, m.status, m.release_year, m.score, m.detail, m.updated_at
+      from public.media_items m
+      where ${buildComicItemScopeCondition('m')} and m.slug <> $1
+        ${buildComicVisibilityCondition(includeNsfw, 'm')}
+        and ${buildComicReadyItemCondition('m')}
+      order by m.updated_at desc
       limit 40
     `,
       [slug],
@@ -627,8 +673,10 @@ async function queryComicChapter(slug: string, includeNsfw = false): Promise<Cha
       i.detail as item_detail
     from public.media_units u
     join public.media_items i on i.item_key = u.item_key
-    where u.unit_type = 'chapter' and u.slug = $1
-      ${buildVisibilityCondition(includeNsfw, 'i.detail')}
+    where u.slug = $1
+      and ${buildComicItemScopeCondition('i')}
+      and ${buildComicReadyChapterCondition('u')}
+      ${buildComicVisibilityCondition(includeNsfw, 'i')}
     limit 1
   `,
     [slug],
@@ -640,9 +688,6 @@ async function queryComicChapter(slug: string, includeNsfw = false): Promise<Cha
   }
 
   const detail = readRecord(row.detail);
-  if (!includeNsfw && hasNsfwTag(readRecord(row.item_detail))) {
-    throw new Error('Comic chapter not found');
-  }
   return {
     title: row.title || row.label || row.slug,
     subtype: normalizeSubtype(row.media_type, readRecord(row.item_detail).type),
@@ -667,10 +712,11 @@ async function queryComicJikanEnrichment(slug: string, includeNsfw = false): Pro
     from public.media_items i
     join public.media_item_enrichments e on e.item_key = i.item_key
     where i.slug = $1
-      and i.media_type in ('manga', 'manhwa', 'manhua')
+      and ${buildComicItemScopeCondition('i')}
       and e.provider = 'jikan'
       and e.match_status = 'matched'
-      ${buildVisibilityCondition(includeNsfw, 'i.detail')}
+      ${buildComicVisibilityCondition(includeNsfw, 'i')}
+      and ${buildComicReadyItemCondition('i')}
     order by e.updated_at desc nulls last
     limit 1
   `,
@@ -733,13 +779,20 @@ export async function getPopularManga(
   options: { includeNsfw?: boolean } = {},
 ): Promise<{ comics: MangaSearchResult[] }> {
   const includeNsfw = options.includeNsfw === true;
-  const comics = await rememberComicCacheValue(
-    buildComicCacheKey('list', 'popular', getVisibilityCacheSegment(includeNsfw), limit),
-    LIST_CACHE_TTL_SECONDS,
-    () => queryPopularComics(limit, includeNsfw),
-  );
+  const key = buildComicCacheKey('list', 'popular', getVisibilityCacheSegment(includeNsfw), limit);
 
-  return { comics };
+  return rememberComicListPayload(
+    key,
+    LIST_CACHE_TTL_SECONDS,
+    () => (
+      shouldUseComicGateway()
+        ? fetchComicGatewayJson<unknown>('/api/comic/popular', {
+            limit,
+            includeNsfw,
+          })
+        : queryPopularComics(limit, includeNsfw)
+    ),
+  );
 }
 
 export async function getNewManga(
@@ -748,13 +801,21 @@ export async function getNewManga(
   options: { includeNsfw?: boolean } = {},
 ): Promise<{ comics: MangaSearchResult[] }> {
   const includeNsfw = options.includeNsfw === true;
-  const comics = await rememberComicCacheValue(
-    buildComicCacheKey('list', 'latest', getVisibilityCacheSegment(includeNsfw), page, limit),
-    LIST_CACHE_TTL_SECONDS,
-    () => queryLatestComics(page, limit, includeNsfw),
-  );
+  const key = buildComicCacheKey('list', 'latest', getVisibilityCacheSegment(includeNsfw), page, limit);
 
-  return { comics };
+  return rememberComicListPayload(
+    key,
+    LIST_CACHE_TTL_SECONDS,
+    () => (
+      shouldUseComicGateway()
+        ? fetchComicGatewayJson<unknown>('/api/comic/latest', {
+            page,
+            limit,
+            includeNsfw,
+          })
+        : queryLatestComics(page, limit, includeNsfw)
+    ),
+  );
 }
 
 export async function getOngoingManga(
@@ -762,13 +823,20 @@ export async function getOngoingManga(
   options: { includeNsfw?: boolean } = {},
 ): Promise<{ comics: MangaSearchResult[] }> {
   const includeNsfw = options.includeNsfw === true;
-  const comics = await rememberComicCacheValue(
-    buildComicCacheKey('list', 'ongoing', getVisibilityCacheSegment(includeNsfw), limit),
-    LIST_CACHE_TTL_SECONDS,
-    () => queryOngoingComics(limit, includeNsfw),
-  );
+  const key = buildComicCacheKey('list', 'ongoing', getVisibilityCacheSegment(includeNsfw), limit);
 
-  return { comics };
+  return rememberComicListPayload(
+    key,
+    LIST_CACHE_TTL_SECONDS,
+    () => (
+      shouldUseComicGateway()
+        ? fetchComicGatewayJson<unknown>('/api/comic/ongoing', {
+            limit,
+            includeNsfw,
+          })
+        : queryOngoingComics(limit, includeNsfw)
+    ),
+  );
 }
 
 export async function searchManga(
@@ -778,13 +846,22 @@ export async function searchManga(
   options: { includeNsfw?: boolean } = {},
 ): Promise<{ data: MangaSearchResult[] }> {
   const includeNsfw = options.includeNsfw === true;
-  const data = await rememberComicCacheValue(
-    buildComicCacheKey('search', getVisibilityCacheSegment(includeNsfw), query.toLowerCase(), page, limit),
-    SEARCH_CACHE_TTL_SECONDS,
-    () => queryComicSearch(query, page, limit, includeNsfw),
-  );
+  const key = buildComicCacheKey('search', getVisibilityCacheSegment(includeNsfw), query.toLowerCase(), page, limit);
 
-  return { data };
+  return rememberComicSearchPayload(
+    key,
+    SEARCH_CACHE_TTL_SECONDS,
+    () => (
+      shouldUseComicGateway()
+        ? fetchComicGatewayJson<unknown>('/api/search/comic', {
+            q: query,
+            page,
+            limit,
+            includeNsfw,
+          })
+        : queryComicSearch(query, page, limit, includeNsfw)
+    ),
+  );
 }
 
 export async function getMangaByGenre(
@@ -794,19 +871,38 @@ export async function getMangaByGenre(
   options: { includeNsfw?: boolean } = {},
 ): Promise<{ comics: MangaSearchResult[] }> {
   const includeNsfw = options.includeNsfw === true;
-  const comics = await rememberComicCacheValue(
-    buildComicCacheKey('genre', getVisibilityCacheSegment(includeNsfw), genre.toLowerCase(), page, limit),
-    LIST_CACHE_TTL_SECONDS,
-    () => queryGenreComics(genre, page, limit, includeNsfw),
-  );
+  const key = buildComicCacheKey('genre', getVisibilityCacheSegment(includeNsfw), genre.toLowerCase(), page, limit);
 
-  return { comics };
+  return rememberComicListPayload(
+    key,
+    LIST_CACHE_TTL_SECONDS,
+    () => (
+      shouldUseComicGateway()
+        ? fetchComicGatewayJson<unknown>('/api/comic/genre', {
+            genre,
+            page,
+            limit,
+            includeNsfw,
+          })
+        : queryGenreComics(genre, page, limit, includeNsfw)
+    ),
+  );
 }
 
 export async function getComicSubtypePosters(
   options: { includeNsfw?: boolean } = {},
 ): Promise<Partial<Record<MangaSubtype, string>>> {
   const includeNsfw = options.includeNsfw === true;
+  if (shouldUseComicGateway()) {
+    return rememberComicCacheValue(
+      buildComicCacheKey('subtype-posters', getVisibilityCacheSegment(includeNsfw)),
+      LIST_CACHE_TTL_SECONDS,
+      () => fetchComicGatewayJson<Partial<Record<MangaSubtype, string>>>('/api/comic/subtype-posters', {
+        includeNsfw,
+      }),
+    );
+  }
+
   return rememberComicCacheValue(
     buildComicCacheKey('subtype-posters', getVisibilityCacheSegment(includeNsfw)),
     LIST_CACHE_TTL_SECONDS,
@@ -819,7 +915,18 @@ export async function getMangaDetail(
   options: { includeNsfw?: boolean; recordAccess?: boolean } = {},
 ): Promise<MangaDetail> {
   const includeNsfw = options.includeNsfw === true;
-  const detail = await rememberComicCacheValue(
+  if (shouldUseComicGateway()) {
+    return rememberComicCacheValue(
+      buildComicCacheKey('detail', getVisibilityCacheSegment(includeNsfw), slug),
+      DETAIL_CACHE_TTL_SECONDS,
+      () => fetchComicGatewayJson<MangaDetail>(`/api/comic/title/${encodeURIComponent(slug)}`, {
+        includeNsfw,
+        recordAccess: options.recordAccess === true,
+      }),
+    );
+  }
+
+  const detail = await rememberComicCacheValue<MangaDetail>(
     buildComicCacheKey('detail', getVisibilityCacheSegment(includeNsfw), slug),
     DETAIL_CACHE_TTL_SECONDS,
     () => queryComicDetail(slug, includeNsfw),
@@ -842,6 +949,16 @@ export async function getComicJikanEnrichment(
   options: { includeNsfw?: boolean } = {},
 ): Promise<JikanEnrichment | null> {
   const includeNsfw = options.includeNsfw === true;
+  if (shouldUseComicGateway()) {
+    return rememberComicCacheValue(
+      buildComicCacheKey('detail', 'jikan', getVisibilityCacheSegment(includeNsfw), slug),
+      DETAIL_CACHE_TTL_SECONDS,
+      () => fetchComicGatewayJson<JikanEnrichment | null>(`/api/comic/jikan/${encodeURIComponent(slug)}`, {
+        includeNsfw,
+      }),
+    );
+  }
+
   return rememberComicCacheValue(
     buildComicCacheKey('detail', 'jikan', getVisibilityCacheSegment(includeNsfw), slug),
     DETAIL_CACHE_TTL_SECONDS,
@@ -854,6 +971,20 @@ export async function getMangaChapter(
   options: { includeNsfw?: boolean; recordAccess?: boolean } = {},
 ): Promise<ChapterDetail> {
   const includeNsfw = 'includeNsfw' in options && options.includeNsfw === true;
+  if (shouldUseComicGateway()) {
+    return rememberComicCacheValue(
+      buildComicCacheKey('chapter', getVisibilityCacheSegment(includeNsfw), slug),
+      CHAPTER_CACHE_TTL_SECONDS,
+      () => fetchComicGatewayJson<ChapterDetail>(`/api/comic/chapter/${encodeURIComponent(slug)}`, {
+        includeNsfw,
+        recordAccess: options.recordAccess === true,
+      }),
+    ).then((chapter) => ({
+      ...chapter,
+      images: chapter.images.map((image) => normalizeComicImageUrl(image)).filter(Boolean),
+    }));
+  }
+
   const chapter = await rememberComicCacheValue(
     buildComicCacheKey('chapter', getVisibilityCacheSegment(includeNsfw), slug),
     CHAPTER_CACHE_TTL_SECONDS,

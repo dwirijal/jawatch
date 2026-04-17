@@ -1,4 +1,4 @@
-import { BookMarked, BookOpen, Clapperboard, FileText, Home, Play, Search, UserRound, Zap } from 'lucide-react';
+import { BookMarked, BookOpen, Clapperboard, Home, Play, Search, UserRound, Zap } from 'lucide-react';
 
 export type NavigationLeafItem = {
   description: string;
@@ -47,17 +47,16 @@ const WATCH_PATH_ALIASES: Record<string, readonly string[]> = {
   '/watch': ['/watch'],
   '/watch/movies': ['/watch/movies', '/movies'],
   '/watch/series': ['/watch/series', '/series'],
-  '/watch/shorts': ['/watch/shorts', '/series/short'],
+  '/watch/shorts': ['/watch/shorts', '/shorts'],
 };
 
 const READ_PATH_ALIASES: Record<string, readonly string[]> = {
   '/read': ['/read'],
-  '/read/comics': ['/read/comics', '/comic'],
-  '/read/novels': ['/read/novels', '/novel'],
+  '/read/comics': ['/read/comics', '/comics'],
 };
 
 const VAULT_PATH_ALIASES: Record<string, readonly string[]> = {
-  '/vault': ['/vault', '/collection'],
+  '/vault': ['/vault'],
 };
 
 const WATCH_GROUP: NavigationGroup = {
@@ -78,7 +77,7 @@ const READ_GROUP: NavigationGroup = {
   key: 'read',
   label: 'Read',
   icon: BookOpen,
-  description: 'Comics and long-form reading in one reading surface.',
+  description: 'Manga, manhwa, and manhua in one reading surface.',
   isActive: createGroupPathMatcher(READ_PATH_ALIASES),
   items: [
     { label: 'Read Home', href: '/read', description: 'Entry point for the reading hub.' },
@@ -117,13 +116,13 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
     key: 'watch',
     type: 'group',
     group: WATCH_GROUP,
-    match: (pathname) => startsWithAnyPath(pathname, ['/watch', '/movies', '/series', '/series/short']),
+    match: (pathname) => startsWithAnyPath(pathname, ['/watch', '/movies', '/series', '/shorts']),
   },
   {
     key: 'read',
     type: 'group',
     group: READ_GROUP,
-    match: (pathname) => startsWithAnyPath(pathname, ['/read', '/comic']),
+    match: (pathname) => startsWithAnyPath(pathname, ['/read', '/comics']),
   },
   {
     key: 'vault',
@@ -131,7 +130,7 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
     label: 'Vault',
     href: '/vault',
     icon: BookMarked,
-    match: (pathname) => startsWithAnyPath(pathname, ['/vault', '/collection']),
+    match: (pathname) => startsWithAnyPath(pathname, ['/vault']),
   },
 ];
 
@@ -161,5 +160,4 @@ export const CATEGORY_ICON_MAP = {
   drama: Clapperboard,
   drachin: Clapperboard,
   dramabox: Clapperboard,
-  novel: FileText,
 };

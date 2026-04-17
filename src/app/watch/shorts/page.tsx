@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { buildMetadata } from '@/lib/seo';
-import DrachinPageClient from '@/app/drachin/DrachinPageClient';
+import ShortsHubClient from '@/app/_shorts/DrachinPageClient';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Watch Shorts Subtitle Indonesia',
@@ -9,5 +9,5 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function WatchShortsPage() {
-  return <DrachinPageClient basePath="/series/short" />;
+  return <ShortsHubClient />;
 }

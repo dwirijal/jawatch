@@ -175,7 +175,7 @@ export function buildSeriesEpisodeJsonLd(options: {
     '@context': 'https://schema.org',
     '@type': 'TVEpisode',
     name: options.episodeTitle,
-    url: absoluteUrl(`/series/watch/${options.episodeSlug}`),
+    url: absoluteUrl(`/series/${options.seriesSlug}/episodes/${options.episodeSlug}`),
     image: absoluteImageUrl(options.poster) || undefined,
     description: options.description || undefined,
     episodeNumber: Number.isFinite(episodeNumber) ? episodeNumber : undefined,
@@ -194,7 +194,7 @@ export function buildSeriesEpisodeJsonLd(options: {
     },
     potentialAction: {
       '@type': 'WatchAction',
-      target: absoluteUrl(`/series/watch/${options.episodeSlug}`),
+      target: absoluteUrl(`/series/${options.seriesSlug}/episodes/${options.episodeSlug}`),
     },
   };
 }
@@ -213,7 +213,7 @@ export function buildMovieWatchJsonLd(options: {
     '@context': 'https://schema.org',
     '@type': 'Movie',
     name: options.title,
-    url: absoluteUrl(`/movies/watch/${options.slug}`),
+    url: absoluteUrl(`/movies/${options.slug}`),
     image: absoluteImageUrl(options.poster) || undefined,
     description: options.description || undefined,
     duration: options.duration || undefined,
@@ -221,7 +221,7 @@ export function buildMovieWatchJsonLd(options: {
     inLanguage: 'id-ID',
     potentialAction: {
       '@type': 'WatchAction',
-      target: absoluteUrl(`/movies/watch/${options.slug}`),
+      target: absoluteUrl(`/movies/${options.slug}`),
     },
   };
 }
@@ -280,7 +280,7 @@ export function buildMovieDetailJsonLd(options: {
     inLanguage: 'id-ID',
     potentialAction: {
       '@type': 'WatchAction',
-      target: absoluteUrl(`/movies/watch/${options.slug}`),
+      target: absoluteUrl(`/movies/${options.slug}`),
     },
   };
 }
@@ -297,33 +297,7 @@ export function buildComicDetailJsonLd(options: {
     '@context': 'https://schema.org',
     '@type': 'ComicSeries',
     name: options.title,
-    url: absoluteUrl(`/comic/${options.slug}`),
-    image: absoluteImageUrl(options.poster) || undefined,
-    description: options.description || undefined,
-    genre: options.genres?.length ? options.genres : undefined,
-    author: options.author
-      ? {
-          '@type': 'Person',
-          name: options.author,
-        }
-      : undefined,
-    inLanguage: 'id-ID',
-  };
-}
-
-export function buildNovelDetailJsonLd(options: {
-  title: string;
-  slug: string;
-  poster?: string | null;
-  description?: string | null;
-  genres?: string[];
-  author?: string | null;
-}) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Book',
-    name: options.title,
-    url: absoluteUrl(`/novel/${options.slug}`),
+    url: absoluteUrl(`/comics/${options.slug}`),
     image: absoluteImageUrl(options.poster) || undefined,
     description: options.description || undefined,
     genre: options.genres?.length ? options.genres : undefined,

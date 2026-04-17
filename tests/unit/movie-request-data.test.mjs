@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { createMovieDetailRequestCache } from '../../src/app/movies/[slug]/movie-detail-data.ts';
-import { createMovieWatchRequestCache } from '../../src/app/movies/watch/[slug]/movie-watch-data.ts';
+import { createMovieWatchRequestCache } from '../../src/app/movies/movie-watch-data.ts';
 import { createMoviePageDataLoader } from '../../src/app/movies/movie-page-data.ts';
 import { resolveDynamicSitemapEntries } from '../../src/app/sitemap-utils.ts';
 import {

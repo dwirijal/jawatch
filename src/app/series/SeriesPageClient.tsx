@@ -29,6 +29,7 @@ interface SeriesPageClientProps {
   initialDramaSpotlight: SeriesCardItem[];
   initialWeeklySchedule: SeriesScheduleLane[];
   filters: string[];
+  activeFilter?: 'anime' | 'donghua' | 'drama' | null;
 }
 
 function getCardTheme(item: SeriesCardItem): 'anime' | 'donghua' | 'drama' {
@@ -38,20 +39,22 @@ function getCardTheme(item: SeriesCardItem): 'anime' | 'donghua' | 'drama' {
 function buildSeriesFilterHref(filter: string): string {
   switch (filter.toLowerCase()) {
     case 'anime':
-      return '/series/anime';
+      return '/watch/series?type=anime';
     case 'donghua':
-      return '/series/donghua';
+      return '/watch/series?type=donghua';
     case 'drama':
-      return '/series/drama';
-    case 'japan':
-      return '/series/country/japan';
-    case 'china':
-      return '/series/country/china';
-    case 'south korea':
-      return '/series/country/south-korea';
+      return '/watch/series?type=drama';
     default:
-      return '/series';
+      return '/watch/series';
   }
+}
+
+function filterSeriesItemsByType(items: SeriesCardItem[], activeFilter: 'anime' | 'donghua' | 'drama' | null): SeriesCardItem[] {
+  if (!activeFilter) {
+    return items;
+  }
+
+  return items.filter((item) => item.type === activeFilter);
 }
 
 export default function SeriesPageClient({
@@ -60,28 +63,35 @@ export default function SeriesPageClient({
   initialDramaSpotlight,
   initialWeeklySchedule,
   filters,
+  activeFilter = null,
 }: SeriesPageClientProps) {
   const router = useRouter();
   const today = React.useMemo(() => getCurrentReleaseDay(), []);
   const [activeRadarDay, setActiveRadarDay] = React.useState<string | null>(today);
-  const initialDonghuaSpotlight = initialLatest.filter((item) => item.type === 'donghua').slice(0, 8);
+  const filteredPopular = React.useMemo(() => filterSeriesItemsByType(initialPopular, activeFilter), [activeFilter, initialPopular]);
+  const filteredLatest = React.useMemo(() => filterSeriesItemsByType(initialLatest, activeFilter), [activeFilter, initialLatest]);
+  const filteredDramaSpotlight = React.useMemo(() => filterSeriesItemsByType(initialDramaSpotlight, activeFilter), [activeFilter, initialDramaSpotlight]);
+  const initialDonghuaSpotlight = React.useMemo(
+    () => filterSeriesItemsByType(initialLatest.filter((item) => item.type === 'donghua').slice(0, 8), activeFilter),
+    [activeFilter, initialLatest],
+  );
   const activeRadarLane = initialWeeklySchedule.find((lane) => lane.day === activeRadarDay) ?? initialWeeklySchedule[0] ?? null;
   const shelfBrowseCards = React.useMemo(
     () => [
       {
-        label: 'Ongoing',
-        route: '/series/ongoing',
-        badge: 'LIVE',
+        label: 'Latest',
+        route: '/watch/series#latest',
+        badge: 'NEW',
         image: initialLatest[0]?.poster || initialPopular[0]?.poster || '',
-        subtitle: 'Series that are still actively airing',
+        subtitle: 'Jump to the latest updated series lane',
         theme: 'drama' as const,
       },
       {
-        label: 'Full List',
-        route: '/series/list',
-        badge: 'LIST',
+        label: 'Popular',
+        route: '/watch/series#popular',
+        badge: 'HOT',
         image: initialPopular[0]?.poster || initialLatest[0]?.poster || '',
-        subtitle: 'Browse the broader canonical catalog',
+        subtitle: 'Open the most active series shelf',
         theme: 'anime' as const,
       },
     ],
@@ -109,7 +119,7 @@ export default function SeriesPageClient({
       resultHrefBuilder={(item) => `/series/${item.slug}`}
     >
       <div className="app-section-stack">
-        <SectionCard title="Browse By Shelf" subtitle="Open focused series lanes for ongoing titles or the full canonical list." icon={Activity} mode="rail" railVariant="default">
+        <SectionCard title="Browse By Shelf" subtitle="Open focused series lanes for ongoing titles or the full canonical list." icon={Activity} mode="rail" railVariant="compact">
           {shelfBrowseCards.map((item) => (
             <MediaCard
               key={item.route}
@@ -123,10 +133,10 @@ export default function SeriesPageClient({
           ))}
         </SectionCard>
 
-        <SectionCard title="Popular Across Series" subtitle="Judul episodik paling ramai di katalog canonical" icon={Flame} mode="grid" gridDensity="default" viewAllHref="/series">
-          {initialPopular.length === 0
+        <SectionCard id="popular" title="Popular Across Series" subtitle="Judul episodik paling ramai di katalog canonical" icon={Flame} mode="grid" gridDensity="default" viewAllHref="/watch/series#popular">
+          {filteredPopular.length === 0
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`series-popular-${index}`} />)
-            : initialPopular.slice(0, 12).map((item) => (
+            : filteredPopular.slice(0, 12).map((item) => (
               <MediaCard
                 key={item.slug}
                 href={`/series/${item.slug}`}
@@ -139,10 +149,10 @@ export default function SeriesPageClient({
             ))}
         </SectionCard>
 
-        <SectionCard title="Recently Updated Series" subtitle="Judul anime, donghua, dan drama episodik yang baru diperbarui" icon={Sparkles} mode="grid" gridDensity="default" viewAllHref="/series/ongoing">
-          {initialLatest.length === 0
+        <SectionCard id="latest" title="Recently Updated Series" subtitle="Judul anime, donghua, dan drama episodik yang baru diperbarui" icon={Sparkles} mode="grid" gridDensity="default" viewAllHref="/watch/series#latest">
+          {filteredLatest.length === 0
             ? Array.from({ length: 12 }).map((_, index) => <SkeletonCard key={`series-latest-${index}`} />)
-            : initialLatest.slice(0, 12).map((item) => (
+            : filteredLatest.slice(0, 12).map((item) => (
               <MediaCard
                 key={item.slug}
                 href={`/series/${item.slug}`}
@@ -155,7 +165,7 @@ export default function SeriesPageClient({
             ))}
         </SectionCard>
 
-        <div className="space-y-6">
+        <div id="release-radar" className="scroll-mt-28 space-y-6">
           <SectionHeader
             title="Release Radar"
             subtitle="Lane jadwal mingguan yang dibaca langsung dari release_day dan cadence di database canonical"
@@ -221,6 +231,7 @@ export default function SeriesPageClient({
                             metaLine={formatSeriesNextRelease(item, activeRadarLane.timezone)}
                             badgeText={getSeriesBadgeText(item.type)}
                             theme={getCardTheme(item)}
+                            aspectRatio="feature"
                           />
                         ))}
                       </StaggerEntry>
@@ -248,9 +259,9 @@ export default function SeriesPageClient({
         </SectionCard>
 
         <SectionCard title="Drama Spotlight" subtitle="Drama episodik paling aktif dari lane live-action canonical" icon={Clapperboard} mode="grid" gridDensity="default">
-          {initialDramaSpotlight.length === 0
+          {filteredDramaSpotlight.length === 0
             ? Array.from({ length: 8 }).map((_, index) => <SkeletonCard key={`series-drama-${index}`} />)
-            : initialDramaSpotlight.slice(0, 8).map((item) => (
+            : filteredDramaSpotlight.slice(0, 8).map((item) => (
               <MediaCard
                 key={item.slug}
                 href={`/series/${item.slug}`}

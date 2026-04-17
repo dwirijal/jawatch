@@ -2,25 +2,29 @@
 
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Search } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Search, Sparkles } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
+import { ThemeToggle } from '@/components/molecules/ThemeToggle';
 import { cn } from '@/lib/utils';
 import { DESKTOP_NAV_ITEMS } from '@/lib/navigation';
+import { isChromelessPath } from '@/lib/route-chrome';
 import { useUIStore } from '@/store/useUIStore';
 import { DesktopNavGroup } from './DesktopNavGroup';
 import { SearchHotkeyListener } from './SearchHotkeyListener';
-import { SearchModal } from './SearchModal';
-import { NavbarAuthControls } from './NavbarAuthControls';
+
+const SearchModal = dynamic(() => import('./SearchModal').then((mod) => mod.SearchModal), {
+  ssr: false,
+});
 
 export function Navbar() {
   const pathname = usePathname() || '/';
   const isSearchOpen = useUIStore((state) => state.isSearchOpen);
   const isNavbarHidden = useUIStore((state) => state.isNavbarHidden);
+  const chromeless = isChromelessPath(pathname);
   const [isSolid, setIsSolid] = React.useState(false);
   const [searchModalMounted, setSearchModalMounted] = React.useState(false);
-  const [authControlsMounted, setAuthControlsMounted] = React.useState(false);
 
   React.useEffect(() => {
     const onScroll = () => {
@@ -38,63 +42,7 @@ export function Navbar() {
     }
   }, [isSearchOpen]);
 
-  React.useEffect(() => {
-    if (authControlsMounted) {
-      return;
-    }
-
-    let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let idleId: number | null = null;
-    const requestIdle =
-      typeof window !== 'undefined' && 'requestIdleCallback' in window
-        ? window.requestIdleCallback.bind(window)
-        : null;
-    const cancelIdle =
-      typeof window !== 'undefined' && 'cancelIdleCallback' in window
-        ? window.cancelIdleCallback.bind(window)
-        : null;
-
-    const mountAuthControls = () => {
-      if (cancelled) {
-        return;
-      }
-
-      if (requestIdle) {
-        idleId = requestIdle(() => {
-          if (!cancelled) {
-            setAuthControlsMounted(true);
-          }
-        }, { timeout: 1500 });
-        return;
-      }
-
-      timeoutId = setTimeout(() => {
-        if (!cancelled) {
-          setAuthControlsMounted(true);
-        }
-      }, 900);
-    };
-
-    if (document.readyState === 'complete') {
-      mountAuthControls();
-    } else {
-      window.addEventListener('load', mountAuthControls, { once: true });
-    }
-
-    return () => {
-      cancelled = true;
-      window.removeEventListener('load', mountAuthControls);
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-      if (idleId !== null && cancelIdle) {
-        cancelIdle(idleId);
-      }
-    };
-  }, [authControlsMounted]);
-
-  if (isNavbarHidden) {
+  if (chromeless || isNavbarHidden) {
     return null;
   }
 
@@ -105,78 +53,82 @@ export function Navbar() {
       <nav
         data-scrolled={isSolid ? 'true' : 'false'}
         className={cn(
-          'sticky top-0 z-[160] hidden w-full border-b transition-all duration-700 ease-in-out md:block',
-          isSolid
-            ? 'border-zinc-200 bg-white/80 py-0 backdrop-blur-xl'
-            : 'border-transparent bg-transparent py-4'
+          'pointer-events-none fixed inset-x-0 top-0 z-[160] hidden transition-all duration-300 ease-out md:block',
+          isSolid ? 'pt-3' : 'pt-4'
         )}
       >
-        <div className="app-container-wide flex h-20 items-center justify-between gap-10">
-          <div className="flex min-w-0 items-center gap-12">
-            <Link href="/" className="focus-tv group flex items-center gap-4">
-              <span className="flex flex-col leading-none">
-                <span className="font-[var(--font-heading)] text-3xl tracking-tight text-zinc-900 lg:text-4xl">
-                  Ja<span className="italic text-zinc-400">watch</span>
+        <div className="app-container-wide">
+          <div
+            className={cn(
+              'pointer-events-auto surface-panel-elevated flex h-[4.5rem] items-center justify-between gap-6 px-4 lg:px-5',
+              isSolid ? 'shadow-[0_28px_70px_-40px_var(--shadow-color-strong)]' : 'shadow-[0_18px_48px_-38px_var(--shadow-color)]'
+            )}
+          >
+            <div className="flex min-w-0 items-center gap-6 xl:gap-10">
+              <Link href="/" className="focus-tv group flex items-center gap-3">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border-subtle bg-[linear-gradient(135deg,var(--accent-soft)_0%,transparent_100%)] text-[var(--accent-strong)] shadow-[0_20px_40px_-30px_var(--shadow-color)]">
+                  <Sparkles className="h-5 w-5" />
                 </span>
-              </span>
-            </Link>
+                <span className="flex flex-col leading-none">
+                  <span className="font-[var(--font-heading)] text-2xl font-bold tracking-[-0.06em] text-foreground lg:text-[1.85rem]">
+                    Ja<span className="text-[var(--accent-strong)]">watch</span>
+                  </span>
+                  <span className="mt-1 hidden text-[9px] font-black uppercase tracking-[0.24em] text-muted-foreground xl:block">
+                    Cinematic watch and reader balance
+                  </span>
+                </span>
+              </Link>
 
-            <div className="flex items-center gap-2">
-              {DESKTOP_NAV_ITEMS.map((item) => {
-                if (item.type === 'group') {
-                  return (
-                    <DesktopNavGroup
-                      key={item.key}
-                      active={item.match(pathname)}
-                      group={item.group}
-                      pathname={pathname}
-                    />
-                  );
-                }
-
-                const isActive = item.match(pathname);
-
-                return (
-                  <Link
-                    key={item.key}
-                    href={item.href}
-                    className={cn(
-                      'focus-tv relative flex items-center gap-2 rounded-full px-6 py-2.5 text-[11px] font-bold uppercase tracking-[0.25em] transition-all duration-500',
-                      isActive ? 'text-zinc-900' : 'text-zinc-400 hover:text-zinc-900'
-                    )}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="active-tab"
-                        className="absolute inset-0 rounded-full bg-zinc-100 shadow-sm"
-                        transition={{ type: 'spring', bounce: 0.1, duration: 0.8 }}
+              <div className="flex items-center gap-1.5">
+                {DESKTOP_NAV_ITEMS.map((item) => {
+                  if (item.type === 'group') {
+                    return (
+                      <DesktopNavGroup
+                        key={item.key}
+                        active={item.match(pathname)}
+                        group={item.group}
+                        pathname={pathname}
                       />
-                    )}
-                    <span className="relative z-10">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
+                    );
+                  }
 
-          <div className="flex items-center gap-6">
-            <div className="hidden lg:block">
-              {authControlsMounted ? (
-                <NavbarAuthControls />
-              ) : (
-                <div className="h-10 w-24 animate-pulse rounded-full bg-zinc-100" />
-              )}
+                  const isActive = item.match(pathname);
+
+                  return (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      className={cn(
+                        'focus-tv relative flex items-center gap-2 rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] transition-colors duration-200',
+                        isActive
+                          ? 'text-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      <span className="relative z-10">{item.label}</span>
+                      {isActive ? <span className="absolute inset-x-3 bottom-0 h-px bg-[var(--accent)]" /> : null}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => useUIStore.getState().setSearchOpen(true)}
-              className="focus-tv rounded-full text-zinc-900 hover:bg-zinc-100"
-              aria-label="Open search"
-            >
-              <Search className="h-5 w-5" />
-            </Button>
+
+            <div className="flex items-center gap-3">
+              <ThemeToggle compact className="hidden lg:inline-flex" />
+              <Button variant="secondary" size="sm" asChild className="hidden lg:inline-flex">
+                <Link href="/login">Login</Link>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => useUIStore.getState().setSearchOpen(true)}
+                className="rounded-full border-border-subtle bg-surface-1 text-foreground hover:bg-surface-elevated"
+                aria-label="Open search"
+              >
+                <Search className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </nav>

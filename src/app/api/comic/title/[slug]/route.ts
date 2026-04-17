@@ -1,5 +1,9 @@
 import { getMangaDetail } from '@/lib/adapters/comic-server';
 import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
+import {
+  resolveComicRouteIncludeNsfw,
+  resolveComicRouteRecordAccess,
+} from '@/lib/server/comic-route-access';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 
 interface RouteContext {
@@ -13,8 +17,10 @@ export async function GET(request: Request, context: RouteContext) {
 
   const { slug } = await context.params;
   try {
+    const includeNsfw = await resolveComicRouteIncludeNsfw(request);
     const payload = await getMangaDetail(slug, {
-      includeNsfw: false,
+      includeNsfw,
+      recordAccess: resolveComicRouteRecordAccess(request),
     });
     return Response.json(payload, {
       headers: buildPrivateCacheControl(),

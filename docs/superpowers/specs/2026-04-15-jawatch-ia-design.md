@@ -435,3 +435,55 @@ The redesign must not regress these guarantees:
 - This spec deliberately favors stable IA and behavioral contracts over premature feature expansion.
 - Editorial curation can stay algorithmic-first now and become hybrid/manual later once admin curation exists.
 - The app should optimize for trustworthy discovery, low route ambiguity, and transportable data boundaries.
+
+## 24. Editorial UI Direction
+This document is the merged source of truth for the prior `2026-04-14-jawatch-editorial-redesign.md` and `2026-04-15-jawatch-ia-design-draft.md`.
+
+Conflict rule:
+- when editorial direction, draft language, or earlier wording conflicts with this document, this file wins
+
+### 24.1 Visual Identity
+- Jawatch uses a premium editorial presentation anchored by a muted green palette rather than default pure-black dark mode
+- core palette:
+  - background: `#0D140D`
+  - surface/card: `#1A241A`
+  - primary accent: `#8DA38D`
+  - secondary accent / border: `#4A5D4A`
+- typography:
+  - headings: `Outfit` or `Inter` variable, heavy weight for editorial contrast
+  - body: clean sans-serif with comfortable reading line-height
+
+### 24.2 App Shell and Navigation
+- navbar is top-fixed with blur treatment and subtle border treatment
+- mobile navigation is bottom-fixed with safe-area-aware spacing
+- segmented/tab navigation should feel deliberate and animated, but must still follow the IA defined earlier in this spec
+- global command/search bar may exist as a shared affordance with:
+  - recent views with progress
+  - trending tags
+  - quick actions such as resume watch/read
+
+### 24.3 Medium-Specific Presentation
+- movies and series:
+  - cinematic presentation may use wide stage / backdrop-led discovery only when a trusted landscape asset exists
+  - when no trusted landscape asset exists, fall back to portrait-led presentation rather than cropping posters into fake wide art
+- shorts:
+  - entering the shorts experience should feel like a full-screen vertical flow
+  - minimal chrome and gesture-first navigation remain required
+- comics:
+  - cards may be taller portrait surfaces with stronger character-art emphasis
+  - trending/top sections may use rank overlays where useful
+- read surfaces for future non-comic formats may adopt more bookshelf/editorial presentation, but the current IA and v1 scope remain authoritative
+
+## 25. UI Implementation Notes
+- framework: `Next.js 16` app router
+- styling: `Tailwind CSS v4`, with vanilla CSS only where editorial effects need it
+- animation stack:
+  - `framer-motion` for layout and transition work
+  - `animejs` only where more bespoke hero animation is justified
+- client state may use `zustand` for shared command/search shell state where local component state is insufficient
+
+## 26. UI Validation Requirements
+- visual regression checks should verify consistent use of the muted green system
+- all navigation controls and player controls require usable `aria-label`s
+- progress indicators must expose proper `role="progressbar"` semantics when applicable
+- mobile motion and video-heavy surfaces must be checked for acceptable runtime performance before release

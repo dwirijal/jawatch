@@ -2,12 +2,11 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { CalendarDays, Flame, Info, Play, Search, SlidersHorizontal, Star } from 'lucide-react';
+import { CalendarDays, Flame, Info, Play, SlidersHorizontal, Star } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { MediaCard } from '@/components/atoms/Card';
-import { Input } from '@/components/atoms/Input';
 import { Link } from '@/components/atoms/Link';
 import { BookmarkButton } from '@/components/organisms/BookmarkButton';
 import { ContinueWatching } from '@/components/organisms/ContinueWatching';
@@ -80,7 +79,6 @@ export default function MoviesPageClient({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [searchValue, setSearchValue] = React.useState('');
   const activeSortMode = normalizeMovieSortMode(activeSort);
   const featuredMovie = React.useMemo(() => getFeaturedMovie(initialPopular, initialLatest), [initialPopular, initialLatest]);
   const combinedMovies = React.useMemo(() => uniqueMovieCards([...initialPopular, ...initialLatest]), [initialPopular, initialLatest]);
@@ -96,14 +94,14 @@ export default function MoviesPageClient({
   const shelfBrowseCards = React.useMemo(() => [
     {
       label: 'Updated',
-      route: '/movies/latest',
+      route: '/watch/movies#latest',
       badge: 'NEW',
       image: initialLatest[0]?.poster || initialPopular[0]?.poster || '',
       subtitle: 'Fresh catalog movement',
     },
     {
       label: 'Popular',
-      route: '/movies/popular',
+      route: '/watch/movies#popular',
       badge: 'HOT',
       image: initialPopular[0]?.poster || initialLatest[0]?.poster || '',
       subtitle: 'Titles with the strongest pull',
@@ -141,24 +139,13 @@ export default function MoviesPageClient({
     router.push(buildMoviesHref(activeGenre, sortMode));
   }, [activeGenre, buildMoviesHref, router]);
 
-  const handleSearchSubmit = React.useCallback((event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const query = searchValue.trim();
-
-    if (query.length < 2) {
-      return;
-    }
-
-    router.push(`/search?q=${encodeURIComponent(query)}&type=movies`);
-  }, [router, searchValue]);
-
   const featuredGenres = featuredMovie?.genres
     ? featuredMovie.genres.split(',').map((genre) => genre.trim()).filter(Boolean).slice(0, 3)
     : [];
 
   return (
     <main className="app-shell" data-theme="movie" data-view-mode="compact">
-      <section className="relative isolate min-h-[22rem] overflow-hidden border-b border-white/10 bg-black md:min-h-[44vh]">
+      <section className="relative isolate min-h-[18rem] overflow-hidden border-b border-white/10 bg-black md:min-h-[32rem]">
         {featuredMovie ? (
           <Image
             src={featuredMovie.poster || '/placeholder-poster.jpg'}
@@ -173,11 +160,15 @@ export default function MoviesPageClient({
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/20" />
         <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background to-transparent" />
 
-        <div className="app-container-wide relative z-10 flex min-h-[22rem] items-end pb-8 pt-28 md:min-h-[44vh] md:pb-10">
-          <div className="max-w-3xl space-y-4">
-            <Badge variant="movie" className="w-fit">Featured Movie</Badge>
+        <div className="app-container-wide relative z-10 flex min-h-[18rem] items-end pb-7 pt-24 md:min-h-[32rem] md:pb-9">
+          <div className="max-w-3xl space-y-4 rounded-[var(--radius-2xl)] border border-white/10 bg-black/25 p-4 backdrop-blur-md md:p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="movie" className="w-fit">Featured Movie</Badge>
+              <Badge variant="outline">Movie Desk</Badge>
+              {activeGenre ? <Badge variant="outline">{activeGenre}</Badge> : null}
+            </div>
             <div className="space-y-2">
-              <h1 className="max-w-3xl text-3xl font-black tracking-[0.01em] text-white sm:text-4xl md:text-6xl">
+              <h1 className="max-w-3xl text-3xl font-black tracking-[0.01em] text-white sm:text-4xl md:text-5xl">
                 {featuredMovie?.title || 'Movies'}
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-zinc-300 md:text-base">
@@ -188,10 +179,22 @@ export default function MoviesPageClient({
                 ].filter(Boolean).join(' • ') || 'Movie picks ready for the next watch session.'}
               </p>
             </div>
+            {featuredGenres.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {featuredGenres.map((genre) => (
+                  <span
+                    key={genre}
+                    className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-200"
+                  >
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            ) : null}
             {featuredMovie ? (
               <div className="flex flex-wrap items-center gap-3">
                 <Button variant="movie" className="whitespace-nowrap" asChild>
-                  <Link href={`/movies/watch/${featuredMovie.slug}`}>
+                  <Link href={`/movies/${featuredMovie.slug}`}>
                     <Play className="h-4 w-4 fill-current" /> Watch Now
                   </Link>
                 </Button>
@@ -219,63 +222,61 @@ export default function MoviesPageClient({
       </section>
 
       <div className="app-container-wide space-y-8 pb-12 pt-5 md:space-y-10 md:pt-7">
-        <section className="sticky top-16 z-30 space-y-4 border border-white/10 bg-background/95 p-4 shadow-2xl backdrop-blur md:top-20 md:p-5">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <form onSubmit={handleSearchSubmit} className="flex min-w-0 flex-1 gap-2">
-              <Input
-                value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
-                placeholder="Search movies"
-                aria-label="Search movies"
-                className="rounded-[var(--radius-sm)]"
-              />
-              <Button type="submit" variant="movie" className="whitespace-nowrap">
-                <Search className="h-4 w-4" /> Search
-              </Button>
-            </form>
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-zinc-500">
-              <SlidersHorizontal className="h-4 w-4" />
-              Browse
+        <section className="surface-panel relative overflow-hidden p-4 md:p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top_left,var(--theme-movie-surface),transparent_74%)]" />
+
+          <div className="relative z-10 flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">Movie browse</p>
+                <h2 className="font-[var(--font-heading)] text-2xl font-bold tracking-[-0.05em] text-white md:text-[1.85rem]">
+                  Filter shelves here, then use navbar search for exact titles.
+                </h2>
+              </div>
+              <div className="hidden items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-zinc-500 md:flex">
+                <SlidersHorizontal className="h-4 w-4" />
+                Browse
+              </div>
             </div>
-          </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            <Button
-              type="button"
-              variant={activeGenre ? 'outline' : 'movie'}
-              size="sm"
-              onClick={() => handleGenreClick(null)}
-              className="shrink-0"
-            >
-              All
-            </Button>
-            {MOVIE_GENRES.slice(0, 12).map((genre) => (
+            <div className="flex gap-2 overflow-x-auto pb-1">
               <Button
-                key={genre}
                 type="button"
-                variant={activeGenre === genre ? 'movie' : 'outline'}
+                variant={activeGenre ? 'outline' : 'movie'}
                 size="sm"
-                onClick={() => handleGenreClick(activeGenre === genre ? null : genre)}
+                onClick={() => handleGenreClick(null)}
                 className="shrink-0"
               >
-                {genre}
+                All
               </Button>
-            ))}
-          </div>
+              {MOVIE_GENRES.slice(0, 12).map((genre) => (
+                <Button
+                  key={genre}
+                  type="button"
+                  variant={activeGenre === genre ? 'movie' : 'outline'}
+                  size="sm"
+                  onClick={() => handleGenreClick(activeGenre === genre ? null : genre)}
+                  className="shrink-0"
+                >
+                  {genre}
+                </Button>
+              ))}
+            </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {SORT_OPTIONS.map((option) => (
-              <Button
-                key={option.value}
-                type="button"
-                variant={activeSortMode === option.value ? 'movie' : 'outline'}
-                size="sm"
-                onClick={() => handleSortChange(option.value)}
-                className="shrink-0"
-              >
-                {option.label}
-              </Button>
-            ))}
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {SORT_OPTIONS.map((option) => (
+                <Button
+                  key={option.value}
+                  type="button"
+                  variant={activeSortMode === option.value ? 'movie' : 'outline'}
+                  size="sm"
+                  onClick={() => handleSortChange(option.value)}
+                  className="shrink-0"
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -298,7 +299,7 @@ export default function MoviesPageClient({
 
           <ContinueWatching type="movie" title="Continue Watching Movies" />
 
-          <SectionCard title="Browse By Shelf" subtitle="Fast lanes for recent movement and high-demand titles." mode="rail" railVariant="default">
+        <SectionCard title="Browse By Shelf" subtitle="Fast lanes for recent movement and high-demand titles." mode="rail" railVariant="compact">
           {shelfBrowseCards.map((item) => (
             <MediaCard
               key={item.route}
@@ -312,13 +313,13 @@ export default function MoviesPageClient({
           ))}
         </SectionCard>
 
-        <SectionCard title="Popular Now" subtitle="Top trending this month" icon={Flame} mode="grid" gridDensity="default" viewAllHref="/movies/popular">
+        <SectionCard id="popular" title="Popular Now" subtitle="Top trending this month" icon={Flame} mode="grid" gridDensity="default" viewAllHref="/watch/movies#popular">
           <MovieCardList items={initialPopular} skeletonKey="popular" />
         </SectionCard>
 
         <SavedContentSection type="movie" title="Saved Movies" />
 
-        <SectionCard title="Recently Updated" subtitle="Fresh catalog changes" icon={CalendarDays} mode="grid" gridDensity="default" viewAllHref="/movies/latest">
+        <SectionCard id="latest" title="Recently Updated" subtitle="Fresh catalog changes" icon={CalendarDays} mode="grid" gridDensity="default" viewAllHref="/watch/movies#latest">
           <MovieCardList items={initialLatest} skeletonKey="latest" />
         </SectionCard>
 

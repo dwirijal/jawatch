@@ -16,6 +16,7 @@ type MoviePageDataLoaderDependencies = {
     limit: number,
     options: { includeNsfw: boolean },
   ) => Promise<MovieCardItem[]>;
+  warmSearchDocuments?: (input: { movies: MovieCardItem[] }) => void;
 };
 
 type MoviePageDataLoaderInput = {
@@ -27,6 +28,7 @@ type MoviePageDataLoaderInput = {
 export function createMoviePageDataLoader({
   loadHubData,
   loadGenreItems,
+  warmSearchDocuments = () => undefined,
 }: MoviePageDataLoaderDependencies) {
   return async function loadMoviePageData({
     activeGenre,
@@ -44,6 +46,14 @@ export function createMoviePageDataLoader({
 
     const [{ popular, latest }, initialResults] = await Promise.all([hubPromise, genrePromise]);
 
+    warmSearchDocuments({
+      movies: [
+        ...popular.slice(0, 18),
+        ...latest.slice(0, 18),
+        ...(initialResults || []).slice(0, 12),
+      ],
+    });
+
     return {
       popular,
       latest,
@@ -60,5 +70,12 @@ export const loadMoviePageData = createMoviePageDataLoader({
   async loadGenreItems(genre, limit, options) {
     const { getMovieGenreItems } = await import('@/lib/adapters/movie');
     return getMovieGenreItems(genre, limit, options);
+  },
+  warmSearchDocuments(input) {
+    void import('@/lib/search/search-service')
+      .then(({ buildSearchWarmDocuments, warmSearchIndexDocuments }) => {
+        void warmSearchIndexDocuments(buildSearchWarmDocuments(input));
+      })
+      .catch(() => undefined);
   },
 });

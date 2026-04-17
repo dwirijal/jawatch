@@ -316,8 +316,10 @@ export async function getVerticalDramaEpisodeFromDb(slug: string, index: number)
 
   return {
     slug: item.slug,
+    episodeSlug: episode.slug,
     title: readString(episode.title) || `${stripEpisodeSuffix(item.title || titleFromSlug(item.slug))} Episode ${episode.number ?? index}`,
     episode: String(episode.number ?? index),
+    episodeIndex: episode.number ?? index,
     poster: item.cover_url || '',
     mirrors,
     defaultUrl: mirrors[0]?.embed_url || '',

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Clapperboard } from 'lucide-react';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import MoviesPageClient from '@/app/movies/MoviesPageClient';
 import { resolveViewerNsfwAccess } from '@/app/loadHomePageData';

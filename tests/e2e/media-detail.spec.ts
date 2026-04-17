@@ -2,11 +2,10 @@ import { expect, test } from '@playwright/test';
 
 const routes = [
   '/movies/sharp-corner-2025',
-  '/movies/watch/sharp-corner-2025',
   '/series/digimon-beatbreak',
-  '/series/watch/one-piece-episode-1155',
-  '/comic/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life',
-  '/comic/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life-chapter-89',
+  '/series/one-piece/episodes/one-piece-episode-1155',
+  '/comics/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life',
+  '/comics/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life/chapters/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life-chapter-89',
 ];
 
 for (const route of routes) {

@@ -2,12 +2,12 @@ import { expect, test } from '@playwright/test';
 
 const routes = [
   '/',
-  '/anime',
-  '/manga',
-  '/movies',
-  '/donghua',
-  '/series/short',
-  '/novel',
+  '/watch',
+  '/watch/movies',
+  '/watch/series',
+  '/watch/shorts',
+  '/read',
+  '/read/comics',
   '/search?q=naruto&type=all',
 ];
 

@@ -4,11 +4,15 @@ Next.js 16 app for the `jawatch.web.id` frontend.
 
 ## Data Access Model
 
-`jawatch` currently mixes two media read paths:
+`jawatch` now supports two comic read modes while keeping the rest of the media catalog on HTTP gateway reads:
 
-- comic surfaces (`manga`, `manhwa`, `manhua`) read directly from `DATABASE_URL`
-- the remaining media surfaces still read through the API gateway (default `https://api.dwizzy.my.id`)
+- `COMIC_DATA_SOURCE=database`: comic surfaces (`manga`, `manhwa`, `manhua`) read directly from `DATABASE_URL`
+- `COMIC_DATA_SOURCE=gateway`: comic surfaces read from `COMIC_API_BASE_URL` over HTTP
+- the remaining media surfaces continue to read through the API gateway (default `https://api.dwizzy.my.id`)
 
+This keeps Vercel isolated from vendor-specific database wiring. To switch between local/dev DB, Aiven, or another SQL backend later, move the datasource behind the HTTP origin instead of changing the frontend contract.
+
+- The app-facing curated media rules are documented in [`docs/curated-media-contract.md`](docs/curated-media-contract.md).
 - Aiven Valkey / Redis can be used as the primary shared comic cache and hot leaderboard
 - Upstash Redis can remain as REST fallback cache
 - Supabase analytics is optional for comic access events
@@ -36,7 +40,11 @@ Main envs:
 
 - `DWIZZY_API_BASE_URL` (server fetch base, default: `https://api.dwizzy.my.id`)
 - `NEXT_PUBLIC_DWIZZY_API_BASE_URL` (optional client-safe mirror)
-- `DATABASE_URL` (optional direct Postgres read path for comics)
+- `DATABASE_URL` (optional direct Postgres read path for comics when `COMIC_DATA_SOURCE=database`)
+- `COMIC_DATA_SOURCE` (`database` or `gateway`; default falls back to `database` when `DATABASE_URL` is set, otherwise `gateway`)
+- `COMIC_API_BASE_URL` (remote comic origin used when `COMIC_DATA_SOURCE=gateway`)
+- `COMIC_ORIGIN_SHARED_TOKEN` (shared secret for trusted comic-origin forwarding across Vercel and the self-hosted origin)
+- `AIVEN_POSTGRES_CA_PEM` or `DATABASE_CA_PEM` (optional Postgres CA bundle for TLS verification)
 - `VALKEY_URL` or `REDIS_URL` (optional primary shared comic cache)
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (optional Redis REST fallback)
 - `SUPABASE_COMIC_ANALYTICS_TABLE` + Supabase service role envs (optional comic analytics sink)
@@ -101,10 +109,32 @@ Recommended Vercel envs:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- optional `DATABASE_URL`
+- `COMIC_DATA_SOURCE`
+- optional `COMIC_API_BASE_URL`
+- optional `COMIC_ORIGIN_SHARED_TOKEN`
+- `AIVEN_POSTGRES_CA_PEM` or `DATABASE_CA_PEM`
 - optional `SITE_URL`
 - optional `NEXT_PUBLIC_SITE_URL`
 
 `SITE_URL` automatically falls back to Vercel system envs like `VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`, then to `https://jawatch.web.id`.
+
+## Cloudflare Tunnel Origin Split
+
+Recommended split when the live app should read from a self-hosted dev/local media backend:
+
+- Vercel `jawatch`:
+  - `COMIC_DATA_SOURCE=gateway`
+  - `COMIC_API_BASE_URL=https://<your-cloudflare-tunnel-host>`
+  - `COMIC_ORIGIN_SHARED_TOKEN=<same-random-secret>`
+  - keep `VALKEY_URL` / `UPSTASH_*` as shared cache
+- self-hosted `jawatch` origin behind Cloudflare Tunnel:
+  - `COMIC_DATA_SOURCE=database`
+  - `DATABASE_URL=postgres://postgres@127.0.0.1:5432/jawatch_catalog`
+  - use `jawatch_catalog_raw` only when you intentionally want the fuller local dataset instead of the curated/default runtime
+  - `COMIC_ORIGIN_SHARED_TOKEN=<same-random-secret>`
+
+For non-comic media, point `DWIZZY_API_BASE_URL` at the backend origin that is already backed by the desired datasource. This keeps cutover to Aiven or another SQL system as an origin/env change rather than a frontend rewrite.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 

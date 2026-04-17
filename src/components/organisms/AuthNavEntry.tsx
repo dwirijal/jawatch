@@ -26,7 +26,7 @@ export function AuthNavEntry() {
     return (
       <Link
         href={buildLoginUrl(redirectTarget)}
-        className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-2.5 text-sm font-black uppercase tracking-[0.24em] text-zinc-100 transition-colors hover:bg-surface-elevated hover:text-white"
+        className="focus-tv rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-2.5 text-sm font-black uppercase tracking-[0.2em] text-foreground transition-colors hover:bg-surface-elevated"
       >
         Login
       </Link>
@@ -40,10 +40,10 @@ export function AuthNavEntry() {
     <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-2 py-2">
       <Avatar name={session.user.displayName} className="border-border-subtle bg-surface-2" />
       <div className="min-w-0">
-        <p className="truncate text-sm font-black uppercase tracking-[0.18em] text-white">
+        <p className="truncate text-sm font-black uppercase tracking-[0.16em] text-foreground">
           {compactDisplayName(session.user.displayName)}
         </p>
-        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Signed in</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">Signed in</p>
       </div>
       <form action={logoutRequest.url} method={logoutRequest.method}>
         <input type="hidden" name="returnTo" value={returnTo} />
@@ -51,7 +51,7 @@ export function AuthNavEntry() {
           type="submit"
           variant="outline"
           size="icon"
-          className="rounded-[var(--radius-sm)] border-border-subtle bg-surface-2 text-zinc-400 hover:bg-surface-elevated hover:text-white"
+          className="rounded-[var(--radius-sm)] border-border-subtle bg-surface-2 text-muted-foreground hover:bg-surface-elevated hover:text-foreground"
           aria-label="Log out"
         >
           <LogOut className="h-4 w-4" />

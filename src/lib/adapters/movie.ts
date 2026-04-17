@@ -2,6 +2,12 @@ import 'server-only';
 
 import { buildComicCacheKey, rememberComicCacheValue } from '@/lib/server/comic-cache';
 import { getComicDb } from '@/lib/server/comic-db';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
+import {
+  buildComicGatewayUrl,
+  readComicOriginSharedToken,
+  shouldUseComicGateway,
+} from '@/lib/server/comic-origin';
 import type { MovieCardItem } from '@/lib/types';
 import { compareMovieUpdatedAtDesc } from '@/lib/adapters/movie-sort';
 import { buildVisibilityCondition } from '@/lib/adapters/video-db-common';
@@ -114,6 +120,47 @@ const SEARCH_CACHE_TTL_SECONDS = 60 * 3;
 const MOVIE_CACHE_NAMESPACE = 'video-movie-v6';
 const MOVIE_CANDIDATE_MULTIPLIER = 4;
 
+async function fetchMovieGatewayJson<T>(
+  path: string,
+  params?: Record<string, string | number | boolean | undefined>,
+): Promise<T> {
+  const headers = new Headers({
+    Accept: 'application/json',
+  });
+
+  const token = readComicOriginSharedToken();
+  if (token) {
+    headers.set('x-comic-origin-token', token);
+  }
+
+  const response = await fetchWithTimeout(buildComicGatewayUrl(path, params), {
+    headers,
+    cache: 'no-store',
+    timeoutMs: 10_000,
+    retries: 1,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Movie gateway ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+
+async function fetchOptionalMovieGatewayJson<T>(
+  path: string,
+  params?: Record<string, string | number | boolean | undefined>,
+): Promise<T | null> {
+  try {
+    return await fetchMovieGatewayJson<T>(path, params);
+  } catch (error) {
+    if (error instanceof Error && error.message.endsWith(' 404')) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 function buildMovieScopeCondition(alias: string): string {
   return `(
     ${alias}.surface_type = 'movie'
@@ -175,7 +222,7 @@ function buildMovieCatalogSelect(includeNsfw: boolean): string {
           u.item_key,
           count(*)::int as unit_count
         from public.media_units u
-        where u.unit_type = 'episode'
+        where u.unit_type in ('movie', 'episode')
         group by u.item_key
       ) unit_counts on unit_counts.item_key = i.item_key
       where ${buildMovieScopeCondition('i')}
@@ -440,6 +487,16 @@ export async function getMovieHomeSection(
   limit = 24,
   options: VisibilityOptions = {},
 ): Promise<MovieCardItem[]> {
+  if (shouldUseComicGateway()) {
+    const includeNsfw = Boolean(options.includeNsfw);
+    const path = section === 'latest' ? '/api/movies/latest' : '/api/movies/popular';
+    return rememberComicCacheValue(
+      buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'section', section, visibilitySegment(options), limit),
+      SEARCH_CACHE_TTL_SECONDS,
+      () => fetchMovieGatewayJson<MovieCardItem[]>(path, { limit, includeNsfw }),
+    );
+  }
+
   const normalizedLimit = Math.max(1, limit);
   const candidateLimit = section === 'latest' ? normalizedLimit : normalizedLimit * MOVIE_CANDIDATE_MULTIPLIER;
   const candidateOrder = section === 'latest'
@@ -478,6 +535,18 @@ export async function getMovieGenreItems(
     return [];
   }
 
+  if (shouldUseComicGateway()) {
+    return rememberComicCacheValue(
+      buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'genre', visibilitySegment(options), needle, limit),
+      SEARCH_CACHE_TTL_SECONDS,
+      () => fetchMovieGatewayJson<MovieCardItem[]>('/api/movies/genre', {
+        genre: needle,
+        limit,
+        includeNsfw: Boolean(options.includeNsfw),
+      }),
+    );
+  }
+
   const rows = sortMovieRows(
     await queryMovieCatalogRows({
       includeNsfw: Boolean(options.includeNsfw),
@@ -504,6 +573,14 @@ export async function searchMovieCatalog(
 
   const cacheKey = buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'search', visibilitySegment(options), normalizedQuery, limit);
   return rememberComicCacheValue(cacheKey, SEARCH_CACHE_TTL_SECONDS, async () => {
+    if (shouldUseComicGateway()) {
+      return fetchMovieGatewayJson<MovieCardItem[]>('/api/search/movies', {
+        q: normalizedQuery,
+        limit,
+        includeNsfw: Boolean(options.includeNsfw),
+      });
+    }
+
     const sql = getComicDb();
     if (!sql) {
       return [];
@@ -543,7 +620,7 @@ export async function searchMovieCatalog(
           u.item_key,
           count(*)::int as unit_count
         from public.media_units u
-        where u.unit_type = 'episode'
+        where u.unit_type in ('movie', 'episode')
         group by u.item_key
       ) unit_counts on unit_counts.item_key = i.item_key
       where ${buildMovieScopeCondition('i')}
@@ -573,6 +650,12 @@ export async function getMovieDetailBySlug(slug: string, options: VisibilityOpti
 
   const cacheKey = buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'detail', visibilitySegment(options), normalizedSlug);
   return rememberComicCacheValue(cacheKey, DETAIL_CACHE_TTL_SECONDS, async () => {
+    if (shouldUseComicGateway()) {
+      return fetchOptionalMovieGatewayJson<MovieDetailData>(`/api/movies/detail/${encodeURIComponent(normalizedSlug)}`, {
+        includeNsfw: Boolean(options.includeNsfw),
+      });
+    }
+
     const sql = getComicDb();
     if (!sql) {
       return null;
@@ -662,7 +745,7 @@ export async function getMovieDetailBySlug(slug: string, options: VisibilityOpti
       cast: mapMovieCast(detail),
       director: readText(detail.director) || readStringArray(detail.directors)[0] || '',
       trailerUrl: readText(detail.trailer_url) || null,
-      externalUrl: `/movies/watch/${row.slug}`,
+      externalUrl: `/movies/${row.slug}`,
       recommendations: relatedRows.slice(0, 8).map(mapMovieCard),
     };
   });
@@ -676,6 +759,12 @@ export async function getMovieWatchBySlug(slug: string, options: VisibilityOptio
 
   const cacheKey = buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'watch', visibilitySegment(options), normalizedSlug);
   return rememberComicCacheValue(cacheKey, DETAIL_CACHE_TTL_SECONDS, async () => {
+    if (shouldUseComicGateway()) {
+      return fetchOptionalMovieGatewayJson<MovieWatchData>(`/api/movies/watch/${encodeURIComponent(normalizedSlug)}`, {
+        includeNsfw: Boolean(options.includeNsfw),
+      });
+    }
+
     const sql = getComicDb();
     if (!sql) {
       return null;

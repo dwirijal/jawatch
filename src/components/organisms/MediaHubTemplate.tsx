@@ -107,63 +107,61 @@ export function MediaHubTemplate({
         {extraHeaderActions}
       </MediaHubHeader>
 
-      <main className="app-container-wide mt-7 sm:mt-8 md:mt-10">
-        <div className="border-t border-white/8 pt-5 md:pt-6">
+      <main className="app-container-wide mt-5 sm:mt-6 md:mt-7">
+        <div className="app-section-stack">
+          {results ? (
+            <section className="animate-in space-y-4 fade-in duration-500">
+              <SectionHeader
+                title={activeGenre ? `Genre: ${activeGenre}` : `Filtered results`}
+                icon={LayoutGrid}
+                action={onClearResults ? (
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    onClick={onClearResults}
+                    className="focus-tv shrink-0 text-xs font-semibold tracking-[0.02em] text-zinc-500 hover:text-white"
+                  >
+                    Clear filter
+                  </Button>
+                ) : undefined}
+              />
+
+              {error ? (
+                <StateInfo type="error" title="Search Error" description={error} />
+              ) : results.length > 0 ? (
+                <div className="media-grid" data-grid-density={gridDensity}>
+                  <StaggerEntry className="contents">
+                    {results.map((item, index) => (
+                      <MediaCard
+                        key={`${item.slug}-${index}`}
+                        href={
+                          resultHrefBuilder
+                            ? resultHrefBuilder(item)
+                            : `${resultHrefPrefix ?? `/${theme === 'movie' ? 'movies' : theme}`}/${item.slug || ''}`
+                        }
+                        image={item.thumb || item.image || item.thumbnail || item.poster || ''}
+                        title={item.title}
+                        subtitle={getResultSubtitle(item)}
+                        theme={theme}
+                      />
+                    ))}
+                  </StaggerEntry>
+                </div>
+              ) : (
+                <StateInfo title="No Content Found" description="Try choosing a different genre or filter." />
+              )}
+            </section>
+          ) : loading ? (
+            <div className="media-grid" data-grid-density={gridDensity}>
+              {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          ) : (
+            children
+          )}
+
           <div className="hidden md:block">
             <DeferredAdSection />
-          </div>
-
-          <div className="app-section-stack mt-5 md:mt-7">
-            {results ? (
-              <section className="animate-in space-y-4 fade-in duration-500">
-                <SectionHeader
-                  title={activeGenre ? `Genre: ${activeGenre}` : `Filtered results`}
-                  icon={LayoutGrid}
-                  action={onClearResults ? (
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      onClick={onClearResults}
-                      className="focus-tv shrink-0 text-xs font-semibold tracking-[0.02em] text-zinc-500 hover:text-white"
-                    >
-                      Clear filter
-                    </Button>
-                  ) : undefined}
-                />
-
-                {error ? (
-                  <StateInfo type="error" title="Search Error" description={error} />
-                ) : results.length > 0 ? (
-                  <div className="media-grid" data-grid-density={gridDensity}>
-                    <StaggerEntry className="contents">
-                      {results.map((item, index) => (
-                        <MediaCard
-                          key={`${item.slug}-${index}`}
-                          href={
-                            resultHrefBuilder
-                              ? resultHrefBuilder(item)
-                              : `${resultHrefPrefix ?? `/${theme === 'movie' ? 'movies' : theme}`}/${item.slug || ''}`
-                          }
-                          image={item.thumb || item.image || item.thumbnail || item.poster || ''}
-                          title={item.title}
-                          subtitle={getResultSubtitle(item)}
-                          theme={theme}
-                        />
-                      ))}
-                    </StaggerEntry>
-                  </div>
-                ) : (
-                  <StateInfo title="No Content Found" description="Try choosing a different genre or filter." />
-                )}
-              </section>
-            ) : loading ? (
-              <div className="media-grid" data-grid-density={gridDensity}>
-                {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
-              </div>
-            ) : (
-              children
-            )}
           </div>
         </div>
       </main>

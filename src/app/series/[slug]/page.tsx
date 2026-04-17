@@ -24,6 +24,7 @@ import {
 } from '@/lib/series-detail-presentation';
 import { getSeriesTheme } from '@/lib/series-presentation';
 import { resolveSeriesCanonicalRedirect } from '@/lib/adapters/series-canonical-utils';
+import { isReservedSeriesSlug } from '@/lib/canonical-route-guards';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -82,6 +83,15 @@ function buildEpisodeQueryHref(slug: string, page: number, sort: EpisodeSortMode
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  if (isReservedSeriesSlug(slug)) {
+    return buildMetadata({
+      title: 'Series Tidak Ditemukan',
+      description: 'Series yang kamu cari tidak tersedia di katalog jawatch.',
+      path: `/series/${slug}`,
+      noIndex: true,
+    });
+  }
+
   const includeNsfw = await resolveViewerNsfwAccess();
   const series = await getSeriesDetailPageData(slug, { includeNsfw });
 
@@ -105,6 +115,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SeriesDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  if (isReservedSeriesSlug(slug)) {
+    notFound();
+  }
+
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const includeNsfw = await resolveViewerNsfwAccess();
   const series = await getSeriesDetailPageData(slug, { includeNsfw });
@@ -121,7 +135,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
   const theme = getSeriesTheme(series.mediaType);
   const seriesCast = series.cast ?? [];
   const productionTeam = series.productionTeam ?? [];
-  const latestEpisodeHref = series.episodes[0] ? `/series/watch/${series.episodes[0].slug}` : null;
+  const latestEpisodeHref = series.episodes[0] ? `/series/${series.slug}/episodes/${series.episodes[0].slug}` : null;
   const trailerEmbedUrl = getYouTubeEmbedUrl(series.trailerUrl);
   const episodeSort = normalizeEpisodeSort(resolvedSearchParams?.sort);
   const sortedEpisodes = [...series.episodes];
@@ -158,8 +172,8 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
         hero={
           <VideoDetailHero
             theme={theme}
-            backHref="/series"
-            backLabel="Back to Series"
+            backHref="/watch/series"
+            backLabel="Back to Watch Series"
             poster={series.poster}
             title={series.title}
             eyebrow={series.seasonLabel}
@@ -293,6 +307,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
         ) : null}
 
         <SeriesEpisodeSection
+          seriesSlug={series.slug}
           theme={theme}
           episodeCount={series.episodes.length}
           currentPage={currentPage}

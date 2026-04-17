@@ -36,8 +36,10 @@ export interface DrachinMirror {
 
 export interface DrachinEpisodeData {
   slug: string;
+  episodeSlug: string;
   title: string;
   episode: string;
+  episodeIndex: number;
   poster: string;
   mirrors: DrachinMirror[];
   defaultUrl: string;

@@ -1,18 +1,8 @@
 // Contract: jawatch uses embedded Supabase auth routes.
 
 import type { AuthLogoutRequest, AuthStatus, AuthUser } from '@/lib/auth-types';
+import { normalizeVaultAwareNextPath } from '@/lib/auth/next-path';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
-
-const DEFAULT_RETURN_PATH = '/';
-
-function sanitizeRelativePath(nextPath: string | undefined): string {
-  const candidate = nextPath?.trim();
-  if (!candidate || !candidate.startsWith('/') || candidate.startsWith('//')) {
-    return DEFAULT_RETURN_PATH;
-  }
-
-  return candidate;
-}
 
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
@@ -114,7 +104,7 @@ export async function getAuthStatus(): Promise<AuthStatus> {
 
 export function buildLoginUrl(nextPath: string): string {
   const url = new URL('/login', resolveAppOrigin());
-  url.searchParams.set('next', sanitizeRelativePath(nextPath));
+  url.searchParams.set('next', normalizeVaultAwareNextPath(nextPath));
   return url.toString();
 }
 
@@ -122,7 +112,7 @@ export function buildLogoutRequest(nextPath: string): AuthLogoutRequest {
   const appOrigin = resolveAppOrigin();
   const url = new URL('/logout', appOrigin).toString();
   const body = new URLSearchParams();
-  body.set('returnTo', sanitizeRelativePath(nextPath));
+  body.set('returnTo', normalizeVaultAwareNextPath(nextPath));
   body.set('origin', appOrigin);
 
   return {

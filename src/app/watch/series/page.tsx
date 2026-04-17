@@ -14,7 +14,26 @@ export const metadata: Metadata = buildMetadata({
 
 export const dynamic = 'force-dynamic';
 
-export default async function WatchSeriesPage() {
+type WatchSeriesPageProps = {
+  searchParams?: Promise<{ type?: string }>;
+};
+
+function normalizeSeriesType(value?: string): 'anime' | 'donghua' | 'drama' | null {
+  switch ((value || '').trim().toLowerCase()) {
+    case 'anime':
+      return 'anime';
+    case 'donghua':
+      return 'donghua';
+    case 'drama':
+      return 'drama';
+    default:
+      return null;
+  }
+}
+
+export default async function WatchSeriesPage({ searchParams }: WatchSeriesPageProps) {
+  const params = searchParams ? await searchParams : undefined;
+  const activeFilter = normalizeSeriesType(params?.type);
   const includeNsfw = await resolveViewerNsfwAccess();
   const { popular, latest, dramaSpotlight, weeklySchedule, filters } = await getSeriesHubData(24, {
     includeNsfw,
@@ -46,6 +65,7 @@ export default async function WatchSeriesPage() {
         initialDramaSpotlight={dramaSpotlight}
         initialWeeklySchedule={weeklySchedule}
         filters={filters}
+        activeFilter={activeFilter}
       />
     </>
   );

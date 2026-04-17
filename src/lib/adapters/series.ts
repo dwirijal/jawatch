@@ -2,6 +2,12 @@ import 'server-only';
 
 import { buildComicCacheKey, rememberComicCacheValue } from '@/lib/server/comic-cache';
 import { getComicDb, type ComicDbClient } from '@/lib/server/comic-db';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
+import {
+  buildComicGatewayUrl,
+  readComicOriginSharedToken,
+  shouldUseComicGateway,
+} from '@/lib/server/comic-origin';
 import {
   buildVisibilityCondition,
   getVisibilityCacheSegment,
@@ -197,7 +203,7 @@ export type SeriesEpisodeData = {
 
 const DETAIL_CACHE_TTL_SECONDS = 60 * 30;
 const SEARCH_CACHE_TTL_SECONDS = 60 * 3;
-const SERIES_CACHE_NAMESPACE = 'series-v8';
+const SERIES_CACHE_NAMESPACE = 'series-v9';
 const SERIES_CANDIDATE_MULTIPLIER = 4;
 
 type LinkedSourceItemRow = {
@@ -217,6 +223,33 @@ function buildSeriesScopeCondition(alias: string): string {
     ${alias}.surface_type = 'series'
     or (${alias}.surface_type = 'unknown' and ${alias}.media_type in ('anime', 'drama'))
   )`;
+}
+
+async function fetchSeriesGatewayJson<T>(
+  path: string,
+  params?: Record<string, string | number | boolean | undefined>,
+): Promise<T> {
+  const headers = new Headers({
+    Accept: 'application/json',
+  });
+
+  const token = readComicOriginSharedToken();
+  if (token) {
+    headers.set('x-comic-origin-token', token);
+  }
+
+  const response = await fetchWithTimeout(buildComicGatewayUrl(path, params), {
+    headers,
+    cache: 'no-store',
+    timeoutMs: 10_000,
+    retries: 1,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Series gateway ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
 }
 
 function buildSeriesCanonicalShadowCondition(alias: string): string {
@@ -1502,6 +1535,15 @@ export async function getSeriesEpisodeBySlug(slug: string, options: VisibilityOp
   })();
   if (!normalizedSlug) {
     return null;
+  }
+
+  if (shouldUseComicGateway()) {
+    return fetchSeriesGatewayJson<SeriesEpisodeData | null>(
+      `/api/series/episode/${encodeURIComponent(normalizedSlug)}`,
+      {
+        includeNsfw: Boolean(options.includeNsfw),
+      },
+    );
   }
 
   const visibility = getVisibilityCacheSegment(Boolean(options.includeNsfw));

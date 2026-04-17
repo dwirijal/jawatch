@@ -178,7 +178,7 @@ export function saveRecentManga(item: RecentManga) {
     title: item.title,
     image: item.image,
     lastChapterOrEpisode: 'Recently viewed',
-    lastLink: `/manga/${item.slug}`,
+    lastLink: `/comics/${item.slug}`,
     timestamp: item.lastReadAt,
   });
 }

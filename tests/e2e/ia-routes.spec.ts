@@ -29,7 +29,7 @@ test('top navigation exposes the new IA labels on the home page', async ({ page 
   await expect(nav).toContainText('Read');
   await expect(nav).toContainText('Vault');
   await expect(nav.getByRole('button', { name: /open search/i })).toBeVisible();
-  await expect(nav).not.toContainText(/Collection|Comics|Novel|Short Series/i);
+  await expect(nav).not.toContainText(/Collection|Novel|Short Series/i);
 });
 
 test('public chrome footer uses the new Vault vocabulary only', async ({ page }) => {

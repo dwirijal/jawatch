@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+import { Play, Tv, Zap } from 'lucide-react';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
+import { HubLaneCard } from '@/components/molecules/HubLaneCard';
 import { buildCollectionPageJsonLd, buildMetadata } from '@/lib/seo';
 
 const WATCH_LINKS = [
@@ -50,26 +52,50 @@ export default function WatchPage() {
         iconName="clapperboard"
         theme="movie"
         eyebrow="Media Hub"
+        footer={(
+          <div className="flex flex-wrap gap-2">
+            {WATCH_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="focus-tv rounded-full border border-border-subtle bg-surface-1 px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        )}
       />
 
-      <div className="app-container-wide py-8 sm:py-10">
-        <div className="grid gap-4 md:grid-cols-3">
-          {WATCH_LINKS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="surface-panel group flex min-h-40 flex-col justify-between rounded-[var(--radius-sm)] border border-border-subtle p-5 transition-colors hover:bg-surface-elevated"
-            >
-              <div className="space-y-3">
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-zinc-500">{item.label}</p>
-                <h2 className="text-2xl font-black tracking-tight text-white">{item.label}</h2>
-                <p className="max-w-sm text-sm leading-6 text-zinc-500">{item.description}</p>
-              </div>
-              <span className="mt-8 text-xs font-black uppercase tracking-[0.24em] text-zinc-400 transition-colors group-hover:text-white">
-                Open {item.label}
-              </span>
-            </Link>
-          ))}
+      <div className="app-container-wide py-6 sm:py-7 md:py-8">
+        <div className="grid gap-4 xl:grid-cols-3">
+          <HubLaneCard
+            href="/watch/movies"
+            title="Movies"
+            eyebrow="Feature films"
+            description="Jump straight into full-length titles, recent catalog movement, and playback entry without leaving the watch shell."
+            theme="movie"
+            icon={Play}
+            highlights={['Popular', 'Latest', 'Saved']}
+          />
+          <HubLaneCard
+            href="/watch/series"
+            title="Series"
+            eyebrow="Episodic lanes"
+            description="Anime, donghua, and live-action series stay inside one browse rhythm with faster continuation and cleaner scanning."
+            theme="drama"
+            icon={Tv}
+            highlights={['Anime', 'Donghua', 'Drama']}
+          />
+          <HubLaneCard
+            href="/watch/shorts"
+            title="Shorts"
+            eyebrow="Vertical stories"
+            description="Open short-form stories built for quick sessions, direct continuation, and immersive swipe-first playback."
+            theme="drama"
+            icon={Zap}
+            highlights={['Vertical', 'Fast start', 'Immersive']}
+          />
         </div>
       </div>
     </main>

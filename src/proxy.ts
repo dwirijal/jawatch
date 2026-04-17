@@ -35,8 +35,58 @@ const BLOCKED_PREFIXES = [
   "/webjars/",
 ];
 
-const SESSION_REFRESH_PREFIXES = ["/account/", "/auth/", "/collection/", "/logout/", "/vault/"];
-const SESSION_REFRESH_EXACT_PATHS = new Set(["/account", "/auth", "/collection", "/login", "/logout", "/vault"]);
+const REMOVED_PUBLIC_EXACT_PATHS = new Set([
+  "/collection",
+  "/comic",
+  "/drachin",
+  "/dramabox",
+  "/manga",
+  "/manhua",
+  "/manhwa",
+  "/movies/latest",
+  "/movies/popular",
+  "/movies/watch",
+  "/novel",
+  "/series/anime",
+  "/series/country",
+  "/series/donghua",
+  "/series/drachin",
+  "/series/drama",
+  "/series/episode",
+  "/series/genre",
+  "/series/list",
+  "/series/ongoing",
+  "/series/short",
+  "/series/watch",
+  "/series/year",
+]);
+
+const REMOVED_PUBLIC_PREFIXES = [
+  "/collection/",
+  "/comic/",
+  "/drachin/",
+  "/dramabox/",
+  "/manga/",
+  "/manhua/",
+  "/manhwa/",
+  "/movies/watch/",
+  "/novel/",
+  "/series/anime/",
+  "/series/country/",
+  "/series/donghua/",
+  "/series/drachin/",
+  "/series/drama/",
+  "/series/episode/",
+  "/series/genre/",
+  "/series/list/",
+  "/series/ongoing/",
+  "/series/short/",
+  "/series/watch/",
+  "/series/year/",
+];
+
+const SESSION_REFRESH_PREFIXES = ["/account/", "/auth/", "/logout/", "/vault/"];
+const SESSION_REFRESH_EXACT_PATHS = new Set(["/account", "/auth", "/login", "/logout", "/vault"]);
 
 function shouldRefreshSupabaseSession(pathname: string) {
   if (SESSION_REFRESH_EXACT_PATHS.has(pathname)) {
@@ -125,6 +175,20 @@ function isScannerPath(pathname: string) {
   return false;
 }
 
+function isRemovedPublicRoute(pathname: string) {
+  return REMOVED_PUBLIC_EXACT_PATHS.has(pathname) || REMOVED_PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+function notFoundResponse() {
+  return new NextResponse("Not Found", {
+    status: 404,
+    headers: {
+      "cache-control": "public, max-age=300, s-maxage=300",
+      "x-robots-tag": "noindex, nofollow, noarchive",
+    },
+  });
+}
+
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
@@ -133,14 +197,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl, 308);
   }
 
-  if (isScannerPath(pathname)) {
-    return new NextResponse("Not Found", {
-      status: 404,
-      headers: {
-        "cache-control": "public, max-age=300, s-maxage=300",
-        "x-robots-tag": "noindex, nofollow, noarchive",
-      },
-    });
+  if (isScannerPath(pathname) || isRemovedPublicRoute(pathname)) {
+    return notFoundResponse();
   }
 
   if (shouldBypassProxyAuthGates(pathname)) {
@@ -155,7 +213,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (!isProxyProtectedPath(pathname) || !hasSupabaseProxyEnv()) {
+  if (!isProxyProtectedPath(pathname)) {
     if (!shouldRefreshSupabaseSession(pathname)) {
       return NextResponse.next();
     }
@@ -165,6 +223,12 @@ export async function proxy(request: NextRequest) {
     } catch {
       return NextResponse.next();
     }
+  }
+
+  if (!hasSupabaseProxyEnv()) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", normalizeVaultAwareNextPath(pathname + request.nextUrl.search));
+    return NextResponse.redirect(loginUrl);
   }
 
   const context = await createProxySupabaseContext(request);

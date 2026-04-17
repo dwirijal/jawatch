@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import { normalizeComicImageUrl } from '@/lib/comic-media';
-import { cn, getMediaPosterAspectClass, ThemeType } from '@/lib/utils';
+import { cn, getCardAspectClass, getMediaKindLabel, type CardAspectRatio, ThemeType } from '@/lib/utils';
 import { Link } from './Link';
 
 export interface StaticMediaCardProps {
@@ -11,7 +11,9 @@ export interface StaticMediaCardProps {
   subtitle?: string;
   metaLine?: string;
   badgeText?: string;
+  contentLabel?: string;
   theme?: ThemeType;
+  aspectRatio?: CardAspectRatio;
   className?: string;
   prefetch?: boolean;
 }
@@ -78,7 +80,9 @@ export function StaticMediaCard({
   subtitle,
   metaLine,
   badgeText,
+  contentLabel,
   theme = 'default',
+  aspectRatio = 'default',
   className,
   prefetch = false,
 }: StaticMediaCardProps) {
@@ -89,6 +93,9 @@ export function StaticMediaCard({
   const compactCopy = shouldUseCompactCopy(displayTitle);
   const accent = getAccent(href, title, theme);
   const isNovelCard = theme === 'novel';
+  const typeLabel = (contentLabel?.trim() || getMediaKindLabel(theme)).toUpperCase();
+  const auxiliaryBadge = badgeText?.trim() || '';
+  const showAuxiliaryBadge = auxiliaryBadge && auxiliaryBadge.toUpperCase() !== typeLabel;
 
   const cardBody = (
     <div
@@ -122,17 +129,16 @@ export function StaticMediaCard({
         <div className="absolute inset-x-0 top-0 h-px bg-white/12" />
         <div className="absolute inset-0 bg-white/[0.02] opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100" />
 
-        {badgeText ? (
-          <div className="absolute left-4 top-4 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/68">
-            <span>{badgeText}</span>
-            {!isNovelCard ? (
-              <>
-                <span className="h-[3px] w-[3px] rounded-full bg-white/35" />
-                <span>Curated</span>
-              </>
-            ) : null}
+        <div className="absolute left-4 top-4 flex max-w-[calc(100%-2rem)] flex-wrap items-center gap-2">
+          <div className="rounded-full border border-white/16 bg-black/50 px-2.5 py-1 backdrop-blur-md">
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">{typeLabel}</span>
           </div>
-        ) : null}
+          {showAuxiliaryBadge ? (
+            <div className="rounded-full border border-white/16 bg-white/10 px-2.5 py-1 backdrop-blur-md">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/82">{auxiliaryBadge}</span>
+            </div>
+          ) : null}
+        </div>
 
         {!isNovelCard ? (
           <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
@@ -166,7 +172,7 @@ export function StaticMediaCard({
     </div>
   );
 
-  const wrapperClassName = cn(href ? 'focus-tv' : 'cursor-default', 'group relative block', getMediaPosterAspectClass(theme), className);
+  const wrapperClassName = cn(href ? 'focus-tv' : 'cursor-default', 'group relative block', getCardAspectClass(aspectRatio, theme), className);
 
   if (!href) {
     return <div className={wrapperClassName}>{cardBody}</div>;

@@ -151,7 +151,7 @@ export function getSeriesSearchCandidateLimit(limit: number): number {
 }
 
 export function buildSeriesCanonicalRedirectPath(
-  pathname: '/series' | '/series/watch',
+  pathname: '/series',
   requestedSlug: string,
   canonicalSlug: string,
 ): string | null {
@@ -166,7 +166,7 @@ export function buildSeriesCanonicalRedirectPath(
 }
 
 export function resolveSeriesCanonicalRedirect<T extends CanonicalSeriesRouteTargetLike>(
-  pathname: '/series' | '/series/watch',
+  pathname: '/series',
   requestedSlug: string,
   resolvedEntity: T | null | undefined,
 ): string | null {

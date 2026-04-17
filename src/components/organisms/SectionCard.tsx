@@ -14,6 +14,7 @@ type SectionCardMode = 'grid' | 'rail';
 type CardGridDensity = 'dense' | 'default' | 'comfortable';
 
 interface SectionCardProps {
+  id?: string;
   title: string;
   subtitle?: string;
   icon?: LucideIcon;
@@ -26,6 +27,7 @@ interface SectionCardProps {
 }
 
 export function SectionCard({
+  id,
   title,
   subtitle,
   icon,
@@ -53,7 +55,7 @@ export function SectionCard({
   }, []);
 
   return (
-    <section className="space-y-4">
+    <section id={id} className="scroll-mt-28 space-y-4">
       <SectionHeader
         title={title}
         subtitle={subtitle}
@@ -69,7 +71,7 @@ export function SectionCard({
                   size="icon"
                   aria-label={`Scroll ${title} backward`}
                   onClick={() => scrollRailByPage('prev')}
-                  className="h-8 w-8 text-zinc-500 hover:text-white"
+                  className="h-8 w-8 text-muted-foreground hover:bg-surface-1 hover:text-foreground"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -79,14 +81,14 @@ export function SectionCard({
                   size="icon"
                   aria-label={`Scroll ${title} forward`}
                   onClick={() => scrollRailByPage('next')}
-                  className="h-8 w-8 text-zinc-500 hover:text-white"
+                  className="h-8 w-8 text-muted-foreground hover:bg-surface-1 hover:text-foreground"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </>
             ) : null}
             {viewAllHref ? (
-              <Button variant="ghost" size="sm" asChild className="text-zinc-500 hover:text-white">
+              <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:bg-surface-1 hover:text-foreground">
                 <Link href={viewAllHref} className="focus-tv flex items-center gap-2 text-xs font-semibold tracking-[0.02em]">
                   View all <ChevronRight className="h-4 w-4" />
                 </Link>
