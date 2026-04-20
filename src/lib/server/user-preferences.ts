@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { buildComicCacheKey, rememberComicCacheValue } from "./comic-cache.ts";
 
 type UserPreferencesRow = {
   user_id: string;
@@ -21,6 +22,7 @@ const USER_PREFERENCES_SELECT = "user_id,adult_content_enabled,subtitle_locale,t
 const USER_PREFERENCE_ONBOARDING_SELECT =
   "user_id,adult_content_enabled,adult_content_choice_set_at,newsletter_opt_in,community_opt_in";
 const ONBOARDING_VALIDATION_MODULE_URL = new URL("../onboarding/validation.ts", import.meta.url).href;
+const PREFERENCES_CACHE_TTL_SECONDS = 60 * 5;
 
 export type UserPreferenceOnboardingFields = {
   userId: string;
@@ -59,17 +61,21 @@ function toOnboardingPreferenceFields(row: UserPreferencesRow): UserPreferenceOn
 }
 
 export async function getUserPreferences(supabase: SupabaseClient, userId: string): Promise<UserPreferences | null> {
-  const { data, error } = await supabase
-    .from("user_preferences")
-    .select(USER_PREFERENCES_SELECT)
-    .eq("user_id", userId)
-    .maybeSingle<UserPreferencesRow>();
+  const cacheKey = buildComicCacheKey('user', userId, 'preferences');
 
-  if (error) {
-    throw error;
-  }
+  return rememberComicCacheValue(cacheKey, PREFERENCES_CACHE_TTL_SECONDS, async () => {
+    const { data, error } = await supabase
+      .from("user_preferences")
+      .select(USER_PREFERENCES_SELECT)
+      .eq("user_id", userId)
+      .maybeSingle<UserPreferencesRow>();
 
-  return data ? toUserPreferences(data) : null;
+    if (error) {
+      throw error;
+    }
+
+    return data ? toUserPreferences(data) : null;
+  });
 }
 
 export async function getOrCreateUserPreferences(
@@ -199,4 +205,31 @@ export async function setPreferenceOptIns(
   }
 
   return toOnboardingPreferenceFields(data);
+}
+
+export async function setUserPreferencesProfile(
+  supabase: SupabaseClient,
+  userId: string,
+  input: {
+    theme: string | null;
+    subtitleLocale: string | null;
+  },
+): Promise<UserPreferences> {
+  const payload = {
+    user_id: userId,
+    theme: input.theme,
+    subtitle_locale: input.subtitleLocale,
+  };
+
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .upsert(payload, { onConflict: "user_id" })
+    .select(USER_PREFERENCES_SELECT)
+    .single<UserPreferencesRow>();
+
+  if (error) {
+    throw error;
+  }
+
+  return toUserPreferences(data);
 }

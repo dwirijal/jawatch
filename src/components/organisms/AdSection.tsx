@@ -18,8 +18,8 @@ export interface AdSectionProps {
 }
 
 export function AdSection({
-  title = 'Partner Spotlight',
-  subtitle = 'Promotional placement that follows the same rhythm, spacing, and surface rules as the rest of the product.',
+  title = 'Sponsor pilihan',
+  subtitle = 'Iklan ditampilkan secukupnya untuk membantu biaya server tanpa mengganggu sesi nonton atau baca.',
   type = 'horizontal',
   className,
   slotClassName,

@@ -53,10 +53,10 @@ export function SeriesWatchRail({
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Series rail</p>
-        <h2 className="text-xl font-black tracking-tight text-foreground">Episode navigation</h2>
+        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Rak episode</p>
+        <h2 className="text-xl font-black tracking-tight text-foreground">Pilih episode</h2>
         <p className="text-sm leading-6 text-muted-foreground">
-          Default mode keeps continuity close to playback so binge sessions do not lose momentum.
+          Episode sebelumnya dan berikutnya tetap dekat supaya maraton tidak putus.
         </p>
       </div>
 
@@ -67,12 +67,12 @@ export function SeriesWatchRail({
             className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-border-strong px-4 text-xs font-bold text-foreground transition hover:bg-surface-1"
           >
             <ChevronLeft className="h-4 w-4" />
-            Prev
+            Sebelumnya
           </Link>
         ) : (
           <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-border-subtle px-4 text-xs font-bold text-muted-foreground">
             <ChevronLeft className="h-4 w-4" />
-            Prev
+            Sebelumnya
           </span>
         )}
 
@@ -81,12 +81,12 @@ export function SeriesWatchRail({
             href={`/series/${seriesSlug}/episodes/${nextEpisodeSlug}`}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-border-strong px-4 text-xs font-bold text-foreground transition hover:bg-surface-1"
           >
-            Next
+            Berikutnya
             <ChevronRight className="h-4 w-4" />
           </Link>
         ) : (
           <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-border-subtle px-4 text-xs font-bold text-muted-foreground">
-            Next
+            Berikutnya
             <ChevronRight className="h-4 w-4" />
           </span>
         )}
@@ -94,8 +94,16 @@ export function SeriesWatchRail({
 
       <div className="space-y-2 border-t border-border-subtle/70 pt-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Quick jump</p>
-          <Badge variant="outline">{playlist.length} Episodes</Badge>
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Lompat cepat</p>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">{playlist.length} episode</Badge>
+            <Link
+              href={`/series/${seriesSlug}?tab=episodes`}
+              className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground transition hover:text-foreground"
+            >
+              Lihat semua
+            </Link>
+          </div>
         </div>
         <div className="grid grid-cols-3 gap-2">
           {visibleEpisodes.map((episode) => {
@@ -139,10 +147,10 @@ export function MovieRelatedRail({ items }: MovieRelatedRailProps) {
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Related rail</p>
-        <h2 className="text-xl font-black tracking-tight text-foreground">Watch next</h2>
+        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Mirip ini</p>
+        <h2 className="text-xl font-black tracking-tight text-foreground">Nonton berikutnya</h2>
         <p className="text-sm leading-6 text-muted-foreground">
-          Default mode keeps nearby recommendations visible without stealing width from the player.
+          Rekomendasi tetap dekat tanpa mengganggu area pemutar.
         </p>
       </div>
 

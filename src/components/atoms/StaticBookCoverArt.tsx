@@ -47,7 +47,7 @@ export function StaticBookCoverArt({
           <div className="absolute inset-y-0 left-[10%] w-px" style={{ backgroundColor: palette.spine }} />
           <div className="absolute inset-x-[12%] top-[10%] h-px" style={{ backgroundColor: palette.rule }} />
           <div className="absolute inset-x-[14%] bottom-[12%] space-y-3" style={{ color: palette.text }}>
-            <p className="text-[9px] font-black uppercase tracking-[0.28em]" style={{ color: palette.eyebrow }}>Novel Edition</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em]" style={{ color: palette.eyebrow }}>Novel Edition</p>
             <h3 className="line-clamp-4 text-[clamp(1rem,2vw,1.45rem)] font-black leading-[1.06] tracking-[-0.03em] text-balance drop-shadow-[0_3px_10px_rgba(0,0,0,0.25)]">
               {splitTitle.title}
             </h3>

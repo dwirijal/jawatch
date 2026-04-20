@@ -1,4 +1,4 @@
-import { SHORTS_HUB_ENABLED } from '../shorts-paths.js';
+import { SHORTS_HUB_ENABLED } from '../shorts-paths.ts';
 
 const NON_INDEXABLE_PREFIXES = [
   '/api',

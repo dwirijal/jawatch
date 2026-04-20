@@ -11,7 +11,7 @@ import { Paper } from '@/components/atoms/Paper';
 import { Progress } from '@/components/atoms/Progress';
 import { ScrollArea, ScrollBar } from '@/components/atoms/ScrollArea';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
-import { useAuthGate } from '@/components/hooks/useAuthGate';
+import { useAuthGate } from '@/hooks/useAuthGate';
 import { getHistoryForAuth, HistoryItem, MediaType } from '@/lib/store';
 import { cn, THEME_CONFIG, ThemeType } from '@/lib/utils';
 
@@ -24,7 +24,7 @@ interface ContinueWatchingProps {
 
 export function ContinueWatching({
   type,
-  title = 'Continue Watching',
+  title = 'Lanjut nonton',
   limit = 10,
   hideWhenUnavailable = false,
 }: ContinueWatchingProps) {
@@ -54,7 +54,11 @@ export function ContinueWatching({
 
   if (!mounted || authGate.loading) return null;
 
-  if (!authGate.authenticated) {
+  if (history.length === 0) {
+    if (authGate.authenticated) {
+      return null;
+    }
+
     if (hideWhenUnavailable) {
       return null;
     }
@@ -66,29 +70,37 @@ export function ContinueWatching({
         <AuthGateNotice
           compact
           loginHref={authGate.loginHref}
-          title={`${title} is available after login`}
-          description="Sign in to unlock your local watch progress on this device."
-          actionLabel="Login"
+          title={`${title} tersimpan lokal dulu`}
+          description="Progres nonton dan baca disimpan di browser ini, lalu ikut ke akun setelah kamu masuk."
+          actionLabel="Masuk"
         />
       </section>
     );
   }
-
-  if (history.length === 0) return null;
 
   return (
     <section className="animate-in space-y-4 fade-in slide-in-from-bottom-4 duration-700">
       <SectionHeader
         title={title}
         icon={Clock}
-        action={
+        action={authGate.authenticated ? (
           <Button variant="ghost" size="sm" className="hidden text-muted-foreground hover:text-foreground md:flex" asChild>
             <Link href="/vault/history">
-              View Full History <ChevronRight className="ml-1 h-4 w-4" />
+              Lihat riwayat <ChevronRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
-        }
+        ) : undefined}
       />
+
+      {!authGate.authenticated ? (
+        <AuthGateNotice
+          compact
+          loginHref={authGate.loginHref}
+          title="Progres sudah tersimpan lokal"
+          description="Masuk kapan saja supaya jawatch membawa progres browser ini ke akun kamu."
+          actionLabel="Masuk"
+        />
+      ) : null}
 
       <ScrollArea className="w-full overflow-hidden">
         <div className="flex gap-4 pb-4 md:gap-6 md:pb-6">
@@ -129,13 +141,13 @@ export function ContinueWatching({
 
                     <div className="absolute bottom-4 left-4 right-4">
                       <div className="mb-1.5 flex items-center gap-2">
-                        <Badge variant={item.type as ThemeType} className="px-2.5 py-0.5 text-[9px] tracking-[0.2em]">
+                        <Badge variant={item.type as ThemeType} className="px-2.5 py-0.5 text-[10px] tracking-[0.2em]">
                           {item.type}
                         </Badge>
                       </div>
                       <h3 className="line-clamp-1 text-sm font-black tracking-tight text-white">{item.title}</h3>
                       <p className="mt-1 line-clamp-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                        {item.type === 'manga' ? 'Read:' : 'Watch:'} {item.lastChapterOrEpisode}
+                        {item.type === 'manga' ? 'Baca:' : 'Nonton:'} {item.lastChapterOrEpisode}
                       </p>
                     </div>
                   </div>

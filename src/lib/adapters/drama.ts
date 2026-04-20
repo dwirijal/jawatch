@@ -1,3 +1,5 @@
+import { buildDramaItemSlug } from '../media-slugs.ts';
+
 export interface DramaCatalogCard {
   slug: string;
   title: string;
@@ -93,13 +95,6 @@ function readString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function slugifyTitle(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
 export function extractDramaboxBookId(coverUrl: string): string {
   const match = coverUrl.match(/\/(4\d{10})\//);
   return match?.[1] ?? '';
@@ -187,7 +182,7 @@ export function normalizeDramaBoxCard(item: Pick<DramaCatalogCard, 'slug' | 'tit
   const bookId = isDramaboxBookId(candidateBookId) ? candidateBookId : '';
   return {
     ...item,
-    slug: bookId || item.slug || slugifyTitle(item.title),
+    slug: bookId || item.slug || buildDramaItemSlug({ title: item.title }),
     bookId: bookId || undefined,
   };
 }

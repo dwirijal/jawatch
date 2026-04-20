@@ -2,12 +2,14 @@
 
 import * as React from 'react';
 import type { BookmarkItem } from '@/lib/store';
+import type { ShareMediaType } from '@/lib/marketing';
 import type { ThemeType } from '@/lib/utils';
 import { ShareButton } from '@/components/molecules/ShareButton';
 import { BookmarkButton } from '@/components/organisms/BookmarkButton';
 
 interface DeferredHeroActionsProps {
   title: string;
+  mediaType?: ShareMediaType;
   theme: Extract<ThemeType, 'manga' | 'anime' | 'donghua' | 'movie' | 'drama' | 'novel'>;
   bookmarkItem?: BookmarkItem;
 }
@@ -73,6 +75,7 @@ function ActionPlaceholder({ wide = false }: { wide?: boolean }) {
 
 export function DeferredHeroActions({
   title,
+  mediaType,
   theme,
   bookmarkItem,
 }: DeferredHeroActionsProps) {
@@ -100,7 +103,7 @@ export function DeferredHeroActions({
       onFocus={handleEagerLoad}
       onTouchStart={handleEagerLoad}
     >
-      {shouldLoad ? <ShareButton title={title} theme={theme} /> : <ActionPlaceholder />}
+      {shouldLoad ? <ShareButton title={title} mediaType={mediaType} theme={theme} /> : <ActionPlaceholder />}
       {bookmarkItem && bookmarkTheme ? (
         shouldLoad ? (
           <BookmarkButton item={bookmarkItem} theme={bookmarkTheme} />

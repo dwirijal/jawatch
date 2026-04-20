@@ -58,3 +58,19 @@ test('curateHomeSections filters undersized sections and caps items', () => {
   assert.equal(curated[0].items.length, HOME_EDITORIAL_MAX_ITEMS);
   assert.equal(curated[1].items.length, HOME_EDITORIAL_MAX_ITEMS);
 });
+
+test('curateHomeSections rewrites source-shaped labels into IA vocabulary', () => {
+  const curated = curateHomeSections([
+    makeSection('fresh-week', 5),
+    makeSection('popular-media', 5),
+    makeSection('movie-latest', 5),
+    makeSection('series-radar', 5),
+    makeSection('top-reading', 5),
+    makeSection('community-lovers', 5),
+  ]);
+
+  assert.deepEqual(
+    curated.map((section) => section.title),
+    ['Rilis baru', 'Lagi ramai', 'Film populer', 'Rekomendasi buat kamu', 'Bacaan favorit', 'Karena kamu suka eksplor'],
+  );
+});

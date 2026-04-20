@@ -376,3 +376,11 @@ test('adapter canonical-unit lateral subquery projects unit_key for outer coales
   assert.match(sql, /\bcu\.updated_at\b/i);
   assert.match(sql, /\bmul\.source_unit_key = u\.unit_key\b/i);
 });
+
+test('adapter canonical-unit lateral subquery can fall back to nullable placeholders when link tables are unavailable', () => {
+  const sql = buildCanonicalEpisodeLateralSubquery('cu', 'u', false);
+
+  assert.match(sql, /\bnull::text as unit_key\b/i);
+  assert.match(sql, /\bnull::real as number\b/i);
+  assert.doesNotMatch(sql, /\bfrom public\.media_unit_links\b/i);
+});

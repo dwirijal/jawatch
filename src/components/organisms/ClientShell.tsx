@@ -8,6 +8,35 @@ import { DeferredAnalytics } from '@/components/organisms/DeferredAnalytics';
 import { ColorModeController } from '@/components/organisms/ColorModeController';
 import { isChromelessPath, isImmersivePlaybackPath } from '@/lib/route-chrome';
 
+const DesktopNavbar = dynamic(() => import('@/components/organisms/Navbar').then((mod) => mod.Navbar), {
+  ssr: false,
+  loading: () => null,
+});
+
+const DeferredCommandBar = dynamic(
+  () => import('@/components/organisms/DeferredCommandBar').then((mod) => mod.DeferredCommandBar),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
+
+const AdNetworkScripts = dynamic(
+  () => import('@/components/organisms/AdNetworkScripts').then((mod) => mod.AdNetworkScripts),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
+
+const LegacyServiceWorkerCleanup = dynamic(
+  () => import('@/components/organisms/LegacyServiceWorkerCleanup').then((mod) => mod.LegacyServiceWorkerCleanup),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
+
 const MobileNav = dynamic(() => import('@/components/organisms/MobileNav').then((mod) => mod.MobileNav), {
   ssr: false,
   loading: () => null,
@@ -71,29 +100,41 @@ export function ClientShell() {
   const chromeless = isChromelessPath(pathname);
   const immersivePlayback = isImmersivePlaybackPath(pathname);
   const installPromptEligible = pathname !== '/' && pathname !== '/login';
+  const chromeEnabled = !chromeless && !immersivePlayback;
+  const [deferredGlobalsMounted, setDeferredGlobalsMounted] = React.useState(false);
+  const [desktopChromeMounted, setDesktopChromeMounted] = React.useState(false);
   const [mobileNavMounted, setMobileNavMounted] = React.useState(false);
   const [pwaPromptMounted, setPwaPromptMounted] = React.useState(false);
 
   React.useEffect(() => {
-    if (chromeless || immersivePlayback) {
+    if (deferredGlobalsMounted) {
       return;
     }
 
-    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    return scheduleDeferredMount(() => {
+      setDeferredGlobalsMounted(true);
+    });
+  }, [deferredGlobalsMounted]);
+
+  React.useEffect(() => {
+    if (!chromeEnabled) {
+      setDesktopChromeMounted(false);
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
     const legacyMediaQuery = mediaQuery as MediaQueryList & {
       addListener?: (listener: (event: MediaQueryListEvent) => void) => void;
       removeListener?: (listener: (event: MediaQueryListEvent) => void) => void;
     };
-    const enableMobileNav = (matches: boolean) => {
-      if (matches) {
-        setMobileNavMounted(true);
-      }
+    const updateDesktopChrome = (matches: boolean) => {
+      setDesktopChromeMounted(matches);
     };
 
-    enableMobileNav(mediaQuery.matches);
+    updateDesktopChrome(mediaQuery.matches);
 
     const handleChange = (event: MediaQueryListEvent) => {
-      enableMobileNav(event.matches);
+      updateDesktopChrome(event.matches);
     };
 
     if ('addEventListener' in mediaQuery) {
@@ -103,25 +144,60 @@ export function ClientShell() {
 
     legacyMediaQuery.addListener?.(handleChange);
     return () => legacyMediaQuery.removeListener?.(handleChange);
-  }, [chromeless, immersivePlayback]);
+  }, [chromeEnabled]);
 
   React.useEffect(() => {
-    if (chromeless || immersivePlayback || !installPromptEligible) {
+    if (!chromeEnabled) {
+      setMobileNavMounted(false);
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const legacyMediaQuery = mediaQuery as MediaQueryList & {
+      addListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+      removeListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+    };
+    const updateMobileNav = (matches: boolean) => {
+      setMobileNavMounted(matches);
+    };
+
+    updateMobileNav(mediaQuery.matches);
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      updateMobileNav(event.matches);
+    };
+
+    if ('addEventListener' in mediaQuery) {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+
+    legacyMediaQuery.addListener?.(handleChange);
+    return () => legacyMediaQuery.removeListener?.(handleChange);
+  }, [chromeEnabled]);
+
+  React.useEffect(() => {
+    if (!chromeEnabled || !installPromptEligible) {
+      setPwaPromptMounted(false);
       return;
     }
 
     return scheduleDeferredMount(() => {
       setPwaPromptMounted(true);
     });
-  }, [chromeless, immersivePlayback, installPromptEligible]);
+  }, [chromeEnabled, installPromptEligible]);
 
   return (
     <>
       <ColorModeController />
       <DeviceListener />
       <DeferredAnalytics />
-      {!chromeless && !immersivePlayback && installPromptEligible && pwaPromptMounted ? <PWAInstallPrompt /> : null}
-      {!chromeless && !immersivePlayback && mobileNavMounted ? <MobileNav /> : null}
+      {deferredGlobalsMounted ? <LegacyServiceWorkerCleanup /> : null}
+      {deferredGlobalsMounted ? <AdNetworkScripts /> : null}
+      {chromeEnabled && desktopChromeMounted ? <DeferredCommandBar /> : null}
+      {chromeEnabled && desktopChromeMounted ? <DesktopNavbar /> : null}
+      {chromeEnabled && installPromptEligible && pwaPromptMounted ? <PWAInstallPrompt /> : null}
+      {chromeEnabled && mobileNavMounted ? <MobileNav /> : null}
     </>
   );
 }

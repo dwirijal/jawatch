@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { SITE_URL } from '@/lib/site';
+import { JAWATCH_MARKETING } from './marketing.ts';
+import { SITE_URL } from './site.ts';
 
 type SeoItem = {
   name: string;
@@ -58,8 +59,10 @@ export function buildMetadata({
   keywords = [],
 }: BuildMetadataOptions): Metadata {
   const canonicalPath = normalizePath(path);
-  const imageUrl = absoluteImageUrl(image || '/favicon.ico');
+  const usesDefaultImage = !image;
+  const imageUrl = absoluteImageUrl(image || JAWATCH_MARKETING.share.defaultImage);
   const normalizedDescription = normalizeDescription(description);
+  const imageAlt = usesDefaultImage ? JAWATCH_MARKETING.share.defaultImageAlt : `${title} di jawatch`;
 
   return {
     title,
@@ -78,7 +81,12 @@ export function buildMetadata({
       title,
       description: normalizedDescription,
       siteName: 'jawatch',
-      images: imageUrl ? [{ url: imageUrl }] : undefined,
+      images: imageUrl ? [{
+        url: imageUrl,
+        width: 1200,
+        height: 630,
+        alt: imageAlt,
+      }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
@@ -103,6 +111,23 @@ export function buildMetadata({
             follow: true,
           },
         },
+  };
+}
+
+export function buildOrganizationJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'jawatch',
+    url: absoluteUrl('/'),
+    logo: absoluteImageUrl(JAWATCH_MARKETING.share.defaultImage),
+    sameAs: [JAWATCH_MARKETING.support.trakteerUrl],
+    potentialAction: {
+      '@type': 'DonateAction',
+      name: JAWATCH_MARKETING.support.label,
+      target: JAWATCH_MARKETING.support.trakteerUrl,
+      description: JAWATCH_MARKETING.support.reason,
+    },
   };
 }
 

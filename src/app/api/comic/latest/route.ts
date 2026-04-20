@@ -1,7 +1,9 @@
 import { getNewManga } from '@/lib/adapters/comic-server';
-import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
-import { resolveComicRouteIncludeNsfw } from '@/lib/server/comic-route-access';
+import { buildPrivateCacheControl } from '@/platform/cache/http/cache-headers';
+import { resolvePublicApiRequestContext } from '@/lib/server/public-api-cache';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
+
+const PUBLIC_CACHE_TTL_SECONDS = 180;
 
 export async function GET(request: Request) {
   if (!(await allowRequestWithinRateLimit(request, { bucket: 'api-comic-latest', limit: 120, windowSeconds: 60 }))) {
@@ -19,10 +21,10 @@ export async function GET(request: Request) {
     });
   }
 
-  const includeNsfw = await resolveComicRouteIncludeNsfw(request);
+  const { includeNsfw, responseHeaders } = await resolvePublicApiRequestContext(request, PUBLIC_CACHE_TTL_SECONDS);
   const payload = await getNewManga(page, limit, { includeNsfw }).catch(() => ({ comics: [] }));
 
   return Response.json(payload, {
-    headers: buildPrivateCacheControl(),
+    headers: responseHeaders,
   });
 }

@@ -1,36 +1,47 @@
 import { Link } from '@/components/atoms/Link';
+import { TrackedMarketingLink } from '@/components/molecules/TrackedMarketingLink';
+import { buildSupportCta } from '@/lib/marketing';
+import { SHORTS_HUB_ENABLED } from '@/lib/shorts-paths';
 
 const FOOTER_GROUPS = [
   {
-    title: 'Watch',
+    title: 'Nonton',
     links: [
-      { href: '/watch/movies', label: 'Movies' },
+      { href: '/watch/movies', label: 'Film' },
       { href: '/watch/series', label: 'Series' },
-      { href: '/watch/shorts', label: 'Shorts' },
+      ...(SHORTS_HUB_ENABLED ? [{ href: '/watch/shorts', label: 'Shorts' }] : []),
     ],
   },
   {
-    title: 'Read',
+    title: 'Baca',
     links: [
-      { href: '/read/comics', label: 'Comics' },
-      { href: '/read/comics#latest', label: 'Latest chapters' },
-      { href: '/read/comics#popular', label: 'Popular comics' },
+      { href: '/read/comics', label: 'Komik' },
+      { href: '/read/comics#latest', label: 'Chapter terbaru' },
+      { href: '/read/comics#popular', label: 'Komik populer' },
     ],
   },
   {
-    title: 'Vault',
+    title: 'Akun',
     links: [
-      { href: '/', label: 'Home' },
-      { href: '/search', label: 'Search' },
-      { href: '/vault', label: 'Vault' },
-      { href: '/login', label: 'Login' },
+      { href: '/', label: 'Beranda' },
+      { href: '/search', label: 'Cari' },
+      { href: '/vault', label: 'Koleksi' },
+      { href: '/support', label: 'Dukung' },
+      { href: '/login', label: 'Masuk' },
     ],
   },
 ] as const;
 
-const LEGAL_ITEMS = ['Terms of Service', 'Privacy Policy', 'DMCA'] as const;
+const LEGAL_ITEMS = [
+  { href: '/terms', label: 'Syarat Layanan' },
+  { href: '/privacy', label: 'Kebijakan Privasi' },
+  { href: '/dmca', label: 'DMCA' },
+  { href: '/contact', label: 'Kontak' },
+] as const;
 
 export function FooterContent() {
+  const supportCta = buildSupportCta();
+
   return (
     <footer className="w-full border-t border-border-subtle bg-surface-1 py-12 backdrop-blur md:py-16">
       <div className="app-container-wide flex flex-col gap-10">
@@ -42,11 +53,23 @@ export function FooterContent() {
               </span>
             </Link>
             <p className="max-w-md text-sm leading-7 text-muted-foreground">
-              Premium watch and reader hub untuk sesi panjang. Shell, controls, dan surfaces dibangun ulang supaya tetap cepat, tenang, dan mudah dipakai di semua ukuran layar.
+              Katalog nonton dan baca untuk anime, donghua, drama Asia, film, manga, manhwa, dan manhua bahasa Indonesia.
             </p>
             <div className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-accent-soft px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-foreground">
               <span className="h-2 w-2 rounded-full bg-[var(--accent)]" />
-              Watch and read surfaces in sync
+              Watch dan read dalam satu katalog
+            </div>
+            <div className="rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2 p-4">
+              <p className="text-sm font-bold text-foreground">{supportCta.title}</p>
+              <p className="mt-2 text-xs leading-6 text-muted-foreground">{supportCta.description}</p>
+              <TrackedMarketingLink
+                href={supportCta.href}
+                eventName="support_click"
+                eventProperties={{ placement: 'footer-support-card', title: supportCta.title }}
+                className="mt-4 inline-flex cursor-pointer items-center rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-[var(--accent-strong)]"
+              >
+                {supportCta.label}
+              </TrackedMarketingLink>
             </div>
           </div>
 
@@ -70,18 +93,18 @@ export function FooterContent() {
 
         <div className="flex flex-col gap-4 border-t border-border-subtle pt-6 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-x-6 gap-y-2">
-            {LEGAL_ITEMS.map((label) => (
-              <span
-                key={label}
-                aria-disabled="true"
-                className="cursor-default text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground"
+            {LEGAL_ITEMS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
               >
-                {label}
-              </span>
+                {item.label}
+              </Link>
             ))}
           </div>
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">
-            &copy; {new Date().getFullYear()} jawatch. Built for long watch and read sessions.
+            &copy; {new Date().getFullYear()} jawatch. Dibangun untuk sesi nonton dan baca yang nyaman.
           </p>
         </div>
       </div>

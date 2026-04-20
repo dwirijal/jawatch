@@ -30,18 +30,18 @@ export function HubLaneCard({
     <Link
       href={href}
       className={cn(
-        'focus-tv surface-panel-elevated group relative flex min-h-[16rem] flex-col overflow-hidden p-5 md:min-h-[18rem] md:p-6',
+        'focus-tv surface-panel-elevated group relative flex min-h-[14rem] flex-col overflow-hidden p-4 md:min-h-[15.5rem] md:p-5',
         className,
       )}
     >
       <div className={cn('pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full opacity-75 blur-3xl', config.primary)} />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_72%)]" />
 
-      <div className="relative z-10 flex h-full flex-col gap-5">
+      <div className="relative z-10 flex h-full flex-col gap-4">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <p className="type-kicker">{eyebrow}</p>
-            <h2 className="text-balance font-[var(--font-heading)] text-[clamp(2rem,4vw,3.25rem)] font-bold leading-[0.94] tracking-[-0.06em] text-foreground">
+            <h2 className="text-balance font-[var(--font-heading)] text-[clamp(1.85rem,4vw,2.9rem)] font-bold leading-[0.94] tracking-[-0.055em] text-foreground">
               {title}
             </h2>
           </div>
@@ -73,9 +73,9 @@ export function HubLaneCard({
           </div>
         ) : null}
 
-        <div className="mt-auto flex items-center justify-between border-t border-border-subtle pt-4">
+        <div className="mt-auto flex items-center justify-between border-t border-border-subtle pt-3.5">
           <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground transition-colors group-hover:text-foreground">
-            Open lane
+            Buka rak
           </span>
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border-subtle bg-surface-1 text-foreground transition-transform duration-200 group-hover:translate-x-1 group-hover:bg-surface-elevated">
             <ArrowRight className="h-4 w-4" />

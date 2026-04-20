@@ -1,5 +1,5 @@
 import { getMangaChapter } from '@/lib/adapters/comic-server';
-import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
+import { buildPrivateCacheControl } from '@/platform/cache/http/cache-headers';
 import {
   resolveComicRouteIncludeNsfw,
   resolveComicRouteRecordAccess,

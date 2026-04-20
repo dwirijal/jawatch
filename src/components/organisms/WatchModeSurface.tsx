@@ -3,7 +3,11 @@
 import * as React from 'react';
 import { Clapperboard, MonitorPlay } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { resolveWatchSurfaceLayout, type WatchSurfaceKind } from '@/lib/watch-surface';
+import {
+  resolveCompactWatchSurfaceSections,
+  resolveWatchSurfaceLayout,
+  type WatchSurfaceKind,
+} from '@/lib/watch-surface';
 import { useUIStore } from '@/store/useUIStore';
 
 interface WatchModeSurfaceProps {
@@ -28,6 +32,10 @@ export function WatchModeSurface({
   const setNavbarHidden = useUIStore((state) => state.setNavbarHidden);
   const setFooterHidden = useUIStore((state) => state.setFooterHidden);
   const layout = resolveWatchSurfaceLayout({ kind, isTheatrical: isTheaterMode });
+  const compactSections = resolveCompactWatchSurfaceSections({
+    hasBody: Boolean(body),
+    hasRail: Boolean(rail),
+  });
 
   React.useEffect(() => {
     setTheaterMode(false);
@@ -101,13 +109,39 @@ export function WatchModeSurface({
         {layout.showRail ? (
           <>
             <section className="flex flex-col gap-6 xl:hidden">
-              <div className="min-w-0 space-y-6">{stage}</div>
-              {rail ? (
-                <div className="min-w-0 border-t border-border-subtle/70 pt-5">
-                  {rail}
-                </div>
-              ) : null}
-              {body ? <div className="min-w-0 space-y-6 border-t border-border-subtle/70 pt-5">{body}</div> : null}
+              {compactSections.map((section) => {
+                if (section.id === 'stage') {
+                  return (
+                    <div key={section.id} className="min-w-0 space-y-6">
+                      {stage}
+                    </div>
+                  );
+                }
+
+                if (section.id === 'body' && body) {
+                  return (
+                    <div
+                      key={section.id}
+                      className={cn('min-w-0 space-y-6', section.bordered && 'border-t border-border-subtle/70 pt-5')}
+                    >
+                      {body}
+                    </div>
+                  );
+                }
+
+                if (section.id === 'rail' && rail) {
+                  return (
+                    <div
+                      key={section.id}
+                      className={cn('min-w-0', section.bordered && 'border-t border-border-subtle/70 pt-5')}
+                    >
+                      {rail}
+                    </div>
+                  );
+                }
+
+                return null;
+              })}
             </section>
 
             <section

@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { hasNsfwLabel } from '@/lib/media-safety';
+import { hasNsfwLabel } from '../media-safety.ts';
 
 export type JsonRecord = Record<string, unknown>;
 
@@ -16,6 +16,7 @@ export type VideoItemRow = {
   score: number;
   detail: JsonRecord | null;
   tmdb_payload?: JsonRecord | null;
+  fanart_payload?: JsonRecord | null;
   updated_at: string;
   unit_count?: number | null;
 };
@@ -28,12 +29,11 @@ export type VideoUnitRow = {
   cover_url: string;
   item_detail: JsonRecord | null;
   item_tmdb_payload?: JsonRecord | null;
+  item_fanart_payload?: JsonRecord | null;
   slug: string;
   title: string;
   label: string;
   number: number | null;
-  prev_slug: string | null;
-  next_slug: string | null;
   published_at: string | null;
   detail: JsonRecord | null;
 };

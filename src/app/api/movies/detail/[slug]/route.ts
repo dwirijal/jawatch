@@ -1,5 +1,5 @@
 import { getMovieDetailBySlug } from '@/lib/adapters/movie';
-import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
+import { buildPrivateCacheControl } from '@/platform/cache/http/cache-headers';
 import { resolveComicRouteIncludeNsfw } from '@/lib/server/comic-route-access';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
 

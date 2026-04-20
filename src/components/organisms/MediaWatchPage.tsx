@@ -19,9 +19,12 @@ interface MediaWatchPageProps {
   sidebar: React.ReactNode;
   downloadGroups: MovieDownloadGroup[];
   community: {
-    mediaId: string;
-    title: string;
-    type: 'series' | 'movie';
+    titleId: string;
+    titleLabel: string;
+    unitId: string;
+    unitLabel: string;
+    unitHref: string;
+    mediaType: 'anime' | 'donghua' | 'movie' | 'drama';
     theme: 'anime' | 'donghua' | 'movie' | 'drama';
   };
   children?: React.ReactNode;
@@ -30,7 +33,7 @@ interface MediaWatchPageProps {
 export function MediaWatchPage({
   historyTracker,
   backHref,
-  eyebrow = 'Now Watching',
+  eyebrow = 'Sedang nonton',
   title,
   subtitle,
   browseHref,

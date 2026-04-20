@@ -4,6 +4,9 @@ export type SeriesCardItem = {
   slug: string;
   title: string;
   poster: string;
+  background?: string;
+  backdrop?: string;
+  logo?: string;
   year: string;
   type: SeriesMediaType;
   rating?: string;

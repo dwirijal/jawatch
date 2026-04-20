@@ -1,6 +1,6 @@
 import 'server-only';
 
-import type { ComicDbClient } from '@/lib/server/comic-db';
+import type { ComicDbClient } from '../server/comic-db.ts';
 import {
   buildDownloadGroups,
   buildMirrorEntries,
@@ -118,31 +118,10 @@ export function buildVisibilityCondition(includeNsfw: boolean, detailColumn = 'd
   }
 
   return `
-    and not (
-      coalesce(${nsfwColumn}, false)
-      or
-      exists (
-        select 1
-        from jsonb_array_elements_text(
-          case
-            when jsonb_typeof(${detailColumn}->'genres') = 'array' then ${detailColumn}->'genres'
-            when jsonb_typeof(${detailColumn}->'genre_names') = 'array' then ${detailColumn}->'genre_names'
-            when jsonb_typeof(${detailColumn}->'category_names') = 'array' then ${detailColumn}->'category_names'
-            else '[]'::jsonb
-          end
-        ) as label_name(value)
-        where lower(label_name.value) = 'nsfw'
-      )
-      or exists (
-        select 1
-        from jsonb_array_elements_text(
-          case
-            when jsonb_typeof(${detailColumn}->'tags') = 'array' then ${detailColumn}->'tags'
-            else '[]'::jsonb
-          end
-        ) as tag_name(value)
-        where lower(tag_name.value) = 'nsfw'
-      )
-    )
+    and coalesce(${nsfwColumn}, false) = false
+    and not (${detailColumn} -> 'genres' @> '["NSFW"]' or ${detailColumn} -> 'genres' @> '["nsfw"]')
+    and not (${detailColumn} -> 'genre_names' @> '["NSFW"]' or ${detailColumn} -> 'genre_names' @> '["nsfw"]')
+    and not (${detailColumn} -> 'category_names' @> '["NSFW"]' or ${detailColumn} -> 'category_names' @> '["nsfw"]')
+    and not (${detailColumn} -> 'tags' @> '["NSFW"]' or ${detailColumn} -> 'tags' @> '["nsfw"]')
   `;
 }

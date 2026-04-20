@@ -1,0 +1,18 @@
+export {
+  buildCanonicalItemFlagSelection,
+  buildCanonicalItemKeyExpression,
+  buildCanonicalItemKeySelection,
+  buildCanonicalItemLateralSubquery,
+  buildCanonicalItemOrdering,
+  buildCanonicalItemShadowCondition,
+  buildCanonicalUnitFlagSelection,
+  buildCanonicalUnitKeyExpression,
+  buildCanonicalUnitOrdering,
+  getComicDbSchemaCapabilities,
+  getPostgresSchemaCapabilities,
+  resetComicDbSchemaCapabilitiesForTests,
+  resolveComicDbSchemaCapabilities,
+  resolvePostgresSchemaCapabilities,
+  type ComicDbSchemaCapabilities,
+  type PostgresSchemaCapabilities,
+} from '../../platform/db/postgres/schema-capabilities.ts';

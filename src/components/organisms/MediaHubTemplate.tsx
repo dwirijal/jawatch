@@ -129,7 +129,7 @@ export function MediaHubTemplate({
           {results ? (
             <section className="animate-in space-y-4 fade-in duration-500">
               <SectionHeader
-                title={activeGenre ? `Genre: ${activeGenre}` : `Filtered results`}
+                title={activeGenre ? `Genre: ${activeGenre}` : 'Hasil filter'}
                 icon={LayoutGrid}
                 action={onClearResults ? (
                   <Button
@@ -139,13 +139,13 @@ export function MediaHubTemplate({
                     onClick={onClearResults}
                     className="focus-tv shrink-0 text-xs font-semibold tracking-[0.02em] text-zinc-500 hover:text-white"
                   >
-                    Clear filter
+                    Hapus filter
                   </Button>
                 ) : undefined}
               />
 
               {error ? (
-                <StateInfo type="error" title="Search Error" description={error} />
+                <StateInfo type="error" title="Pencarian belum bisa dibuka" description={error} />
               ) : results.length > 0 ? (
                 <div className="media-grid" data-grid-density={gridDensity}>
                   <StaggerEntry className="contents">
@@ -166,7 +166,7 @@ export function MediaHubTemplate({
                   </StaggerEntry>
                 </div>
               ) : (
-                <StateInfo title="No Content Found" description="Try choosing a different genre or filter." />
+                <StateInfo title="Belum ada hasil" description="Coba genre atau filter lain." />
               )}
             </section>
           ) : loading ? (

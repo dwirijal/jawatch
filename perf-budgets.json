@@ -7,14 +7,9 @@
       "name": "landing-listing",
       "routePatterns": [
         "^/$",
-        "^/(watch|read)$",
+        "^/(watch|read|search|support|contact|privacy|terms|dmca)$",
         "^/watch/(movies|series|shorts)$",
-        "^/read/comics$",
-        "^/(series|movies|novel|comic|search|collection|nsfw|drachin|dramabox)$",
-        "^/series/(anime|donghua|drama|list|drachin|country/\\[country\\]|genre/\\[genre\\]|year/\\[year\\])$",
-        "^/series/(ongoing|short)$",
-        "^/comic/(latest|ongoing|popular|manga|manhua|manhwa)$",
-        "^/movies/(latest|popular)$"
+        "^/read/comics$"
       ],
       "budgets": {
         "healthy": {
@@ -34,11 +29,8 @@
     {
       "name": "detail",
       "routePatterns": [
-        "^/(series|movies|comic|novel)/\\[slug\\]$",
-        "^/(comics|shorts)/\\[slug\\]$",
-        "^/nsfw/(series|movies|comic)/\\[slug\\]$",
-        "^/drachin/\\[slug\\]$",
-        "^/dramabox/\\[bookId\\]$"
+        "^/(movies|series|comics|shorts)/\\[slug\\]$",
+        "^/(series|comics)/\\[slug\\]/(episodes|chapters)$"
       ],
       "budgets": {
         "healthy": {
@@ -58,14 +50,9 @@
     {
       "name": "watch-read",
       "routePatterns": [
-        "^/(series|movies)/watch/\\[slug\\]$",
-        "^/series/short/watch/\\[slug\\]$",
-        "^/(comics|shorts)/\\[slug\\]/(chapters|episodes)/\\[(chapterSlug|episodeSlug)\\]$",
-        "^/nsfw/(series|movies)/watch/\\[slug\\]$",
-        "^/comic/\\[slug\\]/\\[chapter\\]$",
-        "^/nsfw/comic/\\[slug\\]/\\[chapter\\]$",
-        "^/novel/\\[slug\\]/read/\\[chapter\\]$",
-        "^/drachin/episode/\\[slug\\]$"
+        "^/series/\\[slug\\]/episodes/\\[episodeSlug\\]$",
+        "^/shorts/\\[slug\\]/episodes/\\[episodeSlug\\]$",
+        "^/comics/\\[slug\\]/chapters/\\[chapterSlug\\]$"
       ],
       "budgets": {
         "healthy": {

@@ -84,3 +84,31 @@ begin
   end if;
 end
 $$;
+
+do $$
+begin
+  if to_regclass('public.community_unit_likes') is not null then
+    alter table public.community_unit_likes enable row level security;
+    drop policy if exists "community likes authenticated read" on public.community_unit_likes;
+    create policy "community likes authenticated read" on public.community_unit_likes
+      for select using (auth.uid() is not null);
+    drop policy if exists "community likes own write" on public.community_unit_likes;
+    create policy "community likes own write" on public.community_unit_likes
+      for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  end if;
+end
+$$;
+
+do $$
+begin
+  if to_regclass('public.community_unit_comments') is not null then
+    alter table public.community_unit_comments enable row level security;
+    drop policy if exists "community comments authenticated read" on public.community_unit_comments;
+    create policy "community comments authenticated read" on public.community_unit_comments
+      for select using (auth.uid() is not null);
+    drop policy if exists "community comments own write" on public.community_unit_comments;
+    create policy "community comments own write" on public.community_unit_comments
+      for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  end if;
+end
+$$;

@@ -10,6 +10,70 @@
 
 **Build/Deploy Rule:** Do not rely on `next build` or other local production builds for this rollout. Build validation must happen via Vercel preview/staging deployments, never Vercel production until explicitly approved.
 
+## Verified Status (2026-04-18)
+
+### Locally verified and currently implemented
+- **Task 1 foundation**
+  - `rtk node --test tests/unit/navigation-ia.test.mjs`
+  - The Playwright test runner was not used for this check; browser-level route checks were run against a live local app instead because the repo Playwright harness expects a reusable server.
+  - Browser checks confirmed `/watch`, `/watch/movies`, `/watch/series`, `/read`, and `/read/comics` returned `200`.
+  - Browser checks confirmed `/watch/shorts` redirected back to `/watch` while shorts source remains paused.
+- **Task 2 vault/auth migration**
+  - `rtk node --test tests/unit/onboarding-session.test.mjs tests/unit/home-ia.test.mjs tests/unit/vault-tabs.test.mjs`
+  - `rtk npm run typecheck`
+  - `rtk npm run lint`
+  - `rtk npm run build`
+  - Browser checks confirmed `/login`, `/signup`, and `/forgot-password` returned `200`.
+  - Browser checks confirmed `/series/digimon-beatbreak/episodes` redirected to `/series/digimon-beatbreak?tab=episodes`.
+  - Browser checks confirmed `/comics/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life/chapters` redirected to `?tab=chapters`.
+- **Guest-to-account local merge follow-up**
+  - `rtk node --test tests/unit/store-merge.test.mjs tests/unit/onboarding-session.test.mjs tests/unit/home-ia.test.mjs tests/unit/vault-tabs.test.mjs`
+  - `rtk npm run typecheck`
+  - `rtk npm run lint`
+  - `rtk npm run build`
+  - Local browser behavior now keeps guest history/bookmarks readable before login and merges them into the active signed-in scope on auth resolution.
+- **Community/social + IA copy alignment**
+  - `rtk node --test tests/unit/community.test.mjs tests/unit/store-community.test.mjs tests/unit/home-curation.test.mjs tests/unit/media-hub-segments.test.mjs tests/unit/navigation-ia.test.mjs tests/unit/store-merge.test.mjs tests/unit/onboarding-session.test.mjs tests/unit/home-ia.test.mjs tests/unit/vault-tabs.test.mjs`
+  - `rtk npm run typecheck`
+  - `rtk npm run lint`
+  - `rtk npm run build`
+  - Browser checks confirmed `/` exposes IA shelf vocabulary (`Fresh Release`, `Trending Now`, `Recommended Picks`).
+  - Browser checks confirmed `/movies/sharp-corner-2025`, `/series/digimon-beatbreak`, `/series/digimon-beatbreak/episodes/digimon-beatbreak-episode-24`, `/comics/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life`, and `/comics/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life/chapters/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life-chapter-89` all returned `200` with their expected community surfaces.
+  - Vault overview now reports aggregate community activity from the same local-first history/bookmark owner scope.
+- **Supabase personalization sync follow-up**
+  - `rtk node --test tests/unit/history-store.test.mjs tests/unit/community-activity-server.test.mjs tests/unit/store-community.test.mjs tests/unit/store-merge.test.mjs tests/unit/onboarding-session.test.mjs tests/unit/home-ia.test.mjs tests/unit/vault-tabs.test.mjs`
+  - `rtk npm run typecheck`
+  - `rtk npm run lint`
+  - `rtk npm run build`
+  - `rtk npm run db:push:supabase`
+  - `rtk npx playwright test tests/e2e/ia-routes.spec.ts tests/e2e/media-detail.spec.ts`
+  - `rtk npm run smoke:supabase-personalization`
+  - Authenticated personalization now pushes history, unit likes, and unit comments through `/api/personalization/sync` and `/api/community`, with signed-in reads sourced from Supabase-backed route handlers instead of local storage only.
+  - The remote Supabase project accepted migration `20260418103303_personalization_sync.sql`, bringing `user_history` metadata columns plus `community_unit_likes` and `community_unit_comments` online in the live schema.
+  - `smoke:supabase-personalization` now verifies live RLS behavior against the linked Supabase project by creating temporary users, writing personalization rows, checking cross-user visibility/isolation, and cleaning up after itself.
+- **Series episode player UX refinement**
+  - `rtk npm run test:unit`
+  - `rtk npm run typecheck`
+  - `rtk npm run lint`
+  - `rtk npm run build`
+  - Player utility controls on the `/series/*/episodes/*` surface are now visible on touch layouts, include explicit accessibility labels, and expose theater mode on mobile/tablet instead of hiding those actions behind desktop hover only.
+  - The compact watch surface now renders `player -> episode context -> rail`, reducing the scroll interruption before metadata and community on narrow screens.
+  - Watch extras now defer ad section mounting, which removes the transient empty block that was appearing between watch options and episode context when no ad inventory was available.
+  - Mirror chips now prefer quality/source labels over generic `Option N` fallback copy, and the series rail now exposes a `View all` escape hatch back to the full episodes tab.
+- **Harness + preview verification**
+  - `rtk npx playwright test tests/e2e/ia-routes.spec.ts tests/e2e/media-detail.spec.ts`
+  - `rtk vercel deploy -y --no-wait --scope fudcourt`
+  - `rtk vercel inspect jawatch-a6altkgos-fudcourt.vercel.app --scope fudcourt`
+  - `rtk vercel curl / --deployment https://jawatch-a6altkgos-fudcourt.vercel.app --scope fudcourt`
+  - `rtk vercel curl /series/digimon-beatbreak --deployment https://jawatch-a6altkgos-fudcourt.vercel.app --scope fudcourt`
+  - `rtk vercel curl /comics/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life/chapters/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life-chapter-89 --deployment https://jawatch-a6altkgos-fudcourt.vercel.app --scope fudcourt`
+  - Playwright repo harness now passes the IA route and media-detail coverage directly against `playwright.config.ts`.
+  - Preview deployment `https://jawatch-a6altkgos-fudcourt.vercel.app` reached `READY`.
+  - Preview verification ran through authenticated Vercel CLI access because the preview is protected by Vercel Authentication.
+
+### Still pending verification or rollout
+- Shorts interaction model and public shorts hub activation
+
 ---
 
 ## File Structure Lock-In

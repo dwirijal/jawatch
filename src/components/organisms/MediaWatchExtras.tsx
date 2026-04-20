@@ -2,15 +2,18 @@
 
 import type { MovieDownloadGroup } from '@/lib/adapters/movie';
 import MediaDownloadOptionsPanel from '@/components/organisms/MediaDownloadOptionsPanel';
-import { AdSection } from '@/components/organisms/AdSection';
-import { CommunityCTA } from '@/components/molecules/CommunityCTA';
+import { DeferredAdSection } from '@/components/organisms/DeferredAdSection';
+import { UnitCommunityPanel } from '@/components/organisms/CommunityPanel';
 
 type MediaWatchExtrasProps = {
   downloadGroups: MovieDownloadGroup[];
   community: {
-    mediaId: string;
-    title: string;
-    type: 'series' | 'movie';
+    titleId: string;
+    titleLabel: string;
+    unitId: string;
+    unitLabel: string;
+    unitHref: string;
+    mediaType: 'anime' | 'donghua' | 'movie' | 'drama';
     theme: 'anime' | 'donghua' | 'movie' | 'drama';
   };
   theme: 'anime' | 'donghua' | 'movie' | 'drama';
@@ -24,8 +27,16 @@ export function MediaWatchExtras({
   return (
     <>
       <MediaDownloadOptionsPanel groups={downloadGroups} accent="indigo" />
-      <AdSection theme={theme} />
-      <CommunityCTA mediaId={community.mediaId} title={community.title} type={community.type} theme={community.theme} />
+      <DeferredAdSection theme={theme} />
+      <UnitCommunityPanel
+        titleId={community.titleId}
+        titleLabel={community.titleLabel}
+        unitId={community.unitId}
+        unitLabel={community.unitLabel}
+        unitHref={community.unitHref}
+        mediaType={community.mediaType}
+        theme={community.theme}
+      />
     </>
   );
 }

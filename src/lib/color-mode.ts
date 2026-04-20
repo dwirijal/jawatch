@@ -1,3 +1,5 @@
+import { readStoredString, writeStoredString } from './browser-storage.ts';
+
 export const COLOR_MODE_STORAGE_KEY = "jawatch-color-mode";
 
 export type ColorModePreference = "system" | "light" | "dark";
@@ -33,16 +35,8 @@ export function getSystemColorMode(): ResolvedColorMode {
 }
 
 export function readStoredColorMode(): ColorModePreference {
-  if (typeof window === "undefined") {
-    return "system";
-  }
-
-  try {
-    const stored = window.localStorage.getItem(COLOR_MODE_STORAGE_KEY);
-    return isColorModePreference(stored) ? stored : "system";
-  } catch {
-    return "system";
-  }
+  const stored = readStoredString(COLOR_MODE_STORAGE_KEY);
+  return isColorModePreference(stored) ? stored : "system";
 }
 
 function emitColorModeEvent(preference: ColorModePreference, resolved: ResolvedColorMode) {
@@ -76,11 +70,7 @@ export function applyColorModePreference(
   root.style.colorScheme = resolved;
 
   if (options?.persist !== false) {
-    try {
-      window.localStorage.setItem(COLOR_MODE_STORAGE_KEY, preference);
-    } catch {
-      // Storage access can fail in private browsing or restricted contexts.
-    }
+    writeStoredString(COLOR_MODE_STORAGE_KEY, preference);
   }
 
   emitColorModeEvent(preference, resolved);

@@ -1,6 +1,11 @@
 import 'server-only';
 
-import { getComicDb } from '@/lib/server/comic-db';
+import { getComicDb } from './comic-db.ts';
+import {
+  buildDramaEpisodeSlug,
+  buildSqlDramaEpisodeSlugExpression,
+  buildSqlDramaItemSlugExpression,
+} from '../media-slugs.ts';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -15,12 +20,17 @@ type DramaItemRow = {
   updated_at: string | null;
 };
 
-type DramaUnitRow = {
-  slug: string;
+type DramaEpisodeRow = {
+  unit_key: string;
   title: string | null;
   label: string | null;
   number: number | null;
   detail: JsonRecord | null;
+};
+
+type DramaResolvedEpisodeRow = DramaEpisodeRow & {
+  item_slug: string;
+  slug: string;
 };
 
 function readRecord(value: unknown): JsonRecord {
@@ -52,6 +62,20 @@ function stripEpisodeSuffix(title: string): string {
 function qualityRank(label: string): number {
   const parsed = Number.parseInt(label.replace(/[^0-9]/g, ''), 10);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function buildDramaItemSlugExpression(alias = 'i'): string {
+  return buildSqlDramaItemSlugExpression(`${alias}.title`, `${alias}.item_key`);
+}
+
+function buildDramaEpisodeSlugExpression(itemAlias = 'i', unitAlias = 'u'): string {
+  return buildSqlDramaEpisodeSlugExpression(
+    buildDramaItemSlugExpression(itemAlias),
+    `${unitAlias}.label`,
+    `${unitAlias}.title`,
+    `${unitAlias}.number::text`,
+    `${unitAlias}.unit_key`,
+  );
 }
 
 function getItemSynopsis(detail: JsonRecord): string {
@@ -127,10 +151,11 @@ async function listDramaItems(limit: number, preferredSource?: string): Promise<
     return [];
   }
 
+  const itemSlugExpression = buildDramaItemSlugExpression('i');
   const rows = await sql<DramaItemRow[]>`
     select
       i.item_key,
-      i.slug,
+      ${sql.unsafe(itemSlugExpression)} as slug,
       i.source,
       i.title,
       i.cover_url,
@@ -158,10 +183,12 @@ async function resolveDramaItem(slug: string): Promise<DramaItemRow | null> {
     return null;
   }
 
+  const itemSlugExpression = buildDramaItemSlugExpression('i');
+  const episodeSlugExpression = buildDramaEpisodeSlugExpression('i', 'u');
   const rows = await sql<DramaItemRow[]>`
     select
       i.item_key,
-      i.slug,
+      ${sql.unsafe(itemSlugExpression)} as slug,
       i.source,
       i.title,
       i.cover_url,
@@ -172,13 +199,13 @@ async function resolveDramaItem(slug: string): Promise<DramaItemRow | null> {
     where i.source in ('dracinly', 'drakorid')
       and i.media_type in ('series', 'drama')
       and (
-        i.slug = ${slug}
+        ${sql.unsafe(itemSlugExpression)} = ${slug}
         or exists (
           select 1
           from public.media_units u
           where u.item_key = i.item_key
             and u.unit_type = 'episode'
-            and u.slug = ${slug}
+            and ${sql.unsafe(episodeSlugExpression)} = ${slug}
         )
       )
     order by i.updated_at desc nulls last
@@ -188,15 +215,15 @@ async function resolveDramaItem(slug: string): Promise<DramaItemRow | null> {
   return rows[0] ?? null;
 }
 
-async function listDramaEpisodes(itemKey: string): Promise<DramaUnitRow[]> {
+async function listDramaEpisodes(itemKey: string): Promise<DramaEpisodeRow[]> {
   const sql = getComicDb();
   if (!sql) {
     return [];
   }
 
-  return sql<DramaUnitRow[]>`
+  return sql<DramaEpisodeRow[]>`
     select
-      u.slug,
+      u.unit_key,
       u.title,
       u.label,
       u.number,
@@ -204,30 +231,42 @@ async function listDramaEpisodes(itemKey: string): Promise<DramaUnitRow[]> {
     from public.media_units u
     where u.item_key = ${itemKey}
       and u.unit_type = 'episode'
-    order by u.number asc nulls last, u.updated_at asc nulls last, u.slug asc
+    order by
+      u.number asc nulls last,
+      u.updated_at asc nulls last,
+      coalesce(nullif(btrim(u.label), ''), nullif(btrim(u.title), ''), '') asc,
+      u.unit_key asc
   `;
 }
 
-async function resolveDramaEpisode(itemKey: string, slug: string, index: number): Promise<DramaUnitRow | null> {
+async function resolveDramaEpisode(itemKey: string, slug: string, index: number): Promise<DramaResolvedEpisodeRow | null> {
   const sql = getComicDb();
   if (!sql) {
     return null;
   }
 
-  const rows = await sql<DramaUnitRow[]>`
+  const itemSlugExpression = buildDramaItemSlugExpression('i');
+  const episodeSlugExpression = buildDramaEpisodeSlugExpression('i', 'u');
+  const rows = await sql<DramaResolvedEpisodeRow[]>`
     select
-      u.slug,
+      ${sql.unsafe(itemSlugExpression)} as item_slug,
+      ${sql.unsafe(episodeSlugExpression)} as slug,
+      u.unit_key,
       u.title,
       u.label,
       u.number,
       u.detail
     from public.media_units u
+    join public.media_items i on i.item_key = u.item_key
     where u.item_key = ${itemKey}
       and u.unit_type = 'episode'
-      and (u.slug = ${slug} or (u.number is not null and u.number = ${index}))
+      and (${sql.unsafe(episodeSlugExpression)} = ${slug} or (u.number is not null and u.number = ${index}))
     order by
-      case when u.slug = ${slug} then 0 else 1 end,
-      u.number asc nulls last
+      case when ${sql.unsafe(episodeSlugExpression)} = ${slug} then 0 else 1 end,
+      u.number asc nulls last,
+      u.updated_at asc nulls last,
+      coalesce(nullif(btrim(u.label), ''), nullif(btrim(u.title), ''), '') asc,
+      u.unit_key asc
     limit 1
   `;
 
@@ -251,10 +290,11 @@ export async function searchVerticalDramaFromDb(query: string) {
     return [];
   }
 
+  const itemSlugExpression = buildDramaItemSlugExpression('i');
   const rows = await sql<DramaItemRow[]>`
     select
       i.item_key,
-      i.slug,
+      ${sql.unsafe(itemSlugExpression)} as slug,
       i.source,
       i.title,
       i.cover_url,
@@ -267,7 +307,7 @@ export async function searchVerticalDramaFromDb(query: string) {
       and (
         i.search_vec @@ plainto_tsquery('simple', ${query})
         or i.title ilike ${`%${query}%`}
-        or i.slug ilike ${`%${query}%`}
+        or ${sql.unsafe(itemSlugExpression)} ilike ${`%${query}%`}
       )
     order by i.updated_at desc nulls last
     limit 24
@@ -295,7 +335,13 @@ export async function getVerticalDramaDetailFromDb(slug: string) {
     episodes: episodes.map((episode) => ({
       episode: String(episode.number ?? (readString(episode.label) || '')),
       index: String(episode.number ?? 1),
-      slug: episode.slug,
+      slug: buildDramaEpisodeSlug({
+        dramaSlug: item.slug,
+        label: episode.label,
+        title: episode.title,
+        number: episode.number,
+        fallbackKey: episode.unit_key,
+      }),
     })),
   };
 }
@@ -317,7 +363,9 @@ export async function getVerticalDramaEpisodeFromDb(slug: string, index: number)
   return {
     slug: item.slug,
     episodeSlug: episode.slug,
-    title: readString(episode.title) || `${stripEpisodeSuffix(item.title || titleFromSlug(item.slug))} Episode ${episode.number ?? index}`,
+    title:
+      readString(episode.title) ||
+      `${stripEpisodeSuffix(item.title || titleFromSlug(item.slug))} Episode ${episode.number ?? index}`,
     episode: String(episode.number ?? index),
     episodeIndex: episode.number ?? index,
     poster: item.cover_url || '',

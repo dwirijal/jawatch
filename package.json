@@ -2,16 +2,18 @@
   "name": "jawatch",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "postinstall": "node scripts/patch-opennext-load-manifest.mjs",
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev",
     "build": "next build",
+    "db:push:supabase": "bash -lc 'set -a; source .env.local >/dev/null 2>&1; SUPABASE_ACCESS_TOKEN=\"$SUPABASE_ACCESS_TOKEN\" supabase db push'",
     "verify": "npm run test:unit && npm run lint && npm run typecheck && npm run build && npm run perf:budgets",
     "perf:budgets": "node scripts/check-route-budgets.mjs",
     "perf:build-and-budgets": "npm run build && npm run perf:budgets",
     "smoke:production": "node scripts/production-smoke-check.mjs",
     "start": "next start",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "link:vercel": "npm exec --yes -- vercel link",
     "deploy:vercel": "npm exec --yes -- vercel --prod",
     "preview:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
@@ -24,7 +26,8 @@
     "test:security": "node scripts/security-check.mjs",
     "test:sources": "node scripts/source-health-check.mjs",
     "test:unit": "node --test tests/unit/*.test.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "smoke:supabase-personalization": "node scripts/supabase-personalization-smoke.mjs"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
@@ -43,6 +46,7 @@
     "animejs": "^4.3.6",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
+    "hls.js": "^1.6.16",
     "lucide-react": "^0.577.0",
     "next": "16.2.1",
     "postgres": "^3.4.8",
@@ -50,6 +54,7 @@
     "react-dom": "19.2.4",
     "redis": "^5.11.0",
     "sanitize-html": "^2.17.2",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.5.0",
     "zustand": "^5.0.12"
   },
@@ -62,6 +67,7 @@
     "@types/sanitize-html": "^2.16.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "supabase": "^2.92.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wrangler": "^4.76.0"

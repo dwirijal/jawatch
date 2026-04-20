@@ -1,8 +1,13 @@
 // Contract: jawatch uses embedded Supabase auth routes.
 
 import type { AuthLogoutRequest, AuthStatus, AuthUser } from '@/lib/auth-types';
-import { normalizeVaultAwareNextPath } from '@/lib/auth/next-path';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { normalizeVaultAwareNextPath } from './auth/next-path.ts';
+import {
+  resetSyncedAuthClientState,
+  syncAuthenticatedClientState,
+  syncAuthStoreOwnership,
+} from './auth/auth-client-personalization.ts';
+import { createSupabaseBrowserClient } from './supabase/client.ts';
 
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
@@ -91,10 +96,23 @@ export async function getAuthStatus(): Promise<AuthStatus> {
 
   const { data, error } = await browserClient.auth.getUser();
   if (error) {
+    resetSyncedAuthClientState();
+    syncAuthStoreOwnership(null);
     return { authenticated: false, user: null };
   }
 
   const user = normalizeUser(data.user ?? null);
+  syncAuthStoreOwnership(user?.id ?? null);
+
+  if (user?.id) {
+    try {
+      await syncAuthenticatedClientState(user.id);
+    } catch {
+      resetSyncedAuthClientState();
+    }
+  } else {
+    resetSyncedAuthClientState();
+  }
 
   return {
     authenticated: user !== null,

@@ -38,12 +38,26 @@ const ICONS = {
 
 export type LucideIconName = keyof typeof ICONS;
 
+function toPascalCaseIconName(iconName: string) {
+  return iconName
+    .trim()
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
+}
+
 export function resolveLucideIcon(iconName?: string | null): LucideIcon | null {
   if (!iconName) {
     return null;
   }
 
-  return ICONS[iconName as LucideIconName] ?? null;
+  if (iconName in ICONS) {
+    return ICONS[iconName as LucideIconName] ?? null;
+  }
+
+  const normalizedIconName = toPascalCaseIconName(iconName);
+  return ICONS[normalizedIconName as LucideIconName] ?? null;
 }
 
 export function renderLucideIcon(iconName: string | null | undefined, className: string): ReactNode {

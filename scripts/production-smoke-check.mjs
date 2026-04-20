@@ -6,7 +6,6 @@ const checks = [
   { path: '/watch', kind: 'html', label: 'watch hub' },
   { path: '/watch/movies', kind: 'html', label: 'movies browse' },
   { path: '/watch/series', kind: 'html', label: 'series browse' },
-  { path: '/watch/shorts', kind: 'html', label: 'shorts browse' },
   { path: '/read', kind: 'html', label: 'read hub' },
   { path: '/read/comics', kind: 'html', label: 'comics browse' },
   { path: '/sitemap.xml', kind: 'xml', label: 'sitemap' },

@@ -14,8 +14,8 @@ export type AdultEligibility = {
 
 const ONBOARDING_PATH = '/onboarding';
 const DEFAULT_RETURN_PATH = '/';
-const PROXY_AUTH_EXEMPT_EXACT_PATHS = new Set(['/login', '/logout', '/onboarding']);
-const PROXY_AUTH_EXEMPT_PREFIXES = ['/auth/callback', '/login/', '/logout/', '/onboarding/'];
+const PROXY_AUTH_EXEMPT_EXACT_PATHS = new Set(['/login', '/logout', '/onboarding', '/signup', '/forgot-password']);
+const PROXY_AUTH_EXEMPT_PREFIXES = ['/auth/callback', '/login/', '/logout/', '/onboarding/', '/signup/', '/forgot-password/'];
 const PROXY_STATIC_EXACT_PATHS = new Set([
   '/ads.txt',
   '/favicon.ico',

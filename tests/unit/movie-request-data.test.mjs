@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { createMovieDetailRequestCache } from '../../src/app/movies/[slug]/movie-detail-data.ts';
 import { createMovieWatchRequestCache } from '../../src/app/movies/movie-watch-data.ts';
 import { createMoviePageDataLoader } from '../../src/app/movies/movie-page-data.ts';
+import { resolveMoviePlaybackState } from '../../src/app/movies/[slug]/movie-playback-state.ts';
 import { resolveDynamicSitemapEntries } from '../../src/app/sitemap-utils.ts';
 import {
   buildMovieGenreRows,
@@ -38,6 +39,23 @@ test('sitemap dynamic entries fall back to static-only mode when dynamic loading
   assert.deepEqual(entries, []);
   assert.equal(warnings.length, 1);
   assert.match(warnings[0], /dynamic sitemap entries unavailable/);
+});
+
+test('sitemap dynamic entries fall back to static-only mode when dynamic loading times out', async () => {
+  const warnings = [];
+  const startedAt = Date.now();
+  const entries = await resolveDynamicSitemapEntries(
+    async () => new Promise((resolve) => {
+      setTimeout(() => resolve([{ slug: 'late-entry' }]), 50);
+    }),
+    (message) => warnings.push(message),
+    { timeoutMs: 5 },
+  );
+
+  assert.deepEqual(entries, []);
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /timeout/i);
+  assert.ok(Date.now() - startedAt < 45);
 });
 
 test('movie browse helpers pick featured, dedupe rows, and normalize sort modes', () => {
@@ -93,6 +111,63 @@ test('movie watch request cache keeps public and auth visibility separate', asyn
   assert.equal(calls, 2);
   assert.deepEqual(publicResult, { slug: 'shelter-2026', includeNsfw: false });
   assert.deepEqual(authResult, { slug: 'shelter-2026', includeNsfw: true });
+});
+
+test('movie playback state uses inline player when a playable default url exists', () => {
+  assert.deepEqual(
+    resolveMoviePlaybackState(
+      { slug: 'dancing-queens-2021', externalUrl: '/movies/dancing-queens-2021' },
+      {
+        canInlinePlayback: true,
+        defaultUrl: 'https://player.example/embed/123',
+        externalUrl: null,
+      },
+    ),
+    {
+      kind: 'inline',
+      href: '#player',
+      ctaLabel: 'Nonton sekarang',
+      message: null,
+    },
+  );
+});
+
+test('movie playback state keeps real external targets when they differ from the detail route', () => {
+  assert.deepEqual(
+    resolveMoviePlaybackState(
+      { slug: 'dancing-queens-2021', externalUrl: '/movies/dancing-queens-2021' },
+      {
+        canInlinePlayback: false,
+        defaultUrl: '',
+        externalUrl: 'https://stream.example/watch/dancing-queens-2021',
+      },
+    ),
+    {
+      kind: 'external',
+      href: 'https://stream.example/watch/dancing-queens-2021',
+      ctaLabel: 'Buka sumber',
+      message: null,
+    },
+  );
+});
+
+test('movie playback state marks self-link watch fallbacks as unavailable', () => {
+  assert.deepEqual(
+    resolveMoviePlaybackState(
+      { slug: 'dancing-queens-2021', externalUrl: '/movies/dancing-queens-2021' },
+      {
+        canInlinePlayback: false,
+        defaultUrl: '',
+        externalUrl: '/movies/dancing-queens-2021',
+      },
+    ),
+    {
+      kind: 'unavailable',
+      href: null,
+      ctaLabel: 'Belum bisa diputar',
+      message: 'Judul ini sudah ada di katalog, tetapi sumber stream belum tersedia.',
+    },
+  );
 });
 
 test('movie page data loader starts hub and genre loads without a waterfall', async () => {

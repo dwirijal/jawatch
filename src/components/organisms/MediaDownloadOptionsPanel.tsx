@@ -201,15 +201,15 @@ export default function MediaDownloadOptionsPanel({
     <Paper id={id} as="article" tone="muted" shadow="sm" className="space-y-4 p-4 md:space-y-5 md:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Downloads</p>
-          <h2 className="mt-1.5 text-lg font-black tracking-tight text-white md:text-xl">Download Options</h2>
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Unduhan</p>
+          <h2 className="mt-1.5 text-lg font-black tracking-tight text-white md:text-xl">Pilihan download</h2>
         </div>
-        <Badge variant="outline">{normalizedGroups.length} Available</Badge>
+        <Badge variant="outline">{normalizedGroups.length} tersedia</Badge>
       </div>
 
       <div className="space-y-3.5">
         <div className="space-y-2.5">
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Quality</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Kualitas</p>
           <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className="flex w-max items-center gap-1.5 pb-1">
               {qualityOptions.map((quality) => {
@@ -251,13 +251,13 @@ export default function MediaDownloadOptionsPanel({
                       <Download className="h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Method</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Metode</p>
                       <p className="mt-1 text-sm font-black tracking-[0.08em] text-white/90">{group.format}</p>
                     </div>
                   </div>
 
                   <span className={cn('rounded-[var(--radius-sm)] border px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.18em]', tone.label)}>
-                    Method
+                    Metode
                   </span>
                 </div>
 

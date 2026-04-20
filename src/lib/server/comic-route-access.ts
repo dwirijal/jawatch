@@ -33,7 +33,7 @@ export async function resolveComicRouteIncludeNsfw(request: Request): Promise<bo
     }
   }
 
-  const { resolveViewerNsfwAccess } = await import('@/app/loadHomePageData');
+  const { resolveViewerNsfwAccess } = await import('./viewer-nsfw-access.ts');
   return resolveViewerNsfwAccess();
 }
 

@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Paper } from '@/components/atoms/Paper';
 import { AdRenderState } from '@/lib/ad-section-visibility';
+import { trackMarketingEvent } from '@/lib/marketing-events';
 import { cn, ThemeType } from '@/lib/utils';
 
 interface AdsProps {
@@ -66,6 +67,7 @@ export function Ads({ type = 'horizontal', className, theme, onStatusChange }: A
 
     const slot = adsenseRef.current;
     let settled = false;
+    let trackedReady = false;
 
     const updateStatus = (nextStatus: AdRenderState) => {
       if (settled && nextStatus === 'pending') {
@@ -74,6 +76,11 @@ export function Ads({ type = 'horizontal', className, theme, onStatusChange }: A
 
       if (nextStatus !== 'pending') {
         settled = true;
+      }
+
+      if (nextStatus === 'ready' && !trackedReady) {
+        trackedReady = true;
+        trackMarketingEvent('ad_slot_ready', { type });
       }
 
       setStatus((current) => (current === nextStatus ? current : nextStatus));
@@ -134,7 +141,7 @@ export function Ads({ type = 'horizontal', className, theme, onStatusChange }: A
       window.clearTimeout(retryTimer);
       window.clearTimeout(settleTimer);
     };
-  }, [hasAdsenseInventory]);
+  }, [hasAdsenseInventory, type]);
 
   if (status === 'hidden') {
     return null;
@@ -154,8 +161,8 @@ export function Ads({ type = 'horizontal', className, theme, onStatusChange }: A
         )}
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between px-3 py-2">
-          <span className="rounded-[var(--radius-xs)] border border-border-subtle bg-background/80 px-2 py-1 text-[9px] font-black uppercase tracking-[0.24em] text-zinc-500 backdrop-blur">
-            Sponsored
+          <span className="rounded-[var(--radius-xs)] border border-border-subtle bg-background/80 px-2 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500 backdrop-blur">
+            Sponsor
           </span>
         </div>
 

@@ -30,31 +30,11 @@ export function buildComicVisibilityCondition(includeNsfw: boolean, itemAlias = 
   const nsfwColumn = `${prefix}is_nsfw`;
 
   return `
-    and not (
-      coalesce(${nsfwColumn}, false)
-      or exists (
-        select 1
-        from jsonb_array_elements_text(
-          case
-            when jsonb_typeof(${detailColumn}->'genres') = 'array' then ${detailColumn}->'genres'
-            when jsonb_typeof(${detailColumn}->'genre_names') = 'array' then ${detailColumn}->'genre_names'
-            when jsonb_typeof(${detailColumn}->'category_names') = 'array' then ${detailColumn}->'category_names'
-            else '[]'::jsonb
-          end
-        ) as label_name(value)
-        where lower(label_name.value) = 'nsfw'
-      )
-      or exists (
-        select 1
-        from jsonb_array_elements_text(
-          case
-            when jsonb_typeof(${detailColumn}->'tags') = 'array' then ${detailColumn}->'tags'
-            else '[]'::jsonb
-          end
-        ) as tag_name(value)
-        where lower(tag_name.value) = 'nsfw'
-      )
-    )
+    and coalesce(${nsfwColumn}, false) = false
+    and not (${detailColumn} -> 'genres' @> '["NSFW"]' or ${detailColumn} -> 'genres' @> '["nsfw"]')
+    and not (${detailColumn} -> 'genre_names' @> '["NSFW"]' or ${detailColumn} -> 'genre_names' @> '["nsfw"]')
+    and not (${detailColumn} -> 'category_names' @> '["NSFW"]' or ${detailColumn} -> 'category_names' @> '["nsfw"]')
+    and not (${detailColumn} -> 'tags' @> '["NSFW"]' or ${detailColumn} -> 'tags' @> '["nsfw"]')
   `;
 }
 
@@ -62,8 +42,7 @@ export function buildComicReadyChapterCondition(unitAlias = 'u'): string {
   const prefix = normalizeAlias(unitAlias);
 
   return `${prefix}unit_type = 'chapter'
-      and jsonb_typeof(${prefix}detail->'pages') = 'array'
-      and jsonb_array_length(${prefix}detail->'pages') > 0`;
+      and coalesce(jsonb_array_length(${prefix}detail->'pages'), 0) > 0`;
 }
 
 export function buildComicReadyItemCondition(itemAlias = 'm'): string {
@@ -73,6 +52,7 @@ export function buildComicReadyItemCondition(itemAlias = 'm'): string {
       select 1
       from public.media_units ready_unit
       where ready_unit.item_key = ${prefix}item_key
-        and ${buildComicReadyChapterCondition('ready_unit')}
+        and ready_unit.unit_type = 'chapter'
+        and coalesce(jsonb_array_length(ready_unit.detail->'pages'), 0) > 0
     )`;
 }

@@ -176,11 +176,22 @@ export function resolveSeriesCanonicalRedirect<T extends CanonicalSeriesRouteTar
 export function buildCanonicalEpisodeLateralSubquery(
   canonicalAlias = 'cu',
   sourceUnitAlias = 'u',
+  enabled = true,
 ): string {
+  if (!enabled) {
+    return `
+        select
+          null::text as unit_key,
+          null::text as title,
+          null::text as label,
+          null::real as number,
+          null::timestamptz as updated_at
+    `;
+  }
+
   return `
         select
           ${canonicalAlias}.unit_key,
-          ${canonicalAlias}.slug,
           ${canonicalAlias}.title,
           ${canonicalAlias}.label,
           ${canonicalAlias}.number,

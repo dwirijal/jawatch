@@ -46,6 +46,10 @@ function flattenPreviewItems(result: UnifiedSearchResult): SearchResultItem[] {
     .slice(0, 6);
 }
 
+function buildSearchCacheKey(query: string): string {
+  return query.trim().toLowerCase();
+}
+
 export function SearchModal() {
   const { isSearchOpen, setSearchOpen } = useUIStore();
   const [query, setQuery] = React.useState('');
@@ -53,12 +57,14 @@ export function SearchModal() {
   const [loading, setLoading] = React.useState(false);
   const router = useRouter();
   const latestRequestId = React.useRef(0);
+  const searchCacheRef = React.useRef(new Map<string, UnifiedSearchResult>());
   const inputId = React.useId();
+  const normalizedQuery = query.trim();
+  const deferredQuery = React.useDeferredValue(normalizedQuery);
   const previewItems = React.useMemo(() => flattenPreviewItems(result), [result]);
 
   const openSearchResults = React.useCallback(() => {
-    const trimmed = query.trim();
-    if (trimmed.length < 2) {
+    if (normalizedQuery.length < 2) {
       return;
     }
 
@@ -66,25 +72,38 @@ export function SearchModal() {
     setLoading(false);
     setResult(createEmptySearchState(''));
     latestRequestId.current += 1;
-    router.push(`/search?q=${encodeURIComponent(trimmed)}&type=all`);
-  }, [query, router, setSearchOpen]);
+    router.push(`/search?q=${encodeURIComponent(normalizedQuery)}&type=all`);
+  }, [normalizedQuery, router, setSearchOpen]);
 
   React.useEffect(() => {
-    if (query.length < 2) {
+    if (deferredQuery.length < 2) {
       latestRequestId.current += 1;
       setLoading(false);
-      setResult(createEmptySearchState(query));
+      setResult(createEmptySearchState(deferredQuery));
       return;
     }
 
+    const cacheKey = buildSearchCacheKey(deferredQuery);
+    const cachedResult = searchCacheRef.current.get(cacheKey);
+    if (cachedResult) {
+      latestRequestId.current += 1;
+      setLoading(false);
+      setResult(cachedResult);
+      return;
+    }
+
+    let controller: AbortController | null = null;
     const timeoutId = window.setTimeout(() => {
       const requestId = latestRequestId.current + 1;
       latestRequestId.current = requestId;
+      controller = new AbortController();
 
       void (async () => {
         setLoading(true);
         try {
-          const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=all&limit=4`);
+          const response = await fetch(`/api/search?q=${encodeURIComponent(deferredQuery)}&type=all&limit=4`, {
+            signal: controller?.signal,
+          });
           if (!response.ok) {
             throw new Error(`search route failed with status ${response.status}`);
           }
@@ -94,11 +113,16 @@ export function SearchModal() {
             return;
           }
 
+          searchCacheRef.current.set(cacheKey, payload);
           setResult(payload);
         } catch (error) {
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            return;
+          }
+
           if (latestRequestId.current === requestId) {
             console.error(error);
-            setResult(createEmptySearchState(query));
+            setResult(createEmptySearchState(deferredQuery));
           }
         } finally {
           if (latestRequestId.current === requestId) {
@@ -106,12 +130,13 @@ export function SearchModal() {
           }
         }
       })();
-    }, 260);
+    }, 220);
 
     return () => {
       window.clearTimeout(timeoutId);
+      controller?.abort();
     };
-  }, [query]);
+  }, [deferredQuery]);
 
   const onSelect = React.useCallback((href: string) => {
     setSearchOpen(false);
@@ -125,7 +150,7 @@ export function SearchModal() {
   return (
     <ModalRoot open={isSearchOpen} onOpenChange={setSearchOpen}>
       <ModalContent className="w-full max-w-3xl p-4 animate-in zoom-in-95 duration-300" overlayClassName="z-[200] bg-black/50 backdrop-blur-2xl animate-in fade-in duration-300">
-        <ModalTitle className="sr-only">Search media</ModalTitle>
+        <ModalTitle className="sr-only">Cari konten</ModalTitle>
         <Paper glassy padded={false} className="overflow-hidden rounded-[var(--radius-2xl)] border border-border-subtle bg-surface-elevated shadow-[0_34px_90px_-48px_var(--shadow-color-strong)]">
           <div className="flex items-center border-b border-border-subtle bg-surface-1 px-6 py-6">
             <Search className="mr-4 h-6 w-6 text-muted-foreground" />
@@ -133,8 +158,8 @@ export function SearchModal() {
               id={inputId}
               variant="search"
               autoFocus
-              placeholder="Search titles across watch and read..."
-              aria-label="Search media"
+              placeholder="Cari judul nonton atau baca..."
+              aria-label="Cari konten"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(event) => {
@@ -153,7 +178,7 @@ export function SearchModal() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setSearchOpen(false)}
-                aria-label="Close search"
+                aria-label="Tutup pencarian"
                 className="h-10 w-10 rounded-full text-muted-foreground hover:bg-surface-elevated hover:text-foreground"
               >
                 <X className="h-5 w-5" />
@@ -173,13 +198,12 @@ export function SearchModal() {
                         fill
                         sizes="112px"
                         className="object-cover"
-                        unoptimized
                       />
                       <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(9,10,14,0.52)_100%)]" />
                     </div>
                     <div className="space-y-3 p-4">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant={result.topMatch.theme}>Top Match</Badge>
+                        <Badge variant={result.topMatch.theme}>Paling cocok</Badge>
                         {result.topMatch.badgeText ? <Badge variant="outline">{result.topMatch.badgeText}</Badge> : null}
                       </div>
                       <div className="space-y-1.5">
@@ -219,7 +243,6 @@ export function SearchModal() {
                               fill
                               sizes="56px"
                               className="object-cover transition-transform duration-500 group-hover:scale-110"
-                              unoptimized
                             />
                           </div>
                           <div className="min-w-0 flex-1 space-y-1.5">
@@ -245,14 +268,14 @@ export function SearchModal() {
                 </div>
               ) : query.length >= 2 && !loading ? (
                 <Paper tone="muted" className="space-y-3 text-center">
-                  <p className="font-[var(--font-heading)] text-xl font-bold tracking-[-0.04em] text-foreground">No title matches yet</p>
+                  <p className="font-[var(--font-heading)] text-xl font-bold tracking-[-0.04em] text-foreground">Belum ada hasil</p>
                   <p className="text-sm leading-6 text-muted-foreground">
-                    Search stays title-first here. Open the canonical search page for broader grouped results.
+                    Coba judul lain atau tekan Enter untuk mencari di semua kategori.
                   </p>
                 </Paper>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Quick Keys</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Cari cepat</p>
                   <div className="flex flex-wrap gap-2">
                     {['One Piece', 'Solo Leveling', 'Avengers', 'Naruto'].map((suggestion) => (
                       <Button
@@ -273,7 +296,7 @@ export function SearchModal() {
               <div className="flex items-center justify-between border-t border-border-subtle pt-4 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Command className="h-4 w-4" />
-                  <span>Open canonical search for the full grouped result view</span>
+                  <span>Tekan Enter untuk lihat semua hasil</span>
                 </div>
                 <Kbd>Enter</Kbd>
               </div>

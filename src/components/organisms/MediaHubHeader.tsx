@@ -11,6 +11,9 @@ export interface MediaHubSpotlight {
   meta?: string;
   image?: string;
   imageAlt?: string;
+  logo?: string;
+  logoAlt?: string;
+  useLogo?: boolean;
   badges?: string[];
   actions?: React.ReactNode;
 }
@@ -58,63 +61,82 @@ export function MediaHubHeader({
   );
   const iconClassName = cn(layoutVariant === 'editorial' ? 'h-6 w-6 md:h-7 md:w-7' : 'h-5 w-5 md:h-6 md:w-6', config.contrast);
   const spotlightBadges = spotlight?.badges?.map((badge) => badge.trim()).filter(Boolean) ?? [];
+  const [imageFailed, setImageFailed] = React.useState(false);
+  const [logoFailed, setLogoFailed] = React.useState(false);
+  const spotlightImage = imageFailed || !spotlight?.image?.trim() ? '' : spotlight.image.trim();
+  const spotlightLogo = spotlight?.useLogo === false || logoFailed || !spotlight?.logo?.trim() ? '' : spotlight.logo.trim();
+
+  React.useEffect(() => {
+    setImageFailed(false);
+  }, [spotlight?.image]);
+
+  React.useEffect(() => {
+    setLogoFailed(false);
+  }, [spotlight?.logo]);
 
   if (layoutVariant === 'editorial' && spotlight) {
     return (
-      <header className="surface-panel-elevated relative isolate overflow-hidden border-b border-border-subtle">
-        {spotlight.image ? (
+      <header className="relative isolate overflow-hidden border-b border-border-subtle/70">
+        {spotlightImage ? (
           <Image
-            src={spotlight.image}
+            src={spotlightImage}
             alt={spotlight.imageAlt || title}
             fill
             priority={spotlightPriority}
-            className="object-cover opacity-55"
+            className="object-cover"
             sizes="100vw"
-            quality={76}
+            quality={82}
             unoptimized
+            onError={() => setImageFailed(true)}
           />
         ) : null}
 
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_48%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(6,7,10,0.96)_0%,rgba(6,7,10,0.82)_48%,rgba(6,7,10,0.46)_100%)]" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(180deg,transparent_0%,rgba(9,10,14,0.88)_100%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_42%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(6,7,10,0.46)_0%,rgba(6,7,10,0.2)_44%,rgba(6,7,10,0.38)_100%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0.08)_0%,rgba(8,10,14,0.16)_24%,rgba(8,10,14,0.9)_100%)]" />
 
-        <div className={cn(containerClassName, 'relative z-10 flex min-h-[20rem] items-end py-8 sm:min-h-[22rem] sm:py-10 md:min-h-[26rem] md:py-12 lg:min-h-[28rem]')}>
-          <div className="w-full space-y-5">
-            <div className="max-w-3xl space-y-4 rounded-[var(--radius-2xl)] border border-white/10 bg-black/28 p-4 shadow-[0_36px_96px_-64px_rgba(0,0,0,0.96)] backdrop-blur-md sm:p-5 md:space-y-5 md:p-6">
+        <div className={cn(containerClassName, 'relative z-10 flex min-h-[11.5rem] items-end py-4 sm:min-h-[12.5rem] sm:py-5 md:min-h-[18rem] md:py-6 lg:min-h-[21rem] lg:py-8 xl:min-h-[23rem]')}>
+          <div className="w-full space-y-4 md:space-y-5">
+            <div className="max-w-3xl space-y-3 md:space-y-4">
               <div className="flex flex-wrap items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/14 bg-black/30 backdrop-blur-sm">
-                  {Icon ? (
-                    <Icon className="h-5 w-5 text-white" />
-                  ) : iconName ? (
-                    renderLucideIcon(iconName, 'h-5 w-5 text-white')
-                  ) : (
-                    <Grid3X3 className="h-5 w-5 text-white" />
-                  )}
-                </div>
-
                 {eyebrow ? (
-                  <span className="text-[10px] font-black uppercase tracking-[0.32em] text-zinc-300">
+                  <span className="text-[10px] font-black uppercase tracking-[0.28em] text-zinc-200/82">
                     {eyebrow}
                   </span>
                 ) : null}
 
                 {spotlight.label ? (
-                  <span className="rounded-full border border-white/16 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/92">
+                  <span className="rounded-full border border-white/14 bg-black/24 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/92 backdrop-blur-sm">
                     {spotlight.label}
                   </span>
                 ) : null}
               </div>
 
-              <div className="space-y-3">
-                <h1 className="max-w-3xl text-balance font-[var(--font-heading)] text-[clamp(2.35rem,5vw,4.5rem)] font-bold leading-[0.94] tracking-[-0.06em] text-white">
-                  {title}
-                </h1>
-                <p className="max-w-2xl text-sm leading-6 text-zinc-200 md:text-base md:leading-7">
+              <div className="space-y-2.5 md:space-y-3">
+                {spotlightLogo ? (
+                  <div className="space-y-2">
+                    <h1 className="sr-only">{title}</h1>
+                    <Image
+                      src={spotlightLogo}
+                      alt={spotlight?.logoAlt || title}
+                      width={960}
+                      height={384}
+                      sizes="(max-width: 767px) 70vw, (max-width: 1279px) 34rem, 40rem"
+                      className="h-auto max-h-[3.25rem] w-auto max-w-[min(64vw,22rem)] object-contain drop-shadow-[0_18px_36px_rgba(0,0,0,0.38)] sm:max-h-[4rem] md:max-h-[4.5rem] md:max-w-[28rem] lg:max-h-[5rem] lg:max-w-[32rem]"
+                      unoptimized
+                      onError={() => setLogoFailed(true)}
+                    />
+                  </div>
+                ) : (
+                  <h1 className="line-clamp-2 max-w-3xl text-balance font-[var(--font-heading)] text-[clamp(1.85rem,7vw,4.5rem)] font-bold leading-[0.94] tracking-[-0.06em] text-white">
+                    {title}
+                  </h1>
+                )}
+                <p className="max-w-2xl text-xs leading-5 text-zinc-100/84 sm:text-sm sm:leading-6 md:text-base md:leading-7">
                   {description}
                 </p>
                 {spotlight.meta ? (
-                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-zinc-300/90 md:text-xs">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-200/70 md:text-xs">
                     {spotlight.meta}
                   </p>
                 ) : null}
@@ -125,7 +147,7 @@ export function MediaHubHeader({
                   {spotlightBadges.map((badge) => (
                     <span
                       key={badge}
-                      className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-100"
+                      className="rounded-full border border-white/12 bg-black/20 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-100 backdrop-blur-sm"
                     >
                       {badge}
                     </span>
@@ -134,16 +156,20 @@ export function MediaHubHeader({
               ) : null}
 
               {spotlight.actions || children ? (
-                <div className="flex flex-wrap items-center gap-3">
-                  {spotlight.actions}
-                  {children}
+                <div className="w-fit max-w-full rounded-[var(--radius-xl)] border border-white/10 bg-black/26 p-2.5 shadow-[0_24px_70px_-38px_rgba(0,0,0,0.72)] backdrop-blur-md sm:p-3">
+                  <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                    {spotlight.actions}
+                    {children}
+                  </div>
                 </div>
               ) : null}
             </div>
 
             {footer ? (
-              <div className="flex min-h-[3.5rem] flex-col gap-3 border-t border-white/10 pt-4 md:min-h-0 md:flex-row md:items-center md:justify-between md:gap-4">
-                {footer}
+              <div className="border-t border-white/10 pt-3 md:pt-4">
+                <div className="flex min-h-[3rem] flex-col gap-3 md:min-h-0 md:flex-row md:items-center md:justify-between md:gap-4">
+                  {footer}
+                </div>
               </div>
             ) : null}
           </div>
@@ -154,18 +180,18 @@ export function MediaHubHeader({
 
   if (layoutVariant === 'editorial') {
     return (
-      <header className="surface-panel-elevated relative overflow-hidden px-4 py-6 sm:px-6 sm:py-7 md:px-8 md:py-8">
+      <header className="surface-panel-elevated relative overflow-hidden px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-7">
         <div className={cn('pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full opacity-[0.2] blur-3xl', config.primary)} />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_72%)]" />
-        <div className={cn(containerClassName, 'relative z-10 space-y-5 md:space-y-6')}>
+        <div className={cn(containerClassName, 'relative z-10 space-y-4 md:space-y-5')}>
           <div className={cn('grid gap-5 lg:gap-6', children ? 'xl:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)] xl:items-end' : undefined)}>
-            <div className="space-y-4 md:space-y-5">
+            <div className="space-y-3.5 md:space-y-4">
               {eyebrow ? (
                 <p className="text-[10px] font-black uppercase tracking-[0.32em] text-muted-foreground">{eyebrow}</p>
               ) : null}
 
-              <div className="max-w-4xl space-y-3 md:space-y-4">
-                <div className="flex items-start gap-3.5 md:gap-4">
+              <div className="max-w-3xl space-y-3 md:space-y-4">
+                <div className="flex items-start gap-3 md:gap-4">
                   <div className={iconWrapperClassName}>
                     {Icon ? (
                       <Icon className={iconClassName} />
@@ -176,9 +202,11 @@ export function MediaHubHeader({
                     )}
                   </div>
 
-                  <div className="min-w-0 space-y-3">
-                    <h1 className={titleClassName}>{title}</h1>
-                    <p className="max-w-3xl text-sm leading-6 text-muted-foreground md:text-[1.02rem] md:leading-7">
+                  <div className="min-w-0 space-y-2.5">
+                    <h1 className="max-w-3xl text-balance font-[var(--font-heading)] text-[clamp(2.1rem,5vw,3.5rem)] font-bold leading-[0.96] tracking-[-0.055em] text-foreground">
+                      {title}
+                    </h1>
+                    <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
                       {description}
                     </p>
                   </div>

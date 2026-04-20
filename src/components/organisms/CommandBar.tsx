@@ -100,7 +100,7 @@ export const CommandBar = () => {
                           <Shuffle className="h-4 w-4 text-[#a3b1a3]" />
                         </div>
                         <div>
-                          <div className="text-sm font-bold">Shuffle Shorts</div>
+                          <div className="text-sm font-bold">Surprise Me</div>
                           <div className="text-[10px] text-[#a3b1a3]/40">Discover something new</div>
                         </div>
                       </button>

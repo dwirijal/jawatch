@@ -1,8 +1,8 @@
 import 'server-only';
 
 import { createHash } from 'node:crypto';
-import { buildComicCacheKey, incrementComicCacheCounter } from '@/lib/server/comic-cache';
-import { buildPrivateNoStoreCacheControl } from '@/lib/cloudflare-cache';
+import { buildComicCacheKey, incrementComicCacheCounter } from './comic-cache.ts';
+import { buildPrivateNoStoreCacheControl } from '../cloudflare-cache.ts';
 
 function getClientIp(request: Request): string | null {
   const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();

@@ -18,6 +18,7 @@ export interface MediaCardProps {
   contentLabel?: string;
   theme?: ThemeType;
   aspectRatio?: CardAspectRatio;
+  displayVariant?: 'default' | 'shelf';
   className?: string;
   prefetch?: boolean;
 }
@@ -81,6 +82,10 @@ function normalizeCardImage(image: string, theme: ThemeType): string {
     return '';
   }
 
+  if (trimmed.startsWith('/') || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    return trimmed;
+  }
+
   if (theme === 'movie') {
     return trimmed;
   }
@@ -138,6 +143,7 @@ export function MediaCard({
   contentLabel,
   theme = 'default',
   aspectRatio = 'default',
+  displayVariant = 'default',
   className,
   prefetch,
 }: MediaCardProps) {
@@ -151,13 +157,115 @@ export function MediaCard({
   const typeLabel = (contentLabel?.trim() || getMediaKindLabel(theme)).toUpperCase();
   const auxiliaryBadge = badgeText?.trim() || '';
   const showAuxiliaryBadge = auxiliaryBadge && auxiliaryBadge.toUpperCase() !== typeLabel;
+  const effectiveAspectRatio = displayVariant === 'shelf' && aspectRatio === 'default' ? 'landscape' : aspectRatio;
+  const isShelfVariant = displayVariant === 'shelf';
+  const displayMetaLine = metaLine?.trim();
 
   React.useEffect(() => {
     setDisplayImage(normalizeCardImage(image, theme));
     setImageLoadFailed(false);
   }, [image, theme]);
 
-  const cardBody = (
+  const posterSurface = theme === 'novel' ? (
+    <BookCoverArt
+      src={displayImage}
+      title={title}
+      subtitle={effectiveSubtitle}
+      sizes={isShelfVariant ? '(max-width: 767px) 88vw, (max-width: 1279px) 48vw, 34vw' : '(max-width: 640px) 46vw, (max-width: 1024px) 24vw, 18vw'}
+      imageClassName="transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+    />
+  ) : displayImage && !imageLoadFailed ? (
+    <Image
+      src={displayImage}
+      alt={title}
+      fill
+      className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+      sizes={isShelfVariant ? '(max-width: 767px) 88vw, (max-width: 1279px) 48vw, 34vw' : '(max-width: 640px) 46vw, (max-width: 1024px) 24vw, 18vw'}
+      quality={isShelfVariant ? 82 : 78}
+      unoptimized
+      onError={() => setImageLoadFailed(true)}
+    />
+  ) : (
+    <div className="jawatch-poster-missing flex h-full w-full items-end bg-[linear-gradient(180deg,var(--surface-2)_0%,var(--surface-1)_100%)]" />
+  );
+
+  const cardBody = isShelfVariant ? (
+    <div
+      className="group relative h-full overflow-hidden rounded-[var(--radius-2xl)] border border-white/10 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-elevated)_82%,white_18%)_0%,var(--surface-1)_100%)] shadow-[0_28px_72px_-48px_var(--shadow-color-strong)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-white/18 hover:shadow-[0_38px_100px_-58px_var(--shadow-color-strong)]"
+      style={
+        {
+          '--card-glow': accent.glow,
+          '--card-badge-bg': accent.labelBg,
+          '--card-badge-text': accent.labelText,
+        } as React.CSSProperties
+      }
+    >
+      <div className="absolute inset-0">
+        {posterSurface}
+      </div>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--card-glow),transparent_56%)] opacity-90" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(7,8,11,0.08)_0%,rgba(7,8,11,0.18)_38%,rgba(7,8,11,0.88)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(7,8,11,0.42)_0%,rgba(7,8,11,0.08)_45%,rgba(7,8,11,0.42)_100%)]" />
+
+      <div className="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5 sm:left-4 sm:top-4">
+        <div className="rounded-full border border-white/16 bg-black/42 px-2.5 py-1 backdrop-blur-md">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
+            {typeLabel}
+          </span>
+        </div>
+        {showAuxiliaryBadge ? (
+          <div className="rounded-full border border-white/16 bg-[var(--card-badge-bg)] px-2.5 py-1 backdrop-blur-md">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--card-badge-text)]">
+              {auxiliaryBadge}
+            </span>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+        <div className="max-w-[85%] space-y-2 sm:max-w-[78%]">
+          <Typography
+            as="h3"
+            className={cn(
+              'line-clamp-2 text-white transition-colors duration-200 group-hover:text-white/95',
+              compactCopy ? 'text-base leading-5 sm:text-lg' : 'text-lg leading-5 sm:text-[1.35rem] sm:leading-6',
+            )}
+          >
+            {displayTitle}
+          </Typography>
+
+          {effectiveSubtitle ? (
+            <p className="line-clamp-2 text-[11px] leading-5 text-white/78 sm:text-sm sm:leading-5">
+              {effectiveSubtitle}
+            </p>
+          ) : null}
+
+          <div className="flex items-center gap-2 pt-1 text-white/72">
+            {displayMetaLine ? (
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/78">
+                {displayMetaLine}
+              </p>
+            ) : null}
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/14 bg-black/22 transition-transform duration-200 group-hover:translate-x-1">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : (
     <div
       className="group relative flex h-full flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border-subtle bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-elevated)_90%,white_10%)_0%,var(--surface-1)_100%)] shadow-[0_24px_60px_-42px_var(--shadow-color)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-border-strong hover:shadow-[0_36px_90px_-56px_var(--shadow-color-strong)]"
       style={
@@ -171,48 +279,20 @@ export function MediaCard({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,var(--card-glow),transparent_72%)] opacity-90" />
 
       <div className="relative min-h-0 flex-1 overflow-hidden">
-        {theme === 'novel' ? (
-          <BookCoverArt
-            src={displayImage}
-            title={title}
-            subtitle={effectiveSubtitle}
-            sizes="(max-width: 640px) 46vw, (max-width: 1024px) 24vw, 18vw"
-            imageClassName="transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-          />
-        ) : displayImage && !imageLoadFailed ? (
-          <>
-            <Image
-              src={displayImage}
-              alt={title}
-              fill
-              className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-              sizes="(max-width: 640px) 46vw, (max-width: 1024px) 24vw, 18vw"
-              quality={78}
-              unoptimized
-              onError={() => setImageLoadFailed(true)}
-            />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(7,8,11,0.08)_40%,rgba(7,8,11,0.72)_100%)]" />
-          </>
-        ) : (
-          <div className="flex h-full w-full flex-col items-start justify-end bg-[linear-gradient(180deg,var(--surface-2)_0%,var(--surface-1)_100%)] p-5">
-            <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">
-              Archive
-            </span>
-            <span className="mt-3 font-[var(--font-heading)] text-xl leading-tight text-foreground">
-              {title}
-            </span>
-          </div>
-        )}
+        {posterSurface}
+        {(displayImage && !imageLoadFailed) || theme === 'novel' ? (
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(7,8,11,0.08)_40%,rgba(7,8,11,0.72)_100%)]" />
+        ) : null}
 
         <div className="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5">
           <div className="rounded-full border border-white/18 bg-black/55 px-2.5 py-1 backdrop-blur-md">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
               {typeLabel}
             </span>
           </div>
           {showAuxiliaryBadge ? (
             <div className="rounded-full border border-white/18 bg-[var(--card-badge-bg)] px-2.5 py-1 backdrop-blur-md">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--card-badge-text)]">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--card-badge-text)]">
                 {auxiliaryBadge}
               </span>
             </div>
@@ -240,9 +320,9 @@ export function MediaCard({
         </div>
 
         <div className="mt-auto flex items-center gap-3 pt-1">
-          {metaLine ? (
+          {displayMetaLine ? (
             <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
-              {metaLine}
+              {displayMetaLine}
             </p>
           ) : null}
           <div className="h-px flex-1 bg-border-subtle" />
@@ -272,7 +352,8 @@ export function MediaCard({
   const wrapperClassName = cn(
     href ? 'focus-tv' : 'cursor-default',
     'relative block',
-    getCardAspectClass(aspectRatio, theme),
+    getCardAspectClass(effectiveAspectRatio, theme),
+    isShelfVariant && 'mx-auto w-full max-w-[356px] md:max-w-none',
     className,
   );
 

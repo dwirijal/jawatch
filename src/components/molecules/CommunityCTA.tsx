@@ -43,7 +43,7 @@ export function CommunityCTA({ title, type, theme = 'default' }: CommunityCTAPro
 
           <Button variant={theme} size="lg" className="h-12 rounded-[var(--radius-sm)] px-6 text-sm md:h-14 md:px-8 md:text-base" asChild>
             <a href="https://discord.gg/gu5bgTXxhQ" target="_blank" rel="noopener noreferrer">
-              Join Community
+              Gabung komunitas
               <ExternalLink className="ml-2.5 h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 md:ml-3 md:h-5 md:w-5" />
             </a>
           </Button>

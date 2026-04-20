@@ -1,8 +1,8 @@
 import 'server-only';
 
 import { cache } from 'react';
-import type { AuthStatus } from '@/lib/auth-types';
-import { getCurrentUser } from '@/lib/auth/session';
+import type { AuthStatus } from '../auth-types.ts';
+import { getCurrentUser } from '../auth/session.ts';
 
 async function loadServerAuthStatus(request?: Request): Promise<AuthStatus> {
   const user = await getCurrentUser(request);

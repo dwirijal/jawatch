@@ -11,8 +11,8 @@ function getPrimaryNavLabels(items) {
   return items.map((item) => ('group' in item ? item.group.label : item.label));
 }
 
-test('top-level navigation exposes Home, Watch, Read, and Vault', () => {
-  assert.deepEqual(getPrimaryNavLabels(DESKTOP_NAV_ITEMS), ['Home', 'Watch', 'Read', 'Vault']);
+test('top-level navigation exposes Beranda, Nonton, Baca, and Koleksi', () => {
+  assert.deepEqual(getPrimaryNavLabels(DESKTOP_NAV_ITEMS), ['Beranda', 'Nonton', 'Baca', 'Koleksi']);
 
   const vaultItem = DESKTOP_NAV_ITEMS.find((item) => item.key === 'vault');
   assert.equal(vaultItem && 'href' in vaultItem ? vaultItem.href : null, '/vault');
@@ -21,11 +21,11 @@ test('top-level navigation exposes Home, Watch, Read, and Vault', () => {
 test('mobile nav keeps search as an action and avoids legacy top-level labels', () => {
   const searchItem = MOBILE_NAV_ITEMS.find((item) => item.key === 'search');
 
-  assert.equal(searchItem?.label, 'Search');
+  assert.equal(searchItem?.label, 'Cari');
   assert.equal('action' in (searchItem || {}) ? searchItem?.action : null, 'search');
   assert.deepEqual(
     MOBILE_NAV_ITEMS.map((item) => item.label),
-    ['Home', 'Watch', 'Search', 'Vault'],
+    ['Beranda', 'Nonton', 'Cari', 'Koleksi'],
   );
   assert.deepEqual(
     MOBILE_NAV_ITEMS.map((item) => ('href' in item ? item.href : null)),
@@ -33,10 +33,10 @@ test('mobile nav keeps search as an action and avoids legacy top-level labels', 
   );
 });
 
-test('mobile menu groups expose the new Watch, Read, and Vault sections', () => {
+test('mobile menu groups expose the new Nonton, Baca, and Koleksi sections', () => {
   assert.deepEqual(
     MOBILE_MENU_GROUPS.map((group) => group.label),
-    ['Watch', 'Read', 'Vault'],
+    ['Nonton', 'Baca', 'Koleksi'],
   );
 
   const vaultGroup = MOBILE_MENU_GROUPS.find((group) => group.key === 'vault');

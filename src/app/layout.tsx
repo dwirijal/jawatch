@@ -3,13 +3,13 @@ import { Bricolage_Grotesque, Geist_Mono, Plus_Jakarta_Sans } from "next/font/go
 import "./globals.css";
 import { CssBaseline } from "@/components/atoms/CssBaseline";
 import { ColorModeScript } from "@/components/atoms/ColorModeScript";
-import { Navbar } from "@/components/organisms/Navbar";
+import { JsonLd } from "@/components/atoms/JsonLd";
 import { Footer } from "@/components/organisms/Footer";
 import { FooterContent } from "@/components/organisms/FooterContent";
 import { ClientShell } from "@/components/organisms/ClientShell";
-import { DeferredCommandBar } from "@/components/organisms/DeferredCommandBar";
-import { AdNetworkScripts } from "@/components/organisms/AdNetworkScripts";
 import { MainFrame } from "@/components/organisms/MainFrame";
+import { JAWATCH_MARKETING } from "@/lib/marketing";
+import { buildOrganizationJsonLd } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site";
 
 const geistMono = Geist_Mono({
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     default: "jawatch - Anime, Donghua, Drama, Film, dan Komik",
     template: "%s | jawatch"
   },
-  description: "Tempat nonton anime, donghua, drama, dan film serta baca komik bahasa Indonesia dalam satu katalog yang cepat dan rapi.",
+  description: "Nonton anime, donghua, drama Asia, dan film subtitle Indonesia, plus baca manga, manhwa, dan manhua bahasa Indonesia dalam satu katalog cepat.",
   applicationName: "jawatch",
   keywords: [
     "anime subtitle indonesia",
@@ -44,6 +44,11 @@ export const metadata: Metadata = {
     "baca komik indonesia",
   ],
   manifest: "/manifest.json",
+  icons: {
+    icon: [{ url: "/jawatch-logo.svg", type: "image/svg+xml" }],
+    shortcut: ["/jawatch-logo.svg"],
+    apple: [{ url: "/jawatch-logo.svg", type: "image/svg+xml" }],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -54,14 +59,19 @@ export const metadata: Metadata = {
     locale: "id_ID",
     siteName: "jawatch",
     title: "jawatch - Anime, Donghua, Drama, Film, dan Komik",
-    description: "Tempat nonton anime, donghua, drama, dan film serta baca komik bahasa Indonesia dalam satu katalog yang cepat dan rapi.",
-    images: ["/logo.png"],
+    description: "Nonton anime, donghua, drama Asia, dan film subtitle Indonesia, plus baca manga, manhwa, dan manhua bahasa Indonesia dalam satu katalog cepat.",
+    images: [{
+      url: JAWATCH_MARKETING.share.defaultImage,
+      width: 1200,
+      height: 630,
+      alt: JAWATCH_MARKETING.share.defaultImageAlt,
+    }],
   },
   twitter: {
     card: "summary_large_image",
     title: "jawatch - Anime, Donghua, Drama, Film, dan Komik",
-    description: "Tempat nonton anime, donghua, drama, dan film serta baca komik bahasa Indonesia dalam satu katalog yang cepat dan rapi.",
-    images: ["/logo.png"],
+    description: "Nonton anime, donghua, drama Asia, dan film subtitle Indonesia, plus baca manga, manhwa, dan manhua bahasa Indonesia dalam satu katalog cepat.",
+    images: [JAWATCH_MARKETING.share.defaultImage],
   },
   other: {
     "google-adsense-account": "ca-pub-8868090753979495",
@@ -95,9 +105,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <ClientShell />
-        <AdNetworkScripts />
-        <DeferredCommandBar />
-        <Navbar />
+        <JsonLd data={buildOrganizationJsonLd()} />
         <MainFrame>
           {children}
         </MainFrame>

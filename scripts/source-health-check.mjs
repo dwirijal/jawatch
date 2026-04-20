@@ -94,27 +94,53 @@ async function checkHttp(name, url, options = {}) {
   const {
     timeoutMs = 8000,
     retries = 0,
+    retryDelayMs = 300,
     headers,
     ok = (status) => status >= 200 && status < 300,
+    retryOnStatus = (status) => [429, 500, 502, 503, 504].includes(status),
   } = options;
 
+  let detailTarget = url;
   try {
-    const response = await fetchWithTimeout(url, {
-      timeoutMs,
-      retries,
-      headers,
-    });
-    results.push({
-      name,
-      status: ok(response.status) ? 'PASS' : 'FAIL',
-      detail: `HTTP ${response.status}`,
-    });
-  } catch (error) {
-    results.push({
-      name,
-      status: 'FAIL',
-      detail: error instanceof Error ? error.message : 'request failed',
-    });
+    const parsed = new URL(url);
+    detailTarget = `${parsed.origin}${parsed.pathname}${parsed.search}`;
+  } catch {
+    detailTarget = url;
+  }
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const response = await fetchWithTimeout(url, {
+        timeoutMs,
+        retries: 0,
+        headers,
+      });
+      const passes = ok(response.status);
+
+      if (!passes && attempt < retries && retryOnStatus(response.status)) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs * (attempt + 1)));
+        continue;
+      }
+
+      results.push({
+        name,
+        status: passes ? 'PASS' : 'FAIL',
+        detail: `HTTP ${response.status} ${detailTarget}`,
+      });
+      return;
+    } catch (error) {
+      if (attempt < retries) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs * (attempt + 1)));
+        continue;
+      }
+
+      results.push({
+        name,
+        status: 'FAIL',
+        detail: error instanceof Error ? error.message : 'request failed',
+      });
+      return;
+    }
   }
 }
 
@@ -269,13 +295,10 @@ async function main() {
     normalizeEnv('NEXT_PUBLIC_SITE_URL') ||
     'https://jawatch.web.id';
   const gatewayOrigin = normalizeEnv('DWIZZY_API_BASE_URL') || normalizeEnv('NEXT_PUBLIC_DWIZZY_API_BASE_URL') || 'https://api.dwizzy.my.id';
-
-  await Promise.all([
+  const gatewayHealthPath = normalizeEnv('DWIZZY_API_HEALTH_PATH');
+  const checks = [
     checkHttp('auth-login', new URL('/login', authOrigin).toString(), {
       ok: (status) => status === 200,
-    }),
-    checkHttp('api-gateway', gatewayOrigin, {
-      ok: (status) => status >= 200 && status < 500,
     }),
     checkHttp('jikan', 'https://api.jikan.moe/v4/anime?q=naruto&limit=1'),
     checkHttp('google-books', 'https://www.googleapis.com/books/v1/volumes?q=intitle:naruto&maxResults=1', {
@@ -287,20 +310,35 @@ async function main() {
       timeoutMs: 12_000,
       retries: 1,
     }),
-    checkHttp('sanka-drachin', 'https://www.sankavollerei.com/anime/drachin/home', {
-      headers: {
-        Accept: 'application/json, text/plain, */*',
-        'Accept-Language': 'en-US,en;q=0.9',
-        Referer: 'https://www.sankavollerei.com/anime/',
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
-      },
+    checkHttp('vertical-drama-home', new URL('/api/vertical-drama/home?entry=drachin', authOrigin).toString(), {
+      ok: (status) => status === 200,
     }),
     checkHttp('kanata-movie', 'https://api.kanata.web.id/movietube/home?section=latest'),
     checkRedis(),
     checkOpenSearch(),
     checkUpstash(),
     checkTmdb(),
-  ]);
+  ];
+
+  if (gatewayHealthPath) {
+    const gatewayHealthUrl = new URL(
+      gatewayHealthPath.startsWith('/') ? gatewayHealthPath : `/${gatewayHealthPath}`,
+      gatewayOrigin,
+    ).toString();
+    checks.push(
+      checkHttp('api-gateway', gatewayHealthUrl, {
+        ok: (status) => status >= 200 && status < 300,
+      }),
+    );
+  } else {
+    results.push({
+      name: 'api-gateway',
+      status: 'SKIP',
+      detail: 'DWIZZY_API_HEALTH_PATH not configured',
+    });
+  }
+
+  await Promise.all(checks);
 
   await checkDatabase();
 

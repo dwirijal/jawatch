@@ -116,7 +116,7 @@ export function StaticMediaCard({
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_52%),linear-gradient(160deg,rgba(32,36,52,0.98),rgba(12,14,21,1))] p-4 text-center text-muted-foreground">
-            <span className="text-[9px] font-black uppercase tracking-[0.18em] leading-tight text-zinc-300">Poster Missing</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.18em] leading-tight text-zinc-300">Poster Missing</span>
             <span className="mt-2 line-clamp-3 text-[11px] font-bold leading-relaxed tracking-tight text-zinc-500">{title}</span>
           </div>
         )}
@@ -131,11 +131,11 @@ export function StaticMediaCard({
 
         <div className="absolute left-4 top-4 flex max-w-[calc(100%-2rem)] flex-wrap items-center gap-2">
           <div className="rounded-full border border-white/16 bg-black/50 px-2.5 py-1 backdrop-blur-md">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">{typeLabel}</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">{typeLabel}</span>
           </div>
           {showAuxiliaryBadge ? (
             <div className="rounded-full border border-white/16 bg-white/10 px-2.5 py-1 backdrop-blur-md">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/82">{auxiliaryBadge}</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/82">{auxiliaryBadge}</span>
             </div>
           ) : null}
         </div>

@@ -1,28 +1,27 @@
 'use client';
 
 import * as React from 'react';
-import { Maximize, Minimize, Lightbulb, LightbulbOff, RefreshCw, Layers, AlertCircle, SkipForward, Play } from 'lucide-react';
-import { cn, ThemeType } from '@/lib/utils';
-import { Button } from '@/components/atoms/Button';
-import { Paper } from '@/components/atoms/Paper';
-import { Switch } from '@/components/atoms/Switch';
+import { cn, type ThemeType } from '@/lib/utils';
+import { resolveVideoPlayerMediaMode } from '@/lib/video-player-media';
 import { useUIStore } from '@/store/useUIStore';
-import { reportDeadMirror, getDeadMirrors } from '@/lib/store';
+import { VideoPlayerControls } from '@/components/organisms/video-player/VideoPlayerControls';
+import { VideoPlayerFrame } from '@/components/organisms/video-player/VideoPlayerFrame';
+import { VideoPlayerMirrorPanel } from '@/components/organisms/video-player/VideoPlayerMirrorPanel';
+import { useVideoPlayerShortcuts } from '@/components/organisms/video-player/useVideoPlayerShortcuts';
+import { useVideoPlayerState } from '@/components/organisms/video-player/useVideoPlayerState';
 
 interface VideoPlayerProps {
   mirrors: Array<{ label: string; embed_url: string }>;
   defaultUrl: string;
-  currentUrl?: string;
-  onMirrorChange?: (url: string, label: string) => void;
   showMirrorPanel?: boolean;
-  title?: string;
-  showTitleOverlay?: boolean;
-  theme?: 'anime' | 'donghua' | 'movie' | 'drama';
+  theme?: WatchPlayerTheme;
   format?: 'landscape' | 'vertical' | 'shorts';
   onNext?: () => void;
   hasNext?: boolean;
   onEnded?: () => void;
 }
+
+type WatchPlayerTheme = Extract<ThemeType, 'anime' | 'donghua' | 'movie' | 'drama'>;
 
 const THEME_ACCENT = {
   anime: {
@@ -43,239 +42,152 @@ const THEME_ACCENT = {
   },
 } as const;
 
-function isDirectMediaUrl(url: string): boolean {
-  return /\.(mp4|webm|ogg)(?:[?#]|$)/i.test(url);
-}
-
-function presentMirrorLabel(label: string, index: number): string {
-  const trimmed = label.trim();
-  const qualityMatch = trimmed.match(/\b(\d{3,4}p)\b/i);
-  if (qualityMatch) {
-    return qualityMatch[1].toUpperCase();
+function resolveFrameClassName(format: NonNullable<VideoPlayerProps['format']>, isTheaterMode: boolean) {
+  if (format === 'shorts') {
+    return 'h-full w-full rounded-none border-0';
   }
 
-  const genericMatch = trimmed.match(/\b(4k|uhd|fhd|hd|sd|hls|mp4)\b/i);
-  if (genericMatch) {
-    return genericMatch[1].toUpperCase();
+  if (format === 'vertical') {
+    return 'mx-auto aspect-[9/16] w-full max-w-[26rem] rounded-[var(--radius-2xl)]';
   }
 
-  return `Option ${index + 1}`;
+  return cn(
+    'aspect-video rounded-[var(--radius-2xl)] md:rounded-[calc(var(--radius-2xl)+0.5rem)]',
+    isTheaterMode && 'md:rounded-[2rem]',
+  );
 }
 
 export function VideoPlayer({
   mirrors,
   defaultUrl,
-  currentUrl,
-  onMirrorChange,
   showMirrorPanel = true,
   theme = 'anime',
   format = 'landscape',
   onNext,
-  hasNext,
+  hasNext = false,
   onEnded,
 }: VideoPlayerProps) {
-  const isControlled = typeof currentUrl === 'string';
-  const [internalUrl, setInternalUrl] = React.useState(defaultUrl);
-  const [key, setKey] = React.useState(0);
-  const [deadMirrors, setDeadMirrors] = React.useState<string[]>([]);
-  const [reportedThisSession, setReportedThisSession] = React.useState<string[]>([]);
-  const [autoPlay, setAutoPlay] = React.useState(true);
-  const { isTheaterMode, setTheaterMode, isLightsDimmed, setLightsDimmed, device } = useUIStore();
-  const activeUrl = isControlled ? currentUrl : internalUrl;
+  const { isTheaterMode, setTheaterMode, isLightsDimmed, setLightsDimmed } = useUIStore();
   const accent = THEME_ACCENT[theme];
-  const useNativePlayer = isDirectMediaUrl(activeUrl || '');
-  const frameClassName =
-    format === 'shorts'
-      ? 'h-full w-full rounded-none border-0'
-      : format === 'vertical'
-        ? 'mx-auto aspect-[9/16] w-full max-w-[26rem] rounded-[var(--radius-2xl)]'
-        : cn(
-            'aspect-video rounded-[var(--radius-2xl)] md:rounded-[calc(var(--radius-2xl)+0.5rem)]',
-            isTheaterMode && 'md:rounded-[2rem]'
-          );
+  const {
+    activeUrl,
+    autoPlay,
+    deadMirrors,
+    hasReportedCurrentMirror,
+    playerKey,
+    setAutoPlay,
+    handleMirrorChange,
+    handleReportCurrentMirror,
+    refreshPlayer,
+  } = useVideoPlayerState({
+    mirrors,
+    defaultUrl,
+  });
+  const mediaMode = resolveVideoPlayerMediaMode(activeUrl || '');
+  const frameClassName = resolveFrameClassName(format, isTheaterMode);
 
-  React.useEffect(() => {
-    setDeadMirrors(getDeadMirrors());
-    if (isControlled) {
-      return;
-    }
+  const toggleLights = React.useCallback(() => {
+    setLightsDimmed(!isLightsDimmed);
+  }, [isLightsDimmed, setLightsDimmed]);
 
-    const preferredLabel = localStorage.getItem('dwizzy_preferred_mirror');
-    if (preferredLabel) {
-      const matchingMirror = mirrors.find(m => m.label === preferredLabel);
-      if (matchingMirror && !getDeadMirrors().includes(matchingMirror.embed_url)) {
-        setInternalUrl(matchingMirror.embed_url);
-        return;
-      }
-    }
-    setInternalUrl(defaultUrl);
-  }, [defaultUrl, isControlled, mirrors]);
-
-  const handleMirrorChange = (url: string, label: string) => {
-    if (!isControlled) {
-      setInternalUrl(url);
-    }
-    setKey(prev => prev + 1);
-    localStorage.setItem('dwizzy_preferred_mirror', label);
-    onMirrorChange?.(url, label);
-  };
-
-  const handleReport = () => {
-    if (confirm('Report this mirror as broken/expired?')) {
-      reportDeadMirror(activeUrl || '');
-      setDeadMirrors(prev => [...prev, activeUrl || '']);
-      setReportedThisSession(prev => [...prev, activeUrl || '']);
-      const nextMirror = mirrors.find(m => !getDeadMirrors().includes(m.embed_url) && m.embed_url !== activeUrl);
-      if (nextMirror) handleMirrorChange(nextMirror.embed_url, nextMirror.label);
-    }
-  };
-
-  const toggleLights = () => setLightsDimmed(!isLightsDimmed);
-  const toggleTheater = () => {
+  const toggleTheater = React.useCallback(() => {
     setTheaterMode(!isTheaterMode);
+
     if (!isTheaterMode) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  };
+  }, [isTheaterMode, setTheaterMode]);
 
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      switch(e.key.toLowerCase()) {
-        case 't': toggleTheater(); break;
-        case 'l': toggleLights(); break;
-        case 'f':
-          (document.querySelector('iframe, video') as HTMLElement | null)?.requestFullscreen();
-          break;
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isTheaterMode, isLightsDimmed]); // eslint-disable-line react-hooks/exhaustive-deps
+  useVideoPlayerShortcuts({
+    onToggleTheater: toggleTheater,
+    onToggleLights: toggleLights,
+  });
 
-  const overlayButtonClass =
-    'h-11 w-11 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/90 text-white backdrop-blur-md hover:bg-surface-elevated';
-
-      return (
-      <div className={cn(
-        "relative z-[150] w-full h-full transition-all duration-500 ease-out",
-        format !== 'shorts' && "space-y-4 md:space-y-6"
-    )}>
-      {isLightsDimmed && !isTheaterMode && (
-        <div className="fixed inset-0 z-[140] bg-black/95 animate-in fade-in duration-500" onClick={toggleLights} />
+  return (
+    <div
+      className={cn(
+        'relative z-[150] h-full w-full transition-all duration-500 ease-out',
+        format !== 'shorts' && 'space-y-4 md:space-y-6',
       )}
+    >
+      {isLightsDimmed && !isTheaterMode ? (
+        <div className="fixed inset-0 z-[140] animate-in fade-in bg-black/95 duration-500" onClick={toggleLights} />
+      ) : null}
 
-      {/* Ambient Glow Effect (YouTube Style) */}
-      {!isTheaterMode && (
-        <div 
+      {!isTheaterMode ? (
+        <div
           className={cn(
-            "absolute inset-0 z-0 opacity-20 blur-[120px] transition-all duration-1000",
+            'absolute inset-0 z-0 opacity-20 blur-[120px] transition-all duration-1000',
             theme === 'anime' && 'bg-blue-600',
             theme === 'donghua' && 'bg-red-600',
             theme === 'movie' && 'bg-indigo-600',
-            theme === 'drama' && 'bg-rose-600'
-          )} 
+            theme === 'drama' && 'bg-rose-600',
+          )}
           style={{ transform: 'scale(1.1)' }}
         />
-      )}
+      ) : null}
 
-      <div className={cn(
-        "group relative z-10 overflow-hidden border border-border-subtle bg-surface-2 hard-shadow-md transition-all duration-700",
-        frameClassName,
-        isTheaterMode && format === 'landscape' && 'border-white/15 shadow-[0_30px_120px_rgba(0,0,0,0.28)]',
-        isLightsDimmed && !isTheaterMode && "ring-4 ring-zinc-100/10"
-      )}>
-        {activeUrl ? (
-          useNativePlayer ? (
-            <video
-              key={key}
-              src={activeUrl}
-              className="h-full w-full bg-black object-contain"
-              controls
-              autoPlay={autoPlay}
-              playsInline
-              preload="metadata"
-              onEnded={onEnded}
-            />
-          ) : (
-            <iframe
-              key={key}
-              src={activeUrl}
-              className="w-full h-full"
-              allowFullScreen
-              scrolling="no"
-              allow="autoplay; encrypted-media"
-              sandbox="allow-same-origin allow-scripts allow-forms allow-presentation"
-            />
-          )
-        ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center bg-surface-1">
-             <div className={cn("mb-4 h-12 w-12 animate-spin rounded-full border-4 border-t-transparent", accent.spinner)} />
-             <p className="animate-pulse text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Preparing Stream...</p>
-          </div>
+      <div
+        className={cn(
+          'group relative z-10 overflow-hidden border border-border-subtle bg-surface-2 hard-shadow-md transition-all duration-700',
+          frameClassName,
+          isTheaterMode && format === 'landscape' && 'border-white/15 shadow-[0_30px_120px_rgba(0,0,0,0.28)]',
+          isLightsDimmed && !isTheaterMode && 'ring-4 ring-zinc-100/10',
         )}
-        
-        {/* Title overlay removed for cleaner aesthetic as title exists in sidebar */}
-        
-        <div className={cn(
-          "absolute top-4 right-4 flex justify-end items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20",
-          isTheaterMode && "top-8 right-8"
-        )}>
-          <div className="flex items-center gap-2 pointer-events-auto">
-            {hasNext && onNext && (
-              <Button variant={theme} size="icon" onClick={onNext} className="h-11 w-11 rounded-[var(--radius-sm)]" title="Next Episode">
-                <SkipForward className="w-5 h-5 fill-current" />
-              </Button>
+      >
+        <VideoPlayerFrame
+          activeUrl={activeUrl || ''}
+          autoPlay={autoPlay}
+          mediaMode={mediaMode}
+          playerKey={playerKey}
+          spinnerClassName={accent.spinner}
+          onEnded={onEnded}
+        />
+
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-x-3 bottom-3 z-20 flex justify-center transition-all duration-300 lg:inset-x-auto lg:bottom-auto lg:right-4 lg:top-4 lg:justify-end',
+            isTheaterMode && 'lg:right-8 lg:top-8',
+          )}
+        >
+          <div
+            className={cn(
+              'flex items-center gap-2 rounded-full border border-white/10 bg-black/55 px-2 py-2 shadow-[0_24px_60px_-36px_rgba(0,0,0,0.8)] backdrop-blur-xl transition-opacity duration-300',
+              isTheaterMode
+                ? 'pointer-events-auto opacity-100'
+                : 'pointer-events-auto opacity-100 lg:pointer-events-none lg:opacity-0 lg:group-hover:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:pointer-events-auto lg:group-focus-within:opacity-100',
             )}
-            <Button variant="ghost" size="icon" onClick={handleReport} disabled={reportedThisSession.includes(activeUrl || '')} className={cn(overlayButtonClass, reportedThisSession.includes(activeUrl || '') ? "text-green-400" : "hover:bg-red-500/20 hover:text-red-400")}><AlertCircle className="w-5 h-5" /></Button>
-            <Button variant="ghost" size="icon" onClick={() => setKey(prev => prev + 1)} className={overlayButtonClass}><RefreshCw className="w-5 h-5" /></Button>
-            <Button variant="ghost" size="icon" onClick={toggleLights} className={overlayButtonClass}>{isLightsDimmed ? <Lightbulb className="w-5 h-5" /> : <LightbulbOff className="w-5 h-5" />}</Button>
-            {device !== 'mobile' && (
-              <Button variant="ghost" size="icon" onClick={toggleTheater} className={overlayButtonClass}>{isTheaterMode ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}</Button>
-            )}
+          >
+            <VideoPlayerControls
+              hasNext={hasNext}
+              isLightsDimmed={isLightsDimmed}
+              isTheaterMode={isTheaterMode}
+              onNext={onNext}
+              onRefresh={refreshPlayer}
+              onReport={handleReportCurrentMirror}
+              onToggleLights={toggleLights}
+              onToggleTheater={toggleTheater}
+              reportDisabled={hasReportedCurrentMirror}
+              theme={theme}
+            />
           </div>
         </div>
       </div>
 
-      {!isTheaterMode && showMirrorPanel && (
-        <Paper tone="muted" shadow="sm" className={cn("p-3 md:p-6 transition-all", isLightsDimmed && "opacity-20 hover:opacity-100")}>
-          <div className="mb-3 flex items-center justify-between gap-3 md:mb-5">
-            <div className="flex items-center gap-3">
-              <div className={cn("rounded-lg p-2", accent.panel)}>
-                <Layers className="h-4 w-4" />
-              </div>
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Watch Options</h2>
-            </div>
-            <div className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-1.5">
-                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Auto Play</span>
-                <Switch checked={autoPlay} onClick={() => setAutoPlay(!autoPlay)} className={!autoPlay ? 'bg-zinc-700' : undefined} />
-             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:gap-3">
-            {mirrors.map((mirror, idx) => {
-              const isDead = deadMirrors.includes(mirror.embed_url);
-              const isActive = activeUrl === mirror.embed_url;
-              return (
-                <Button
-                  key={idx}
-                  variant={isActive ? theme as ThemeType : "outline"}
-                  onClick={() => handleMirrorChange(mirror.embed_url, mirror.label)}
-                  className={cn(
-                    "relative min-w-0 overflow-hidden rounded-[var(--radius-sm)] px-3 text-[10px] uppercase tracking-[0.1em] md:px-6",
-                    !isActive && "border-border-subtle bg-surface-1 hover:bg-surface-elevated",
-                    isDead && !isActive && "opacity-40 grayscale"
-                  )}
-                >
-                  <div className="flex items-center gap-2 relative z-10">
-                    {isDead ? <AlertCircle className="w-3 h-3 text-red-500" /> : <Play className={cn("w-3 h-3", isActive ? "fill-white" : "fill-zinc-500")} />}
-                    {presentMirrorLabel(mirror.label, idx)}
-                  </div>
-                </Button>
-              );
-            })}
-          </div>
-        </Paper>
-      )}
+      {showMirrorPanel ? (
+        <VideoPlayerMirrorPanel
+          accentPanelClassName={accent.panel}
+          activeUrl={activeUrl || ''}
+          autoPlay={autoPlay}
+          deadMirrors={deadMirrors}
+          isLightsDimmed={isLightsDimmed}
+          isTheaterMode={isTheaterMode}
+          mirrors={mirrors}
+          onMirrorChange={handleMirrorChange}
+          onToggleAutoPlay={() => setAutoPlay(!autoPlay)}
+          theme={theme}
+        />
+      ) : null}
     </div>
   );
 }

@@ -36,8 +36,8 @@ export function ReaderPageImage({
           <TriangleAlert className="h-5 w-5" />
         </div>
         <div className="space-y-1.5">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Page {index + 1}</p>
-          <h3 className="text-lg font-black tracking-tight text-zinc-100">Image unavailable</h3>
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-zinc-500">Halaman {index + 1}</p>
+          <h3 className="text-lg font-black tracking-tight text-zinc-100">Gambar belum bisa dibuka</h3>
           <p className="max-w-sm text-sm leading-6 text-zinc-400">
             Halaman ini gagal dimuat dari sumber upstream. Coba muat ulang atau buka gambar asli di tab baru.
           </p>
@@ -45,13 +45,13 @@ export function ReaderPageImage({
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button type="button" variant="outline" className="h-11 rounded-[var(--radius-sm)] px-4.5" onClick={handleRetry}>
             <RefreshCw className="h-4 w-4" />
-            Retry
+            Coba lagi
           </Button>
           {src.trim() ? (
             <Button type="button" variant="ghost" className="h-11 rounded-[var(--radius-sm)] px-4.5 text-zinc-300 hover:text-white" asChild>
               <a href={src} target="_blank" rel="noreferrer">
                 <ExternalLink className="h-4 w-4" />
-                Open source
+                Buka gambar asli
               </a>
             </Button>
           ) : null}
@@ -64,7 +64,7 @@ export function ReaderPageImage({
     <Image
       key={`${src}-${retryNonce}`}
       src={src}
-      alt={`Page ${index + 1}`}
+      alt={`Halaman ${index + 1}`}
       width={1200}
       height={1700}
       sizes="(max-width: 1200px) 100vw, 1200px"

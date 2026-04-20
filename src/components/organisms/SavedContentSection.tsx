@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Bookmark } from 'lucide-react';
 import { MediaCard } from '@/components/atoms/Card';
 import { AuthGateNotice } from '@/components/molecules/AuthGateNotice';
-import { useAuthGate } from '@/components/hooks/useAuthGate';
+import { useAuthGate } from '@/hooks/useAuthGate';
 import { getBookmarks, BookmarkItem, MediaType } from '@/lib/store';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
 import { THEME_CONFIG } from '@/lib/utils';
@@ -19,7 +19,7 @@ interface SavedContentSectionProps {
 
 export function SavedContentSection({
   type,
-  title = "Your Vault",
+  title = "Koleksi kamu",
   limit,
   hideWhenUnavailable = false,
   themeOverride,
@@ -33,12 +33,6 @@ export function SavedContentSection({
   );
 
   React.useEffect(() => {
-    if (!authGate.authenticated) {
-      setMounted(true);
-      setItems([]);
-      return;
-    }
-
     setMounted(true);
     const allBookmarks = getBookmarks();
     const filtered = mediaTypes ? allBookmarks.filter((bookmark) => mediaTypes.includes(bookmark.type)) : allBookmarks;
@@ -50,7 +44,11 @@ export function SavedContentSection({
   const theme = themeOverride || (mediaTypes?.length === 1 ? mediaTypes[0] : 'default');
   const config = THEME_CONFIG[theme];
 
-  if (!authGate.authenticated) {
+  if (items.length === 0) {
+    if (authGate.authenticated) {
+      return null;
+    }
+
     if (hideWhenUnavailable) {
       return null;
     }
@@ -59,7 +57,7 @@ export function SavedContentSection({
       <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 md:space-y-8">
         <SectionHeader
           title={title}
-          subtitle="Login to view and keep your saved picks in one place"
+          subtitle="Masuk untuk melihat dan menyimpan pilihan kamu di satu tempat"
           leading={
             <div className={`rounded-[1.15rem] border p-2.5 md:rounded-2xl md:p-3 ${config.bg} ${config.text} ${config.border}`}>
               <Bookmark className="h-5 w-5 md:h-6 md:w-6" />
@@ -70,27 +68,35 @@ export function SavedContentSection({
         <AuthGateNotice
           compact
           loginHref={authGate.loginHref}
-          title="Saved content is available after login"
-          description="Sign in to unlock your personal vault. Once you are in, your existing local-only saved content behavior stays the same."
-          actionLabel="Login"
+          title="Simpanan dimulai dari browser ini"
+          description="Simpan judul secara lokal dulu. Masuk nanti supaya semuanya ikut tersimpan ke akun."
+          actionLabel="Masuk"
         />
       </section>
     );
   }
 
-  if (items.length === 0) return null;
-
   return (
     <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 md:space-y-8">
       <SectionHeader
         title={title}
-        subtitle="Items you have bookmarked"
+        subtitle={authGate.authenticated ? 'Judul yang kamu simpan' : 'Pilihan tersimpan di browser ini'}
         leading={
           <div className={`rounded-[1.15rem] border p-2.5 md:rounded-2xl md:p-3 ${config.bg} ${config.text} ${config.border}`}>
             <Bookmark className="h-5 w-5 md:h-6 md:w-6" />
           </div>
         }
       />
+
+      {!authGate.authenticated ? (
+        <AuthGateNotice
+          compact
+          loginHref={authGate.loginHref}
+          title="Rak simpan lokal aktif"
+          description="Masuk kapan saja supaya jawatch membawa simpanan ini ke akun kamu."
+          actionLabel="Masuk"
+        />
+      ) : null}
 
       <div className="media-grid" data-grid-density="default">
         {items.map((item) => (

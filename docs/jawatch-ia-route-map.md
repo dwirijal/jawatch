@@ -12,7 +12,7 @@ This document records the implemented public information architecture for Jawatc
 | `/watch` | Watch hub for movies, series, and shorts. |
 | `/watch/movies` | Movie browse, genre filters, latest/popular sections. |
 | `/watch/series` | Series browse for anime, donghua, and drama via `?type=` filters. |
-| `/watch/shorts` | Vertical short-series browse surface. |
+| `/watch/shorts` | Paused for now while source stability is fixed; direct visits fall back to `/watch`. |
 | `/read` | Read hub. |
 | `/read/comics` | Comics browse for manga, manhwa, and manhua via `?type=` filters. |
 | `/search` | Global search surface, launched from navbar/command UI. |
@@ -85,7 +85,7 @@ npm run perf:budgets
 For deployed preview smoke checks, expected HTTP behavior is:
 
 ```text
-200 / /watch /watch/movies /watch/series /watch/shorts /read /read/comics
+200 / /watch /watch/movies /watch/series /read /read/comics
 404 /drachin /dramabox /comic/* /manga/* /novel /collection
 404 /movies/watch/* /movies/latest /movies/popular
 404 /series/watch/* /series/short /series/anime /series/donghua /series/drama

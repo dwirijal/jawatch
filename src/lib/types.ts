@@ -5,6 +5,9 @@ export interface GenericMediaItem {
   image?: string;
   thumbnail?: string;
   poster?: string;
+  background?: string;
+  backdrop?: string;
+  logo?: string;
   episode?: string;
   chapter?: string;
   year?: string;
@@ -32,6 +35,8 @@ export interface MangaSearchResult {
   time_ago?: string;
   link: string;
   image: string;
+  background?: string;
+  logo?: string;
 }
 
 export interface MangaChapter {
@@ -48,6 +53,8 @@ export interface MangaDetail {
   title: string;
   title_indonesian: string;
   image: string;
+  background?: string;
+  logo?: string;
   synopsis: string;
   synopsis_full: string;
   summary: string;
@@ -66,6 +73,7 @@ export interface MangaDetail {
 }
 
 export interface ChapterDetail {
+  slug?: string;
   title: string;
   subtype?: MangaSubtype;
   manga_slug?: string;
@@ -235,6 +243,9 @@ export interface MovieCardItem {
   slug: string;
   title: string;
   poster: string;
+  background?: string;
+  backdrop?: string;
+  logo?: string;
   year: string;
   type: 'movie' | 'series';
   rating?: string;

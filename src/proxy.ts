@@ -1,199 +1,31 @@
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { normalizeVaultAwareNextPath } from "@/lib/auth/next-path";
-import { getOnboardingGateRedirectPath, isProxyProtectedPath, shouldBypassProxyAuthGates } from "@/lib/auth/session";
-import { getOnboardingStatus } from "@/lib/onboarding/server";
-import { refreshSupabaseSession } from "@/lib/supabase/middleware";
-
-const CANONICAL_APP_ORIGIN = 'https://jawatch.web.id';
-const LEGACY_APP_HOSTS = new Set(['weebs.dwizzy.my.id', 'weeb.dwizzy.my.id']);
-
-const BLOCKED_EXACT_PATHS = new Set([
-  "/@vite/env",
-  "/api/gql",
-  "/api/graphql",
-  "/graphql",
-  "/graphql/api",
-  "/login.action",
-  "/server",
-  "/server-status",
-  "/swagger-ui.html",
-  "/swagger.json",
-  "/trace.axd",
-  "/v2/_catalog",
-  "/v2/api-docs",
-  "/v3/api-docs",
-]);
-
-const BLOCKED_PREFIXES = [
-  "/api-docs/",
-  "/debug/",
-  "/nsfw/",
-  "/ecp/",
-  "/swagger/",
-  "/webjars/",
-];
-
-const REMOVED_PUBLIC_EXACT_PATHS = new Set([
-  "/collection",
-  "/comic",
-  "/drachin",
-  "/dramabox",
-  "/manga",
-  "/manhua",
-  "/manhwa",
-  "/movies/latest",
-  "/movies/popular",
-  "/movies/watch",
-  "/novel",
-  "/series/anime",
-  "/series/country",
-  "/series/donghua",
-  "/series/drachin",
-  "/series/drama",
-  "/series/episode",
-  "/series/genre",
-  "/series/list",
-  "/series/ongoing",
-  "/series/short",
-  "/series/watch",
-  "/series/year",
-]);
-
-const REMOVED_PUBLIC_PREFIXES = [
-  "/collection/",
-  "/comic/",
-  "/drachin/",
-  "/dramabox/",
-  "/manga/",
-  "/manhua/",
-  "/manhwa/",
-  "/movies/watch/",
-  "/novel/",
-  "/series/anime/",
-  "/series/country/",
-  "/series/donghua/",
-  "/series/drachin/",
-  "/series/drama/",
-  "/series/episode/",
-  "/series/genre/",
-  "/series/list/",
-  "/series/ongoing/",
-  "/series/short/",
-  "/series/watch/",
-  "/series/year/",
-];
-
-const SESSION_REFRESH_PREFIXES = ["/account/", "/auth/", "/logout/", "/vault/"];
-const SESSION_REFRESH_EXACT_PATHS = new Set(["/account", "/auth", "/login", "/logout", "/vault"]);
-
-function shouldRefreshSupabaseSession(pathname: string) {
-  if (SESSION_REFRESH_EXACT_PATHS.has(pathname)) {
-    return true;
-  }
-
-  return SESSION_REFRESH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-}
-
-function hasSupabaseProxyEnv() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-}
-
-function getSupabaseProxyEnv() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return null;
-  }
-
-  return { supabaseUrl, supabaseAnonKey };
-}
-
-function cloneCookies(from: NextResponse, to: NextResponse) {
-  for (const cookie of from.cookies.getAll()) {
-    to.cookies.set(cookie);
-  }
-}
-
-async function createProxySupabaseContext(request: NextRequest) {
-  let response = NextResponse.next({
-    request,
-  });
-
-  const proxyEnv = getSupabaseProxyEnv();
-  if (!proxyEnv) {
-    return null;
-  }
-
-  const supabase = createServerClient(proxyEnv.supabaseUrl, proxyEnv.supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
-
-        response = NextResponse.next({
-          request,
-        });
-
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
-        });
-      },
-    },
-  });
-
-  return { supabase, response };
-}
-
-function isScannerPath(pathname: string) {
-  if (pathname.startsWith("/.") && !pathname.startsWith("/.well-known/")) {
-    return true;
-  }
-
-  if (BLOCKED_EXACT_PATHS.has(pathname)) {
-    return true;
-  }
-
-  if (pathname === "/nsfw") {
-    return true;
-  }
-
-  if (pathname === "/wp" || pathname.startsWith("/wp-") || pathname.startsWith("/wp/")) {
-    return true;
-  }
-
-  if (BLOCKED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
-    return true;
-  }
-
-  return false;
-}
-
-function isRemovedPublicRoute(pathname: string) {
-  return REMOVED_PUBLIC_EXACT_PATHS.has(pathname) || REMOVED_PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-}
-
-function notFoundResponse() {
-  return new NextResponse("Not Found", {
-    status: 404,
-    headers: {
-      "cache-control": "public, max-age=300, s-maxage=300",
-      "x-robots-tag": "noindex, nofollow, noarchive",
-    },
-  });
-}
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import {
+  getOnboardingGateRedirectPath,
+  isProxyProtectedPath,
+  shouldBypassProxyAuthGates,
+} from '@/lib/auth/session';
+import { getOnboardingStatus } from '@/lib/onboarding/server';
+import { buildLoginRedirect, notFoundResponse } from '@/platform/gateway/legacy/responses';
+import {
+  buildCanonicalAppRedirectUrl,
+  isLegacyAppHost,
+  isRemovedPublicRoute,
+  isScannerPath,
+  shouldRefreshSupabaseSession,
+} from '@/platform/gateway/legacy/routing';
+import {
+  cloneCookies,
+  createProxySupabaseContext,
+  hasSupabaseProxyEnv,
+} from '@/platform/gateway/legacy/supabase-context';
+import { refreshSupabaseSession } from '@/platform/supabase/middleware';
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  if (LEGACY_APP_HOSTS.has(request.nextUrl.hostname)) {
-    const redirectUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, CANONICAL_APP_ORIGIN);
+  if (isLegacyAppHost(request.nextUrl.hostname)) {
+    const redirectUrl = buildCanonicalAppRedirectUrl(request.nextUrl.pathname, request.nextUrl.search);
     return NextResponse.redirect(redirectUrl, 308);
   }
 
@@ -226,9 +58,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!hasSupabaseProxyEnv()) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", normalizeVaultAwareNextPath(pathname + request.nextUrl.search));
-    return NextResponse.redirect(loginUrl);
+    return buildLoginRedirect(request, pathname + request.nextUrl.search);
   }
 
   const context = await createProxySupabaseContext(request);
@@ -239,9 +69,7 @@ export async function proxy(request: NextRequest) {
   const { supabase, response } = context;
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", normalizeVaultAwareNextPath(pathname + request.nextUrl.search));
-    const loginRedirect = NextResponse.redirect(loginUrl);
+    const loginRedirect = buildLoginRedirect(request, pathname + request.nextUrl.search);
     cloneCookies(response, loginRedirect);
     return loginRedirect;
   }

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createAuthSessionStore } from '../../src/components/hooks/auth-session-store.ts';
+import { createAuthSessionStore } from '../../src/hooks/auth-session-store.ts';
 
 test('dedupes concurrent auth status loads and updates subscribers once data arrives', async () => {
   let calls = 0;

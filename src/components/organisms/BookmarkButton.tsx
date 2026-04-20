@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Bookmark } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { AuthGateNotice } from '@/components/molecules/AuthGateNotice';
-import { useAuthGate } from '@/components/hooks/useAuthGate';
+import { useAuthGate } from '@/hooks/useAuthGate';
 import { checkIsBookmarked, toggleBookmark, BookmarkItem } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
@@ -21,21 +21,34 @@ export function BookmarkButton({
   item,
   theme = 'anime',
   className,
-  saveLabel = 'Save',
-  savedLabel = 'Saved',
-  loadingLabel = 'Checking...',
+  saveLabel = 'Simpan',
+  savedLabel = 'Tersimpan',
+  loadingLabel = 'Mengecek...',
 }: BookmarkButtonProps) {
   const [, setRefreshKey] = useState(0);
+  const [noticeVisible, setNoticeVisible] = useState(false);
   const authGate = useAuthGate();
-  const isSaved = authGate.authenticated && checkIsBookmarked(item.id);
+  const isSaved = checkIsBookmarked(item.id);
   const isPending = authGate.loading;
 
   const handleToggle = () => {
-    toggleBookmark(item);
+    const isAdded = toggleBookmark(item);
     setRefreshKey((value) => value + 1);
+    if (!authGate.authenticated) {
+      setNoticeVisible(isAdded);
+      return;
+    }
+
+    setNoticeVisible(false);
   };
 
-  const handleClick = authGate.requireAuth(handleToggle);
+  const handleClick = () => {
+    if (isPending) {
+      return;
+    }
+
+    handleToggle();
+  };
 
   const themeClasses = {
     manga: isSaved ? 'bg-orange-600 text-white hover:bg-orange-700 border-transparent' : 'text-orange-500 hover:bg-orange-600/10 border-orange-600/50',
@@ -63,13 +76,13 @@ export function BookmarkButton({
         {isPending ? loadingLabel : isSaved ? savedLabel : saveLabel}
       </Button>
 
-      {!authGate.authenticated && authGate.noticeVisible ? (
+      {!authGate.authenticated && noticeVisible ? (
         <AuthGateNotice
           compact
           loginHref={authGate.loginHref}
-          title="Login to save"
-          description="Sign in to keep bookmarks in your vault."
-          actionLabel="Login"
+          title="Tersimpan di browser ini"
+          description="Masuk nanti supaya jawatch membawa simpanan ini ke akun kamu."
+          actionLabel="Masuk"
         />
       ) : null}
     </div>

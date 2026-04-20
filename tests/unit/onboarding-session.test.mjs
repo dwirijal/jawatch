@@ -42,3 +42,9 @@ test("proxy bypass allows public files but not protected dotted paths", () => {
   assert.equal(shouldBypassProxyAuthGates("/collection/foo.bar"), true);
   assert.equal(shouldBypassProxyAuthGates("/vault/saved"), false);
 });
+
+test("proxy bypass allows public auth utility routes", () => {
+  assert.equal(shouldBypassProxyAuthGates("/login"), true);
+  assert.equal(shouldBypassProxyAuthGates("/signup"), true);
+  assert.equal(shouldBypassProxyAuthGates("/forgot-password"), true);
+});

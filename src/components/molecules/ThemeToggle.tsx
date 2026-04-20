@@ -49,17 +49,17 @@ export function ThemeToggle({ className, compact = false }: ThemeToggleProps) {
             title={option.label}
             onClick={() => setPreference(option.value)}
             className={cn(
-              'focus-tv inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all duration-200',
+              'focus-tv inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all duration-300 active:scale-95',
               compact ? 'h-9 min-w-9 justify-center px-2.5' : 'h-10',
               active
-                ? 'border-transparent bg-foreground text-background shadow-[0_20px_40px_-30px_rgba(12,10,9,0.8)]'
-                : 'border-transparent bg-transparent text-muted-foreground hover:border-border-subtle hover:bg-surface-elevated hover:text-foreground',
+                ? 'border-transparent bg-foreground text-background shadow-[0_12px_24px_-10px_rgba(12,10,9,0.8)] scale-100'
+                : 'border-transparent bg-transparent text-muted-foreground hover:scale-105 hover:border-border-subtle hover:bg-surface-elevated hover:text-foreground hover:shadow-sm',
             )}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
             {!compact ? <span>{option.value}</span> : null}
             {!compact && showResolved ? (
-              <span className="rounded-full border border-current/16 px-2 py-0.5 text-[9px] opacity-75">
+              <span className="rounded-full border border-current/16 px-2 py-0.5 text-[10px] opacity-75">
                 {resolved}
               </span>
             ) : null}

@@ -1,23 +1,23 @@
 import 'server-only';
 
-import { searchManga } from '@/lib/adapters/comic-server';
-import { searchMovieCatalog } from '@/lib/adapters/movie';
-import { searchSeriesCatalog } from '@/lib/adapters/series';
+import { searchManga } from '../adapters/comic-server.ts';
+import { searchMovieCatalog } from '../adapters/movie.ts';
+import { searchSeriesCatalog } from '../adapters/series.ts';
 import {
   formatComicCardSubtitle,
   formatMovieCardMetaLine,
   formatMovieCardSubtitle,
   getComicCardBadgeText,
   getMovieCardBadgeText,
-} from '@/lib/card-presentation';
+} from '../card-presentation.ts';
 import {
   formatSeriesCardSubtitle,
   getSeriesBadgeText,
   getSeriesTheme,
   type SeriesCardItem,
-} from '@/lib/series-presentation';
-import { buildComicCacheKey, rememberComicCacheValue } from '@/lib/server/comic-cache';
-import type { MangaSearchResult, MovieCardItem } from '@/lib/types';
+} from '../series-presentation.ts';
+import { buildComicCacheKey, rememberComicCacheValue } from '../server/comic-cache.ts';
+import type { MangaSearchResult, MovieCardItem } from '../types.ts';
 import {
   getSearchGroupLabel,
   type SearchDomain,
@@ -26,6 +26,7 @@ import {
   type SearchResultItem,
   type UnifiedSearchResult,
 } from './search-contract';
+import { mergeSearchDocuments } from './search-merge';
 import { searchIndexedDocuments, upsertSearchDocuments } from './opensearch';
 
 type UnifiedSearchOptions = {
@@ -216,13 +217,23 @@ export async function searchUnifiedTitles(
       limit,
     });
 
-    if (indexedDocuments && indexedDocuments.length > 0) {
+    if (indexedDocuments && indexedDocuments.length >= limit) {
       return buildResult(normalizedQuery, domain, 'opensearch', indexedDocuments, limit);
     }
 
     const fallbackDocuments = await searchFallbackDocuments(normalizedQuery, domain, limit, includeNsfw);
     if (fallbackDocuments.length > 0) {
       void upsertSearchDocuments(fallbackDocuments);
+    }
+
+    if (indexedDocuments && indexedDocuments.length > 0) {
+      return buildResult(
+        normalizedQuery,
+        domain,
+        fallbackDocuments.length > 0 ? 'fallback' : 'opensearch',
+        mergeSearchDocuments(indexedDocuments, fallbackDocuments, limit),
+        limit,
+      );
     }
 
     return buildResult(normalizedQuery, domain, 'fallback', fallbackDocuments, limit);

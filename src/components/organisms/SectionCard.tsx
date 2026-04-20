@@ -69,7 +69,7 @@ export function SectionCard({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  aria-label={`Scroll ${title} backward`}
+                  aria-label={`Geser ${title} ke belakang`}
                   onClick={() => scrollRailByPage('prev')}
                   className="h-8 w-8 text-muted-foreground hover:bg-surface-1 hover:text-foreground"
                 >
@@ -79,7 +79,7 @@ export function SectionCard({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  aria-label={`Scroll ${title} forward`}
+                  aria-label={`Geser ${title} ke depan`}
                   onClick={() => scrollRailByPage('next')}
                   className="h-8 w-8 text-muted-foreground hover:bg-surface-1 hover:text-foreground"
                 >
@@ -90,7 +90,7 @@ export function SectionCard({
             {viewAllHref ? (
               <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:bg-surface-1 hover:text-foreground">
                 <Link href={viewAllHref} className="focus-tv flex items-center gap-2 text-xs font-semibold tracking-[0.02em]">
-                  View all <ChevronRight className="h-4 w-4" />
+                  Lihat semua <ChevronRight className="h-4 w-4" />
                 </Link>
               </Button>
             ) : null}

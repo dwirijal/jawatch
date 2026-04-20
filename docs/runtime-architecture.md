@@ -81,12 +81,50 @@ Used by:
 Shared shell:
 
 - `HorizontalPlayerPage`
-- `VideoPlaybackScaffold`
+- `WatchModeSurface`
+- `VideoPlayer`
 
 Desktop rule:
 
 - player stage `75%`
 - picker / context rail `25%`
+
+### Shared Watch Stack
+
+Shared watch behavior is split across tested helpers and small client islands.
+
+Core ownership:
+
+- `src/components/organisms/VideoPlayer.tsx`
+  - thin public entrypoint only
+  - composes player frame, controls, mirror panel, and shortcut/state hooks
+- `src/components/organisms/video-player/VideoPlayerFrame.tsx`
+  - renders empty/native/HLS/embed media branches
+  - owns HLS attach and teardown
+- `src/components/organisms/video-player/VideoPlayerControls.tsx`
+  - renders the utility control tray only
+- `src/components/organisms/video-player/VideoPlayerMirrorPanel.tsx`
+  - renders mirror switching and autoplay controls only
+- `src/components/organisms/video-player/useVideoPlayerState.ts`
+  - owns internal URL, player refresh key, dead-mirror state, autoplay, and per-session reporting
+- `src/components/organisms/video-player/useVideoPlayerShortcuts.ts`
+  - owns keyboard shortcut registration only
+- `src/lib/video-player-media.ts`
+  - source of truth for `empty | native | hls | embed` mode resolution
+- `src/lib/video-player-controls.ts`
+  - source of truth for control order and labels
+- `src/lib/video-player-ui.ts`
+  - source of truth for mirror label normalization
+- `src/lib/watch-surface.ts`
+  - source of truth for watch-mode policy, rail visibility, compact ordering, and bordered section layout
+
+Rules:
+
+- Keep page composition server-led. Series/movie pages should assemble `header`, `stage`, `body`, and `rail`, not re-own player runtime logic.
+- Keep browser-only player state inside `video-player/*` hooks or subcomponents.
+- Do not reintroduce dead public player props unless a real caller needs them. The current shared player contract is intentionally minimal.
+- Keep compact watch order deterministic: `stage -> body -> rail`.
+- Preserve deferred/non-critical work outside the primary player frame when possible.
 
 ### Vertical Series Detail
 

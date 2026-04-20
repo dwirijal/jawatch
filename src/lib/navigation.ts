@@ -1,5 +1,5 @@
 import { BookMarked, BookOpen, Clapperboard, Home, Play, Search, UserRound, Zap } from 'lucide-react';
-import { SHORTS_HUB_ENABLED } from './shorts-paths.js';
+import { SHORTS_HUB_ENABLED } from './shorts-paths.ts';
 
 export type NavigationLeafItem = {
   description: string;
@@ -62,57 +62,57 @@ const VAULT_PATH_ALIASES: Record<string, readonly string[]> = {
 
 const WATCH_GROUP: NavigationGroup = {
   key: 'watch',
-  label: 'Watch',
+  label: 'Nonton',
   icon: Clapperboard,
   description: SHORTS_HUB_ENABLED
-    ? 'Movies, series, and shorts in one watch surface.'
-    : 'Movies and series in one watch surface.',
+    ? 'Film, series, dan shorts dalam satu rak nonton.'
+    : 'Film dan series dalam satu rak nonton.',
   isActive: createGroupPathMatcher(WATCH_PATH_ALIASES),
   items: [
-    { label: 'Watch Home', href: '/watch', description: 'Entry point for the watch hub.' },
-    { label: 'Movies', href: '/watch/movies', description: 'Film catalog and playback entry.' },
-    { label: 'Series', href: '/watch/series', description: 'Episodic anime, donghua, and drama.' },
+    { label: 'Beranda nonton', href: '/watch', description: 'Mulai pilih tontonan dari sini.' },
+    { label: 'Film', href: '/watch/movies', description: 'Film populer, terbaru, dan siap diputar.' },
+    { label: 'Series', href: '/watch/series', description: 'Anime, donghua, dan drama episodik.' },
     ...(SHORTS_HUB_ENABLED
-      ? [{ label: 'Shorts', href: '/watch/shorts', description: 'Vertical short-form playback.' }]
+      ? [{ label: 'Shorts', href: '/watch/shorts', description: 'Cerita vertikal buat sesi cepat.' }]
       : []),
   ],
 };
 
 const READ_GROUP: NavigationGroup = {
   key: 'read',
-  label: 'Read',
+  label: 'Baca',
   icon: BookOpen,
-  description: 'Manga, manhwa, and manhua in one reading surface.',
+  description: 'Manga, manhwa, dan manhua dalam satu rak baca.',
   isActive: createGroupPathMatcher(READ_PATH_ALIASES),
   items: [
-    { label: 'Read Home', href: '/read', description: 'Entry point for the reading hub.' },
-    { label: 'Comics', href: '/read/comics', description: 'Manga, manhwa, and manhua shelf.' },
+    { label: 'Beranda baca', href: '/read', description: 'Mulai pilih bacaan dari sini.' },
+    { label: 'Komik', href: '/read/comics', description: 'Rak manga, manhwa, dan manhua.' },
   ],
 };
 
 const VAULT_GROUP: NavigationGroup = {
   key: 'vault',
-  label: 'Vault',
+  label: 'Koleksi',
   icon: BookMarked,
-  description: 'Saved content, history, and account-adjacent surfaces.',
+  description: 'Simpanan, riwayat, dan area akun.',
   isActive: createGroupPathMatcher(VAULT_PATH_ALIASES),
   items: [
-    { label: 'Vault', href: '/vault', description: 'Open your saved library.' },
+    { label: 'Koleksi', href: '/vault', description: 'Buka simpanan dan riwayat kamu.' },
   ],
 };
 
 export const EDITORIAL_NAV_ITEMS = [
-  { label: 'Home', href: '/', key: 'home' },
-  { label: 'Watch', href: '/watch', key: 'watch' },
-  { label: 'Read', href: '/read', key: 'read' },
-  { label: 'Vault', href: '/vault', key: 'vault' },
+  { label: 'Beranda', href: '/', key: 'home' },
+  { label: 'Nonton', href: '/watch', key: 'watch' },
+  { label: 'Baca', href: '/read', key: 'read' },
+  { label: 'Koleksi', href: '/vault', key: 'vault' },
 ];
 
 export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
   {
     key: 'home',
     type: 'link',
-    label: 'Home',
+    label: 'Beranda',
     href: '/',
     icon: Home,
     match: (pathname) => pathname === '/',
@@ -132,7 +132,7 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
   {
     key: 'vault',
     type: 'link',
-    label: 'Vault',
+    label: 'Koleksi',
     href: '/vault',
     icon: BookMarked,
     match: (pathname) => startsWithAnyPath(pathname, ['/vault']),
@@ -140,17 +140,17 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
 ];
 
 export const MOBILE_NAV_ITEMS = [
-  { key: 'home', label: 'Home', href: '/', icon: Home },
-  { key: 'watch', label: 'Watch', href: '/watch', icon: Clapperboard },
-  { key: 'search', label: 'Search', icon: Search, action: 'search' as const },
-  { key: 'vault', label: 'Vault', href: '/vault', icon: BookMarked },
+  { key: 'home', label: 'Beranda', href: '/', icon: Home },
+  { key: 'watch', label: 'Nonton', href: '/watch', icon: Clapperboard },
+  { key: 'search', label: 'Cari', icon: Search, action: 'search' as const },
+  { key: 'vault', label: 'Koleksi', href: '/vault', icon: BookMarked },
 ];
 
 export const MOBILE_MENU_GROUPS: NavigationGroup[] = [WATCH_GROUP, READ_GROUP, VAULT_GROUP];
 
 export const ACCOUNT_PANEL_META = {
-  label: 'Account',
-  description: 'Identity, settings, and sync surfaces.',
+  label: 'Akun',
+  description: 'Identitas, pengaturan, dan sinkronisasi.',
   icon: UserRound,
 };
 

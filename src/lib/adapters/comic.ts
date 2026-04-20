@@ -1,12 +1,12 @@
 import type {
   MangaSearchResult,
   MangaSubtype,
-} from '@/lib/types';
-import { normalizeComicImageUrl } from '@/lib/comic-media';
+} from '../types.ts';
+import { normalizeComicImageUrl } from '../comic-media.ts';
 import {
   normalizeComicListPayload,
   normalizeComicSearchPayload,
-} from '@/lib/adapters/comic-response';
+} from './comic-response.ts';
 
 type SearchResponse = {
   data: MangaSearchResult[];

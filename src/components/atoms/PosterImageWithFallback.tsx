@@ -47,11 +47,11 @@ export function PosterImageWithFallback({
           onError={() => setImageFailed(true)}
         />
       ) : (
-        <div className="flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_52%),linear-gradient(160deg,rgba(32,36,52,0.98),rgba(12,14,21,1))] p-4 text-center text-muted-foreground">
-          <span className="text-[9px] font-black uppercase tracking-[0.18em] leading-tight text-zinc-300">{fallbackLabel}</span>
-          <span className="mt-2 line-clamp-4 text-[13px] font-bold leading-relaxed tracking-tight text-zinc-500">
-            {title}
-          </span>
+        <div
+          className="jawatch-poster-missing h-full w-full bg-[linear-gradient(180deg,var(--surface-2)_0%,var(--surface-1)_100%)]"
+          aria-label={`${fallbackLabel}: ${title}`}
+        >
+          <span className="sr-only">{fallbackLabel}: {title}</span>
         </div>
       )}
     </div>

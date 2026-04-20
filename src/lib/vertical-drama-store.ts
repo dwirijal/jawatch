@@ -1,3 +1,5 @@
+import { readStoredJson, writeStoredJson } from './browser-storage.ts';
+
 export type VerticalDramaProvider = 'drachin' | 'dramabox';
 
 type ResumeEntry = {
@@ -14,29 +16,16 @@ function getResumeKey(provider: VerticalDramaProvider, id: string): string {
 }
 
 function readResumeMap(): ResumeMap {
-  if (typeof window === 'undefined') {
-    return {};
+  const parsed = readStoredJson(STORAGE_KEY);
+  if (parsed && typeof parsed === 'object') {
+    return parsed as ResumeMap;
   }
 
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return {};
-    }
-
-    const parsed = JSON.parse(raw) as ResumeMap;
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch {
-    return {};
-  }
+  return {};
 }
 
 function writeResumeMap(value: ResumeMap) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+  writeStoredJson(STORAGE_KEY, value);
 }
 
 export function saveVerticalDramaProgress(provider: VerticalDramaProvider, id: string, episodeIndex: number) {

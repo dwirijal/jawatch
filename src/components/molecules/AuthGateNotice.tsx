@@ -19,7 +19,7 @@ export function AuthGateNotice({
   loginHref,
   title,
   description,
-  actionLabel = 'Login',
+  actionLabel = 'Masuk',
   compact = false,
   className,
 }: AuthGateNoticeProps) {

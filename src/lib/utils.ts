@@ -6,7 +6,72 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export type ThemeType = 'anime' | 'manga' | 'donghua' | 'movie' | 'drama' | 'novel' | 'default';
-export type CardAspectRatio = 'default' | 'feature' | 'theme';
+export type CardAspectRatio = 'default' | 'feature' | 'theme' | 'landscape';
+export const DEFAULT_MEDIA_BACKGROUND = 'https://imgcdn.dev/i/YRY7Rd';
+export const MEDIA_BACKGROUND_FIELD_CANDIDATES = [
+  'background_url',
+  'background',
+  'background_image',
+  'backgroundImage',
+  'backdrop_url',
+  'backdrop',
+  'backdrop_image',
+  'backdropImage',
+] as const;
+export const MEDIA_LOGO_FIELD_CANDIDATES = [
+  'logo_url',
+  'logo',
+  'title_logo',
+  'title_logo_url',
+  'titleLogo',
+  'titleLogoUrl',
+  'clearlogo',
+  'clearlogo_url',
+  'clear_logo',
+] as const;
+
+export function normalizeAssetUrl(value: unknown): string {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  const normalized = value.trim();
+  if (!normalized) {
+    return '';
+  }
+
+  if (normalized.startsWith('//')) {
+    return `https:${normalized}`;
+  }
+
+  return normalized;
+}
+
+export function pickAssetUrl(...values: unknown[]): string {
+  for (const value of values) {
+    const normalized = normalizeAssetUrl(value);
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  return '';
+}
+
+export function pickAssetFromRecord(
+  record: Record<string, unknown> | null | undefined,
+  keys: readonly string[],
+): string {
+  if (!record) {
+    return '';
+  }
+
+  return pickAssetUrl(...keys.map((key) => record[key]));
+}
+
+export function resolveMediaBackgroundUrl(...values: unknown[]): string {
+  return pickAssetUrl(...values) || DEFAULT_MEDIA_BACKGROUND;
+}
 
 function createThemeConfig(token: string) {
   return {
@@ -85,6 +150,8 @@ export function getCardAspectClass(aspectRatio: CardAspectRatio = 'default', the
       return 'aspect-[3/4]';
     case 'feature':
       return 'aspect-[2/3]';
+    case 'landscape':
+      return 'aspect-[16/9]';
     case 'theme':
       return getMediaPosterAspectClass(theme);
     default:

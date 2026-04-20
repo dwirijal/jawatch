@@ -5,8 +5,8 @@ import { LogOut } from 'lucide-react';
 import { Avatar } from '@/components/atoms/Avatar';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
-import { useAuthSession } from '@/components/hooks/useAuthSession';
-import { useRedirectTarget } from '@/components/hooks/useRedirectTarget';
+import { useAuthSession } from '@/hooks/useAuthSession';
+import { useRedirectTarget } from '@/hooks/useRedirectTarget';
 import { buildLoginUrl, buildLogoutRequest } from '@/lib/auth-gateway';
 
 function compactDisplayName(displayName: string) {
@@ -28,7 +28,7 @@ export function AuthNavEntry() {
         href={buildLoginUrl(redirectTarget)}
         className="focus-tv rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-2.5 text-sm font-black uppercase tracking-[0.2em] text-foreground transition-colors hover:bg-surface-elevated"
       >
-        Login
+        Masuk
       </Link>
     );
   }
@@ -43,7 +43,7 @@ export function AuthNavEntry() {
         <p className="truncate text-sm font-black uppercase tracking-[0.16em] text-foreground">
           {compactDisplayName(session.user.displayName)}
         </p>
-        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">Signed in</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">Sudah masuk</p>
       </div>
       <form action={logoutRequest.url} method={logoutRequest.method}>
         <input type="hidden" name="returnTo" value={returnTo} />
@@ -52,7 +52,7 @@ export function AuthNavEntry() {
           variant="outline"
           size="icon"
           className="rounded-[var(--radius-sm)] border-border-subtle bg-surface-2 text-muted-foreground hover:bg-surface-elevated hover:text-foreground"
-          aria-label="Log out"
+          aria-label="Keluar"
         >
           <LogOut className="h-4 w-4" />
         </Button>

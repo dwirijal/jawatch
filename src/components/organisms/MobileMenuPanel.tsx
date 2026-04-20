@@ -5,10 +5,10 @@ import { Check, X, LogOut, UserRound } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/components/atoms/Link';
 import { ModalClose, ModalContent, ModalRoot, ModalTitle } from '@/components/atoms/Modal';
-import { useRedirectTarget } from '@/components/hooks/useRedirectTarget';
+import { useRedirectTarget } from '@/hooks/useRedirectTarget';
 import { useUIStore } from '@/store/useUIStore';
 import { ACCOUNT_PANEL_META, MOBILE_MENU_GROUPS } from '@/lib/navigation';
-import { useAuthSession } from '@/components/hooks/useAuthSession';
+import { useAuthSession } from '@/hooks/useAuthSession';
 import { ThemeToggle } from '@/components/molecules/ThemeToggle';
 import { cn } from '@/lib/utils';
 import { buildLoginUrl, buildLogoutRequest } from '@/lib/auth-gateway';
@@ -35,11 +35,11 @@ export function MobileMenuPanel() {
         <ModalContent className="inset-y-0 right-0 left-auto flex w-full max-w-sm translate-x-0 -translate-y-0 flex-col border-l border-border-subtle bg-background shadow-2xl" overlayClassName="z-[180] bg-black/60 backdrop-blur-sm">
           <div className="flex items-center justify-between border-b border-border-subtle px-5 py-5">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-muted-foreground">Navigate</p>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-muted-foreground">Navigasi</p>
               <ModalTitle className="mt-1 text-xl font-black uppercase tracking-[0.12em] text-foreground">
                 jawatch
               </ModalTitle>
-              <p className="mt-2 text-xs text-muted-foreground">Watch, read, and vault.</p>
+              <p className="mt-2 text-xs text-muted-foreground">Nonton, baca, dan koleksi.</p>
             </div>
             <ModalClose className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 p-2 text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground">
               <X className="h-5 w-5" />
@@ -51,8 +51,8 @@ export function MobileMenuPanel() {
               <section className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-foreground">Color Theme</h2>
-                    <p className="mt-1 text-xs text-muted-foreground">Dark, light, or follow the system.</p>
+                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-foreground">Tema warna</h2>
+                    <p className="mt-1 text-xs text-muted-foreground">Gelap, terang, atau ikut sistem.</p>
                   </div>
                 </div>
                 <ThemeToggle className="w-full justify-between" />
@@ -105,7 +105,7 @@ export function MobileMenuPanel() {
                           <div className="flex items-center justify-between gap-3">
                             <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">{item.label}</p>
                             <span className="rounded-full border border-border-subtle px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">
-                              Soon
+                              Segera
                             </span>
                           </div>
                           <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>
@@ -133,8 +133,8 @@ export function MobileMenuPanel() {
                       className="flex items-center justify-between rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-4 transition-colors hover:bg-surface-elevated"
                     >
                       <div>
-                        <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Login</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Sign in for bookmark and history sync.</p>
+                        <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Masuk</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Masuk untuk sinkron bookmark dan riwayat.</p>
                       </div>
                       <UserRound className="h-5 w-5 text-muted-foreground" />
                     </Link>
@@ -143,7 +143,7 @@ export function MobileMenuPanel() {
                   <div className="space-y-3">
                     <div className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-4">
                       <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">{session.user.displayName}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Signed in with {session.user.provider ?? 'discord'}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Masuk dengan {session.user.provider ?? 'discord'}</p>
                     </div>
                     <form action={logoutRequest.url} method={logoutRequest.method}>
                       <input type="hidden" name="returnTo" value={returnTo} />
@@ -152,15 +152,15 @@ export function MobileMenuPanel() {
                         className="flex w-full items-center justify-between rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-4 text-left transition-colors hover:bg-surface-1"
                       >
                         <div>
-                          <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Logout</p>
-                          <p className="mt-1 text-xs text-muted-foreground">Return to this app after sign out.</p>
+                          <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Keluar</p>
+                          <p className="mt-1 text-xs text-muted-foreground">Kembali ke aplikasi ini setelah keluar.</p>
                         </div>
                         <LogOut className="h-5 w-5 text-muted-foreground" />
                       </button>
                     </form>
                     <div className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-4 opacity-70">
-                      <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Account settings</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Coming later on jawatch.</p>
+                      <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Pengaturan akun</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Segera hadir di jawatch.</p>
                     </div>
                   </div>
                 )}

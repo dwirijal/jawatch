@@ -1,7 +1,9 @@
 import { getMovieHomeSection } from '@/lib/adapters/movie';
-import { buildPrivateCacheControl } from '@/lib/cloudflare-cache';
-import { resolveComicRouteIncludeNsfw } from '@/lib/server/comic-route-access';
+import { buildPrivateCacheControl } from '@/platform/cache/http/cache-headers';
+import { resolvePublicApiRequestContext } from '@/lib/server/public-api-cache';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
+
+const PUBLIC_CACHE_TTL_SECONDS = 180;
 
 export async function GET(request: Request) {
   if (!(await allowRequestWithinRateLimit(request, { bucket: 'api-movies-popular', limit: 120, windowSeconds: 60 }))) {
@@ -11,12 +13,12 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limitParam = Number.parseInt(searchParams.get('limit') || '24', 10);
   const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 40) : 24;
-  const includeNsfw = await resolveComicRouteIncludeNsfw(request);
+  const { includeNsfw, responseHeaders } = await resolvePublicApiRequestContext(request, PUBLIC_CACHE_TTL_SECONDS);
   const results = await getMovieHomeSection('popular', limit, {
     includeNsfw,
   }).catch(() => []);
 
   return Response.json(results, {
-    headers: buildPrivateCacheControl(),
+    headers: responseHeaders,
   });
 }

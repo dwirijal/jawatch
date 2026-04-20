@@ -20,7 +20,7 @@ export function MainFrame({ children }: MainFrameProps) {
     <main
       className={cn(
         'min-h-screen flex-1',
-        chromeless || isNavbarHidden ? 'pt-0' : 'pt-3 md:pt-24',
+        chromeless || isNavbarHidden ? 'pt-0' : 'pt-3 md:pt-[5.25rem]',
         chromeless || isFooterHidden ? 'pb-0' : 'pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0'
       )}
     >

@@ -40,6 +40,10 @@ const defaultImageRemoteHostPatterns = [
   "rebahinxxi.b-cdn.net",
   "www.manhwaindo.my",
   "static-v1.mydramawave.com",
+  "imgcdn.dev",
+  "v4.kiryuu.to",
+  "komiku.org",
+  "www.komiku.org",
 ];
 
 function readImageRemoteHostPatterns() {
@@ -53,12 +57,14 @@ function readImageRemoteHostPatterns() {
 
 const imageRemoteHostPatterns = readImageRemoteHostPatterns();
 
+const pwaEnabled = process.env.ENABLE_PWA === "1";
+
 const withPWA = withPWAInit({
   dest: "public",
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  disable: process.env.NODE_ENV === "development",
+  disable: !pwaEnabled,
   workboxOptions: {
     disableDevLogs: true,
   },
@@ -102,6 +108,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['127.0.0.1'],
   async headers() {
     return [
       {
@@ -119,6 +126,7 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    qualities: [70, 72, 75, 78, 82],
     localPatterns: [
       {
         pathname: '/api/comic/image',

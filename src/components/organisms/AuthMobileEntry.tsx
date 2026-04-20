@@ -4,8 +4,8 @@ import * as React from 'react';
 import { LogOut, UserRound } from 'lucide-react';
 import { Avatar } from '@/components/atoms/Avatar';
 import { Link } from '@/components/atoms/Link';
-import { useAuthSession } from '@/components/hooks/useAuthSession';
-import { useRedirectTarget } from '@/components/hooks/useRedirectTarget';
+import { useAuthSession } from '@/hooks/useAuthSession';
+import { useRedirectTarget } from '@/hooks/useRedirectTarget';
 import { buildLoginUrl, buildLogoutRequest } from '@/lib/auth-gateway';
 import { cn } from '@/lib/utils';
 
@@ -29,7 +29,7 @@ export function AuthMobileEntry() {
         className="focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-zinc-500 transition-colors hover:bg-surface-1 hover:text-white"
       >
         <UserRound className="h-5 w-5" />
-        <span className="text-[10px] font-black uppercase tracking-widest">Login</span>
+        <span className="text-[10px] font-black uppercase tracking-widest">Masuk</span>
       </Link>
     );
   }
@@ -46,7 +46,7 @@ export function AuthMobileEntry() {
           'focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 transition-colors',
           'text-zinc-500 hover:bg-surface-1 hover:text-white'
         )}
-        aria-label={`Log out ${session.user.displayName}`}
+        aria-label={`Keluar dari ${session.user.displayName}`}
       >
         <div className="relative">
           <Avatar name={session.user.displayName} size="sm" className="border-border-subtle bg-surface-2" />

@@ -1,4 +1,6 @@
-export const SHORTS_HUB_HREF = '/watch/shorts';
+export const SHORTS_HUB_ENABLED = false;
+export const SHORTS_HUB_HREF = SHORTS_HUB_ENABLED ? '/watch/shorts' : '/watch';
+export const SHORTS_BACK_LABEL = SHORTS_HUB_ENABLED ? 'Kembali ke shorts' : 'Kembali ke nonton';
 
 function normalizePathSegment(value: string): string {
   return value.trim();
