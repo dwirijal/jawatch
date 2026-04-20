@@ -167,26 +167,26 @@ export async function getOnboardingStatus(
     throw preferenceResult.error;
   }
 
-  const mediaPreferencesResult = await supabase
-    .from("user_media_preferences")
-    .select("media_type")
-    .eq("user_id", userId);
+  const [mediaPreferencesResult, genrePreferencesResult, titleSeedsResult] = await Promise.all([
+    supabase
+      .from("user_media_preferences")
+      .select("media_type")
+      .eq("user_id", userId),
+    supabase
+      .from("user_genre_preferences")
+      .select("genre_key")
+      .eq("user_id", userId),
+    supabase
+      .from("user_title_seeds")
+      .select("title,media_type,source")
+      .eq("user_id", userId),
+  ]);
   if (mediaPreferencesResult.error) {
     throw mediaPreferencesResult.error;
   }
-
-  const genrePreferencesResult = await supabase
-    .from("user_genre_preferences")
-    .select("genre_key")
-    .eq("user_id", userId);
   if (genrePreferencesResult.error) {
     throw genrePreferencesResult.error;
   }
-
-  const titleSeedsResult = await supabase
-    .from("user_title_seeds")
-    .select("title,media_type,source")
-    .eq("user_id", userId);
   if (titleSeedsResult.error) {
     throw titleSeedsResult.error;
   }

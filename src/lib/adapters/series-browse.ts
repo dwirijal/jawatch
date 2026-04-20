@@ -217,9 +217,13 @@ export async function getSeriesHubData(
 ): Promise<SeriesHubData> {
   const normalizedLimit = Math.max(1, limit);
   const includeFilters = options.includeFilters !== false;
-  return Boolean(options.includeNsfw)
-    ? getAuthenticatedSeriesHubData(normalizedLimit, includeFilters)
-    : getPublicSeriesHubData(normalizedLimit, includeFilters);
+  const visibility = getVisibilityCacheSegment(Boolean(options.includeNsfw));
+  const cacheKey = buildComicCacheKey(SERIES_CACHE_NAMESPACE, visibility, 'hub', normalizedLimit, includeFilters ? 'filters' : 'no-filters');
+  return rememberComicCacheValue(cacheKey, SEARCH_CACHE_TTL_SECONDS, async () => (
+    Boolean(options.includeNsfw)
+      ? getAuthenticatedSeriesHubData(normalizedLimit, includeFilters)
+      : getPublicSeriesHubData(normalizedLimit, includeFilters)
+  ));
 }
 
 export async function getSeriesFilteredItems(

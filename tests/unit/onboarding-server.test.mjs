@@ -220,6 +220,15 @@ function createAgeAccessSupabaseMock() {
   return { supabase, calls };
 }
 
+function createDeferred() {
+  let resolve;
+  const promise = new Promise((nextResolve) => {
+    resolve = nextResolve;
+  });
+
+  return { promise, resolve };
+}
+
 test("onboarding is incomplete when display name is blank", () => {
   assert.equal(
     isOnboardingComplete({
@@ -413,6 +422,123 @@ test("onboarding completion stays false without required fields", async () => {
 
   const status = await getOnboardingStatus(supabase, "user_3");
   assert.equal(status.complete, false);
+});
+
+test("onboarding status starts supplemental preference queries in parallel", async () => {
+  const startedTables = [];
+  const mediaDeferred = createDeferred();
+  const genreDeferred = createDeferred();
+  const titleSeedDeferred = createDeferred();
+
+  const supabase = {
+    from(table) {
+      if (table === "profiles") {
+        return {
+          select() {
+            return {
+              eq() {
+                return {
+                  async maybeSingle() {
+                    return {
+                      data: {
+                        id: "user_parallel",
+                        display_name: "Parallel User",
+                        birth_date: "2000-01-10",
+                        onboarding_completed_at: "2026-04-12T00:00:00.000Z",
+                      },
+                      error: null,
+                    };
+                  },
+                };
+              },
+            };
+          },
+        };
+      }
+
+      if (table === "user_preferences") {
+        return {
+          select() {
+            return {
+              eq() {
+                return {
+                  async maybeSingle() {
+                    return {
+                      data: {
+                        user_id: "user_parallel",
+                        adult_content_enabled: true,
+                        adult_content_choice_set_at: "2026-04-12T00:00:00.000Z",
+                        newsletter_opt_in: false,
+                        community_opt_in: false,
+                      },
+                      error: null,
+                    };
+                  },
+                };
+              },
+            };
+          },
+        };
+      }
+
+      if (table === "user_media_preferences") {
+        return {
+          select() {
+            return {
+              eq() {
+                startedTables.push(table);
+                return mediaDeferred.promise;
+              },
+            };
+          },
+        };
+      }
+
+      if (table === "user_genre_preferences") {
+        return {
+          select() {
+            return {
+              eq() {
+                startedTables.push(table);
+                return genreDeferred.promise;
+              },
+            };
+          },
+        };
+      }
+
+      if (table === "user_title_seeds") {
+        return {
+          select() {
+            return {
+              eq() {
+                startedTables.push(table);
+                return titleSeedDeferred.promise;
+              },
+            };
+          },
+        };
+      }
+
+      throw new Error(`Unexpected table: ${table}`);
+    },
+  };
+
+  const statusPromise = getOnboardingStatus(supabase, "user_parallel");
+
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  assert.deepEqual(
+    [...new Set(startedTables)].sort(),
+    ["user_genre_preferences", "user_media_preferences", "user_title_seeds"],
+  );
+
+  mediaDeferred.resolve({ data: [], error: null });
+  genreDeferred.resolve({ data: [], error: null });
+  titleSeedDeferred.resolve({ data: [], error: null });
+
+  const status = await statusPromise;
+  assert.equal(status.userId, "user_parallel");
 });
 
 test("media preference replacement uses own-row user_id filter shape", async () => {

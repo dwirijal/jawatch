@@ -360,3 +360,11 @@ test('enrichment entrypoint stays a thin facade over provider modules', () => {
   assert.equal(source.includes('const runtimeCache'), false);
   assert.equal(source.includes('function scoreTitleSimilarity('), false);
 });
+
+test('movie and series browse adapters define shared hub cache keys for Redis-backed domain caching', () => {
+  const movieBrowseSource = read('src/lib/adapters/movie-browse.ts');
+  const seriesBrowseSource = read('src/lib/adapters/series-browse.ts');
+
+  assert.equal(movieBrowseSource.includes("buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'hub'"), true);
+  assert.equal(seriesBrowseSource.includes("buildComicCacheKey(SERIES_CACHE_NAMESPACE, visibility, 'hub'"), true);
+});

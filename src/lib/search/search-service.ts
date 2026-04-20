@@ -26,6 +26,10 @@ import {
   type SearchResultItem,
   type UnifiedSearchResult,
 } from './search-contract';
+import {
+  executePlannedSearchFallback,
+  planUnifiedSearchFallbackPhases,
+} from './search-fallback-plan';
 import { mergeSearchDocuments } from './search-merge';
 import { searchIndexedDocuments, upsertSearchDocuments } from './opensearch';
 
@@ -160,31 +164,52 @@ function toComicDocument(item: MangaSearchResult, rank: number): SearchIndexDocu
   };
 }
 
+async function searchFallbackRouteType(
+  routeType: Exclude<SearchDomain, 'all'>,
+  query: string,
+  limit: number,
+  includeNsfw: boolean,
+): Promise<SearchIndexDocument[]> {
+  const options = { includeNsfw };
+  switch (routeType) {
+    case 'series': {
+      const seriesItems = await searchSeriesCatalog(query, limit, options).catch(() => [] as SeriesCardItem[]);
+      return seriesItems.map((item, index) => toSeriesDocument(item, index));
+    }
+    case 'movies': {
+      const movieItems = await searchMovieCatalog(query, limit, options).catch(() => [] as MovieCardItem[]);
+      return movieItems.map((item, index) => toMovieDocument(item, index));
+    }
+    case 'comic': {
+      const comicItems = await searchManga(query, 1, limit, options).then((response) => response.data || []).catch(() => [] as MangaSearchResult[]);
+      return comicItems.map((item, index) => toComicDocument(item, index));
+    }
+    default:
+      return [];
+  }
+}
+
 async function searchFallbackDocuments(
   query: string,
   domain: SearchDomain,
   limit: number,
   includeNsfw: boolean,
+  indexedDocuments: Array<Pick<SearchIndexDocument, 'routeType'>> = [],
 ): Promise<SearchIndexDocument[]> {
-  const perDomainLimit = domain === 'all' ? limit : Math.max(limit, 8);
-  const options = { includeNsfw };
-  const [seriesItems, movieItems, comicItems] = await Promise.all([
-    domain === 'all' || domain === 'series'
-      ? searchSeriesCatalog(query, perDomainLimit, options).catch(() => [])
-      : Promise.resolve([] as SeriesCardItem[]),
-    domain === 'all' || domain === 'movies'
-      ? searchMovieCatalog(query, perDomainLimit, options).catch(() => [])
-      : Promise.resolve([] as MovieCardItem[]),
-    domain === 'all' || domain === 'comic'
-      ? searchManga(query, 1, perDomainLimit, options).then((response) => response.data || []).catch(() => [])
-      : Promise.resolve([] as MangaSearchResult[]),
-  ]);
+  const phases = planUnifiedSearchFallbackPhases({
+    domain,
+    limit,
+    indexedDocuments,
+  });
+  const targetCount = domain === 'all'
+    ? Math.max(1, limit - indexedDocuments.length)
+    : Math.max(1, limit);
 
-  return [
-    ...seriesItems.map((item, index) => toSeriesDocument(item, index)),
-    ...movieItems.map((item, index) => toMovieDocument(item, index)),
-    ...comicItems.map((item, index) => toComicDocument(item, index)),
-  ];
+  return executePlannedSearchFallback({
+    phases,
+    targetCount,
+    runSearch: (routeType, phaseLimit) => searchFallbackRouteType(routeType, query, phaseLimit, includeNsfw),
+  });
 }
 
 export async function searchUnifiedTitles(
@@ -221,7 +246,13 @@ export async function searchUnifiedTitles(
       return buildResult(normalizedQuery, domain, 'opensearch', indexedDocuments, limit);
     }
 
-    const fallbackDocuments = await searchFallbackDocuments(normalizedQuery, domain, limit, includeNsfw);
+    const fallbackDocuments = await searchFallbackDocuments(
+      normalizedQuery,
+      domain,
+      limit,
+      includeNsfw,
+      indexedDocuments || [],
+    );
     if (fallbackDocuments.length > 0) {
       void upsertSearchDocuments(fallbackDocuments);
     }

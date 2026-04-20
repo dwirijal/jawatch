@@ -3,6 +3,7 @@ import 'server-only';
 import { createHash } from 'node:crypto';
 import { buildComicCacheKey, incrementComicCacheCounter } from './comic-cache.ts';
 import { buildPrivateNoStoreCacheControl } from '../cloudflare-cache.ts';
+import { incrementLocalRateLimitCounter } from './request-rate-limit-local.ts';
 
 function getClientIp(request: Request): string | null {
   const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
@@ -23,6 +24,15 @@ type RateLimitOptions = {
 };
 
 type LegacyRateLimitInput = RateLimitOptions & { request: Request };
+
+async function incrementRateLimitCounter(key: string, ttlSeconds: number): Promise<number> {
+  const distributedCount = await incrementComicCacheCounter(key, ttlSeconds);
+  if (distributedCount !== null) {
+    return distributedCount;
+  }
+
+  return incrementLocalRateLimitCounter(key, ttlSeconds);
+}
 
 function normalizeRateLimitInput(
   requestOrOptions: Request | LegacyRateLimitInput,
@@ -53,9 +63,9 @@ export async function allowRequestWithinRateLimit(
   const windowSeconds = Math.max(1, options.windowSeconds);
   const bucketWindow = Math.floor(Date.now() / 1000 / windowSeconds);
   const key = buildComicCacheKey('ratelimit', options.bucket, bucketWindow, hashIp(clientIp));
-  const count = await incrementComicCacheCounter(key, windowSeconds + 5);
+  const count = await incrementRateLimitCounter(key, windowSeconds + 5);
 
-  if (count === null || count <= limit) {
+  if (count <= limit) {
     return true;
   }
 

@@ -97,12 +97,16 @@ export async function getMovieHubData(
   limit = 24,
   options: VisibilityOptions = {},
 ): Promise<MovieHubData> {
-  const [popular, latest] = await Promise.all([
-    getMovieHomeSection('popular', limit, options),
-    getMovieHomeSection('latest', limit, options),
-  ]);
+  const normalizedLimit = Math.max(1, limit);
+  const cacheKey = buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'hub', visibilitySegment(options), normalizedLimit);
+  return rememberComicCacheValue(cacheKey, SEARCH_CACHE_TTL_SECONDS, async () => {
+    const [popular, latest] = await Promise.all([
+      getMovieHomeSection('popular', normalizedLimit, options),
+      getMovieHomeSection('latest', normalizedLimit, options),
+    ]);
 
-  return { popular, latest };
+    return { popular, latest };
+  });
 }
 
 async function loadMovieGenreItems(
