@@ -14,8 +14,8 @@ export function TasteSeedsStep({
   return (
     <form action={action} className="space-y-4">
       <div>
-        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-zinc-200">Selera awal</h2>
-        <p className="mt-2 text-sm text-zinc-400">
+        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Selera awal</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
           Tambahkan beberapa genre dan judul favorit supaya rekomendasi lebih pas.
         </p>
       </div>
@@ -27,7 +27,7 @@ export function TasteSeedsStep({
       ) : null}
 
       <div>
-        <label htmlFor="genreKeys" className="block text-xs font-black uppercase tracking-[0.16em] text-zinc-300">
+        <label htmlFor="genreKeys" className="block text-xs font-black uppercase tracking-[0.16em] text-foreground">
           Genre (pisahkan dengan koma)
         </label>
         <input
@@ -36,14 +36,14 @@ export function TasteSeedsStep({
           type="text"
           defaultValue={defaultGenreKeys}
           placeholder="action, thriller, romance"
-          className="mt-2 w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-500 focus:border-zinc-300"
+          className="mt-2 w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-[color:var(--accent-strong)]"
         />
       </div>
 
       <div>
         <label
           htmlFor="favoriteTitles"
-          className="block text-xs font-black uppercase tracking-[0.16em] text-zinc-300"
+          className="block text-xs font-black uppercase tracking-[0.16em] text-foreground"
         >
           Judul favorit (satu per baris)
         </label>
@@ -53,20 +53,20 @@ export function TasteSeedsStep({
           rows={5}
           defaultValue={defaultFavoriteTitles}
           placeholder={'The Godfather\nBreaking Bad\nSolo Leveling'}
-          className="mt-2 w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-500 focus:border-zinc-300"
+          className="mt-2 w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-[color:var(--accent-strong)]"
         />
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
           type="submit"
-          className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-elevated px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition-colors hover:bg-zinc-700"
+          className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-elevated px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-foreground transition-colors hover:bg-surface-1"
         >
           Lanjut
         </button>
         <a
           href={skipHref}
-          className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-3 text-center text-sm font-black uppercase tracking-[0.16em] text-zinc-200 transition-colors hover:bg-surface-elevated"
+          className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-3 text-center text-sm font-black uppercase tracking-[0.16em] text-foreground transition-colors hover:bg-surface-elevated"
         >
           Lewati dulu
         </a>

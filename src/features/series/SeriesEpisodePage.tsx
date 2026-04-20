@@ -8,17 +8,58 @@ import { MediaWatchExtras } from '@/components/organisms/MediaWatchExtras';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { WatchModeSurface } from '@/components/organisms/WatchModeSurface';
 import { SeriesWatchRail } from '@/components/organisms/WatchRails';
+import {
+  getSeriesEpisodePageData,
+  getSeriesEpisodePageDataByNumber,
+  getSeriesEpisodePageDataBySpecialSlug,
+} from '@/domains/series/server/series-episode-data';
 import { resolveViewerNsfwAccess } from '@/lib/server/viewer-nsfw-access';
-import { getSeriesEpisodeBySlug } from '@/lib/adapters/series';
 import { buildMetadata, buildSeriesEpisodeJsonLd } from '@/lib/seo';
 import { getSeriesBadgeText, getSeriesTheme } from '@/lib/series-presentation';
 
-interface PageProps {
-  params: Promise<{ slug: string; episodeSlug?: string }>;
+interface LegacyPageProps {
+  params: Promise<{ slug: string; episodeSlug: string }>;
 }
 
-function buildSeriesEpisodeHref(seriesSlug: string, episodeSlug: string): string {
+interface EpisodeNumberPageProps {
+  params: Promise<{ slug: string; episodeNumber: string }>;
+}
+
+interface SpecialPageProps {
+  params: Promise<{ slug: string; episodeSlug: string }>;
+}
+
+type EpisodeRouteInput =
+  | { mode: 'legacy'; seriesSlug: string; episodeSlug: string }
+  | { mode: 'number'; seriesSlug: string; episodeNumber: string }
+  | { mode: 'special'; seriesSlug: string; episodeSlug: string };
+
+function buildLegacySeriesEpisodeHref(seriesSlug: string, episodeSlug: string): string {
   return `/series/${seriesSlug}/episodes/${episodeSlug}`;
+}
+
+function buildRequestedEpisodePath(route: EpisodeRouteInput): string {
+  if (route.mode === 'legacy') {
+    return buildLegacySeriesEpisodeHref(route.seriesSlug, route.episodeSlug);
+  }
+
+  if (route.mode === 'number') {
+    return `/series/${route.seriesSlug}/ep/${route.episodeNumber}`;
+  }
+
+  return `/series/${route.seriesSlug}/special/${route.episodeSlug}`;
+}
+
+async function loadEpisodeRouteData(route: EpisodeRouteInput, includeNsfw: boolean) {
+  if (route.mode === 'legacy') {
+    return getSeriesEpisodePageData(route.episodeSlug, includeNsfw);
+  }
+
+  if (route.mode === 'number') {
+    return getSeriesEpisodePageDataByNumber(route.seriesSlug, route.episodeNumber, includeNsfw);
+  }
+
+  return getSeriesEpisodePageDataBySpecialSlug(route.seriesSlug, route.episodeSlug, includeNsfw);
 }
 
 function collapseRepeatedLeadingPhrase(value: string): string {
@@ -50,19 +91,15 @@ function MetaStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const resolvedParams = await params;
-  const requestedEpisodeSlug = resolvedParams.episodeSlug || resolvedParams.slug;
+async function buildSeriesEpisodeMetadataForRoute(route: EpisodeRouteInput): Promise<Metadata> {
   const includeNsfw = await resolveViewerNsfwAccess();
-  const episode = await getSeriesEpisodeBySlug(requestedEpisodeSlug, {
-    includeNsfw,
-  });
+  const episode = await loadEpisodeRouteData(route, includeNsfw);
 
   if (!episode) {
     return buildMetadata({
       title: 'Episode Tidak Ditemukan',
       description: 'Episode yang kamu cari tidak tersedia di katalog series jawatch.',
-      path: buildSeriesEpisodeHref(resolvedParams.slug, requestedEpisodeSlug),
+      path: buildRequestedEpisodePath(route),
       noIndex: true,
     });
   }
@@ -77,26 +114,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return buildMetadata({
     title: `${normalizedTitle} Subtitle Indonesia`,
     description: `Nonton ${normalizedTitle} subtitle Indonesia${episode.country ? ` dari ${episode.country}` : ''}${episode.year ? ` rilis ${episode.year}` : ''}.`,
-    path: buildSeriesEpisodeHref(episode.seriesSlug, episode.slug),
+    path: episode.href,
     image: episode.poster,
   });
 }
 
-export default async function SeriesWatchPage({ params }: PageProps) {
-  const resolvedParams = await params;
-  const requestedSeriesSlug = resolvedParams.slug;
-  const requestedEpisodeSlug = resolvedParams.episodeSlug || resolvedParams.slug;
+async function renderSeriesEpisodePageForRoute(route: EpisodeRouteInput) {
   const includeNsfw = await resolveViewerNsfwAccess();
-  const episode = await getSeriesEpisodeBySlug(requestedEpisodeSlug, {
-    includeNsfw,
-  });
+  const episode = await loadEpisodeRouteData(route, includeNsfw);
 
   if (!episode) {
     notFound();
   }
 
-  if (episode.seriesSlug !== requestedSeriesSlug || episode.slug !== requestedEpisodeSlug) {
-    redirect(buildSeriesEpisodeHref(episode.seriesSlug, episode.slug));
+  const requestedPath = buildRequestedEpisodePath(route);
+  if (episode.seriesSlug !== route.seriesSlug || episode.href !== requestedPath) {
+    redirect(episode.href);
   }
 
   const theme = getSeriesTheme(episode.mediaType);
@@ -110,7 +143,7 @@ export default async function SeriesWatchPage({ params }: PageProps) {
           seriesTitle: episode.seriesTitle,
           seriesSlug: episode.seriesSlug,
           episodeTitle: episode.title,
-          episodeSlug: episode.slug,
+          episodeHref: episode.href,
           poster: episode.poster,
           description: episode.synopsis,
           episodeNumber: episode.episodeNumber,
@@ -142,7 +175,7 @@ export default async function SeriesWatchPage({ params }: PageProps) {
             mirrors={episode.mirrors}
             defaultUrl={episode.defaultUrl}
             theme={theme}
-            hasNext={Boolean(episode.nextEpisodeSlug)}
+            hasNext={Boolean(episode.nextEpisodeHref)}
           />
         }
         body={
@@ -169,7 +202,7 @@ export default async function SeriesWatchPage({ params }: PageProps) {
 
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="outline">{badgeText}</Badge>
-                  <Badge variant="outline">{episode.playlist.length} episode</Badge>
+                  <Badge variant="outline">{episode.playlistTotal} episode</Badge>
                   {episode.country ? <Badge variant="outline">{episode.country}</Badge> : null}
                 </div>
               </div>
@@ -177,7 +210,7 @@ export default async function SeriesWatchPage({ params }: PageProps) {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                 <MetaStat label="Pemutar" value={episode.mirrors.length > 0 ? 'Siap diputar' : 'Menunggu'} />
                 <MetaStat label="Episode" value={episodeLabel} />
-                <MetaStat label="Playlist" value={`${episode.playlist.length} episode`} />
+                <MetaStat label="Playlist" value={`${episode.playlistTotal} episode`} />
                 <MetaStat label="Series" value={badgeText} />
               </div>
             </section>
@@ -189,7 +222,7 @@ export default async function SeriesWatchPage({ params }: PageProps) {
                 titleLabel: episode.seriesTitle,
                 unitId: `episode:${episode.slug}`,
                 unitLabel: episodeLabel,
-                unitHref: buildSeriesEpisodeHref(episode.seriesSlug, episode.slug),
+                unitHref: episode.href,
                 mediaType: theme,
                 theme,
               }}
@@ -199,14 +232,69 @@ export default async function SeriesWatchPage({ params }: PageProps) {
         }
         rail={
           <SeriesWatchRail
-            seriesSlug={episode.seriesSlug}
-            currentEpisodeSlug={episode.slug}
+            currentEpisodeHref={episode.href}
+            seriesHref={episode.detailHref}
             playlist={episode.playlist}
-            prevEpisodeSlug={episode.prevEpisodeSlug}
-            nextEpisodeSlug={episode.nextEpisodeSlug}
+            playlistTotal={episode.playlistTotal}
+            prevEpisodeHref={episode.prevEpisodeHref}
+            nextEpisodeHref={episode.nextEpisodeHref}
           />
         }
       />
     </>
   );
+}
+
+export async function generateMetadata({ params }: LegacyPageProps): Promise<Metadata> {
+  const { slug, episodeSlug } = await params;
+  return buildSeriesEpisodeMetadataForRoute({
+    mode: 'legacy',
+    seriesSlug: slug,
+    episodeSlug,
+  });
+}
+
+export async function generateEpisodeNumberMetadata({ params }: EpisodeNumberPageProps): Promise<Metadata> {
+  const { slug, episodeNumber } = await params;
+  return buildSeriesEpisodeMetadataForRoute({
+    mode: 'number',
+    seriesSlug: slug,
+    episodeNumber,
+  });
+}
+
+export async function generateSpecialEpisodeMetadata({ params }: SpecialPageProps): Promise<Metadata> {
+  const { slug, episodeSlug } = await params;
+  return buildSeriesEpisodeMetadataForRoute({
+    mode: 'special',
+    seriesSlug: slug,
+    episodeSlug,
+  });
+}
+
+export default async function SeriesLegacyEpisodePage({ params }: LegacyPageProps) {
+  const { slug, episodeSlug } = await params;
+  return renderSeriesEpisodePageForRoute({
+    mode: 'legacy',
+    seriesSlug: slug,
+    episodeSlug,
+  });
+}
+
+export async function SeriesEpisodeNumberPage({ params }: EpisodeNumberPageProps) {
+  const { slug, episodeNumber } = await params;
+  return renderSeriesEpisodePageForRoute({
+    mode: 'number',
+    seriesSlug: slug,
+    episodeNumber,
+  });
+}
+
+export async function SeriesSpecialEpisodePage({ params }: SpecialPageProps) {
+  const { slug, episodeSlug } = await params;
+  return renderSeriesEpisodePageForRoute({
+    mode: 'special',
+    seriesSlug: slug,
+    episodeSlug,
+  });
 }

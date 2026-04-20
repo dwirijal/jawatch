@@ -89,8 +89,9 @@ function createThemeConfig(token: string) {
 }
 
 /**
- * Centralized theme configuration aligned with the Luxury Editorial Design System.
- * Focuses on high-contrast typography and subtle premium accents.
+ * Compatibility shim for legacy domain variants.
+ * Runtime color tokens now collapse to a single primary family, but consumers
+ * still pass domain-flavored variant names across the UI.
  */
 export const THEME_CONFIG = {
   anime: createThemeConfig('anime'),

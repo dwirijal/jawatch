@@ -14,7 +14,7 @@ export function ReadingSettings({ autoNext, setAutoNext }: { autoNext: boolean, 
   return (
     <PopperRoot>
       <PopperTrigger asChild>
-        <Button variant="outline" size="icon" className="h-11 w-11 rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 text-zinc-400 hover:bg-surface-elevated hover:text-white">
+        <Button variant="outline" size="icon" className="h-11 w-11 rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 text-foreground hover:bg-surface-elevated hover:text-foreground">
           <Settings2 className="h-4 w-4" />
         </Button>
       </PopperTrigger>
@@ -22,12 +22,12 @@ export function ReadingSettings({ autoNext, setAutoNext }: { autoNext: boolean, 
         <div className="space-y-5">
           <div className="flex items-center gap-2">
             <Sliders className="h-3.5 w-3.5 text-orange-400" />
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Pengaturan reader</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Pengaturan reader</h3>
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Lebar baca</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Lebar baca</span>
               <span className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-400">{readerWidth}%</span>
             </div>
             <Slider value={readerWidth} min={60} max={100} step={20} onChange={(event) => setReaderWidth(Number(event.currentTarget.value))} />
@@ -35,8 +35,8 @@ export function ReadingSettings({ autoNext, setAutoNext }: { autoNext: boolean, 
 
           <div className="flex items-center justify-between border-t border-border-subtle pt-4">
             <div className="flex items-center gap-2">
-              <FastForward className="h-3.5 w-3.5 text-zinc-500" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Auto lanjut</span>
+              <FastForward className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Auto lanjut</span>
             </div>
             <Switch checked={autoNext} onClick={() => setAutoNext(!autoNext)} />
           </div>

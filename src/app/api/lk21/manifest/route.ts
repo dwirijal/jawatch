@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import {
   buildLk21UpstreamHeaders,
   fetchLk21PlaybackManifestUrl,
@@ -35,7 +36,9 @@ export async function GET(request: Request) {
         'content-type': 'application/vnd.apple.mpegurl',
       },
     });
-  } catch {
+  } catch (error) {
+    Sentry.captureException(error);
     return new Response('LK21 manifest unavailable', { status: 502 });
   }
 }
+

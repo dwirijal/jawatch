@@ -50,7 +50,9 @@
     {
       "name": "watch-read",
       "routePatterns": [
+        "^/series/\\[slug\\]/ep/\\[episodeNumber\\]$",
         "^/series/\\[slug\\]/episodes/\\[episodeSlug\\]$",
+        "^/series/\\[slug\\]/special/\\[episodeSlug\\]$",
         "^/shorts/\\[slug\\]/episodes/\\[episodeSlug\\]$",
         "^/comics/\\[slug\\]/chapters/\\[chapterSlug\\]$"
       ],

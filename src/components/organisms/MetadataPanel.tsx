@@ -70,17 +70,17 @@ export function MetadataPanel({ data, loading }: MetadataPanelProps) {
 
           return (
             <Paper key={item.key} tone="muted" className="flex min-h-[6.5rem] flex-col justify-between gap-3 rounded-[var(--radius-sm)] p-4 md:p-5">
-              <div className="mb-1.5 flex items-center gap-2 text-zinc-500">
+              <div className="mb-1.5 flex items-center gap-2 text-muted-foreground">
                 <Icon className={`h-3.5 w-3.5 ${item.iconClassName}`} />
                 <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
               </div>
-              <p className="text-xl font-black text-white md:text-2xl">{item.getValue(data)}</p>
+              <p className="text-xl font-black text-foreground md:text-2xl">{item.getValue(data)}</p>
             </Paper>
           );
         })}
 
         <Paper tone="muted" className="flex min-h-[6.5rem] flex-col justify-between gap-3 rounded-[var(--radius-sm)] p-4 md:p-5">
-          <div className="mb-1.5 flex items-center gap-2 text-zinc-500">
+          <div className="mb-1.5 flex items-center gap-2 text-muted-foreground">
             <ExternalLink className="w-3.5 h-3.5 text-green-500" />
             <span className="text-[10px] font-black uppercase tracking-widest">Official Source</span>
           </div>
@@ -97,7 +97,7 @@ export function MetadataPanel({ data, loading }: MetadataPanelProps) {
 
       <div className="flex flex-wrap gap-2">
         {allTags.map((tag, i) => (
-          <Badge key={i} variant="outline" className="rounded-[var(--radius-sm)] px-2.5 py-1 text-zinc-300">
+          <Badge key={i} variant="outline" className="rounded-[var(--radius-sm)] px-2.5 py-1">
             {tag}
           </Badge>
         ))}
@@ -106,8 +106,8 @@ export function MetadataPanel({ data, loading }: MetadataPanelProps) {
       {data.trailer_url && (
         <Paper tone="muted" shadow="sm" className="flex flex-col items-center justify-between gap-5 rounded-[var(--radius-2xl)] p-5 md:flex-row md:p-6">
            <div className="space-y-2 text-center md:text-left">
-              <h3 className="text-lg font-black uppercase tracking-tight text-white md:text-xl">Official Trailer</h3>
-              <p className="text-xs font-medium text-zinc-500">Watch the official promotional video for this series.</p>
+              <h3 className="text-lg font-black uppercase tracking-tight text-foreground md:text-xl">Official Trailer</h3>
+              <p className="text-xs font-medium text-muted-foreground">Watch the official promotional video for this series.</p>
            </div>
            <Button variant="outline" size="lg" className="h-12 rounded-[var(--radius-sm)] px-6" asChild>
              <a 

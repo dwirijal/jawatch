@@ -85,7 +85,7 @@ export function VideoHeroTrailerControls({
         aria-pressed={Boolean(preference)}
         aria-label={preference ? 'Disable trailer background' : 'Enable trailer background'}
         className={cn(
-          'h-11 min-w-[9.25rem] rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 px-4 text-[11px] uppercase tracking-[0.22em] text-zinc-200 hover:bg-surface-elevated hover:text-white',
+          'h-11 min-w-[9.25rem] rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 px-4 text-[11px] uppercase tracking-[0.22em] text-foreground hover:bg-surface-elevated hover:text-foreground',
           preference && 'border-white/20'
         )}
       >

@@ -69,9 +69,9 @@ function getFormatTone(format: string) {
   }
 
   return {
-    card: 'border-white/10 bg-white/[0.03]',
-    label: 'border-white/10 bg-white/5 text-white/70',
-    button: 'border-white/10 bg-white/5 text-white/80 hover:bg-white/10',
+    card: 'border-border-subtle bg-surface-1/70',
+    label: 'border-border-subtle bg-surface-elevated text-muted-foreground',
+    button: 'border-border-subtle bg-surface-elevated text-foreground hover:bg-surface-1',
   };
 }
 
@@ -202,7 +202,7 @@ export default function MediaDownloadOptionsPanel({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Unduhan</p>
-          <h2 className="mt-1.5 text-lg font-black tracking-tight text-white md:text-xl">Pilihan download</h2>
+          <h2 className="mt-1.5 text-lg font-black tracking-tight text-foreground md:text-xl">Pilihan download</h2>
         </div>
         <Badge variant="outline">{normalizedGroups.length} tersedia</Badge>
       </div>
@@ -222,7 +222,7 @@ export default function MediaDownloadOptionsPanel({
                     onClick={() => setActiveQuality(quality)}
                     className={cn(
                       'shrink-0 rounded-[var(--radius-sm)] border px-3.5 py-2.5 text-[11px] font-black uppercase tracking-[0.18em] transition',
-                      isActive ? QUALITY_ACCENT_CLASS[accent] : 'border-border-subtle bg-surface-2 text-zinc-400 hover:bg-surface-elevated hover:text-white'
+                      isActive ? QUALITY_ACCENT_CLASS[accent] : 'border-border-subtle bg-surface-2 text-muted-foreground hover:bg-surface-elevated hover:text-foreground'
                     )}
                   >
                     {quality}
@@ -247,12 +247,12 @@ export default function MediaDownloadOptionsPanel({
             >
                 <div className="mb-3.5 flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] bg-black/20 text-white/80">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] bg-black/20 text-foreground">
                       <Download className="h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">Metode</p>
-                      <p className="mt-1 text-sm font-black tracking-[0.08em] text-white/90">{group.format}</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">Metode</p>
+                      <p className="mt-1 text-sm font-black tracking-[0.08em] text-foreground">{group.format}</p>
                     </div>
                   </div>
 

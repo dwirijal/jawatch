@@ -188,7 +188,7 @@ export function buildSeriesEpisodeJsonLd(options: {
   seriesTitle: string;
   seriesSlug: string;
   episodeTitle: string;
-  episodeSlug: string;
+  episodeHref: string;
   poster?: string | null;
   description?: string | null;
   episodeNumber?: string | null;
@@ -200,7 +200,7 @@ export function buildSeriesEpisodeJsonLd(options: {
     '@context': 'https://schema.org',
     '@type': 'TVEpisode',
     name: options.episodeTitle,
-    url: absoluteUrl(`/series/${options.seriesSlug}/episodes/${options.episodeSlug}`),
+    url: absoluteUrl(options.episodeHref),
     image: absoluteImageUrl(options.poster) || undefined,
     description: options.description || undefined,
     episodeNumber: Number.isFinite(episodeNumber) ? episodeNumber : undefined,
@@ -219,7 +219,7 @@ export function buildSeriesEpisodeJsonLd(options: {
     },
     potentialAction: {
       '@type': 'WatchAction',
-      target: absoluteUrl(`/series/${options.seriesSlug}/episodes/${options.episodeSlug}`),
+      target: absoluteUrl(options.episodeHref),
     },
   };
 }

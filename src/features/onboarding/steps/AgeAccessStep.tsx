@@ -12,8 +12,8 @@ export function AgeAccessStep({
   return (
     <form action={action} className="space-y-4">
       <div>
-        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-zinc-200">Umur dan akses</h2>
-        <p className="mt-2 text-sm text-zinc-400">Atur tanggal lahir dan preferensi konten dewasa.</p>
+        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Umur dan akses</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Atur tanggal lahir dan preferensi konten dewasa.</p>
       </div>
 
       {errorCode === 'birth-date' || errorCode === 'required' ? (
@@ -23,7 +23,7 @@ export function AgeAccessStep({
       ) : null}
 
       <div>
-        <label htmlFor="birthDate" className="block text-xs font-black uppercase tracking-[0.16em] text-zinc-300">
+        <label htmlFor="birthDate" className="block text-xs font-black uppercase tracking-[0.16em] text-foreground">
           Tanggal lahir
         </label>
         <input
@@ -33,7 +33,7 @@ export function AgeAccessStep({
           required
           defaultValue={defaultBirthDate}
           max={new Date().toISOString().slice(0, 10)}
-          className="mt-2 w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors focus:border-zinc-300"
+          className="mt-2 w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-[color:var(--accent-strong)]"
         />
       </div>
 
@@ -45,14 +45,14 @@ export function AgeAccessStep({
           defaultChecked={defaultAdultContentEnabled}
           className="mt-0.5 h-4 w-4 rounded border-border-subtle bg-surface-1"
         />
-        <span className="text-sm text-zinc-300">
+        <span className="text-sm text-foreground">
           Saya sudah 21+ dan ingin mengaktifkan konten dewasa di katalog biasa.
         </span>
       </label>
 
       <button
         type="submit"
-        className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-elevated px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition-colors hover:bg-zinc-700"
+        className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-elevated px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-foreground transition-colors hover:bg-surface-1"
       >
         Lanjut
       </button>

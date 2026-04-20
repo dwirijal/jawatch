@@ -10,14 +10,14 @@ const PUBLIC_COPY_FILES = [
   'src/features/home/server/loadHomePageData.ts',
   'src/features/home/server/home-feed-loader.ts',
   'src/features/home/server/home-feed-shared.ts',
-  'src/app/movies/MoviesPageClient.tsx',
-  'src/app/series/SeriesPageClient.tsx',
+  'src/features/movies/MoviesPageClient.tsx',
+  'src/features/series/SeriesPageClient.tsx',
   'src/features/comics/ComicPageClient.tsx',
   'src/components/organisms/MediaHubTemplate.tsx',
-  'src/app/movies/[slug]/page.tsx',
-  'src/app/movies/[slug]/movie-playback-state.ts',
-  'src/app/series/[slug]/page.tsx',
-  'src/app/series/[slug]/SeriesEpisodeSection.tsx',
+  'src/app/(public)/movies/[slug]/page.tsx',
+  'src/domains/movies/server/movie-playback-state.ts',
+  'src/app/(public)/series/[slug]/page.tsx',
+  'src/domains/series/ui/SeriesEpisodeSection.tsx',
   'src/features/comics/ComicTitlePage.tsx',
   'src/features/comics/ComicChapterPage.tsx',
   'src/features/auth/AuthPageShell.tsx',
@@ -42,21 +42,21 @@ const PUBLIC_COPY_FILES = [
   'src/features/shorts/DrachinEpisodeClient.tsx',
   'src/components/organisms/SectionCard.tsx',
   'src/components/organisms/BookmarkButton.tsx',
-  'src/app/vault/page.tsx',
-  'src/app/vault/history/page.tsx',
-  'src/app/vault/saved/page.tsx',
-  'src/app/vault/profile/page.tsx',
-  'src/app/account/age/page.tsx',
-  'src/app/onboarding/OnboardingWizard.tsx',
-  'src/app/onboarding/steps/IdentityStep.tsx',
-  'src/app/onboarding/steps/AgeAccessStep.tsx',
-  'src/app/onboarding/steps/MediaPreferencesStep.tsx',
-  'src/app/onboarding/steps/TasteSeedsStep.tsx',
-  'src/app/onboarding/steps/OptInsStep.tsx',
+  'src/app/(vault)/vault/page.tsx',
+  'src/app/(vault)/vault/history/page.tsx',
+  'src/app/(vault)/vault/saved/page.tsx',
+  'src/app/(vault)/vault/profile/page.tsx',
+  'src/app/(vault)/account/age/page.tsx',
+  'src/features/onboarding/OnboardingWizard.tsx',
+  'src/features/onboarding/steps/IdentityStep.tsx',
+  'src/features/onboarding/steps/AgeAccessStep.tsx',
+  'src/features/onboarding/steps/MediaPreferencesStep.tsx',
+  'src/features/onboarding/steps/TasteSeedsStep.tsx',
+  'src/features/onboarding/steps/OptInsStep.tsx',
   'src/lib/home-curation.ts',
   'src/components/organisms/MediaWatchPage.tsx',
   'src/lib/shorts-paths.ts',
-  'src/app/search/SearchResultsPageClient.tsx',
+  'src/features/search/SearchResultsPageClient.tsx',
   'src/lib/search/search-contract.ts',
   'src/lib/navigation.ts',
   'src/components/organisms/Navbar.tsx',
@@ -67,7 +67,7 @@ const PUBLIC_COPY_FILES = [
   'src/components/molecules/ReadingSettings.tsx',
   'src/components/molecules/PWAInstallPrompt.tsx',
   'src/features/series/SeriesEpisodePage.tsx',
-  'src/app/read/comics/page.tsx',
+  'src/app/(public)/read/comics/page.tsx',
 ];
 
 const LEGACY_COPY_PATTERNS = [
@@ -231,12 +231,12 @@ test('public UX copy keeps Indonesian marketplace-style action labels', () => {
   assert.match(homeHero, /Mulai nonton/);
   assert.match(homeHero, /Lihat dulu/);
 
-  const movies = readSource('src/app/movies/MoviesPageClient.tsx');
+  const movies = readSource('src/features/movies/MoviesPageClient.tsx');
   assert.match(movies, /Nonton sekarang/);
   assert.match(movies, /Lihat detail/);
   assert.match(movies, /Pilih rak film/);
 
-  const series = readSource('src/app/series/SeriesPageClient.tsx');
+  const series = readSource('src/features/series/SeriesPageClient.tsx');
   assert.match(series, /Lanjut nonton/);
   assert.match(series, /Pilih rak series/);
 

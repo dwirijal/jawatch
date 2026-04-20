@@ -26,7 +26,7 @@ export function AuthMobileEntry() {
     return (
       <Link
         href={buildLoginUrl(redirectTarget)}
-        className="focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-zinc-500 transition-colors hover:bg-surface-1 hover:text-white"
+        className="focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 text-muted-foreground transition-colors hover:bg-surface-1 hover:text-foreground"
       >
         <UserRound className="h-5 w-5" />
         <span className="text-[10px] font-black uppercase tracking-widest">Masuk</span>
@@ -44,7 +44,7 @@ export function AuthMobileEntry() {
         type="submit"
         className={cn(
           'focus-tv flex min-w-[3.75rem] flex-col items-center justify-center gap-1 rounded-[var(--radius-sm)] px-2 py-1.5 transition-colors',
-          'text-zinc-500 hover:bg-surface-1 hover:text-white'
+          'text-muted-foreground hover:bg-surface-1 hover:text-foreground'
         )}
         aria-label={`Keluar dari ${session.user.displayName}`}
       >

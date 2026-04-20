@@ -177,7 +177,7 @@ export type SeriesDetailData = {
   cast: Array<{ name: string; role?: string; voice?: string }>;
   productionTeam: string[];
   sourceLabel: string;
-  episodes: Array<{ slug: string; title: string; label: string; number: number | null }>;
+  episodes: Array<{ slug: string; href: string; title: string; label: string; number: number | null }>;
   recommendations: SeriesCardItem[];
 };
 
@@ -187,6 +187,7 @@ export type SeriesDetailOptions = VisibilityOptions & {
 
 export type SeriesEpisodeData = {
   slug: string;
+  href: string;
   mediaType: SeriesMediaType;
   seriesSlug: string;
   seriesTitle: string;
@@ -203,7 +204,10 @@ export type SeriesEpisodeData = {
   canInlinePlayback: boolean;
   externalUrl: string;
   downloadGroups: VideoDownloadGroup[];
-  playlist: Array<{ slug: string; label: string; title: string; number: number | null }>;
+  playlist: Array<{ slug: string; href: string; label: string; title: string; number: number | null }>;
+  playlistTotal: number;
+  prevEpisodeHref: string | null;
+  nextEpisodeHref: string | null;
   prevEpisodeSlug: string | null;
   nextEpisodeSlug: string | null;
 };
@@ -276,6 +280,19 @@ export function buildSeriesEpisodeSlugExpression(itemAlias: string, unitAlias: s
       when coalesce(${seriesSlugExpression}, '') <> '' then ${seriesSlugExpression}
       when ${fallbackSlug} <> '' then 'episode-' || ${fallbackSlug}
       else 'episode'
+    end
+  )`;
+}
+
+export function buildSeriesEpisodeSpecialSlugExpression(unitAlias: string): string {
+  const labelSlug = buildSqlSlugifyExpression(`coalesce(${unitAlias}.label, ${unitAlias}.title, '')`);
+  const fallbackSlug = buildSqlSlugifyExpression(`${unitAlias}.unit_key`);
+
+  return `(
+    case
+      when ${labelSlug} <> '' then ${labelSlug}
+      when ${fallbackSlug} <> '' then ${fallbackSlug}
+      else 'special'
     end
   )`;
 }

@@ -324,8 +324,8 @@ export default function SeriesPageClient({
                               'relative px-4 py-2.5 text-xs font-bold transition-all md:px-6 md:py-3 md:text-sm',
                               'rounded-xl focus-ring outline-none',
                               isActive
-                                ? 'bg-surface-2 text-white shadow-2xl'
-                                : 'text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300'
+                                ? 'bg-surface-2 text-foreground shadow-2xl'
+                                : 'text-muted-foreground hover:bg-surface-1 hover:text-foreground'
                             )}
                           >
                             {isActive && <div className="absolute inset-x-0 -bottom-1 h-0.5 bg-gradient-to-r from-transparent via-rose-500 to-transparent" />}

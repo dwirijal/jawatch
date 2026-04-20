@@ -19,7 +19,7 @@ export function VideoDetailPageSkeleton({ theme, backLabel }: VideoDetailPageSke
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.04),transparent_30%)]" />
           <div className="relative z-10 px-5 py-5 md:px-7 md:py-7">
             <nav className="mb-6">
-              <Button variant="outline" size="sm" disabled className="rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 text-zinc-300">
+              <Button variant="outline" size="sm" disabled className="rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 text-foreground">
                 {backLabel}
               </Button>
             </nav>

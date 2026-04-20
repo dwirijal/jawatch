@@ -18,5 +18,9 @@ export function isImmersivePlaybackPath(pathname: string | null | undefined): bo
   if (normalized.startsWith('/shorts/') && normalized.includes('/episodes/')) {
     return true;
   }
-  return normalized.startsWith('/series/') && normalized.includes('/episodes/');
+  return normalized.startsWith('/series/') && (
+    normalized.includes('/episodes/')
+    || normalized.includes('/ep/')
+    || normalized.includes('/special/')
+  );
 }

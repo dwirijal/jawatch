@@ -6,6 +6,7 @@ import { ColorModeScript } from "@/components/atoms/ColorModeScript";
 import { JsonLd } from "@/components/atoms/JsonLd";
 import { Footer } from "@/components/organisms/Footer";
 import { FooterContent } from "@/components/organisms/FooterContent";
+import { AdNetworkScripts } from "@/components/organisms/AdNetworkScripts";
 import { ClientShell } from "@/components/organisms/ClientShell";
 import { MainFrame } from "@/components/organisms/MainFrame";
 import { JAWATCH_MARKETING } from "@/lib/marketing";
@@ -104,6 +105,7 @@ export default function RootLayout({
         <CssBaseline />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
+        <AdNetworkScripts />
         <ClientShell />
         <JsonLd data={buildOrganizationJsonLd()} />
         <MainFrame>

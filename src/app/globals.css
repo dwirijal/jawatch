@@ -1,76 +1,242 @@
 @import "tailwindcss";
 
+:root {
+  --color-classic-crimson-50: oklch(94.89% 0.020 9.78);
+  --color-classic-crimson-100: oklch(90.01% 0.039 12.05);
+  --color-classic-crimson-200: oklch(80.32% 0.083 12.48);
+  --color-classic-crimson-300: oklch(71.18% 0.130 14.87);
+  --color-classic-crimson-400: oklch(63.19% 0.174 17.78);
+  --color-classic-crimson-500: oklch(57.14% 0.208 22.63);
+  --color-classic-crimson-600: oklch(48.57% 0.174 22.14);
+  --color-classic-crimson-700: oklch(39.59% 0.139 21.86);
+  --color-classic-crimson-800: oklch(30.14% 0.101 20.61);
+  --color-classic-crimson-900: oklch(19.95% 0.058 19.04);
+  --color-classic-crimson-950: oklch(16.71% 0.043 17.02);
+
+  --color-mint-leaf-50: oklch(97.68% 0.024 173.86);
+  --color-mint-leaf-100: oklch(95.41% 0.048 173.51);
+  --color-mint-leaf-200: oklch(91.33% 0.093 170.89);
+  --color-mint-leaf-300: oklch(87.93% 0.131 168.77);
+  --color-mint-leaf-400: oklch(85.22% 0.160 165.91);
+  --color-mint-leaf-500: oklch(83.19% 0.180 161.92);
+  --color-mint-leaf-600: oklch(70.42% 0.151 162.43);
+  --color-mint-leaf-700: oklch(57.02% 0.121 162.71);
+  --color-mint-leaf-800: oklch(42.78% 0.089 163.23);
+  --color-mint-leaf-900: oklch(27.23% 0.053 166.15);
+  --color-mint-leaf-950: oklch(22.18% 0.041 167.33);
+
+  --color-golden-orange-50: oklch(97.34% 0.021 79.10);
+  --color-golden-orange-100: oklch(94.89% 0.043 81.89);
+  --color-golden-orange-200: oklch(90.01% 0.085 81.41);
+  --color-golden-orange-300: oklch(85.20% 0.122 79.36);
+  --color-golden-orange-400: oklch(80.93% 0.150 76.55);
+  --color-golden-orange-500: oklch(77.04% 0.165 70.66);
+  --color-golden-orange-600: oklch(65.28% 0.139 71.04);
+  --color-golden-orange-700: oklch(52.96% 0.112 71.64);
+  --color-golden-orange-800: oklch(40.09% 0.083 74.05);
+  --color-golden-orange-900: oklch(25.84% 0.051 78.08);
+  --color-golden-orange-950: oklch(21.04% 0.041 81.04);
+
+  --color-strawberry-red-50: oklch(94.78% 0.023 17.56);
+  --color-strawberry-red-100: oklch(89.44% 0.049 18.10);
+  --color-strawberry-red-200: oklch(79.43% 0.103 19.60);
+  --color-strawberry-red-300: oklch(70.52% 0.159 21.99);
+  --color-strawberry-red-400: oklch(63.58% 0.209 25.41);
+  --color-strawberry-red-500: oklch(59.55% 0.237 28.57);
+  --color-strawberry-red-600: oklch(50.47% 0.200 28.44);
+  --color-strawberry-red-700: oklch(40.98% 0.160 28.19);
+  --color-strawberry-red-800: oklch(30.93% 0.117 27.66);
+  --color-strawberry-red-900: oklch(19.98% 0.071 26.45);
+  --color-strawberry-red-950: oklch(16.47% 0.055 25.63);
+
+  --color-azure-blue-50: oklch(95.25% 0.021 259.19);
+  --color-azure-blue-100: oklch(90.24% 0.044 259.95);
+  --color-azure-blue-200: oklch(80.61% 0.090 260.01);
+  --color-azure-blue-300: oklch(71.25% 0.139 259.68);
+  --color-azure-blue-400: oklch(62.55% 0.187 259.69);
+  --color-azure-blue-500: oklch(55.12% 0.229 260.92);
+  --color-azure-blue-600: oklch(46.93% 0.191 260.78);
+  --color-azure-blue-700: oklch(38.38% 0.151 260.54);
+  --color-azure-blue-800: oklch(29.34% 0.109 260.05);
+  --color-azure-blue-900: oklch(19.62% 0.064 257.65);
+  --color-azure-blue-950: oklch(16.50% 0.047 256.29);
+
+  --neutral-50: #F7F7F7;
+  --neutral-100: #EFEFEF;
+  --neutral-200: #D9D9D9;
+  --neutral-300: #BFBFBF;
+  --neutral-400: #A6A6A6;
+  --neutral-500: #8C8C8C;
+  --neutral-600: #737373;
+  --neutral-700: #595959;
+  --neutral-800: #404040;
+  --neutral-900: #2A2A2A;
+  --neutral-950: #212121;
+
+  --primitive-color-primary-50: var(--color-classic-crimson-50);
+  --primitive-color-primary-100: var(--color-classic-crimson-100);
+  --primitive-color-primary-200: var(--color-classic-crimson-200);
+  --primitive-color-primary-300: var(--color-classic-crimson-300);
+  --primitive-color-primary-400: var(--color-classic-crimson-400);
+  --primitive-color-primary-500: var(--color-classic-crimson-500);
+  --primitive-color-primary-600: var(--color-classic-crimson-600);
+  --primitive-color-primary-700: var(--color-classic-crimson-700);
+  --primitive-color-primary-800: var(--color-classic-crimson-800);
+  --primitive-color-primary-900: var(--color-classic-crimson-900);
+  --primitive-color-primary-950: var(--color-classic-crimson-950);
+
+  --primitive-color-success-50: var(--color-mint-leaf-50);
+  --primitive-color-success-100: var(--color-mint-leaf-100);
+  --primitive-color-success-200: var(--color-mint-leaf-200);
+  --primitive-color-success-300: var(--color-mint-leaf-300);
+  --primitive-color-success-400: var(--color-mint-leaf-400);
+  --primitive-color-success-500: var(--color-mint-leaf-500);
+  --primitive-color-success-600: var(--color-mint-leaf-600);
+  --primitive-color-success-700: var(--color-mint-leaf-700);
+  --primitive-color-success-800: var(--color-mint-leaf-800);
+  --primitive-color-success-900: var(--color-mint-leaf-900);
+  --primitive-color-success-950: var(--color-mint-leaf-950);
+
+  --primitive-color-warning-50: var(--color-golden-orange-50);
+  --primitive-color-warning-100: var(--color-golden-orange-100);
+  --primitive-color-warning-200: var(--color-golden-orange-200);
+  --primitive-color-warning-300: var(--color-golden-orange-300);
+  --primitive-color-warning-400: var(--color-golden-orange-400);
+  --primitive-color-warning-500: var(--color-golden-orange-500);
+  --primitive-color-warning-600: var(--color-golden-orange-600);
+  --primitive-color-warning-700: var(--color-golden-orange-700);
+  --primitive-color-warning-800: var(--color-golden-orange-800);
+  --primitive-color-warning-900: var(--color-golden-orange-900);
+  --primitive-color-warning-950: var(--color-golden-orange-950);
+
+  --primitive-color-danger-50: var(--color-strawberry-red-50);
+  --primitive-color-danger-100: var(--color-strawberry-red-100);
+  --primitive-color-danger-200: var(--color-strawberry-red-200);
+  --primitive-color-danger-300: var(--color-strawberry-red-300);
+  --primitive-color-danger-400: var(--color-strawberry-red-400);
+  --primitive-color-danger-500: var(--color-strawberry-red-500);
+  --primitive-color-danger-600: var(--color-strawberry-red-600);
+  --primitive-color-danger-700: var(--color-strawberry-red-700);
+  --primitive-color-danger-800: var(--color-strawberry-red-800);
+  --primitive-color-danger-900: var(--color-strawberry-red-900);
+  --primitive-color-danger-950: var(--color-strawberry-red-950);
+
+  --primitive-color-info-50: var(--color-azure-blue-50);
+  --primitive-color-info-100: var(--color-azure-blue-100);
+  --primitive-color-info-200: var(--color-azure-blue-200);
+  --primitive-color-info-300: var(--color-azure-blue-300);
+  --primitive-color-info-400: var(--color-azure-blue-400);
+  --primitive-color-info-500: var(--color-azure-blue-500);
+  --primitive-color-info-600: var(--color-azure-blue-600);
+  --primitive-color-info-700: var(--color-azure-blue-700);
+  --primitive-color-info-800: var(--color-azure-blue-800);
+  --primitive-color-info-900: var(--color-azure-blue-900);
+  --primitive-color-info-950: var(--color-azure-blue-950);
+
+  --primitive-color-neutral-50: var(--neutral-50);
+  --primitive-color-neutral-100: var(--neutral-100);
+  --primitive-color-neutral-200: var(--neutral-200);
+  --primitive-color-neutral-300: var(--neutral-300);
+  --primitive-color-neutral-400: var(--neutral-400);
+  --primitive-color-neutral-500: var(--neutral-500);
+  --primitive-color-neutral-600: var(--neutral-600);
+  --primitive-color-neutral-700: var(--neutral-700);
+  --primitive-color-neutral-800: var(--neutral-800);
+  --primitive-color-neutral-900: var(--neutral-900);
+  --primitive-color-neutral-950: var(--neutral-950);
+}
+
 :root,
 html[data-color-mode="light"] {
-  --background: #f5f1ea;
-  --background-alt: #ede4d7;
-  --foreground: #14110f;
-  --muted-foreground: #61584f;
-  --border-subtle: rgba(20, 17, 15, 0.11);
-  --border-strong: rgba(20, 17, 15, 0.2);
-  --surface-1: rgba(255, 252, 247, 0.74);
-  --surface-2: #ece4d8;
-  --surface-elevated: rgba(255, 255, 255, 0.9);
-  --surface-overlay: rgba(248, 243, 236, 0.82);
-  --accent: #b68b52;
-  --accent-soft: rgba(182, 139, 82, 0.16);
-  --accent-strong: #8a6537;
-  --accent-contrast: #fff8ef;
-  --shadow-color: rgba(37, 24, 14, 0.24);
-  --shadow-color-strong: rgba(37, 24, 14, 0.34);
-  --page-glow-top: rgba(255, 255, 255, 0.78);
-  --page-glow-side: rgba(182, 139, 82, 0.16);
-  --selection: rgba(182, 139, 82, 0.28);
+  --background: var(--primitive-color-neutral-50);
+  --background-alt: var(--primitive-color-neutral-100);
+  --foreground: var(--primitive-color-neutral-950);
+  --muted-foreground: var(--primitive-color-neutral-700);
+  --border-subtle: var(--primitive-color-neutral-200);
+  --border-strong: var(--primitive-color-neutral-300);
+  --surface-1: var(--primitive-color-neutral-50);
+  --surface-2: var(--primitive-color-neutral-100);
+  --surface-elevated: var(--primitive-color-neutral-50);
+  --surface-overlay: var(--primitive-color-neutral-100);
+  --accent: var(--primitive-color-primary-500);
+  --accent-soft: var(--primitive-color-primary-50);
+  --accent-strong: var(--primitive-color-primary-600);
+  --accent-contrast: var(--primitive-color-neutral-50);
+  --shadow-color: var(--primitive-color-neutral-300);
+  --shadow-color-strong: var(--primitive-color-neutral-400);
+  --page-glow-top: var(--primitive-color-neutral-50);
+  --page-glow-side: var(--primitive-color-primary-100);
+  --selection: var(--primitive-color-primary-200);
   --poster-missing-image: url('/poster-missing-light.png');
 
-  --theme-default-fill: #1f1b17;
-  --theme-default-contrast: #faf6ef;
-  --theme-default-text: #665b4f;
-  --theme-default-border: rgba(31, 27, 23, 0.18);
-  --theme-default-surface: rgba(31, 27, 23, 0.08);
-  --theme-default-shadow: rgba(31, 27, 23, 0.28);
+  --signal-success: var(--primitive-color-success-600);
+  --signal-success-surface: var(--primitive-color-success-50);
+  --signal-success-contrast: var(--primitive-color-neutral-950);
+  --signal-warning: var(--primitive-color-warning-600);
+  --signal-warning-surface: var(--primitive-color-warning-50);
+  --signal-warning-contrast: var(--primitive-color-neutral-950);
+  --signal-danger: var(--primitive-color-danger-600);
+  --signal-danger-surface: var(--primitive-color-danger-50);
+  --signal-danger-contrast: var(--primitive-color-neutral-50);
+  --signal-info: var(--primitive-color-info-600);
+  --signal-info-surface: var(--primitive-color-info-50);
+  --signal-info-contrast: var(--primitive-color-neutral-50);
 
-  --theme-anime-fill: #9e637f;
-  --theme-anime-contrast: #fff6fa;
-  --theme-anime-text: #8b546f;
-  --theme-anime-border: rgba(158, 99, 127, 0.22);
-  --theme-anime-surface: rgba(158, 99, 127, 0.1);
-  --theme-anime-shadow: rgba(158, 99, 127, 0.3);
+  --theme-primary-fill: var(--primitive-color-primary-600);
+  --theme-primary-contrast: var(--primitive-color-neutral-50);
+  --theme-primary-text: var(--primitive-color-primary-700);
+  --theme-primary-border: var(--primitive-color-primary-200);
+  --theme-primary-surface: var(--primitive-color-primary-50);
+  --theme-primary-shadow: var(--primitive-color-primary-300);
 
-  --theme-manga-fill: #aa7842;
-  --theme-manga-contrast: #fff8ef;
-  --theme-manga-text: #90663b;
-  --theme-manga-border: rgba(170, 120, 66, 0.23);
-  --theme-manga-surface: rgba(170, 120, 66, 0.1);
-  --theme-manga-shadow: rgba(170, 120, 66, 0.3);
+  --theme-default-fill: var(--theme-primary-fill);
+  --theme-default-contrast: var(--theme-primary-contrast);
+  --theme-default-text: var(--theme-primary-text);
+  --theme-default-border: var(--theme-primary-border);
+  --theme-default-surface: var(--theme-primary-surface);
+  --theme-default-shadow: var(--theme-primary-shadow);
 
-  --theme-donghua-fill: #a85f4b;
-  --theme-donghua-contrast: #fff7f4;
-  --theme-donghua-text: #934f3d;
-  --theme-donghua-border: rgba(168, 95, 75, 0.23);
-  --theme-donghua-surface: rgba(168, 95, 75, 0.1);
-  --theme-donghua-shadow: rgba(168, 95, 75, 0.3);
+  --theme-anime-fill: var(--theme-primary-fill);
+  --theme-anime-contrast: var(--theme-primary-contrast);
+  --theme-anime-text: var(--theme-primary-text);
+  --theme-anime-border: var(--theme-primary-border);
+  --theme-anime-surface: var(--theme-primary-surface);
+  --theme-anime-shadow: var(--theme-primary-shadow);
 
-  --theme-movie-fill: #b68b52;
-  --theme-movie-contrast: #fff8ef;
-  --theme-movie-text: #8f6937;
-  --theme-movie-border: rgba(182, 139, 82, 0.24);
-  --theme-movie-surface: rgba(182, 139, 82, 0.1);
-  --theme-movie-shadow: rgba(182, 139, 82, 0.32);
+  --theme-manga-fill: var(--theme-primary-fill);
+  --theme-manga-contrast: var(--theme-primary-contrast);
+  --theme-manga-text: var(--theme-primary-text);
+  --theme-manga-border: var(--theme-primary-border);
+  --theme-manga-surface: var(--theme-primary-surface);
+  --theme-manga-shadow: var(--theme-primary-shadow);
 
-  --theme-drama-fill: #8c5f7c;
-  --theme-drama-contrast: #fdf6fb;
-  --theme-drama-text: #78506a;
-  --theme-drama-border: rgba(140, 95, 124, 0.22);
-  --theme-drama-surface: rgba(140, 95, 124, 0.1);
-  --theme-drama-shadow: rgba(140, 95, 124, 0.3);
+  --theme-donghua-fill: var(--theme-primary-fill);
+  --theme-donghua-contrast: var(--theme-primary-contrast);
+  --theme-donghua-text: var(--theme-primary-text);
+  --theme-donghua-border: var(--theme-primary-border);
+  --theme-donghua-surface: var(--theme-primary-surface);
+  --theme-donghua-shadow: var(--theme-primary-shadow);
 
-  --theme-novel-fill: #83684d;
-  --theme-novel-contrast: #fff8f1;
-  --theme-novel-text: #70573f;
-  --theme-novel-border: rgba(131, 104, 77, 0.22);
-  --theme-novel-surface: rgba(131, 104, 77, 0.1);
-  --theme-novel-shadow: rgba(131, 104, 77, 0.3);
+  --theme-movie-fill: var(--theme-primary-fill);
+  --theme-movie-contrast: var(--theme-primary-contrast);
+  --theme-movie-text: var(--theme-primary-text);
+  --theme-movie-border: var(--theme-primary-border);
+  --theme-movie-surface: var(--theme-primary-surface);
+  --theme-movie-shadow: var(--theme-primary-shadow);
+
+  --theme-drama-fill: var(--theme-primary-fill);
+  --theme-drama-contrast: var(--theme-primary-contrast);
+  --theme-drama-text: var(--theme-primary-text);
+  --theme-drama-border: var(--theme-primary-border);
+  --theme-drama-surface: var(--theme-primary-surface);
+  --theme-drama-shadow: var(--theme-primary-shadow);
+
+  --theme-novel-fill: var(--theme-primary-fill);
+  --theme-novel-contrast: var(--theme-primary-contrast);
+  --theme-novel-text: var(--theme-primary-text);
+  --theme-novel-border: var(--theme-primary-border);
+  --theme-novel-surface: var(--theme-primary-surface);
+  --theme-novel-shadow: var(--theme-primary-shadow);
 
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -80,7 +246,7 @@ html[data-color-mode="light"] {
   --space-2xl: 2.5rem;
   --space-3xl: 4rem;
 
-  --shadow-sm: 0 1px 2px rgba(34, 24, 16, 0.06);
+  --shadow-sm: 0 1px 2px var(--border-subtle);
   --shadow-md: 0 18px 42px -34px var(--shadow-color);
   --shadow-lg: 0 32px 84px -56px var(--shadow-color-strong);
   --shadow-xl: 0 42px 110px -60px var(--shadow-color-strong);
@@ -107,78 +273,164 @@ html[data-color-mode="light"] {
 }
 
 html[data-color-mode="dark"] {
-  --background: #090a0d;
-  --background-alt: #101216;
-  --foreground: #f3efe8;
-  --muted-foreground: #b2aba1;
-  --border-subtle: rgba(243, 239, 232, 0.12);
-  --border-strong: rgba(243, 239, 232, 0.22);
-  --surface-1: rgba(17, 20, 26, 0.76);
-  --surface-2: #141924;
-  --surface-elevated: rgba(22, 26, 34, 0.88);
-  --surface-overlay: rgba(13, 15, 19, 0.82);
-  --accent: #BDFF00;
-  --accent-soft: rgba(209, 168, 111, 0.16);
-  --accent-strong: #f1c98d;
-  --accent-contrast: #140f09;
-  --shadow-color: rgba(0, 0, 0, 0.44);
-  --shadow-color-strong: rgba(0, 0, 0, 0.66);
-  --page-glow-top: rgba(255, 255, 255, 0.07);
-  --page-glow-side: rgba(209, 168, 111, 0.16);
-  --selection: rgba(209, 168, 111, 0.24);
+  --background: var(--primitive-color-neutral-950);
+  --background-alt: var(--primitive-color-neutral-900);
+  --foreground: var(--primitive-color-neutral-50);
+  --muted-foreground: var(--primitive-color-neutral-300);
+  --border-subtle: var(--primitive-color-neutral-800);
+  --border-strong: var(--primitive-color-neutral-700);
+  --surface-1: var(--primitive-color-neutral-900);
+  --surface-2: var(--primitive-color-neutral-800);
+  --surface-elevated: var(--primitive-color-neutral-900);
+  --surface-overlay: var(--primitive-color-neutral-900);
+  --accent: var(--primitive-color-primary-500);
+  --accent-soft: var(--primitive-color-primary-950);
+  --accent-strong: var(--primitive-color-primary-600);
+  --accent-contrast: var(--primitive-color-neutral-50);
+  --shadow-color: var(--primitive-color-neutral-900);
+  --shadow-color-strong: var(--primitive-color-neutral-950);
+  --page-glow-top: var(--primitive-color-neutral-900);
+  --page-glow-side: var(--primitive-color-primary-900);
+  --selection: var(--primitive-color-primary-800);
   --poster-missing-image: url('/poster-missing-dark.png');
 
-  --theme-default-fill: #f0e8dc;
-  --theme-default-contrast: #16120f;
-  --theme-default-text: #dad0c1;
-  --theme-default-border: rgba(240, 232, 220, 0.18);
-  --theme-default-surface: rgba(240, 232, 220, 0.08);
-  --theme-default-shadow: rgba(240, 232, 220, 0.18);
+  --signal-success: var(--primitive-color-success-500);
+  --signal-success-surface: var(--primitive-color-success-950);
+  --signal-success-contrast: var(--primitive-color-neutral-50);
+  --signal-warning: var(--primitive-color-warning-500);
+  --signal-warning-surface: var(--primitive-color-warning-950);
+  --signal-warning-contrast: var(--primitive-color-neutral-950);
+  --signal-danger: var(--primitive-color-danger-500);
+  --signal-danger-surface: var(--primitive-color-danger-950);
+  --signal-danger-contrast: var(--primitive-color-neutral-50);
+  --signal-info: var(--primitive-color-info-500);
+  --signal-info-surface: var(--primitive-color-info-950);
+  --signal-info-contrast: var(--primitive-color-neutral-50);
 
-  --theme-anime-fill: #c889aa;
-  --theme-anime-contrast: #24151c;
-  --theme-anime-text: #f3cad8;
-  --theme-anime-border: rgba(200, 137, 170, 0.26);
-  --theme-anime-surface: rgba(200, 137, 170, 0.14);
-  --theme-anime-shadow: rgba(200, 137, 170, 0.24);
+  --theme-primary-fill: var(--primitive-color-primary-500);
+  --theme-primary-contrast: var(--primitive-color-neutral-50);
+  --theme-primary-text: var(--primitive-color-primary-200);
+  --theme-primary-border: var(--primitive-color-primary-700);
+  --theme-primary-surface: var(--primitive-color-primary-950);
+  --theme-primary-shadow: var(--primitive-color-primary-800);
 
-  --theme-manga-fill: #c79a63;
-  --theme-manga-contrast: #25180c;
-  --theme-manga-text: #f2d7ba;
-  --theme-manga-border: rgba(199, 154, 99, 0.26);
-  --theme-manga-surface: rgba(199, 154, 99, 0.14);
-  --theme-manga-shadow: rgba(199, 154, 99, 0.24);
+  --theme-default-fill: var(--theme-primary-fill);
+  --theme-default-contrast: var(--theme-primary-contrast);
+  --theme-default-text: var(--theme-primary-text);
+  --theme-default-border: var(--theme-primary-border);
+  --theme-default-surface: var(--theme-primary-surface);
+  --theme-default-shadow: var(--theme-primary-shadow);
 
-  --theme-donghua-fill: #cd8b73;
-  --theme-donghua-contrast: #241611;
-  --theme-donghua-text: #f4d4c8;
-  --theme-donghua-border: rgba(205, 139, 115, 0.26);
-  --theme-donghua-surface: rgba(205, 139, 115, 0.14);
-  --theme-donghua-shadow: rgba(205, 139, 115, 0.24);
+  --theme-anime-fill: var(--theme-primary-fill);
+  --theme-anime-contrast: var(--theme-primary-contrast);
+  --theme-anime-text: var(--theme-primary-text);
+  --theme-anime-border: var(--theme-primary-border);
+  --theme-anime-surface: var(--theme-primary-surface);
+  --theme-anime-shadow: var(--theme-primary-shadow);
 
-  --theme-movie-fill: #d1a86f;
-  --theme-movie-contrast: #1d140a;
-  --theme-movie-text: #efd5b0;
-  --theme-movie-border: rgba(209, 168, 111, 0.28);
-  --theme-movie-surface: rgba(209, 168, 111, 0.14);
-  --theme-movie-shadow: rgba(209, 168, 111, 0.26);
+  --theme-manga-fill: var(--theme-primary-fill);
+  --theme-manga-contrast: var(--theme-primary-contrast);
+  --theme-manga-text: var(--theme-primary-text);
+  --theme-manga-border: var(--theme-primary-border);
+  --theme-manga-surface: var(--theme-primary-surface);
+  --theme-manga-shadow: var(--theme-primary-shadow);
 
-  --theme-drama-fill: #b88aa8;
-  --theme-drama-contrast: #21141d;
-  --theme-drama-text: #e8cade;
-  --theme-drama-border: rgba(184, 138, 168, 0.26);
-  --theme-drama-surface: rgba(184, 138, 168, 0.14);
-  --theme-drama-shadow: rgba(184, 138, 168, 0.24);
+  --theme-donghua-fill: var(--theme-primary-fill);
+  --theme-donghua-contrast: var(--theme-primary-contrast);
+  --theme-donghua-text: var(--theme-primary-text);
+  --theme-donghua-border: var(--theme-primary-border);
+  --theme-donghua-surface: var(--theme-primary-surface);
+  --theme-donghua-shadow: var(--theme-primary-shadow);
 
-  --theme-novel-fill: #b29a79;
-  --theme-novel-contrast: #1f1710;
-  --theme-novel-text: #dfd0bc;
-  --theme-novel-border: rgba(178, 154, 121, 0.26);
-  --theme-novel-surface: rgba(178, 154, 121, 0.14);
-  --theme-novel-shadow: rgba(178, 154, 121, 0.22);
+  --theme-movie-fill: var(--theme-primary-fill);
+  --theme-movie-contrast: var(--theme-primary-contrast);
+  --theme-movie-text: var(--theme-primary-text);
+  --theme-movie-border: var(--theme-primary-border);
+  --theme-movie-surface: var(--theme-primary-surface);
+  --theme-movie-shadow: var(--theme-primary-shadow);
+
+  --theme-drama-fill: var(--theme-primary-fill);
+  --theme-drama-contrast: var(--theme-primary-contrast);
+  --theme-drama-text: var(--theme-primary-text);
+  --theme-drama-border: var(--theme-primary-border);
+  --theme-drama-surface: var(--theme-primary-surface);
+  --theme-drama-shadow: var(--theme-primary-shadow);
+
+  --theme-novel-fill: var(--theme-primary-fill);
+  --theme-novel-contrast: var(--theme-primary-contrast);
+  --theme-novel-text: var(--theme-primary-text);
+  --theme-novel-border: var(--theme-primary-border);
+  --theme-novel-surface: var(--theme-primary-surface);
+  --theme-novel-shadow: var(--theme-primary-shadow);
 }
 
 @theme inline {
+  --color-primary-50: var(--primitive-color-primary-50);
+  --color-primary-100: var(--primitive-color-primary-100);
+  --color-primary-200: var(--primitive-color-primary-200);
+  --color-primary-300: var(--primitive-color-primary-300);
+  --color-primary-400: var(--primitive-color-primary-400);
+  --color-primary-500: var(--primitive-color-primary-500);
+  --color-primary-600: var(--primitive-color-primary-600);
+  --color-primary-700: var(--primitive-color-primary-700);
+  --color-primary-800: var(--primitive-color-primary-800);
+  --color-primary-900: var(--primitive-color-primary-900);
+  --color-primary-950: var(--primitive-color-primary-950);
+  --color-success-50: var(--primitive-color-success-50);
+  --color-success-100: var(--primitive-color-success-100);
+  --color-success-200: var(--primitive-color-success-200);
+  --color-success-300: var(--primitive-color-success-300);
+  --color-success-400: var(--primitive-color-success-400);
+  --color-success-500: var(--primitive-color-success-500);
+  --color-success-600: var(--primitive-color-success-600);
+  --color-success-700: var(--primitive-color-success-700);
+  --color-success-800: var(--primitive-color-success-800);
+  --color-success-900: var(--primitive-color-success-900);
+  --color-success-950: var(--primitive-color-success-950);
+  --color-warning-50: var(--primitive-color-warning-50);
+  --color-warning-100: var(--primitive-color-warning-100);
+  --color-warning-200: var(--primitive-color-warning-200);
+  --color-warning-300: var(--primitive-color-warning-300);
+  --color-warning-400: var(--primitive-color-warning-400);
+  --color-warning-500: var(--primitive-color-warning-500);
+  --color-warning-600: var(--primitive-color-warning-600);
+  --color-warning-700: var(--primitive-color-warning-700);
+  --color-warning-800: var(--primitive-color-warning-800);
+  --color-warning-900: var(--primitive-color-warning-900);
+  --color-warning-950: var(--primitive-color-warning-950);
+  --color-danger-50: var(--primitive-color-danger-50);
+  --color-danger-100: var(--primitive-color-danger-100);
+  --color-danger-200: var(--primitive-color-danger-200);
+  --color-danger-300: var(--primitive-color-danger-300);
+  --color-danger-400: var(--primitive-color-danger-400);
+  --color-danger-500: var(--primitive-color-danger-500);
+  --color-danger-600: var(--primitive-color-danger-600);
+  --color-danger-700: var(--primitive-color-danger-700);
+  --color-danger-800: var(--primitive-color-danger-800);
+  --color-danger-900: var(--primitive-color-danger-900);
+  --color-danger-950: var(--primitive-color-danger-950);
+  --color-info-50: var(--primitive-color-info-50);
+  --color-info-100: var(--primitive-color-info-100);
+  --color-info-200: var(--primitive-color-info-200);
+  --color-info-300: var(--primitive-color-info-300);
+  --color-info-400: var(--primitive-color-info-400);
+  --color-info-500: var(--primitive-color-info-500);
+  --color-info-600: var(--primitive-color-info-600);
+  --color-info-700: var(--primitive-color-info-700);
+  --color-info-800: var(--primitive-color-info-800);
+  --color-info-900: var(--primitive-color-info-900);
+  --color-info-950: var(--primitive-color-info-950);
+  --color-neutral-50: var(--primitive-color-neutral-50);
+  --color-neutral-100: var(--primitive-color-neutral-100);
+  --color-neutral-200: var(--primitive-color-neutral-200);
+  --color-neutral-300: var(--primitive-color-neutral-300);
+  --color-neutral-400: var(--primitive-color-neutral-400);
+  --color-neutral-500: var(--primitive-color-neutral-500);
+  --color-neutral-600: var(--primitive-color-neutral-600);
+  --color-neutral-700: var(--primitive-color-neutral-700);
+  --color-neutral-800: var(--primitive-color-neutral-800);
+  --color-neutral-900: var(--primitive-color-neutral-900);
+  --color-neutral-950: var(--primitive-color-neutral-950);
   --color-background: var(--background);
   --color-background-alt: var(--background-alt);
   --color-foreground: var(--foreground);
@@ -219,7 +471,7 @@ html[data-color-mode="dark"] {
     background:
       radial-gradient(circle at top left, var(--page-glow-top), transparent 28%),
       radial-gradient(circle at top right, var(--page-glow-side), transparent 24%),
-      linear-gradient(180deg, color-mix(in srgb, var(--background) 92%, white 8%) 0%, var(--background) 42%, color-mix(in srgb, var(--background) 88%, var(--background-alt) 12%) 100%);
+      linear-gradient(180deg, var(--background-alt) 0%, var(--background) 42%, var(--background-alt) 100%);
     color: var(--foreground);
     font-family: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
     line-height: 1.6;
@@ -308,7 +560,7 @@ html[data-color-mode="dark"] {
     border-radius: inherit;
     padding: 1px;
     pointer-events: none;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.32), transparent 36%, rgba(255, 255, 255, 0.08));
+    background: linear-gradient(135deg, var(--page-glow-top), transparent 36%, var(--page-glow-side));
     -webkit-mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
@@ -318,7 +570,7 @@ html[data-color-mode="dark"] {
 
   .liquid-glass {
     background: var(--surface-overlay);
-    border: 1px solid color-mix(in srgb, var(--border-subtle) 80%, white 20%);
+    border: 1px solid var(--border-strong);
     backdrop-filter: blur(18px);
     box-shadow: 0 18px 40px -28px var(--shadow-color);
   }
@@ -328,7 +580,7 @@ html[data-color-mode="dark"] {
     overflow: hidden;
     border-radius: var(--radius-xl);
     border: 1px solid var(--border-subtle);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 92%, white 8%) 0%, var(--surface-1) 100%);
+    background: linear-gradient(180deg, var(--surface-elevated) 0%, var(--surface-1) 100%);
     backdrop-filter: blur(18px);
     box-shadow: var(--shadow-md);
   }
@@ -337,8 +589,8 @@ html[data-color-mode="dark"] {
     position: relative;
     overflow: hidden;
     border-radius: var(--radius-2xl);
-    border: 1px solid color-mix(in srgb, var(--border-subtle) 74%, white 26%);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--surface-elevated) 92%, white 8%) 0%, var(--surface-elevated) 100%);
+    border: 1px solid var(--border-strong);
+    background: linear-gradient(180deg, var(--surface-elevated) 0%, var(--surface-2) 100%);
     backdrop-filter: blur(22px);
     box-shadow: var(--shadow-lg);
   }
@@ -362,8 +614,8 @@ html[data-color-mode="dark"] {
 
   .focus-tv:focus-visible {
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--accent) 32%, transparent),
-      0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+      0 0 0 1px var(--accent-strong),
+      0 0 0 4px var(--accent-soft);
   }
 
   .type-display {
@@ -395,7 +647,7 @@ html[data-color-mode="dark"] {
     letter-spacing: 0.24em;
     text-transform: uppercase;
     font-weight: 800;
-    color: color-mix(in srgb, var(--muted-foreground) 78%, var(--accent) 22%);
+    color: var(--accent-strong);
   }
 
   .app-shell {

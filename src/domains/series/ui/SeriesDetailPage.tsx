@@ -136,7 +136,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
   const theme = getSeriesTheme(series.mediaType);
   const seriesCast = series.cast ?? [];
   const productionTeam = series.productionTeam ?? [];
-  const latestEpisodeHref = series.episodes[0] ? `/series/${series.slug}/episodes/${series.episodes[0].slug}` : null;
+  const latestEpisodeHref = series.episodes[0]?.href ?? null;
   const trailerEmbedUrl = getYouTubeEmbedUrl(series.trailerUrl);
   const episodeSort = normalizeEpisodeSort(resolvedSearchParams?.sort);
   const sortedEpisodes = [...series.episodes];
@@ -310,7 +310,6 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
         ) : null}
 
         <SeriesEpisodeSection
-          seriesSlug={series.slug}
           theme={theme}
           episodeCount={series.episodes.length}
           currentPage={currentPage}
@@ -318,6 +317,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
           episodeSort={episodeSort}
           episodes={visibleEpisodes.map((episode) => ({
             slug: episode.slug,
+            href: episode.href,
             title: episode.title || episode.label,
             label: episode.label,
           }))}
@@ -339,7 +339,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
             units={series.episodes.map((episode) => ({
               id: `episode:${episode.slug}`,
               label: episode.title || episode.label,
-              href: `/series/${series.slug}/episodes/${episode.slug}`,
+              href: episode.href,
             }))}
           />
         </section>

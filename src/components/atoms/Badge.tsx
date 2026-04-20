@@ -10,7 +10,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 const BADGE_VARIANTS: Record<Exclude<BadgeVariant, ThemeType>, string> = {
   outline: "border-border-subtle bg-surface-1 text-muted-foreground",
   solid: "border-transparent bg-foreground text-background shadow-[0_18px_40px_-28px_var(--shadow-color)]",
-  status: "border-transparent bg-accent-soft text-[var(--accent-strong)]",
+  status: "border-transparent bg-accent-soft text-foreground",
 };
 
 export function Badge({ className, variant = "outline", ...props }: BadgeProps) {

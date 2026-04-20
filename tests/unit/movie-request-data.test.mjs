@@ -1,18 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createMovieDetailRequestCache } from '../../src/app/movies/[slug]/movie-detail-data.ts';
-import { createMovieWatchRequestCache } from '../../src/app/movies/movie-watch-data.ts';
-import { createMoviePageDataLoader } from '../../src/app/movies/movie-page-data.ts';
-import { resolveMoviePlaybackState } from '../../src/app/movies/[slug]/movie-playback-state.ts';
-import { resolveDynamicSitemapEntries } from '../../src/app/sitemap-utils.ts';
+import { createMovieDetailRequestCache } from '../../src/domains/movies/server/movie-detail-data.ts';
+import { createMovieWatchRequestCache } from '../../src/domains/movies/server/movie-watch-data.ts';
+import { createMoviePageDataLoader } from '../../src/features/movies/server/loadMoviePageData.ts';
+import { resolveMoviePlaybackState } from '../../src/domains/movies/server/movie-playback-state.ts';
+import { resolveDynamicSitemapEntries } from '../../src/app/_shared/metadata/sitemap-utils.ts';
 import {
   buildMovieGenreRows,
   getFeaturedMovie,
   normalizeMovieSortMode,
   sortMovieCards,
   uniqueMovieCards,
-} from '../../src/app/movies/movie-browse-utils.ts';
+} from '../../src/features/movies/movie-browse-utils.ts';
 import { compareMovieUpdatedAtDesc } from '../../src/lib/adapters/movie-sort.ts';
 
 test('movie updated-at sorter handles Date rows from postgres', () => {

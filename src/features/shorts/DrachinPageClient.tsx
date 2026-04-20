@@ -81,6 +81,13 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
     };
   }, []);
 
+  React.useEffect(() => {
+    return () => {
+      setNavbarHidden(false);
+      setFooterHidden(false);
+    };
+  }, [setFooterHidden, setNavbarHidden]);
+
   const enterShortsMode = async () => {
     setLoadingShorts(true);
     setViewMode('shorts');

@@ -53,10 +53,10 @@ export const VideoPlayerMirrorPanel = React.memo(function VideoPlayerMirrorPanel
           <div className={cn('rounded-lg p-2', accentPanelClassName)}>
             <Layers className="h-4 w-4" />
           </div>
-          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Pilihan nonton</h2>
+          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Pilihan nonton</h2>
         </div>
         <div className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-1.5">
-          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Auto lanjut</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Auto lanjut</span>
           <Switch checked={autoPlay} onClick={onToggleAutoPlay} className={!autoPlay ? 'bg-zinc-700' : undefined} />
         </div>
       </div>
@@ -89,7 +89,7 @@ export const VideoPlayerMirrorPanel = React.memo(function VideoPlayerMirrorPanel
                 {isDead ? (
                   <AlertCircle className="h-3 w-3 text-red-500" />
                 ) : (
-                  <Play className={cn('h-3 w-3', isActive ? 'fill-white' : 'fill-zinc-500')} />
+                  <Play className={cn('h-3 w-3', isActive ? 'fill-current' : 'fill-muted-foreground')} />
                 )}
                 {mirrorLabel}
               </div>

@@ -15,6 +15,8 @@ export {
 
 export {
   getSeriesDetailBySlug,
+  getSeriesEpisodeByNumber,
+  getSeriesEpisodeBySpecialSlug,
   getSeriesEpisodeBySlug,
   getSeriesRecommendations,
 } from './series-detail.ts';

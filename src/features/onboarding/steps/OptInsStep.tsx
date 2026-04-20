@@ -12,8 +12,8 @@ export function OptInsStep({
   return (
     <form action={action} className="space-y-4">
       <div>
-        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-zinc-200">Update dan rekomendasi</h2>
-        <p className="mt-2 text-sm text-zinc-400">Pilih apakah kamu ingin menerima update dari jawatch.</p>
+        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Update dan rekomendasi</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Pilih apakah kamu ingin menerima update dari jawatch.</p>
       </div>
 
       {errorCode === 'required' || errorCode === 'finish' ? (
@@ -30,7 +30,7 @@ export function OptInsStep({
           defaultChecked={defaultNewsletterOptIn}
           className="mt-0.5 h-4 w-4 rounded border-border-subtle bg-surface-1"
         />
-        <span className="text-sm text-zinc-300">Kirim update produk dan rilis sesekali lewat email.</span>
+        <span className="text-sm text-foreground">Kirim update produk dan rilis sesekali lewat email.</span>
       </label>
 
       <label className="flex items-start gap-3 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 p-3">
@@ -41,12 +41,12 @@ export function OptInsStep({
           defaultChecked={defaultCommunityOptIn}
           className="mt-0.5 h-4 w-4 rounded border-border-subtle bg-surface-1"
         />
-        <span className="text-sm text-zinc-300">Aktifkan rekomendasi komunitas dan sorotan tren.</span>
+        <span className="text-sm text-foreground">Aktifkan rekomendasi komunitas dan sorotan tren.</span>
       </label>
 
       <button
         type="submit"
-        className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-elevated px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition-colors hover:bg-zinc-700"
+        className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-elevated px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-foreground transition-colors hover:bg-surface-1"
       >
         Selesai
       </button>

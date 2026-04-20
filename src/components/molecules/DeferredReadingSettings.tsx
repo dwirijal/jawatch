@@ -93,7 +93,7 @@ export function DeferredReadingSettings({
       variant="outline"
       size="icon"
       aria-label="Open reader settings"
-      className="h-11 w-11 rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 text-zinc-400 hover:bg-surface-elevated hover:text-white"
+      className="h-11 w-11 rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 text-foreground hover:bg-surface-elevated hover:text-foreground"
       onPointerEnter={handleMount}
       onFocus={handleMount}
       onTouchStart={handleMount}

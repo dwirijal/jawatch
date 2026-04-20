@@ -7,49 +7,29 @@ import type { MovieCardItem } from '@/lib/types';
 
 type SeriesRailEpisode = {
   slug: string;
+  href: string;
   label: string;
   title: string;
   number: number | null;
 };
 
 interface SeriesWatchRailProps {
-  seriesSlug: string;
-  currentEpisodeSlug: string;
+  currentEpisodeHref: string;
+  seriesHref: string;
   playlist: SeriesRailEpisode[];
-  prevEpisodeSlug: string | null;
-  nextEpisodeSlug: string | null;
-}
-
-function sliceAroundIndex<T>(items: T[], activeIndex: number, radius: number): T[] {
-  if (items.length <= radius * 2 + 1) {
-    return items;
-  }
-
-  const safeIndex = Math.min(Math.max(activeIndex, 0), items.length - 1);
-  const start = Math.max(0, safeIndex - radius);
-  const end = Math.min(items.length, safeIndex + radius + 1);
-
-  if (end - start >= radius * 2 + 1) {
-    return items.slice(start, end);
-  }
-
-  if (start === 0) {
-    return items.slice(0, Math.min(items.length, radius * 2 + 1));
-  }
-
-  return items.slice(Math.max(0, items.length - (radius * 2 + 1)));
+  playlistTotal: number;
+  prevEpisodeHref: string | null;
+  nextEpisodeHref: string | null;
 }
 
 export function SeriesWatchRail({
-  seriesSlug,
-  currentEpisodeSlug,
+  currentEpisodeHref,
+  seriesHref,
   playlist,
-  prevEpisodeSlug,
-  nextEpisodeSlug,
+  playlistTotal,
+  prevEpisodeHref,
+  nextEpisodeHref,
 }: SeriesWatchRailProps) {
-  const activeIndex = playlist.findIndex((item) => item.slug === currentEpisodeSlug);
-  const visibleEpisodes = sliceAroundIndex(playlist, activeIndex, 5);
-
   return (
     <div className="space-y-5">
       <div className="space-y-2">
@@ -61,9 +41,9 @@ export function SeriesWatchRail({
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        {prevEpisodeSlug ? (
+        {prevEpisodeHref ? (
           <Link
-            href={`/series/${seriesSlug}/episodes/${prevEpisodeSlug}`}
+            href={prevEpisodeHref}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-border-strong px-4 text-xs font-bold text-foreground transition hover:bg-surface-1"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -76,9 +56,9 @@ export function SeriesWatchRail({
           </span>
         )}
 
-        {nextEpisodeSlug ? (
+        {nextEpisodeHref ? (
           <Link
-            href={`/series/${seriesSlug}/episodes/${nextEpisodeSlug}`}
+            href={nextEpisodeHref}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-border-strong px-4 text-xs font-bold text-foreground transition hover:bg-surface-1"
           >
             Berikutnya
@@ -96,9 +76,9 @@ export function SeriesWatchRail({
         <div className="flex items-center justify-between gap-3">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Lompat cepat</p>
           <div className="flex items-center gap-2">
-            <Badge variant="outline">{playlist.length} episode</Badge>
+            <Badge variant="outline">{playlistTotal} episode</Badge>
             <Link
-              href={`/series/${seriesSlug}?tab=episodes`}
+              href={`${seriesHref}?tab=episodes`}
               className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground transition hover:text-foreground"
             >
               Lihat semua
@@ -106,8 +86,8 @@ export function SeriesWatchRail({
           </div>
         </div>
         <div className="grid grid-cols-3 gap-2">
-          {visibleEpisodes.map((episode) => {
-            const isActive = episode.slug === currentEpisodeSlug;
+          {playlist.map((episode) => {
+            const isActive = episode.href === currentEpisodeHref;
 
             return isActive ? (
               <span
@@ -119,7 +99,7 @@ export function SeriesWatchRail({
             ) : (
               <Link
                 key={episode.slug}
-                href={`/series/${seriesSlug}/episodes/${episode.slug}`}
+                href={episode.href}
                 className={cn(
                   'inline-flex min-h-11 items-center justify-center rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-foreground transition hover:bg-surface-2',
                   'focus-tv'

@@ -31,6 +31,8 @@ function normalizePath(path: string): string {
 export function isUnitPath(path: string): boolean {
   const pathname = normalizePath(path);
   return (
+    /^\/series\/[^/]+\/ep\/[^/]+$/.test(pathname) ||
+    /^\/series\/[^/]+\/special\/[^/]+$/.test(pathname) ||
     /^\/series\/[^/]+\/episodes\/[^/]+$/.test(pathname) ||
     /^\/shorts\/[^/]+\/episodes\/[^/]+$/.test(pathname) ||
     /^\/comics\/[^/]+\/chapters\/[^/]+$/.test(pathname)

@@ -24,8 +24,8 @@ export default async function OnboardingPage({
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-6 py-12">
       <section className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 p-6">
-        <h1 className="text-xl font-black uppercase tracking-[0.16em] text-white">Welcome To Jawatch</h1>
-        <p className="mt-2 text-sm text-zinc-400">
+        <h1 className="text-xl font-black uppercase tracking-[0.16em] text-foreground">Welcome To Jawatch</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
           Finish a quick setup so we can personalize your catalog and access preferences.
         </p>
       </section>

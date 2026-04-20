@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createSeriesDetailRequestCache } from '../../src/app/series/[slug]/series-detail-data.ts';
+import { createSeriesDetailRequestCache } from '../../src/domains/series/server/series-detail-data.ts';
 
 test('dedupes in-flight and repeated lookups for the same slug', async () => {
   let calls = 0;

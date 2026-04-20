@@ -72,6 +72,8 @@ const REMOVED_PUBLIC_PREFIXES = [
 
 const SESSION_REFRESH_PREFIXES = ['/account/', '/auth/', '/logout/', '/vault/'];
 const SESSION_REFRESH_EXACT_PATHS = new Set(['/account', '/auth', '/login', '/logout', '/vault']);
+const LEGACY_SERIES_EPISODE_ROUTE = /^\/series\/([^/]+)\/episodes\/([^/]+)\/?$/;
+const LEGACY_NUMBERED_EPISODE_SLUG = /(?:^|[-/])(?:episode|ep)-(\d+(?:\.\d+)?)$/i;
 
 export function buildCanonicalAppRedirectUrl(pathname: string, search: string) {
   return new URL(`${pathname}${search}`, CANONICAL_APP_ORIGIN);
@@ -87,6 +89,26 @@ export function shouldRefreshSupabaseSession(pathname: string) {
   }
 
   return SESSION_REFRESH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+export function getLegacySeriesEpisodeRedirectPath(pathname: string): string | null {
+  const match = pathname.match(LEGACY_SERIES_EPISODE_ROUTE);
+  if (!match) {
+    return null;
+  }
+
+  const [, seriesSlug, episodeSlug] = match;
+  const numberedMatch = episodeSlug.match(LEGACY_NUMBERED_EPISODE_SLUG);
+  if (numberedMatch) {
+    return `/series/${seriesSlug}/ep/${numberedMatch[1]}`;
+  }
+
+  const seriesPrefix = `${seriesSlug}-`;
+  const specialSlug = episodeSlug.startsWith(seriesPrefix)
+    ? episodeSlug.slice(seriesPrefix.length)
+    : episodeSlug;
+
+  return `/series/${seriesSlug}/special/${specialSlug || 'special'}`;
 }
 
 export function isScannerPath(pathname: string) {

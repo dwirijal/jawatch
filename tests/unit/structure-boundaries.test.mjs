@@ -90,6 +90,15 @@ test('auth gateway stays focused on auth status and URL helpers', () => {
   assert.equal(source.includes("from '@/lib/store'"), false);
 });
 
+test('domain cache accepts Aiven Valkey env aliases', () => {
+  const source = read('src/platform/cache/redis/domain-cache.ts');
+
+  assert.equal(source.includes('process.env.AIVEN_REDIS_URL'), true);
+  assert.equal(source.includes('process.env.AIVEN_VALKEY_URL'), true);
+  assert.equal(source.includes('process.env.REDIS_URL'), true);
+  assert.equal(source.includes('process.env.VALKEY_URL'), true);
+});
+
 test('store root file is a thin facade instead of a persistence implementation', () => {
   const source = read('src/lib/store.ts');
 

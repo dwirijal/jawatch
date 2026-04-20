@@ -16,6 +16,7 @@ import {
   shouldUseComicGateway,
 } from '../server/comic-origin.ts';
 import { fetchWithTimeout } from '../fetch-with-timeout.ts';
+import { buildSeriesEpisodeHref, parseSeriesEpisodeNumberParam } from '../series-episode-paths.ts';
 import {
   buildVisibilityCondition,
   getVisibilityCacheSegment,
@@ -31,15 +32,16 @@ import { pickAssetUrl } from '../utils.ts';
 import {
   buildCanonicalEpisodeLateralSubquery,
   collapseCanonicalEpisodeEntries,
-  resolveSeriesEpisodeNavigation,
   selectCanonicalSeriesRow,
   selectSeriesPlaybackSources,
 } from './series-canonical-utils';
+import { buildSeriesEpisodeRailState } from './series-episode-playlist.ts';
 import {
   resolveLk21MovieProviderUrl,
 } from './movie-lk21-stream-resolver.ts';
 import {
   buildPublicSeriesEpisodeSlug,
+  buildSeriesEpisodeSpecialSlugExpression,
   buildSeriesEpisodeSlugExpression,
   buildSeriesItemSlugExpression,
   buildSeriesScopeCondition,
@@ -72,6 +74,9 @@ import {
   type SeriesRow,
 } from './series-shared.ts';
 import { type SeriesMediaType } from '../series-presentation.ts';
+
+type SeriesSqlClient = NonNullable<ReturnType<typeof getComicDb>>;
+type SeriesDbSchemaCapabilities = Awaited<ReturnType<typeof getComicDbSchemaCapabilities>>;
 
 async function fetchSeriesGatewayJson<T>(
   path: string,
@@ -193,18 +198,29 @@ export async function getSeriesDetailBySlug(
         and u.unit_type = 'episode'
       order by coalesce(cu.number, u.number) desc nulls last, coalesce(cu.updated_at, u.updated_at) desc
     `, [episodeItemKey]);
-    const normalizedEpisodes = collapseCanonicalEpisodeEntries(episodes).map((episode) => ({
-      ...episode,
-      slug: buildPublicSeriesEpisodeSlug({
+    const normalizedEpisodes = collapseCanonicalEpisodeEntries(episodes).map((episode) => {
+      const episodeSlug = buildPublicSeriesEpisodeSlug({
         seriesSlug: row.slug,
         episodeSlug: '',
         label: episode.label,
         title: episode.title,
         number: episode.number,
-      }),
-      title: collapseRepeatedSeriesTitle(episode.title),
-      label: readText(episode.label),
-    }));
+      });
+
+      return {
+        ...episode,
+        slug: episodeSlug,
+        href: buildSeriesEpisodeHref({
+          seriesSlug: row.slug,
+          episodeSlug,
+          label: episode.label,
+          title: episode.title,
+          number: episode.number,
+        }),
+        title: collapseRepeatedSeriesTitle(episode.title),
+        label: readText(episode.label),
+      };
+    });
 
     const detail = getSeriesDetailRecord(row);
     const genres = getSeriesGenres(detail);
@@ -283,22 +299,307 @@ export async function getSeriesRecommendations({
   });
 }
 
+function normalizeEpisodeLookupValue(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  try {
+    return decodeURIComponent(trimmed);
+  } catch {
+    return trimmed;
+  }
+}
+
+function buildSeriesEpisodeMatchQuery(
+  schemaCapabilities: Parameters<typeof buildCanonicalUnitKeyExpression>[1],
+  matchCondition: string,
+): string {
+  return `
+    with matched_unit as (
+      select
+        u.unit_key as requested_unit_key,
+        i.source as requested_source,
+        ${buildCanonicalUnitKeyExpression('u', schemaCapabilities)} as canonical_unit_key
+      from public.media_units u
+      join public.media_items i on i.item_key = u.item_key
+      where ${buildSeriesScopeCondition('i')}
+        and ${matchCondition}
+        and u.unit_type = 'episode'
+      order by ${buildCanonicalUnitOrdering('u', schemaCapabilities)}u.updated_at desc
+      limit 1
+    )
+    select
+      i.item_key,
+      mu.requested_unit_key,
+      mu.requested_source,
+      i.media_type,
+      i.origin_type,
+      i.release_country,
+      ${buildSeriesItemSlugExpression('i')} as item_slug,
+      i.title as item_title,
+      i.cover_url,
+      i.release_year,
+      i.detail as item_detail,
+      f.payload as item_fanart_payload,
+      e.payload as item_tmdb_payload,
+      ${buildSeriesEpisodeSlugExpression('i', 'u')} as slug,
+      u.title,
+      u.label,
+      u.number,
+      u.detail,
+      mu.canonical_unit_key
+    from matched_unit mu
+    join public.media_units u on u.unit_key = mu.canonical_unit_key
+    join public.media_items i on i.item_key = u.item_key
+    left join public.media_item_enrichments f
+      on f.item_key = i.item_key
+     and f.provider = 'fanart'
+     and f.match_status = 'matched'
+    left join public.media_item_enrichments e
+      on e.item_key = i.item_key
+     and e.provider = 'tmdb'
+     and e.match_status = 'matched'
+    limit 1
+  `;
+}
+
+async function buildSeriesEpisodePayload(
+  row: SeriesEpisodeRow,
+  options: VisibilityOptions,
+  sql = getComicDb(),
+  schemaCapabilities?: SeriesDbSchemaCapabilities | null,
+): Promise<SeriesEpisodeData | null> {
+  const resolvedSchemaCapabilities = schemaCapabilities ?? (sql ? await getComicDbSchemaCapabilities(sql) : null);
+  if (!sql || !resolvedSchemaCapabilities) {
+    return null;
+  }
+
+  const preferredSourceItemKey = await readPreferredLinkedSourceItemKey(sql, row.item_key, {
+    requestedSource: row.requested_source,
+    includeNsfw: Boolean(options.includeNsfw),
+  });
+  const playlistItemKey = preferredSourceItemKey || readText(row.item_key);
+  const playlist = await sql.unsafe<Array<{
+    canonical_unit_key: string | null;
+    label: string;
+    title: string;
+    number: number | null;
+  }>>(`
+    select
+      coalesce(cu.unit_key, u.unit_key) as canonical_unit_key,
+      coalesce(cu.label, u.label) as label,
+      coalesce(cu.title, u.title) as title,
+      coalesce(cu.number, u.number) as number
+    from public.media_units u
+    left join lateral (
+      ${buildCanonicalEpisodeLateralSubquery('cu', 'u', resolvedSchemaCapabilities.unitLinks)}
+    ) cu on true
+    where u.item_key = $1
+      and u.unit_type = 'episode'
+    order by coalesce(cu.number, u.number) desc nulls last, coalesce(cu.updated_at, u.updated_at) desc
+  `, [playlistItemKey]);
+
+  const itemDetail = getSeriesItemDetailRecord(row);
+  const episodeDetail = readRecord(row.detail);
+  const sourceDetail = await readPreferredLinkedSourceUnitDetail(sql, row.canonical_unit_key, {
+    requestedUnitKey: row.requested_unit_key,
+    linkedSourceItemKey: preferredSourceItemKey,
+    requestedSource: row.requested_source,
+    includeNsfw: Boolean(options.includeNsfw),
+  });
+  const sourceEpisodeDetail = {
+    ...episodeDetail,
+    ...sourceDetail,
+  };
+  const canonicalPlayback = await readCanonicalPlaybackOptions(sql, row.canonical_unit_key);
+  const playback = selectSeriesPlaybackSources({
+    requestedSlug: row.slug,
+    canonicalSlug: row.slug,
+    sourceMirrors: parseVideoMirrors(sourceEpisodeDetail),
+    canonicalMirrors: canonicalPlayback.mirrors,
+    sourceDownloadGroups: parseVideoDownloads(sourceEpisodeDetail),
+    canonicalDownloadGroups: canonicalPlayback.downloadGroups,
+    sourceStreamUrl: readText(sourceEpisodeDetail.stream_url),
+  });
+
+  const resolvedMirrors = await Promise.all(
+    playback.mirrors.map(async (entry) => ({
+      label: entry.label,
+      embed_url: await resolveLk21MovieProviderUrl(entry.embed_url),
+    })),
+  );
+
+  const resolvedDefaultUrl = resolvedMirrors[0]?.embed_url || await resolveLk21MovieProviderUrl(playback.defaultUrl);
+  const publicSlug = buildPublicSeriesEpisodeSlug({
+    seriesSlug: row.item_slug,
+    episodeSlug: '',
+    label: row.label,
+    title: row.title,
+    number: row.number,
+  });
+  const href = buildSeriesEpisodeHref({
+    seriesSlug: row.item_slug,
+    episodeSlug: publicSlug,
+    label: row.label,
+    title: row.title,
+    number: row.number,
+  });
+  const railState = buildSeriesEpisodeRailState({
+    entries: playlist,
+    currentCanonicalUnitKey: row.canonical_unit_key || row.requested_unit_key || '',
+    seriesSlug: row.item_slug,
+  });
+
+  return {
+    slug: publicSlug,
+    href,
+    mediaType: getSeriesType(row),
+    seriesSlug: row.item_slug,
+    seriesTitle: collapseRepeatedSeriesTitle(row.item_title),
+    poster: normalizePosterUrl(itemDetail.poster_url, row.cover_url),
+    year: formatDetailYear(row.release_year, itemDetail),
+    country: normalizeCountry(itemDetail) || formatCountryCode(row.release_country),
+    title: collapseRepeatedSeriesTitle(readText(row.title) || `${row.item_title} ${row.label}`.trim()),
+    episodeLabel: readText(row.label),
+    episodeNumber: row.number == null ? '' : String(row.number),
+    synopsis: readText(episodeDetail.synopsis) || readText(episodeDetail.overview) || readText(itemDetail.synopsis) || readText(itemDetail.overview) || 'Synopsis is still being prepared.',
+    detailHref: `/series/${row.item_slug}`,
+    mirrors: resolvedMirrors,
+    defaultUrl: resolvedDefaultUrl,
+    canInlinePlayback: Boolean(resolvedDefaultUrl),
+    externalUrl: resolvedDefaultUrl,
+    downloadGroups: playback.downloadGroups,
+    playlist: railState.playlist,
+    playlistTotal: railState.playlistTotal,
+    prevEpisodeHref: railState.prevEpisodeHref,
+    nextEpisodeHref: railState.nextEpisodeHref,
+    prevEpisodeSlug: railState.prevEpisodeSlug,
+    nextEpisodeSlug: railState.nextEpisodeSlug,
+  };
+}
+
+async function loadSeriesEpisodeRowsByLegacySlug(
+  normalizedSlug: string,
+  options: VisibilityOptions,
+  sql = getComicDb(),
+  schemaCapabilities?: SeriesDbSchemaCapabilities | null,
+): Promise<SeriesEpisodeRow[]> {
+  const resolvedSchemaCapabilities = schemaCapabilities ?? (sql ? await getComicDbSchemaCapabilities(sql) : null);
+  if (!sql || !resolvedSchemaCapabilities || !normalizedSlug) {
+    return [];
+  }
+
+  const loadEpisodeRows = (query: string, params: unknown[]) => sql.unsafe<SeriesEpisodeRow[]>(query, params);
+  const visibilityClause = buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw');
+
+  const rows = await loadEpisodeRows(
+    buildSeriesEpisodeMatchQuery(
+      resolvedSchemaCapabilities,
+      `${buildSeriesEpisodeSlugExpression('i', 'u')} = $1
+        ${visibilityClause}`,
+    ),
+    [normalizedSlug],
+  );
+
+  if (rows.length > 0) {
+    return rows;
+  }
+
+  const parsedPublicRequest = parsePublicSeriesEpisodeRequest(normalizedSlug);
+  if (!parsedPublicRequest) {
+    return [];
+  }
+
+  return loadEpisodeRows(
+    buildSeriesEpisodeMatchQuery(
+      resolvedSchemaCapabilities,
+      `${buildSeriesItemSlugExpression('i')} = $1
+        and u.number = $2
+        ${visibilityClause}`,
+    ),
+    [parsedPublicRequest.seriesSlug, parsedPublicRequest.episodeNumber],
+  );
+}
+
+async function loadSeriesEpisodeRowsByNumber(
+  seriesSlug: string,
+  episodeNumber: number,
+  options: VisibilityOptions,
+  sql = getComicDb(),
+  schemaCapabilities?: SeriesDbSchemaCapabilities | null,
+): Promise<SeriesEpisodeRow[]> {
+  const resolvedSchemaCapabilities = schemaCapabilities ?? (sql ? await getComicDbSchemaCapabilities(sql) : null);
+  if (!sql || !resolvedSchemaCapabilities || !readText(seriesSlug) || !Number.isFinite(episodeNumber)) {
+    return [];
+  }
+
+  return sql.unsafe<SeriesEpisodeRow[]>(
+    buildSeriesEpisodeMatchQuery(
+      resolvedSchemaCapabilities,
+      `${buildSeriesItemSlugExpression('i')} = $1
+        and u.number = $2
+        ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}`,
+    ),
+    [seriesSlug, episodeNumber],
+  );
+}
+
+async function loadSeriesEpisodeRowsBySpecialSlug(
+  seriesSlug: string,
+  specialSlug: string,
+  options: VisibilityOptions,
+  sql = getComicDb(),
+  schemaCapabilities?: SeriesDbSchemaCapabilities | null,
+): Promise<SeriesEpisodeRow[]> {
+  const resolvedSchemaCapabilities = schemaCapabilities ?? (sql ? await getComicDbSchemaCapabilities(sql) : null);
+  if (!sql || !resolvedSchemaCapabilities || !readText(seriesSlug) || !readText(specialSlug)) {
+    return [];
+  }
+
+  return sql.unsafe<SeriesEpisodeRow[]>(
+    buildSeriesEpisodeMatchQuery(
+      resolvedSchemaCapabilities,
+      `${buildSeriesItemSlugExpression('i')} = $1
+        and u.number is null
+        and ${buildSeriesEpisodeSpecialSlugExpression('u')} = $2
+        ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}`,
+    ),
+    [seriesSlug, specialSlug],
+  );
+}
+
+async function rememberResolvedSeriesEpisode(
+  cacheParts: Array<string | number>,
+  options: VisibilityOptions,
+  rowLoader: (sql: SeriesSqlClient, schemaCapabilities: SeriesDbSchemaCapabilities) => Promise<SeriesEpisodeRow[]>,
+): Promise<SeriesEpisodeData | null> {
+  const visibility = getVisibilityCacheSegment(Boolean(options.includeNsfw));
+  const key = buildComicCacheKey(SERIES_CACHE_NAMESPACE, visibility, ...cacheParts);
+
+  return rememberComicCacheValue(key, DETAIL_CACHE_TTL_SECONDS, async () => {
+    const sql = getComicDb();
+    if (!sql) {
+      return null;
+    }
+
+    const schemaCapabilities = await getComicDbSchemaCapabilities(sql);
+    const rows = await rowLoader(sql, schemaCapabilities);
+    const row = selectCanonicalSeriesRow(rows);
+    if (!row) {
+      return null;
+    }
+
+    return buildSeriesEpisodePayload(row, options, sql, schemaCapabilities);
+  });
+}
+
 export async function getSeriesEpisodeBySlug(
   slug: string,
   options: VisibilityOptions = {},
 ): Promise<SeriesEpisodeData | null> {
-  const normalizedSlug = (() => {
-    const trimmed = slug.trim();
-    if (!trimmed) {
-      return '';
-    }
-
-    try {
-      return decodeURIComponent(trimmed);
-    } catch {
-      return trimmed;
-    }
-  })();
+  const normalizedSlug = normalizeEpisodeLookupValue(slug);
   if (!normalizedSlug) {
     return null;
   }
@@ -312,229 +613,49 @@ export async function getSeriesEpisodeBySlug(
     );
   }
 
-  const visibility = getVisibilityCacheSegment(Boolean(options.includeNsfw));
-  const key = buildComicCacheKey(SERIES_CACHE_NAMESPACE, visibility, 'episode', normalizedSlug);
+  return rememberResolvedSeriesEpisode(
+    ['episode-legacy', normalizedSlug],
+    options,
+    (sql, schemaCapabilities) => loadSeriesEpisodeRowsByLegacySlug(normalizedSlug, options, sql, schemaCapabilities),
+  );
+}
 
-  return rememberComicCacheValue(key, DETAIL_CACHE_TTL_SECONDS, async () => {
-    const sql = getComicDb();
-    if (!sql) {
-      return null;
-    }
+export async function getSeriesEpisodeByNumber(
+  seriesSlug: string,
+  episodeNumber: string | number,
+  options: VisibilityOptions = {},
+): Promise<SeriesEpisodeData | null> {
+  const normalizedSeriesSlug = normalizeEpisodeLookupValue(seriesSlug);
+  const normalizedEpisodeNumber = typeof episodeNumber === 'number'
+    ? episodeNumber
+    : parseSeriesEpisodeNumberParam(String(episodeNumber));
 
-    const schemaCapabilities = await getComicDbSchemaCapabilities(sql);
-    const loadEpisodeRows = (query: string, params: unknown[]) => sql.unsafe<SeriesEpisodeRow[]>(query, params);
+  if (!normalizedSeriesSlug || normalizedEpisodeNumber == null) {
+    return null;
+  }
 
-    const exactMatchQuery = `
-      with matched_unit as (
-        select
-          u.unit_key as requested_unit_key,
-          i.source as requested_source,
-          ${buildCanonicalUnitKeyExpression('u', schemaCapabilities)} as canonical_unit_key
-        from public.media_units u
-        join public.media_items i on i.item_key = u.item_key
-        where ${buildSeriesScopeCondition('i')}
-          and ${buildSeriesEpisodeSlugExpression('i', 'u')} = $1
-          and u.unit_type = 'episode'
-          ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}
-        order by ${buildCanonicalUnitOrdering('u', schemaCapabilities)}u.updated_at desc
-        limit 1
-      )
-      select
-        i.item_key,
-        mu.requested_unit_key,
-        mu.requested_source,
-        i.media_type,
-        i.origin_type,
-        i.release_country,
-        ${buildSeriesItemSlugExpression('i')} as item_slug,
-        i.title as item_title,
-        i.cover_url,
-        i.release_year,
-        i.detail as item_detail,
-        f.payload as item_fanart_payload,
-        e.payload as item_tmdb_payload,
-        ${buildSeriesEpisodeSlugExpression('i', 'u')} as slug,
-        u.title,
-        u.label,
-        u.number,
-        u.detail,
-        mu.canonical_unit_key
-      from matched_unit mu
-      join public.media_units u on u.unit_key = mu.canonical_unit_key
-      join public.media_items i on i.item_key = u.item_key
-      left join public.media_item_enrichments f
-        on f.item_key = i.item_key
-       and f.provider = 'fanart'
-       and f.match_status = 'matched'
-      left join public.media_item_enrichments e
-        on e.item_key = i.item_key
-       and e.provider = 'tmdb'
-       and e.match_status = 'matched'
-      limit 1
-    `;
+  return rememberResolvedSeriesEpisode(
+    ['episode-number', normalizedSeriesSlug, String(normalizedEpisodeNumber)],
+    options,
+    (sql, schemaCapabilities) => loadSeriesEpisodeRowsByNumber(normalizedSeriesSlug, normalizedEpisodeNumber, options, sql, schemaCapabilities),
+  );
+}
 
-    let rows = await loadEpisodeRows(exactMatchQuery, [normalizedSlug]);
+export async function getSeriesEpisodeBySpecialSlug(
+  seriesSlug: string,
+  specialSlug: string,
+  options: VisibilityOptions = {},
+): Promise<SeriesEpisodeData | null> {
+  const normalizedSeriesSlug = normalizeEpisodeLookupValue(seriesSlug);
+  const normalizedSpecialSlug = normalizeEpisodeLookupValue(specialSlug);
 
-    if (rows.length === 0) {
-      const parsedPublicRequest = parsePublicSeriesEpisodeRequest(normalizedSlug);
-      if (parsedPublicRequest) {
-        rows = await loadEpisodeRows(`
-          with matched_unit as (
-            select
-              u.unit_key as requested_unit_key,
-              i.source as requested_source,
-              ${buildCanonicalUnitKeyExpression('u', schemaCapabilities)} as canonical_unit_key
-            from public.media_units u
-            join public.media_items i on i.item_key = u.item_key
-            where ${buildSeriesScopeCondition('i')}
-              and ${buildSeriesItemSlugExpression('i')} = $1
-              and u.number = $2
-              and u.unit_type = 'episode'
-              ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}
-            order by ${buildCanonicalUnitOrdering('u', schemaCapabilities)}u.updated_at desc
-            limit 1
-          )
-          select
-            i.item_key,
-            mu.requested_unit_key,
-            mu.requested_source,
-            i.media_type,
-            i.origin_type,
-            i.release_country,
-            ${buildSeriesItemSlugExpression('i')} as item_slug,
-            i.title as item_title,
-            i.cover_url,
-            i.release_year,
-            i.detail as item_detail,
-            f.payload as item_fanart_payload,
-            e.payload as item_tmdb_payload,
-            ${buildSeriesEpisodeSlugExpression('i', 'u')} as slug,
-            u.title,
-            u.label,
-            u.number,
-            u.detail,
-            mu.canonical_unit_key
-          from matched_unit mu
-          join public.media_units u on u.unit_key = mu.canonical_unit_key
-          join public.media_items i on i.item_key = u.item_key
-          left join public.media_item_enrichments f
-            on f.item_key = i.item_key
-           and f.provider = 'fanart'
-           and f.match_status = 'matched'
-          left join public.media_item_enrichments e
-            on e.item_key = i.item_key
-           and e.provider = 'tmdb'
-           and e.match_status = 'matched'
-          limit 1
-        `, [parsedPublicRequest.seriesSlug, parsedPublicRequest.episodeNumber]);
-      }
-    }
+  if (!normalizedSeriesSlug || !normalizedSpecialSlug) {
+    return null;
+  }
 
-    const row = selectCanonicalSeriesRow(rows);
-    if (!row) {
-      return null;
-    }
-
-    const preferredSourceItemKey = await readPreferredLinkedSourceItemKey(sql, row.item_key, {
-      requestedSource: row.requested_source,
-      includeNsfw: Boolean(options.includeNsfw),
-    });
-    const playlistItemKey = preferredSourceItemKey || readText(row.item_key);
-    const playlist = await sql.unsafe<Array<{
-      canonical_unit_key: string | null;
-      label: string;
-      title: string;
-      number: number | null;
-    }>>(`
-      select
-        coalesce(cu.unit_key, u.unit_key) as canonical_unit_key,
-        coalesce(cu.label, u.label) as label,
-        coalesce(cu.title, u.title) as title,
-        coalesce(cu.number, u.number) as number
-      from public.media_units u
-      left join lateral (
-        ${buildCanonicalEpisodeLateralSubquery('cu', 'u', schemaCapabilities.unitLinks)}
-      ) cu on true
-      where u.item_key = $1
-        and u.unit_type = 'episode'
-      order by coalesce(cu.number, u.number) desc nulls last, coalesce(cu.updated_at, u.updated_at) desc
-    `, [playlistItemKey]);
-
-    const itemDetail = getSeriesItemDetailRecord(row);
-    const episodeDetail = readRecord(row.detail);
-    const sourceDetail = await readPreferredLinkedSourceUnitDetail(sql, row.canonical_unit_key, {
-      requestedUnitKey: row.requested_unit_key,
-      linkedSourceItemKey: preferredSourceItemKey,
-      requestedSource: row.requested_source,
-      includeNsfw: Boolean(options.includeNsfw),
-    });
-    const sourceEpisodeDetail = {
-      ...episodeDetail,
-      ...sourceDetail,
-    };
-    const canonicalPlayback = await readCanonicalPlaybackOptions(sql, row.canonical_unit_key);
-    const playback = selectSeriesPlaybackSources({
-      requestedSlug: normalizedSlug,
-      canonicalSlug: row.slug,
-      sourceMirrors: parseVideoMirrors(sourceEpisodeDetail),
-      canonicalMirrors: canonicalPlayback.mirrors,
-      sourceDownloadGroups: parseVideoDownloads(sourceEpisodeDetail),
-      canonicalDownloadGroups: canonicalPlayback.downloadGroups,
-      sourceStreamUrl: readText(sourceEpisodeDetail.stream_url),
-    });
-
-    const resolvedMirrors = await Promise.all(
-      playback.mirrors.map(async (entry) => ({
-        label: entry.label,
-        embed_url: await resolveLk21MovieProviderUrl(entry.embed_url),
-      })),
-    );
-
-    const resolvedDefaultUrl = resolvedMirrors[0]?.embed_url || await resolveLk21MovieProviderUrl(playback.defaultUrl);
-
-    const publicSlug = buildPublicSeriesEpisodeSlug({
-      seriesSlug: row.item_slug,
-      episodeSlug: '',
-      label: row.label,
-      title: row.title,
-      number: row.number,
-    });
-    const collapsedPlaylist = collapseCanonicalEpisodeEntries(playlist).map((entry) => ({
-      ...entry,
-      slug: buildPublicSeriesEpisodeSlug({
-        seriesSlug: row.item_slug,
-        episodeSlug: '',
-        label: entry.label,
-        title: entry.title,
-        number: entry.number,
-      }),
-    }));
-    const navigation = resolveSeriesEpisodeNavigation({
-      currentSlug: publicSlug,
-      playlist: collapsedPlaylist,
-    });
-
-    return {
-      slug: publicSlug,
-      mediaType: getSeriesType(row),
-      seriesSlug: row.item_slug,
-      seriesTitle: collapseRepeatedSeriesTitle(row.item_title),
-      poster: normalizePosterUrl(itemDetail.poster_url, row.cover_url),
-      year: formatDetailYear(row.release_year, itemDetail),
-      country: normalizeCountry(itemDetail) || formatCountryCode(row.release_country),
-      title: collapseRepeatedSeriesTitle(readText(row.title) || `${row.item_title} ${row.label}`.trim()),
-      episodeLabel: readText(row.label),
-      episodeNumber: row.number == null ? '' : String(row.number),
-      synopsis: readText(episodeDetail.synopsis) || readText(episodeDetail.overview) || readText(itemDetail.synopsis) || readText(itemDetail.overview) || 'Synopsis is still being prepared.',
-      detailHref: `/series/${row.item_slug}`,
-      mirrors: resolvedMirrors,
-      defaultUrl: resolvedDefaultUrl,
-      canInlinePlayback: Boolean(resolvedDefaultUrl),
-      externalUrl: resolvedDefaultUrl,
-      downloadGroups: playback.downloadGroups,
-      playlist: collapsedPlaylist,
-      prevEpisodeSlug: navigation.prevSlug,
-      nextEpisodeSlug: navigation.nextSlug,
-    };
-  });
+  return rememberResolvedSeriesEpisode(
+    ['episode-special', normalizedSeriesSlug, normalizedSpecialSlug],
+    options,
+    (sql, schemaCapabilities) => loadSeriesEpisodeRowsBySpecialSlug(normalizedSeriesSlug, normalizedSpecialSlug, options, sql, schemaCapabilities),
+  );
 }

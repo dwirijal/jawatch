@@ -78,18 +78,18 @@ export function OnboardingWizard({
   return (
     <section className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 p-6">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-zinc-400">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-muted-foreground">
           Langkah {stepIndex + 1} dari {STEP_ORDER.length}
         </p>
         {OPTIONAL_STEPS.has(currentStep) ? (
-          <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">Opsional</p>
+          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Opsional</p>
         ) : (
-          <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">Wajib</p>
+          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Wajib</p>
         )}
       </div>
 
       <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-2">
-        <div className="h-full rounded-full bg-zinc-100 transition-all" style={{ width: `${progressPercent}%` }} />
+        <div className="h-full rounded-full bg-[var(--accent-strong)] transition-all" style={{ width: `${progressPercent}%` }} />
       </div>
 
       <div className="mt-6">

@@ -27,8 +27,8 @@ export function MediaPreferencesStep({
   return (
     <form action={action} className="space-y-4">
       <div>
-        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-zinc-200">Preferensi konten</h2>
-        <p className="mt-2 text-sm text-zinc-400">Pilih jenis konten yang mau kamu prioritaskan.</p>
+        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Preferensi konten</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Pilih jenis konten yang mau kamu prioritaskan.</p>
       </div>
 
       {errorCode === 'media' ? (
@@ -50,7 +50,7 @@ export function MediaPreferencesStep({
               defaultChecked={selectedTypes.has(mediaType)}
               className="h-4 w-4 rounded border-border-subtle bg-surface-1"
             />
-            <span className="text-sm text-zinc-300">{formatMediaTypeLabel(mediaType)}</span>
+            <span className="text-sm text-foreground">{formatMediaTypeLabel(mediaType)}</span>
           </label>
         ))}
       </div>
@@ -58,13 +58,13 @@ export function MediaPreferencesStep({
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
           type="submit"
-          className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-elevated px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition-colors hover:bg-zinc-700"
+          className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-elevated px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-foreground transition-colors hover:bg-surface-1"
         >
           Lanjut
         </button>
         <a
           href={skipHref}
-          className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-3 text-center text-sm font-black uppercase tracking-[0.16em] text-zinc-200 transition-colors hover:bg-surface-elevated"
+          className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-3 text-center text-sm font-black uppercase tracking-[0.16em] text-foreground transition-colors hover:bg-surface-elevated"
         >
           Lewati dulu
         </a>

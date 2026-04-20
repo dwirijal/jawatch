@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const routes = [
   '/movies/sharp-corner-2025',
   '/series/digimon-beatbreak',
-  '/series/digimon-beatbreak/episodes/digimon-beatbreak-episode-24',
+  '/series/digimon-beatbreak/ep/24',
   '/comics/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life',
   '/comics/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life/chapters/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life-chapter-89',
 ];
@@ -37,7 +37,7 @@ test('series and comic title pages expose aggregate community panels', async ({ 
 });
 
 test('series episode and comic chapter pages expose unit community panels', async ({ page }) => {
-  await page.goto('/series/digimon-beatbreak/episodes/digimon-beatbreak-episode-24', { waitUntil: 'domcontentloaded' });
+  await page.goto('/series/digimon-beatbreak/ep/24', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('body')).toContainText('Like this unit');
   await expect(page.locator('body')).toContainText('Talk about Episode');
 

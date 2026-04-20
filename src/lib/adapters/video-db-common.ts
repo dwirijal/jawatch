@@ -119,9 +119,9 @@ export function buildVisibilityCondition(includeNsfw: boolean, detailColumn = 'd
 
   return `
     and coalesce(${nsfwColumn}, false) = false
-    and not (${detailColumn} -> 'genres' @> '["NSFW"]' or ${detailColumn} -> 'genres' @> '["nsfw"]')
-    and not (${detailColumn} -> 'genre_names' @> '["NSFW"]' or ${detailColumn} -> 'genre_names' @> '["nsfw"]')
-    and not (${detailColumn} -> 'category_names' @> '["NSFW"]' or ${detailColumn} -> 'category_names' @> '["nsfw"]')
-    and not (${detailColumn} -> 'tags' @> '["NSFW"]' or ${detailColumn} -> 'tags' @> '["nsfw"]')
+    and not (coalesce(${detailColumn} -> 'genres', '[]'::jsonb) @> '["NSFW"]' or coalesce(${detailColumn} -> 'genres', '[]'::jsonb) @> '["nsfw"]')
+    and not (coalesce(${detailColumn} -> 'genre_names', '[]'::jsonb) @> '["NSFW"]' or coalesce(${detailColumn} -> 'genre_names', '[]'::jsonb) @> '["nsfw"]')
+    and not (coalesce(${detailColumn} -> 'category_names', '[]'::jsonb) @> '["NSFW"]' or coalesce(${detailColumn} -> 'category_names', '[]'::jsonb) @> '["nsfw"]')
+    and not (coalesce(${detailColumn} -> 'tags', '[]'::jsonb) @> '["NSFW"]' or coalesce(${detailColumn} -> 'tags', '[]'::jsonb) @> '["nsfw"]')
   `;
 }

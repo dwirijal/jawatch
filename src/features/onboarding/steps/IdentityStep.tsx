@@ -10,8 +10,8 @@ export function IdentityStep({
   return (
     <form action={action} className="space-y-4">
       <div>
-        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-zinc-200">Identitas</h2>
-        <p className="mt-2 text-sm text-zinc-400">Atur nama yang tampil di jawatch.</p>
+        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Identitas</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Atur nama yang tampil di jawatch.</p>
       </div>
 
       {errorCode === 'display-name' || errorCode === 'required' ? (
@@ -21,7 +21,7 @@ export function IdentityStep({
       ) : null}
 
       <div>
-        <label htmlFor="displayName" className="block text-xs font-black uppercase tracking-[0.16em] text-zinc-300">
+        <label htmlFor="displayName" className="block text-xs font-black uppercase tracking-[0.16em] text-foreground">
           Nama tampilan
         </label>
         <input
@@ -31,13 +31,13 @@ export function IdentityStep({
           required
           autoComplete="nickname"
           defaultValue={defaultDisplayName}
-          className="mt-2 w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-500 focus:border-zinc-300"
+          className="mt-2 w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-[color:var(--accent-strong)]"
         />
       </div>
 
       <button
         type="submit"
-        className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-elevated px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition-colors hover:bg-zinc-700"
+        className="w-full rounded-[var(--radius-sm)] border border-border-subtle bg-surface-elevated px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-foreground transition-colors hover:bg-surface-1"
       >
         Lanjut
       </button>

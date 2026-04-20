@@ -63,7 +63,7 @@ Semua token mengikuti axis yang sama dengan foundation:
 
 **Spec**
 
-Color scheme Jawatch dibangun dari warm editorial light mode dan obsidian cinematic dark mode, dengan domain tint sebagai metadata accent daripada sebagai background utama.
+Color scheme Jawatch sekarang dibangun dari satu brand family `primary`, satu neutral system untuk canvas dan content, dan empat semantic status families. Domain tint bukan lagi token canonical; yang canonical adalah primitive aliases dan semantic runtime tokens.
 
 **Anatomy**
 
@@ -84,30 +84,47 @@ Color scheme Jawatch dibangun dari warm editorial light mode dan obsidian cinema
 | `accent.strong` | `accent-strong` | `accent-strong` | `--accent-strong` | CTA edge and emphasis |
 | `accent.on-accent` | `accent-contrast` | `accent-contrast` | `--accent-contrast` | text on accent |
 | `selection.default` | `selection` | `selection` | `--selection` | native selection fill |
+| `signal.success` | `signal-success` | `signal-success` | `--signal-success` | positive status |
+| `signal.warning` | `signal-warning` | `signal-warning` | `--signal-warning` | caution status |
+| `signal.danger` | `signal-danger` | `signal-danger` | `--signal-danger` | destructive/error status |
+| `signal.info` | `signal-info` | `signal-info` | `--signal-info` | helper/info status |
 
-### Domain Theme Tokens
+### Primitive Alias Families
 
-| Token family | Semantic role | Light | Dark | Real use case |
-| --- | --- | --- | --- | --- |
-| `theme.default` | editorial neutral tint | warm ink + pale contrast | pale paper + dark contrast | fallback media UI |
-| `theme.anime` | rose-magenta tint | berry rose | dusty rose | anime badge/chip/glow |
-| `theme.manga` | amber paper tint | roasted amber | warm amber | comic shelves and chips |
-| `theme.donghua` | coral terracotta tint | terracotta | soft coral | donghua accents |
-| `theme.movie` | cinematic gold tint | gold | warm gold-sand | movie CTA/chips |
-| `theme.drama` | plum tint | plum | pastel plum | drama and shorts |
-| `theme.novel` | sepia tint | sepia brown | soft sepia | novel framing |
+| Family | Raw source | Semantic meaning | Real use case |
+| --- | --- | --- | --- |
+| `primary` | `classic-crimson` | brand, CTA, active state | primary button and emphasis |
+| `success` | `mint-leaf` | positive state | success banner or badge |
+| `warning` | `golden-orange` | caution state | warning chip or notice |
+| `danger` | `strawberry-red` | destructive or error state | error CTA and destructive action |
+| `info` | `azure-blue` | informational state | helper callout and neutral action |
+| `neutral` | `neutral` | shell, surface, border, text | canvas and content hierarchy |
+
+### Compatibility Theme Tokens
+
+| Token family | Canonical source | Role now | Real use case |
+| --- | --- | --- | --- |
+| `theme.default` | `theme-primary` | compatibility shim | old variant props still render |
+| `theme.anime` | `theme-primary` | compatibility shim | legacy anime prop path |
+| `theme.manga` | `theme-primary` | compatibility shim | legacy manga prop path |
+| `theme.donghua` | `theme-primary` | compatibility shim | legacy donghua prop path |
+| `theme.movie` | `theme-primary` | compatibility shim | legacy movie prop path |
+| `theme.drama` | `theme-primary` | compatibility shim | legacy drama prop path |
+| `theme.novel` | `theme-primary` | compatibility shim | legacy novel prop path |
 
 **Source References**
 
-- [foundation semantic colors](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/docs/design/foundation.md#core-semantic-raw-colors)
-- [foundation domain theme values](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/docs/design/foundation.md#domain-theme-raw-values)
-- [utils.ts THEME_CONFIG](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/lib/utils.ts:57)
+- [foundation primitive scales](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/docs/design/foundation.md#primitive-color-scales)
+- [foundation semantic runtime color aliases](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/docs/design/foundation.md#semantic-runtime-color-aliases)
+- [foundation theme compatibility shim](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/docs/design/foundation.md#theme-compatibility-shim)
+- [utils.ts THEME_CONFIG](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/lib/utils.ts:74)
 
 **Real Use Cases**
 
-- [HubLaneCard.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/molecules/HubLaneCard.tsx:23) untuk discovery tinting
-- [Badge.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/atoms/Badge.tsx:16) untuk domain-coded chips
-- [ThemeToggle.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/molecules/ThemeToggle.tsx:25) untuk proof of light/dark axis
+- [Button.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/atoms/Button.tsx:31) untuk primary CTA token stack
+- [Paper.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/atoms/Paper.tsx:14) untuk neutral surface hierarchy
+- [HubLaneCard.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/molecules/HubLaneCard.tsx:27) masih menerima theme lama, tetapi tint visualnya sudah satu family
+- [ThemeToggle.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/molecules/ThemeToggle.tsx:25) tetap membuktikan axis `light/dark` tanpa domain tint
 
 ## Typography Scale
 
@@ -361,7 +378,7 @@ Discovery surfaces adalah kombinasi terpadat dari color, type, elevation, dan ra
 **Anatomy**
 
 - elevated surfaces
-- domain-coded accents
+- primary-coded accents
 - shelf rail density
 - headline and kicker hierarchy
 
@@ -398,12 +415,12 @@ Watch hubs mengutamakan dense catalog grid, container-led layout, dan section rh
 
 **Spec**
 
-Read hubs memakai grid dan tint yang sama, tetapi cenderung lean ke manga amber family dan continuation-first rhythm.
+Read hubs memakai grid dan tint yang sama, tetapi cenderung lean ke primary family dan continuation-first rhythm.
 
 **Anatomy**
 
 - comfortable/dense grid
-- manga theme tints
+- primary theme compatibility tint
 - supportive body and metadata copy
 
 **Real Use Cases**

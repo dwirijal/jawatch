@@ -17,6 +17,8 @@ test('canonical title pages are indexable', () => {
 });
 
 test('unit pages are not indexable by default', () => {
+  assert.equal(isUnitPath('/series/one-piece/ep/1'), true);
+  assert.equal(isUnitPath('/series/one-piece/special/episode-nagi'), true);
   assert.equal(isUnitPath('/series/one-piece/episodes/episode-1'), true);
   assert.equal(isIndexablePath('/comics/title/chapters/chapter-1'), false);
 });

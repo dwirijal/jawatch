@@ -74,373 +74,195 @@ Jawatch mendokumentasikan primitive di dua axis:
 
 ## Raw Color Inventory
 
-### Core Semantic Raw Colors
+### Primitive Color Scales
 
 **Spec**
 
-Tabel ini memetakan semantic raw values yang benar-benar dipakai CSS sekarang. Ini bukan token semantik akhir; ini inventaris material visual mentah yang nanti dipetakan di `tokens.md`.
+`foundation.md` sekarang memegang raw palette yang eksplisit, bukan hasil turunan dari warna runtime lama. Semua warna UI Jawatch harus turun dari satu set primitive berikut:
+
+- `primary` alias ke raw family `classic-crimson`
+- `success` alias ke raw family `mint-leaf`
+- `warning` alias ke raw family `golden-orange`
+- `danger` alias ke raw family `strawberry-red`
+- `info` alias ke raw family `azure-blue`
+- `neutral` alias ke raw family `neutral`
+
+Primitive ini hidup dua lapis:
+- raw source: `--color-*`
+- primitive alias: `--primitive-color-*`
 
 **Anatomy**
 
-| Raw family | Light source | Dark source | Notes | Real use case |
+| Raw family | Alias family | Format | Notes | Real use case |
 | --- | --- | --- | --- | --- |
-| `background` | `#f5f1ea` | `#090a0d` | page canvas utama | `body`, app shell, page gradients |
-| `background-alt` | `#ede4d7` | `#101216` | secondary page tint | page depth and end gradients |
-| `foreground` | `#14110f` | `#f3efe8` | primary readable text | body copy, headings, buttons |
-| `muted-foreground` | `#61584f` | `#b2aba1` | supportive text | subtitles, helper text, metadata |
-| `border-subtle` | `rgba(20,17,15,0.11)` | `rgba(243,239,232,0.12)` | baseline stroke | cards, pills, controls, overlays |
-| `border-strong` | `rgba(20,17,15,0.2)` | `rgba(243,239,232,0.22)` | emphasized stroke | hover/focus-border escalation |
-| `surface-1` | `rgba(255,252,247,0.74)` | `rgba(17,20,26,0.76)` | soft panel surface | muted cards, controls, search results |
-| `surface-2` | `#ece4d8` | `#141924` | solid panel base | `Paper tone=solid`, secondary fields |
-| `surface-elevated` | `rgba(255,255,255,0.9)` | `rgba(22,26,34,0.88)` | brighter elevated panel | elevated cards, modal inner frame |
-| `surface-overlay` | `rgba(248,243,236,0.82)` | `rgba(13,15,19,0.82)` | glass overlay base | `liquid-glass`, overlay chrome |
-| `accent` | `#b68b52` | `#BDFF00` | primary emphasis hue | CTA, focus halo, kicker tint |
-| `accent-soft` | `rgba(182,139,82,0.16)` | `rgba(209,168,111,0.16)` | ambient accent wash | glows, subdued emphasis panels |
-| `accent-strong` | `#8a6537` | `#f1c98d` | concentrated accent edge | CTA gradients, hover emphasis |
-| `accent-contrast` | `#fff8ef` | `#140f09` | text on accent | primary buttons |
-| `selection` | `rgba(182,139,82,0.28)` | `rgba(209,168,111,0.24)` | text selection fill | browser-native selection |
-| `page-glow-top` | `rgba(255,255,255,0.78)` | `rgba(255,255,255,0.07)` | upper canvas glow | body background mix |
-| `page-glow-side` | `rgba(182,139,82,0.16)` | `rgba(209,168,111,0.16)` | side atmospheric glow | body background mix |
-| `poster-missing-image` | `/poster-missing-light.png` | `/poster-missing-dark.png` | image fallback asset | poster placeholder surfaces |
+| `classic-crimson` | `primary` | `oklch(50-950)` | satu-satunya brand/primary family | CTA, active state, all legacy theme tint |
+| `mint-leaf` | `success` | `oklch(50-950)` | semantic positive family | future success banner, healthy state, positive signal |
+| `golden-orange` | `warning` | `oklch(50-950)` | semantic caution family | warning pill, editorial caution, pending state |
+| `strawberry-red` | `danger` | `oklch(50-950)` | semantic critical family | destructive action, critical badge, error emphasis |
+| `azure-blue` | `info` | `oklch(50-950)` | semantic informational family | info banner, helper accent, neutral action |
+| `neutral` | `neutral` | `hex(50-950)` | canvas/content/surface family | page shell, body text, border, panel hierarchy |
+
+**Primitive Scale Values**
+
+#### Classic Crimson / Primary
+
+`50 oklch(94.89% 0.020 9.78)`  
+`100 oklch(90.01% 0.039 12.05)`  
+`200 oklch(80.32% 0.083 12.48)`  
+`300 oklch(71.18% 0.130 14.87)`  
+`400 oklch(63.19% 0.174 17.78)`  
+`500 oklch(57.14% 0.208 22.63)`  
+`600 oklch(48.57% 0.174 22.14)`  
+`700 oklch(39.59% 0.139 21.86)`  
+`800 oklch(30.14% 0.101 20.61)`  
+`900 oklch(19.95% 0.058 19.04)`  
+`950 oklch(16.71% 0.043 17.02)`
+
+#### Mint Leaf / Success
+
+`50 oklch(97.68% 0.024 173.86)`  
+`100 oklch(95.41% 0.048 173.51)`  
+`200 oklch(91.33% 0.093 170.89)`  
+`300 oklch(87.93% 0.131 168.77)`  
+`400 oklch(85.22% 0.160 165.91)`  
+`500 oklch(83.19% 0.180 161.92)`  
+`600 oklch(70.42% 0.151 162.43)`  
+`700 oklch(57.02% 0.121 162.71)`  
+`800 oklch(42.78% 0.089 163.23)`  
+`900 oklch(27.23% 0.053 166.15)`  
+`950 oklch(22.18% 0.041 167.33)`
+
+#### Golden Orange / Warning
+
+`50 oklch(97.34% 0.021 79.10)`  
+`100 oklch(94.89% 0.043 81.89)`  
+`200 oklch(90.01% 0.085 81.41)`  
+`300 oklch(85.20% 0.122 79.36)`  
+`400 oklch(80.93% 0.150 76.55)`  
+`500 oklch(77.04% 0.165 70.66)`  
+`600 oklch(65.28% 0.139 71.04)`  
+`700 oklch(52.96% 0.112 71.64)`  
+`800 oklch(40.09% 0.083 74.05)`  
+`900 oklch(25.84% 0.051 78.08)`  
+`950 oklch(21.04% 0.041 81.04)`
+
+#### Strawberry Red / Danger
+
+`50 oklch(94.78% 0.023 17.56)`  
+`100 oklch(89.44% 0.049 18.10)`  
+`200 oklch(79.43% 0.103 19.60)`  
+`300 oklch(70.52% 0.159 21.99)`  
+`400 oklch(63.58% 0.209 25.41)`  
+`500 oklch(59.55% 0.237 28.57)`  
+`600 oklch(50.47% 0.200 28.44)`  
+`700 oklch(40.98% 0.160 28.19)`  
+`800 oklch(30.93% 0.117 27.66)`  
+`900 oklch(19.98% 0.071 26.45)`  
+`950 oklch(16.47% 0.055 25.63)`
+
+#### Azure Blue / Info
+
+`50 oklch(95.25% 0.021 259.19)`  
+`100 oklch(90.24% 0.044 259.95)`  
+`200 oklch(80.61% 0.090 260.01)`  
+`300 oklch(71.25% 0.139 259.68)`  
+`400 oklch(62.55% 0.187 259.69)`  
+`500 oklch(55.12% 0.229 260.92)`  
+`600 oklch(46.93% 0.191 260.78)`  
+`700 oklch(38.38% 0.151 260.54)`  
+`800 oklch(29.34% 0.109 260.05)`  
+`900 oklch(19.62% 0.064 257.65)`  
+`950 oklch(16.50% 0.047 256.29)`
+
+#### Neutral
+
+`50 #F7F7F7`  
+`100 #EFEFEF`  
+`200 #D9D9D9`  
+`300 #BFBFBF`  
+`400 #A6A6A6`  
+`500 #8C8C8C`  
+`600 #737373`  
+`700 #595959`  
+`800 #404040`  
+`900 #2A2A2A`  
+`950 #212121`
 
 **Source References**
 
-- [globals.css root variables](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:3)
-- [globals.css dark variables](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:108)
-- [globals.css @theme inline](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:181)
+- [globals.css primitive palette](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:3)
+- [globals.css primitive aliases](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:76)
+- [globals.css @theme inline](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:321)
 
 **Real Use Cases**
 
-- [SearchModal.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/organisms/SearchModal.tsx:128) memakai `surface-elevated`, `surface-1`, dan `border-subtle` untuk overlay search
-- [ThemeToggle.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/molecules/ThemeToggle.tsx:25) memakai `surface-1`, `surface-elevated`, `border-subtle`, `foreground`, dan `background`
-- [Paper.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/atoms/Paper.tsx:14) merutekan `surface-1`, `surface-2`, dan `border-subtle` ke paper tones
+- semua utility Tailwind masa depan bisa memakai `primary-*`, `success-*`, `warning-*`, `danger-*`, `info-*`, dan `neutral-*`
+- `classic-crimson` menjadi satu-satunya family brand, jadi chip dan CTA tidak lagi berubah per domain
+- neutral scale sekarang memegang seluruh canvas, text, border, dan panel hierarchy
 
-### Domain Theme Raw Values
+### Semantic Runtime Color Aliases
 
 **Spec**
 
-Jawatch punya family tema per domain yang diroute lewat `THEME_CONFIG` di `src/lib/utils.ts`. Family ini dipakai sebagai tint domain pada card, badge, glow, border, dan icon chips.
+Setelah primitive dikunci, runtime CSS hanya boleh memetakan semantic vars ke primitive aliases. Artinya `--background`, `--surface-*`, `--accent*`, `--selection`, `--signal-*`, dan `--theme-*` tidak lagi menyimpan warna mentah.
 
 **Anatomy**
 
-| Theme family | Light fill | Dark fill | Light text | Dark text | Light border | Dark border | Light surface | Dark surface | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `default` | `#1f1b17` | `#f0e8dc` | `#665b4f` | `#dad0c1` | `rgba(31,27,23,0.18)` | `rgba(240,232,220,0.18)` | `rgba(31,27,23,0.08)` | `rgba(240,232,220,0.08)` | neutral editorial fallback |
-| `anime` | `#9e637f` | `#c889aa` | `#8b546f` | `#f3cad8` | `rgba(158,99,127,0.22)` | `rgba(200,137,170,0.26)` | `rgba(158,99,127,0.10)` | `rgba(200,137,170,0.14)` | rose-magenta family |
-| `manga` | `#aa7842` | `#c79a63` | `#90663b` | `#f2d7ba` | `rgba(170,120,66,0.23)` | `rgba(199,154,99,0.26)` | `rgba(170,120,66,0.10)` | `rgba(199,154,99,0.14)` | amber paper tone |
-| `donghua` | `#a85f4b` | `#cd8b73` | `#934f3d` | `#f4d4c8` | `rgba(168,95,75,0.23)` | `rgba(205,139,115,0.26)` | `rgba(168,95,75,0.10)` | `rgba(205,139,115,0.14)` | coral terracotta tone |
-| `movie` | `#b68b52` | `#d1a86f` | `#8f6937` | `#efd5b0` | `rgba(182,139,82,0.24)` | `rgba(209,168,111,0.28)` | `rgba(182,139,82,0.10)` | `rgba(209,168,111,0.14)` | gold cinema tone |
-| `drama` | `#8c5f7c` | `#b88aa8` | `#78506a` | `#e8cade` | `rgba(140,95,124,0.22)` | `rgba(184,138,168,0.26)` | `rgba(140,95,124,0.10)` | `rgba(184,138,168,0.14)` | plum-lilac tone |
-| `novel` | `#83684d` | `#b29a79` | `#70573f` | `#dfd0bc` | `rgba(131,104,77,0.22)` | `rgba(178,154,121,0.26)` | `rgba(131,104,77,0.10)` | `rgba(178,154,121,0.14)` | sepia editorial tone |
+| Semantic runtime token | Light source | Dark source | Primitive source | Real use case |
+| --- | --- | --- | --- | --- |
+| `background` | `neutral-50` | `neutral-950` | `primitive-color-neutral-*` | page shell |
+| `background-alt` | `neutral-100` | `neutral-900` | `primitive-color-neutral-*` | background depth |
+| `foreground` | `neutral-950` | `neutral-50` | `primitive-color-neutral-*` | body and heading text |
+| `muted-foreground` | `neutral-700` | `neutral-300` | `primitive-color-neutral-*` | metadata and helper text |
+| `border-subtle` | `neutral-200` | `neutral-800` | `primitive-color-neutral-*` | default strokes |
+| `border-strong` | `neutral-300` | `neutral-700` | `primitive-color-neutral-*` | higher-emphasis strokes |
+| `surface-1` | `neutral-50` | `neutral-900` | `primitive-color-neutral-*` | base cards and controls |
+| `surface-2` | `neutral-100` | `neutral-800` | `primitive-color-neutral-*` | stronger panels |
+| `surface-elevated` | `neutral-50` | `neutral-900` | `primitive-color-neutral-*` | elevated cards and overlays |
+| `surface-overlay` | `neutral-100` | `neutral-900` | `primitive-color-neutral-*` | liquid-glass shells |
+| `accent` | `primary-500` | `primary-500` | `primitive-color-primary-*` | primary CTA |
+| `accent-soft` | `primary-50` | `primary-950` | `primitive-color-primary-*` | ring spread and glow bed |
+| `accent-strong` | `primary-600` | `primary-600` | `primitive-color-primary-*` | kicker and focus edge |
+| `accent-contrast` | `neutral-50` | `neutral-50` | `primitive-color-neutral-*` | text on accent |
+| `selection` | `primary-200` | `primary-800` | `primitive-color-primary-*` | browser selection fill |
+| `signal-success` | `success-600` | `success-500` | `primitive-color-success-*` | positive signal |
+| `signal-warning` | `warning-600` | `warning-500` | `primitive-color-warning-*` | caution signal |
+| `signal-danger` | `danger-600` | `danger-500` | `primitive-color-danger-*` | destructive/error signal |
+| `signal-info` | `info-600` | `info-500` | `primitive-color-info-*` | informational signal |
 
 **Source References**
 
-- [globals.css theme vars](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:23)
-- [utils.ts THEME_CONFIG](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/lib/utils.ts:57)
+- [globals.css light runtime aliases](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:131)
+- [globals.css dark runtime aliases](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:256)
 
 **Real Use Cases**
 
-- [HubLaneCard.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/molecules/HubLaneCard.tsx:23) memakai `config.primary`, `config.border`, `config.bg`, `config.text`, `config.contrast`
-- [Badge.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/atoms/Badge.tsx:16) merutekan variant domain langsung ke theme families
-- [VideoPlayerControls.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/organisms/video-player/VideoPlayerControls.tsx:44) memakai theme variant untuk tombol `next`
+- [SearchModal.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/organisms/SearchModal.tsx:128) mengambil seluruh surface stack dari neutral aliases ini
+- [Button.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/atoms/Button.tsx:31) memakai `accent`, `accent-strong`, dan `accent-contrast` sebagai CTA baseline
+- state sukses, warning, danger, dan info sekarang punya family yang eksplisit untuk atom nanti, tanpa harus bikin palette baru
 
-### Generated OKLCH Hue Ladders
+### Theme Compatibility Shim
 
 **Spec**
 
-Bagian ini menyediakan ladder `50-950` dalam format `oklch(...)` untuk family warna inti. Ladder ini adalah output dokumentasi berbasis warna sumber saat ini, bukan CSS variables yang sudah dikirim ke runtime.
+Jawatch tidak lagi memakai domain theme visual. Namun `THEME_CONFIG` dan `--theme-*` compatibility layer tetap dipertahankan karena banyak consumer lama masih memanggil variant `anime`, `manga`, `movie`, `drama`, `donghua`, `novel`, dan `default`.
 
 **Anatomy**
 
-#### Warm Neutral Light
-
-Base source: `background #f5f1ea`
-
-`50 oklch(0.985 0.011 81.8)`  
-`100 oklch(0.955 0.011 81.8)`  
-`200 oklch(0.905 0.011 81.8)`  
-`300 oklch(0.835 0.011 81.8)`  
-`400 oklch(0.740 0.011 81.8)`  
-`500 oklch(0.959 0.009 81.8)`  
-`600 oklch(0.859 0.009 81.8)`  
-`700 oklch(0.779 0.009 81.8)`  
-`800 oklch(0.679 0.009 81.8)`  
-`900 oklch(0.579 0.009 81.8)`  
-`950 oklch(0.499 0.009 81.8)`
-
-#### Obsidian Neutral Dark
-
-Base source: `backgroundDark #090a0d`
-
-`50 oklch(0.985 0.009 270.5)`  
-`100 oklch(0.955 0.009 270.5)`  
-`200 oklch(0.905 0.009 270.5)`  
-`300 oklch(0.835 0.009 270.5)`  
-`400 oklch(0.740 0.009 270.5)`  
-`500 oklch(0.145 0.007 270.5)`  
-`600 oklch(0.220 0.007 270.5)`  
-`700 oklch(0.180 0.007 270.5)`  
-`800 oklch(0.140 0.007 270.5)`  
-`900 oklch(0.110 0.007 270.5)`  
-`950 oklch(0.080 0.007 270.5)`
-
-#### Gold Accent
-
-Light base: `accent #b68b52`  
-Dark base: `movieDark #d1a86f`
-
-Light ladder:
-
-`50 oklch(0.985 0.026 73.0)`  
-`100 oklch(0.955 0.034 73.0)`  
-`200 oklch(0.905 0.049 73.0)`  
-`300 oklch(0.835 0.065 73.0)`  
-`400 oklch(0.740 0.080 73.0)`  
-`500 oklch(0.666 0.091 73.0)`  
-`600 oklch(0.566 0.081 73.0)`  
-`700 oklch(0.486 0.071 73.0)`  
-`800 oklch(0.386 0.061 73.0)`  
-`900 oklch(0.286 0.051 73.0)`  
-`950 oklch(0.206 0.046 73.0)`
-
-Dark ladder:
-
-`50 oklch(0.985 0.025 74.9)`  
-`100 oklch(0.955 0.033 74.9)`  
-`200 oklch(0.905 0.048 74.9)`  
-`300 oklch(0.835 0.063 74.9)`  
-`400 oklch(0.740 0.078 74.9)`  
-`500 oklch(0.756 0.088 74.9)`  
-`600 oklch(0.656 0.079 74.9)`  
-`700 oklch(0.576 0.069 74.9)`  
-`800 oklch(0.476 0.059 74.9)`  
-`900 oklch(0.376 0.049 74.9)`  
-`950 oklch(0.296 0.045 74.9)`
-
-#### Electric Lime Accent
-
-Base source: `accentDark #BDFF00`
-
-`50 oklch(0.985 0.067 126.3)`  
-`100 oklch(0.955 0.087 126.3)`  
-`200 oklch(0.905 0.127 126.3)`  
-`300 oklch(0.835 0.167 126.3)`  
-`400 oklch(0.740 0.190 126.3)`  
-`500 oklch(0.921 0.190 126.3)`  
-`600 oklch(0.821 0.190 126.3)`  
-`700 oklch(0.741 0.184 126.3)`  
-`800 oklch(0.641 0.158 126.3)`  
-`900 oklch(0.541 0.132 126.3)`  
-`950 oklch(0.461 0.119 126.3)`
-
-#### Default Editorial Ink
-
-Light base: `default #1f1b17`  
-Dark base: `defaultDark #f0e8dc`
-
-Light ladder:
-
-`50 oklch(0.985 0.011 67.3)`  
-`100 oklch(0.955 0.011 67.3)`  
-`200 oklch(0.905 0.011 67.3)`  
-`300 oklch(0.835 0.011 67.3)`  
-`400 oklch(0.740 0.011 67.3)`  
-`500 oklch(0.225 0.009 67.3)`  
-`600 oklch(0.220 0.009 67.3)`  
-`700 oklch(0.180 0.009 67.3)`  
-`800 oklch(0.140 0.009 67.3)`  
-`900 oklch(0.110 0.009 67.3)`  
-`950 oklch(0.080 0.009 67.3)`
-
-Dark ladder:
-
-`50 oklch(0.985 0.017 78.2)`  
-`100 oklch(0.955 0.017 78.2)`  
-`200 oklch(0.905 0.017 78.2)`  
-`300 oklch(0.835 0.017 78.2)`  
-`400 oklch(0.740 0.017 78.2)`  
-`500 oklch(0.934 0.013 78.2)`  
-`600 oklch(0.834 0.013 78.2)`  
-`700 oklch(0.754 0.013 78.2)`  
-`800 oklch(0.654 0.013 78.2)`  
-`900 oklch(0.554 0.013 78.2)`  
-`950 oklch(0.474 0.013 78.2)`
-
-#### Anime Rose
-
-Light base: `anime #9e637f`  
-Dark base: `animeDark #c889aa`
-
-Light ladder:
-
-`50 oklch(0.985 0.024 350.2)`  
-`100 oklch(0.955 0.031 350.2)`  
-`200 oklch(0.905 0.046 350.2)`  
-`300 oklch(0.835 0.060 350.2)`  
-`400 oklch(0.740 0.074 350.2)`  
-`500 oklch(0.573 0.085 350.2)`  
-`600 oklch(0.473 0.075 350.2)`  
-`700 oklch(0.393 0.066 350.2)`  
-`800 oklch(0.293 0.057 350.2)`  
-`900 oklch(0.193 0.047 350.2)`  
-`950 oklch(0.113 0.043 350.2)`
-
-Dark ladder:
-
-`50 oklch(0.985 0.025 346.9)`  
-`100 oklch(0.955 0.032 346.9)`  
-`200 oklch(0.905 0.047 346.9)`  
-`300 oklch(0.835 0.062 346.9)`  
-`400 oklch(0.740 0.077 346.9)`  
-`500 oklch(0.703 0.088 346.9)`  
-`600 oklch(0.603 0.078 346.9)`  
-`700 oklch(0.523 0.068 346.9)`  
-`800 oklch(0.423 0.059 346.9)`  
-`900 oklch(0.323 0.049 346.9)`  
-`950 oklch(0.243 0.044 346.9)`
-
-#### Manga Amber
-
-Light base: `manga #aa7842`  
-Dark base: `mangaDark #c79a63`
-
-Light ladder:
-
-`50 oklch(0.985 0.027 66.6)`  
-`100 oklch(0.955 0.035 66.6)`  
-`200 oklch(0.905 0.051 66.6)`  
-`300 oklch(0.835 0.067 66.6)`  
-`400 oklch(0.740 0.083 66.6)`  
-`500 oklch(0.612 0.094 66.6)`  
-`600 oklch(0.512 0.084 66.6)`  
-`700 oklch(0.432 0.074 66.6)`  
-`800 oklch(0.332 0.063 66.6)`  
-`900 oklch(0.232 0.053 66.6)`  
-`950 oklch(0.152 0.048 66.6)`
-
-Dark ladder:
-
-`50 oklch(0.985 0.026 71.2)`  
-`100 oklch(0.955 0.033 71.2)`  
-`200 oklch(0.905 0.049 71.2)`  
-`300 oklch(0.835 0.064 71.2)`  
-`400 oklch(0.740 0.079 71.2)`  
-`500 oklch(0.716 0.090 71.2)`  
-`600 oklch(0.616 0.080 71.2)`  
-`700 oklch(0.536 0.070 71.2)`  
-`800 oklch(0.436 0.060 71.2)`  
-`900 oklch(0.336 0.050 71.2)`  
-`950 oklch(0.256 0.045 71.2)`
-
-#### Donghua Coral
-
-Light base: `donghua #a85f4b`  
-Dark base: `donghuaDark #cd8b73`
-
-Light ladder:
-
-`50 oklch(0.985 0.029 36.2)`  
-`100 oklch(0.955 0.037 36.2)`  
-`200 oklch(0.905 0.054 36.2)`  
-`300 oklch(0.835 0.071 36.2)`  
-`400 oklch(0.740 0.088 36.2)`  
-`500 oklch(0.565 0.100 36.2)`  
-`600 oklch(0.465 0.089 36.2)`  
-`700 oklch(0.385 0.078 36.2)`  
-`800 oklch(0.285 0.067 36.2)`  
-`900 oklch(0.185 0.056 36.2)`  
-`950 oklch(0.105 0.051 36.2)`
-
-Dark ladder:
-
-`50 oklch(0.985 0.025 40.8)`  
-`100 oklch(0.955 0.033 40.8)`  
-`200 oklch(0.905 0.048 40.8)`  
-`300 oklch(0.835 0.063 40.8)`  
-`400 oklch(0.740 0.078 40.8)`  
-`500 oklch(0.697 0.088 40.8)`  
-`600 oklch(0.597 0.079 40.8)`  
-`700 oklch(0.517 0.069 40.8)`  
-`800 oklch(0.417 0.059 40.8)`  
-`900 oklch(0.317 0.049 40.8)`  
-`950 oklch(0.237 0.045 40.8)`
-
-#### Drama Plum
-
-Light base: `drama #8c5f7c`  
-Dark base: `dramaDark #b88aa8`
-
-Light ladder:
-
-`50 oklch(0.985 0.020 340.8)`  
-`100 oklch(0.955 0.026 340.8)`  
-`200 oklch(0.905 0.038 340.8)`  
-`300 oklch(0.835 0.050 340.8)`  
-`400 oklch(0.740 0.063 340.8)`  
-`500 oklch(0.543 0.071 340.8)`  
-`600 oklch(0.443 0.063 340.8)`  
-`700 oklch(0.363 0.055 340.8)`  
-`800 oklch(0.263 0.048 340.8)`  
-`900 oklch(0.163 0.040 340.8)`  
-`950 oklch(0.083 0.036 340.8)`
-
-Dark ladder:
-
-`50 oklch(0.985 0.020 339.9)`  
-`100 oklch(0.955 0.026 339.9)`  
-`200 oklch(0.905 0.037 339.9)`  
-`300 oklch(0.835 0.049 339.9)`  
-`400 oklch(0.740 0.061 339.9)`  
-`500 oklch(0.687 0.069 339.9)`  
-`600 oklch(0.587 0.061 339.9)`  
-`700 oklch(0.507 0.054 339.9)`  
-`800 oklch(0.407 0.046 339.9)`  
-`900 oklch(0.307 0.039 339.9)`  
-`950 oklch(0.227 0.035 339.9)`
-
-#### Novel Sepia
-
-Light base: `novel #83684d`  
-Dark base: `novelDark #b29a79`
-
-Light ladder:
-
-`50 oklch(0.985 0.015 66.3)`  
-`100 oklch(0.955 0.019 66.3)`  
-`200 oklch(0.905 0.028 66.3)`  
-`300 oklch(0.835 0.037 66.3)`  
-`400 oklch(0.740 0.046 66.3)`  
-`500 oklch(0.537 0.053 66.3)`  
-`600 oklch(0.437 0.047 66.3)`  
-`700 oklch(0.357 0.041 66.3)`  
-`800 oklch(0.257 0.035 66.3)`  
-`900 oklch(0.157 0.029 66.3)`  
-`950 oklch(0.080 0.027 66.3)`
-
-Dark ladder:
-
-`50 oklch(0.985 0.015 75.5)`  
-`100 oklch(0.955 0.020 75.5)`  
-`200 oklch(0.905 0.029 75.5)`  
-`300 oklch(0.835 0.038 75.5)`  
-`400 oklch(0.740 0.047 75.5)`  
-`500 oklch(0.699 0.054 75.5)`  
-`600 oklch(0.599 0.048 75.5)`  
-`700 oklch(0.519 0.042 75.5)`  
-`800 oklch(0.419 0.036 75.5)`  
-`900 oklch(0.319 0.030 75.5)`  
-`950 oklch(0.239 0.027 75.5)`
+- canonical runtime theme family sekarang hanya `theme-primary`
+- semua `theme-default-*`, `theme-anime-*`, `theme-manga-*`, `theme-donghua-*`, `theme-movie-*`, `theme-drama-*`, dan `theme-novel-*` mengarah ke `theme-primary-*`
+- artinya UI lama tidak pecah, tetapi seluruh tint domain sekarang tampil dengan primary family yang sama
 
 **Source References**
 
-- [globals.css core colors](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:5)
-- [globals.css domain colors](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:23)
+- [globals.css theme-primary aliases](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:149)
+- [utils.ts THEME_CONFIG compatibility shim](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/lib/utils.ts:74)
 
 **Real Use Cases**
 
-- gold accent family menggerakkan CTA dan movie tint
-- anime rose, manga amber, donghua coral, drama plum, dan novel sepia dipakai sebagai domain-coded tint
-- warm neutral dan obsidian neutral mengunci mode terang/gelap tanpa mengganti struktur layout
+- [HubLaneCard.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/molecules/HubLaneCard.tsx:27) masih menerima `theme` prop lama, tetapi tint visualnya sekarang konsisten
+- [Badge.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/atoms/Badge.tsx:18) tidak lagi membedakan domain via warna, hanya via label/content
+- [VideoPlayerControls.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/organisms/video-player/VideoPlayerControls.tsx:44) tetap bekerja tanpa rewrite prop API
 
 ## Raw Numeric Inventory
 
@@ -714,12 +536,12 @@ Tidak ada blok `768px` khusus untuk grid density. Akibatnya:
 
 **Spec**
 
-Discovery surfaces memperlihatkan foundation Jawatch paling lengkap: surface, tint domain, type hierarchy, density grid, dan cinematic elevation.
+Discovery surfaces memperlihatkan foundation Jawatch paling lengkap: surface, primary emphasis, type hierarchy, density grid, dan cinematic elevation.
 
 **Anatomy**
 
 - elevated glass-like panel
-- domain tint chip and icon
+- primary-tinted chip and icon
 - adaptive grid or rail
 - editorial heading with negative tracking
 

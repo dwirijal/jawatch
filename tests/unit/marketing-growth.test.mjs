@@ -67,7 +67,7 @@ test('footer links trust and compliance pages instead of inert legal labels', ()
 
 test('trust pages exist with indexable marketing metadata', () => {
   for (const route of ['privacy', 'terms', 'dmca', 'contact']) {
-    const page = fs.readFileSync(new URL(`../../src/app/${route}/page.tsx`, import.meta.url), 'utf8');
+    const page = fs.readFileSync(new URL(`../../src/app/(public)/${route}/page.tsx`, import.meta.url), 'utf8');
     assert.match(page, /buildMetadata/);
     assert.match(page, new RegExp(`path: '/${route}'`));
   }

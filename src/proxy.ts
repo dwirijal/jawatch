@@ -9,6 +9,7 @@ import { getOnboardingStatus } from '@/lib/onboarding/server';
 import { buildLoginRedirect, notFoundResponse } from '@/platform/gateway/legacy/responses';
 import {
   buildCanonicalAppRedirectUrl,
+  getLegacySeriesEpisodeRedirectPath,
   isLegacyAppHost,
   isRemovedPublicRoute,
   isScannerPath,
@@ -31,6 +32,11 @@ export async function proxy(request: NextRequest) {
 
   if (isScannerPath(pathname) || isRemovedPublicRoute(pathname)) {
     return notFoundResponse();
+  }
+
+  const legacySeriesEpisodeRedirectPath = getLegacySeriesEpisodeRedirectPath(pathname);
+  if (legacySeriesEpisodeRedirectPath) {
+    return NextResponse.redirect(new URL(legacySeriesEpisodeRedirectPath, request.url), 308);
   }
 
   if (shouldBypassProxyAuthGates(pathname)) {

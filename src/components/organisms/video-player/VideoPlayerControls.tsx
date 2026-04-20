@@ -31,7 +31,7 @@ interface VideoPlayerControlsProps {
 }
 
 const overlayButtonClass =
-  'h-11 w-11 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/90 text-white backdrop-blur-md hover:bg-surface-elevated';
+  'h-11 w-11 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/90 text-foreground backdrop-blur-md hover:bg-surface-elevated hover:text-foreground';
 
 function renderControlIcon(
   control: VideoPlayerControlDescriptor,

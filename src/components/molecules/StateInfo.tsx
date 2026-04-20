@@ -36,13 +36,13 @@ export function StateInfo({
     >
       <div className={cn(
         "p-4 rounded-[var(--radius-sm)]",
-        type === "error" ? "bg-red-500/10 text-red-300" : "bg-surface-2 text-zinc-500"
+        type === "error" ? "bg-red-500/10 text-red-300" : "bg-surface-2 text-muted-foreground"
       )}>
         <FinalIcon className="w-10 h-10" />
       </div>
       <div className="space-y-2 max-w-md">
-        <h3 className="text-xl font-bold text-white">{title}</h3>
-        <p className="text-sm text-zinc-500">{description}</p>
+        <h3 className="text-xl font-bold text-foreground">{title}</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
       {actionLabel && onAction && (
         <Button variant="outline" onClick={onAction}>
