@@ -368,3 +368,12 @@ test('movie and series browse adapters define shared hub cache keys for Redis-ba
   assert.equal(movieBrowseSource.includes("buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'hub'"), true);
   assert.equal(seriesBrowseSource.includes("buildComicCacheKey(SERIES_CACHE_NAMESPACE, visibility, 'hub'"), true);
 });
+
+test('comic chapter query resolves adjacent navigation in SQL instead of sibling scans', () => {
+  const source = read('src/lib/adapters/comic-server-shared.ts');
+
+  assert.equal(source.includes('const siblingRows'), false);
+  assert.equal(source.includes('.findIndex('), false);
+  assert.equal(source.includes('lag(slug) over'), true);
+  assert.equal(source.includes('lead(slug) over'), true);
+});

@@ -81,6 +81,8 @@ export type ComicChapterDetailRow = ComicChapterRow & {
   cover_url: string;
   item_detail: JsonRecord | null;
   slug: string;
+  next_slug?: string | null;
+  prev_slug?: string | null;
 };
 
 type PopularComicEntry = {
@@ -690,26 +692,71 @@ export async function queryComicChapter(slug: string, includeNsfw = false): Prom
   const sql = await getSql();
   const rows = await sql.unsafe<ComicChapterDetailRow[]>(
     `
+    with ordered_chapters as (
+      select
+        u.item_key,
+        ${buildComicChapterSlugExpression('i', 'u')} as slug,
+        u.title,
+        u.label,
+        u.number,
+        u.published_at,
+        u.updated_at,
+        u.detail,
+        ${buildComicItemSlugExpression('i')} as item_slug,
+        i.title as item_title,
+        i.media_type,
+        i.source,
+        i.cover_url,
+        i.detail as item_detail
+      from public.media_units u
+      join public.media_items i on i.item_key = u.item_key
+      where ${buildComicItemScopeCondition('i')}
+        and ${buildComicReadyChapterCondition('u')}
+        ${buildComicVisibilityCondition(includeNsfw, 'i')}
+    ),
+    chapter_rows as (
+      select
+        item_key,
+        slug,
+        title,
+        label,
+        number,
+        published_at,
+        detail,
+        item_slug,
+        item_title,
+        media_type,
+        source,
+        cover_url,
+        item_detail,
+        lag(slug) over (
+          partition by item_key
+          order by number desc nulls last, published_at desc nulls last, updated_at desc
+        ) as next_slug,
+        lead(slug) over (
+          partition by item_key
+          order by number desc nulls last, published_at desc nulls last, updated_at desc
+        ) as prev_slug
+      from ordered_chapters
+    )
     select
-      u.item_key,
-      ${buildComicChapterSlugExpression('i', 'u')} as slug,
-      u.title,
-      u.label,
-      u.number,
-      u.published_at,
-      u.detail,
-      ${buildComicItemSlugExpression('i')} as item_slug,
-      i.title as item_title,
-      i.media_type,
-      i.source,
-      i.cover_url,
-      i.detail as item_detail
-    from public.media_units u
-    join public.media_items i on i.item_key = u.item_key
-    where ${buildComicChapterSlugExpression('i', 'u')} = $1
-      and ${buildComicItemScopeCondition('i')}
-      and ${buildComicReadyChapterCondition('u')}
-      ${buildComicVisibilityCondition(includeNsfw, 'i')}
+      item_key,
+      slug,
+      title,
+      label,
+      number,
+      published_at,
+      detail,
+      item_slug,
+      item_title,
+      media_type,
+      source,
+      cover_url,
+      item_detail,
+      next_slug,
+      prev_slug
+    from chapter_rows
+    where slug = $1
     limit 1
   `,
     [slug],
@@ -721,20 +768,6 @@ export async function queryComicChapter(slug: string, includeNsfw = false): Prom
   }
 
   const detail = readRecord(row.detail);
-  const siblingRows = await sql.unsafe<Array<{ slug: string }>>(
-    `
-    select ${buildComicChapterSlugExpression('i', 'u')} as slug
-    from public.media_units u
-    join public.media_items i on i.item_key = u.item_key
-    where u.item_key = $1
-      and ${buildComicItemScopeCondition('i')}
-      and ${buildComicReadyChapterCondition('u')}
-      ${buildComicVisibilityCondition(includeNsfw, 'i')}
-    order by u.number desc nulls last, u.published_at desc nulls last, u.updated_at desc
-  `,
-    [row.item_key],
-  );
-  const currentIndex = siblingRows.findIndex((entry) => readText(entry.slug) === row.slug);
 
   return {
     slug: row.slug,
@@ -745,10 +778,10 @@ export async function queryComicChapter(slug: string, includeNsfw = false): Prom
     chapter_title: row.label || row.title,
     images: parseComicPageImages(detail),
     navigation: {
-      next: currentIndex > 0 ? siblingRows[currentIndex - 1]?.slug || null : null,
-      prev: currentIndex >= 0 ? siblingRows[currentIndex + 1]?.slug || null : null,
-      nextChapter: currentIndex > 0 ? siblingRows[currentIndex - 1]?.slug || null : null,
-      previousChapter: currentIndex >= 0 ? siblingRows[currentIndex + 1]?.slug || null : null,
+      next: row.next_slug || null,
+      prev: row.prev_slug || null,
+      nextChapter: row.next_slug || null,
+      previousChapter: row.prev_slug || null,
     },
   };
 }

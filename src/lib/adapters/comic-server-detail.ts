@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { normalizeComicImageUrl } from '../comic-media.ts';
+import { normalizeChapterDetailPayload } from './comic-chapter-normalization.ts';
 import { buildComicCacheKey, rememberComicCacheValue } from '../server/comic-cache.ts';
 import { shouldUseComicGateway } from '../server/comic-origin.ts';
 import type {
@@ -86,25 +86,20 @@ export async function getMangaChapter(
     return rememberComicCacheValue(
       buildComicCacheKey('chapter', getVisibilityCacheSegment(includeNsfw), slug),
       CHAPTER_CACHE_TTL_SECONDS,
-      () => fetchComicGatewayJson<ChapterDetail>(`/api/comic/chapter/${encodeURIComponent(slug)}`, {
-        includeNsfw,
-        recordAccess: options.recordAccess === true,
-      }),
-    ).then((chapter) => ({
-      ...chapter,
-      images: chapter.images.map((image) => normalizeComicImageUrl(image)).filter(Boolean),
-    }));
+      async () => normalizeChapterDetailPayload(
+        await fetchComicGatewayJson<ChapterDetail>(`/api/comic/chapter/${encodeURIComponent(slug)}`, {
+          includeNsfw,
+          recordAccess: options.recordAccess === true,
+        }),
+      ),
+    );
   }
 
-  const chapter = await rememberComicCacheValue(
+  const normalizedChapter = await rememberComicCacheValue(
     buildComicCacheKey('chapter', getVisibilityCacheSegment(includeNsfw), slug),
     CHAPTER_CACHE_TTL_SECONDS,
-    () => queryComicChapter(slug, includeNsfw),
+    async () => normalizeChapterDetailPayload(await queryComicChapter(slug, includeNsfw)),
   );
-  const normalizedChapter = {
-    ...chapter,
-    images: chapter.images.map((image) => normalizeComicImageUrl(image)).filter(Boolean),
-  };
 
   if (options.recordAccess) {
     void recordComicAccess({
