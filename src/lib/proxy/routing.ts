@@ -1,5 +1,9 @@
 export {
+  buildLegacyRedirectUrl,
   buildCanonicalAppRedirectUrl,
+  getLegacyAliasRedirectPath,
+  getLegacyComicChapterRedirectPath,
+  getLegacyRedirectPath,
   isLegacyAppHost,
   isRemovedPublicRoute,
   isScannerPath,

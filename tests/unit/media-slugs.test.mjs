@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   buildDramaEpisodeSlug,
@@ -52,4 +53,19 @@ test('drama episode slug sql expression is title-based and does not depend on sl
   assert.doesNotMatch(expression, /\.slug\b/);
   assert.match(expression, /i\.title/);
   assert.match(expression, /u\.number::text/);
+});
+
+test('comic chapter links use the canonical route helper instead of legacy chapters URLs', () => {
+  const sourceFiles = [
+    '../../src/features/comics/ComicTitlePage.tsx',
+    '../../src/features/comics/ComicChapterClient.tsx',
+    '../../src/lib/adapters/comic-server-shared.ts',
+  ];
+
+  for (const sourceFile of sourceFiles) {
+    const source = readFileSync(new URL(sourceFile, import.meta.url), 'utf8');
+
+    assert.match(source, /buildComicChapterHref/);
+    assert.doesNotMatch(source, /\/chapters\/\$\{/);
+  }
 });

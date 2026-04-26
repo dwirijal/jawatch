@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { findComicFixture } from './comic-fixture';
 
 const routes = [
   '/',
@@ -30,11 +31,17 @@ test('series episodes index route falls back to the title episodes tab', async (
   await expect(page).toHaveURL(/\/series\/digimon-beatbreak\?tab=episodes$/);
 });
 
-test('comic chapters index route falls back to the title chapters tab', async ({ page }) => {
-  const response = await page.goto('/comics/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life/chapters', {
+test('comic chapters index route falls back to the title chapters tab when catalog data exists', async ({ page, request }) => {
+  const fixture = await findComicFixture(request);
+  if (!fixture) {
+    test.skip(true, 'Comic catalog API returned no fixture data.');
+    return;
+  }
+
+  const response = await page.goto(`/comics/${fixture.slug}/chapters`, {
     waitUntil: 'domcontentloaded',
   });
 
   expect(response?.status()).toBe(200);
-  await expect(page).toHaveURL(/\/comics\/oukoku-e-tsuzuku-michi-dorei-kenshi-no-nariagari-harem-life\?tab=chapters$/);
+  await expect(page).toHaveURL(new RegExp(`/comics/${fixture.slug}\\?tab=chapters$`));
 });

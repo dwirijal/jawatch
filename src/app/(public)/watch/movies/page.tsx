@@ -1,3 +1,3 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
-export { default, generateMetadata } from '@/features/movies/WatchMoviesPage';
+export { default, metadata } from '@/features/movies/WatchMoviesPage';

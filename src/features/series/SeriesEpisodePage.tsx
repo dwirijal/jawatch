@@ -176,6 +176,7 @@ async function renderSeriesEpisodePageForRoute(route: EpisodeRouteInput) {
             defaultUrl={episode.defaultUrl}
             theme={theme}
             hasNext={Boolean(episode.nextEpisodeHref)}
+            nextHref={episode.nextEpisodeHref}
           />
         }
         body={

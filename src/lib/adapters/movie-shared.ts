@@ -148,7 +148,7 @@ export type MovieHubData = {
 
 export const DETAIL_CACHE_TTL_SECONDS = 60 * 30;
 export const SEARCH_CACHE_TTL_SECONDS = 60 * 3;
-export const MOVIE_CACHE_NAMESPACE = 'video-movie-v9';
+export const MOVIE_CACHE_NAMESPACE = 'video-movie-v10';
 export const MOVIE_CANDIDATE_MULTIPLIER = 4;
 
 export function readMovieBackground(detail: Record<string, unknown>): string {

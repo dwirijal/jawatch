@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type VideoPlayerMediaMode } from '@/lib/video-player-media';
 
@@ -22,6 +23,11 @@ export function VideoPlayerFrame({
   onEnded,
 }: VideoPlayerFrameProps) {
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
+  const [embedActivated, setEmbedActivated] = React.useState(false);
+
+  React.useEffect(() => {
+    setEmbedActivated(false);
+  }, [activeUrl, playerKey]);
 
   React.useEffect(() => {
     if (mediaMode !== 'hls' || !activeUrl) {
@@ -95,11 +101,27 @@ export function VideoPlayerFrame({
   }
 
   if (mediaMode === 'embed') {
+    if (!embedActivated) {
+      return (
+        <div className="flex h-full w-full items-center justify-center bg-black">
+          <button
+            type="button"
+            aria-label="Putar video"
+            className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/20 bg-white/15 text-white shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur transition hover:scale-105 hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/70"
+            onClick={() => setEmbedActivated(true)}
+          >
+            <Play className="ml-1 h-7 w-7 fill-current" aria-hidden="true" />
+          </button>
+        </div>
+      );
+    }
+
     return (
       <iframe
         key={playerKey}
         src={activeUrl}
         className="h-full w-full"
+        loading="lazy"
         allowFullScreen
         scrolling="no"
         allow="autoplay; encrypted-media"

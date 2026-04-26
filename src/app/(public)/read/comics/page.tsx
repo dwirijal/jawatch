@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import ComicPageClient from '@/features/comics/ComicPageClient';
+import { Suspense } from 'react';
+import ComicPageClient, { ComicPageClientFromSearchParams } from '@/features/comics/ComicPageClient';
 import { loadComicPageData } from '@/features/comics/loadComicPageData';
 import { buildMetadata } from '@/lib/seo';
-import type { MangaSubtype } from '@/lib/types';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Baca Komik Bahasa Indonesia',
@@ -13,35 +13,27 @@ export const metadata: Metadata = buildMetadata({
 
 export const dynamic = 'force-dynamic';
 
-type ReadComicsPageProps = {
-  searchParams?: Promise<{ type?: string }>;
-};
-
-function normalizeComicVariant(value?: string): MangaSubtype | 'all' {
-  switch ((value || '').trim().toLowerCase()) {
-    case 'manga':
-      return 'manga';
-    case 'manhwa':
-      return 'manhwa';
-    case 'manhua':
-      return 'manhua';
-    default:
-      return 'all';
-  }
-}
-
-export default async function ReadComicsPage({ searchParams }: ReadComicsPageProps) {
-  const params = searchParams ? await searchParams : undefined;
-  const variant = normalizeComicVariant(params?.type);
-  const { popular, newest, subtypePosters } = await loadComicPageData(variant);
+export default async function ReadComicsPage() {
+  const { popular, newest, subtypePosters } = await loadComicPageData('all', { includeNsfw: false });
 
   return (
-    <ComicPageClient
-      variant={variant}
-      routeBase="/comics"
-      initialPopular={popular}
-      initialNewest={newest}
-      subtypePosters={subtypePosters}
-    />
+    <Suspense
+      fallback={(
+        <ComicPageClient
+          variant="all"
+          routeBase="/comics"
+          initialPopular={popular}
+          initialNewest={newest}
+          subtypePosters={subtypePosters}
+        />
+      )}
+    >
+      <ComicPageClientFromSearchParams
+        routeBase="/comics"
+        initialPopular={popular}
+        initialNewest={newest}
+        subtypePosters={subtypePosters}
+      />
+    </Suspense>
   );
 }

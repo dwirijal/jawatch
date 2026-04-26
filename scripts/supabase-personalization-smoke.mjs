@@ -158,7 +158,7 @@ async function main() {
       title: 'Supabase Smoke Title',
       image_url: 'https://example.com/poster.jpg',
       unit_label: 'Episode 1',
-      unit_href: '/series/smoke/episodes/1',
+      unit_href: '/series/smoke/ep/1',
       last_seen_at: new Date().toISOString(),
     };
 
@@ -192,7 +192,7 @@ async function main() {
           title_label: 'Supabase Smoke Title',
           unit_id: ids.unitId,
           unit_label: 'Episode 1',
-          unit_href: '/series/smoke/episodes/1',
+          unit_href: '/series/smoke/ep/1',
           media_type: 'anime',
         },
         { onConflict: 'user_id,title_id,unit_id' },
@@ -234,7 +234,7 @@ async function main() {
           title_label: 'Supabase Smoke Title',
           unit_id: ids.unitId,
           unit_label: 'Episode 1',
-          unit_href: '/series/smoke/episodes/1',
+          unit_href: '/series/smoke/ep/1',
           media_type: 'anime',
           author_name: 'Codex Smoke',
           content: 'Supabase personalization smoke comment',

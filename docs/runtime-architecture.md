@@ -2,6 +2,15 @@
 
 ## Data Layers
 
+### Production Media Store
+
+The production media store is the Jawatch Supabase media DB. It is intentionally
+media-only: watch/read catalog rows, playable/readable units, compact
+enrichments, and playback options live here. User profile, preference, history,
+bookmark, and community data lives in the dwizzyOS Supabase DB instead.
+
+Detailed operating rules are in `docs/production-media-runtime.md`.
+
 ### `src/lib/media.ts`
 
 Source layer.
@@ -76,7 +85,8 @@ Shared shell:
 Used by:
 
 - `/movies/[slug]` inline player section
-- `/series/[slug]/episodes/[episodeSlug]`
+- `/series/[slug]/ep/[number]`
+- `/series/[slug]/special/[episodeSlug]`
 
 Shared shell:
 
@@ -160,7 +170,8 @@ Shared shell:
 
 Used by:
 
-- `/comics/[slug]/chapters/[chapterSlug]`
+- `/comics/[slug]/ch/[number]`
+- `/comics/[slug]/chapter/[chapterSlug]`
 
 Shared shell:
 

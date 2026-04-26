@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   extractSlugFromUrl,
   filterMangaBySubtype,
@@ -48,6 +49,10 @@ interface ComicPageClientProps {
   initialNewest: MangaSearchResult[];
   subtypePosters?: Partial<Record<MangaSubtype, string>>;
 }
+
+type ComicPageClientFromSearchParamsProps = Omit<ComicPageClientProps, 'variant'> & {
+  fallbackVariant?: MangaSubtype | 'all';
+};
 
 const VARIANT_CONFIG: Record<MangaSubtype | 'all', {
   title: string;
@@ -100,6 +105,19 @@ const VARIANT_CONFIG: Record<MangaSubtype | 'all', {
 
 function toSubtypeItems(items: MangaSearchResult[], subtype: MangaSubtype): MangaSearchResult[] {
   return filterMangaBySubtype(items, subtype);
+}
+
+function normalizeComicVariant(value?: string | null): MangaSubtype | 'all' {
+  switch ((value || '').trim().toLowerCase()) {
+    case 'manga':
+      return 'manga';
+    case 'manhwa':
+      return 'manhwa';
+    case 'manhua':
+      return 'manhua';
+    default:
+      return 'all';
+  }
 }
 
 function buildItemHref(routeBase: string, item: MangaSearchResult): string {
@@ -190,7 +208,9 @@ export default function ComicPageClient({
       spotlightComic ? getComicCardBadgeText(spotlightComic) : isAllVariant ? 'COMIC' : variant.toUpperCase(),
       formatComicCardSubtitle(spotlightComic || { chapter: undefined, time_ago: undefined }),
     ].filter(Boolean).join(' • '),
-    image: spotlightComic?.background || (spotlightComic ? getHDThumbnail(spotlightComic.image) : getComicHeroFallback(variant)),
+    image: spotlightComic?.background
+      ? getHDThumbnail(spotlightComic.background)
+      : (spotlightComic ? getHDThumbnail(spotlightComic.image) : getComicHeroFallback(variant)),
     imageAlt: spotlightComic?.title || config.title,
     logo: spotlightComic?.logo,
     logoAlt: spotlightComic?.title || config.title,
@@ -559,6 +579,16 @@ export default function ComicPageClient({
             ))}
         </SectionCard>
       </StaggerEntry>
-    </MediaHubTemplate>
+      </MediaHubTemplate>
   );
+}
+
+export function ComicPageClientFromSearchParams({
+  fallbackVariant = 'all',
+  ...props
+}: ComicPageClientFromSearchParamsProps) {
+  const searchParams = useSearchParams();
+  const variant = normalizeComicVariant(searchParams.get('type')) || fallbackVariant;
+
+  return <ComicPageClient {...props} variant={variant} />;
 }

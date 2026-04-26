@@ -3,6 +3,12 @@
 import * as React from 'react';
 
 const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-8868090753979495';
+const ADSENSE_SLOT_IDS = [
+  process.env.NEXT_PUBLIC_ADSENSE_SLOT_HORIZONTAL || '',
+  process.env.NEXT_PUBLIC_ADSENSE_SLOT_VERTICAL || '',
+  process.env.NEXT_PUBLIC_ADSENSE_SLOT_SQUARE || '',
+];
+const HAS_ADSENSE_INVENTORY = Boolean(ADSENSE_CLIENT && ADSENSE_SLOT_IDS.some(Boolean));
 
 declare global {
   interface Window {
@@ -82,7 +88,7 @@ function scheduleDeferredWork(task: () => void) {
 
 export function AdNetworkScripts() {
   React.useEffect(() => {
-    if (!ADSENSE_CLIENT) {
+    if (!HAS_ADSENSE_INVENTORY) {
       return;
     }
 

@@ -1,8 +1,5 @@
 import type { MetadataRoute } from 'next';
 import { connection } from 'next/server';
-import { getMovieHubData } from '@/lib/adapters/movie';
-import { getPopularManga, getNewManga } from '@/lib/adapters/comic-server';
-import { getSeriesHubData } from '@/lib/adapters/series';
 import { SITE_URL } from '@/lib/site';
 import { SHORTS_HUB_ENABLED } from '@/lib/shorts-paths';
 import { absoluteImageUrl } from '@/lib/seo';
@@ -13,7 +10,9 @@ type SitemapChangeFrequency = NonNullable<SitemapEntry['changeFrequency']>;
 
 export const revalidate = 1800;
 
-const DYNAMIC_SITEMAP_LIMIT = 120;
+const ENABLE_DYNAMIC_SITEMAP = process.env.ENABLE_DYNAMIC_SITEMAP === 'true';
+const DYNAMIC_SITEMAP_LIMIT = 40;
+const DYNAMIC_SITEMAP_TIMEOUT_MS = 2_500;
 
 type SitemapMediaItem = {
   slug?: string | null;
@@ -90,32 +89,49 @@ function dedupeEntries(entries: SitemapEntry[]): SitemapEntry[] {
 }
 
 async function loadDynamicEntries(): Promise<SitemapEntry[]> {
+  if (!ENABLE_DYNAMIC_SITEMAP) {
+    return [];
+  }
+
+  const [
+    { getMovieHubData },
+    { getPopularManga, getNewManga },
+    { getSeriesHubData },
+  ] = await Promise.all([
+    import('@/lib/adapters/movie'),
+    import('@/lib/adapters/comic-server'),
+    import('@/lib/adapters/series'),
+  ]);
+
   const [movieEntries, seriesEntries, comicEntries] = await Promise.all([
     resolveDynamicSitemapEntries(async () => {
       const { popular, latest } = await getMovieHubData(DYNAMIC_SITEMAP_LIMIT, { includeNsfw: false });
       return toMediaEntries([...popular, ...latest], '/movies', 0.82, 'daily');
-    }),
+    }, console.warn, { timeoutMs: DYNAMIC_SITEMAP_TIMEOUT_MS }),
     resolveDynamicSitemapEntries(async () => {
       const { popular, latest, dramaSpotlight } = await getSeriesHubData(DYNAMIC_SITEMAP_LIMIT, {
         includeNsfw: false,
         includeFilters: false,
       });
       return toMediaEntries([...popular, ...latest, ...dramaSpotlight], '/series', 0.82, 'daily');
-    }),
+    }, console.warn, { timeoutMs: DYNAMIC_SITEMAP_TIMEOUT_MS }),
     resolveDynamicSitemapEntries(async () => {
       const [popular, latest] = await Promise.all([
         getPopularManga(DYNAMIC_SITEMAP_LIMIT, { includeNsfw: false }),
         getNewManga(1, DYNAMIC_SITEMAP_LIMIT, { includeNsfw: false }),
       ]);
       return toMediaEntries([...(popular.comics || []), ...(latest.comics || [])], '/comics', 0.78, 'daily');
-    }),
+    }, console.warn, { timeoutMs: DYNAMIC_SITEMAP_TIMEOUT_MS }),
   ]);
 
   return dedupeEntries([...movieEntries, ...seriesEntries, ...comicEntries]);
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  await connection();
+  if (ENABLE_DYNAMIC_SITEMAP) {
+    await connection();
+  }
+
   const generatedAt = new Date();
   const staticEntries = staticRoutes.map(({ path, priority, changeFrequency }) =>
     toEntry(path, generatedAt, priority, changeFrequency),

@@ -3,14 +3,14 @@ import 'server-only';
 import { buildComicCacheKey, rememberComicCacheValue } from '../server/comic-cache.ts';
 import { getComicDb } from '../server/comic-db.ts';
 import {
-  buildCanonicalItemFlagSelection,
-  buildCanonicalItemOrdering,
-  buildCanonicalUnitKeyExpression,
-  buildCanonicalUnitOrdering,
   getComicDbSchemaCapabilities,
 } from '../server/comic-db-schema.ts';
 import { shouldUseComicGateway } from '../server/comic-origin.ts';
 import { pickAssetUrl } from '../utils.ts';
+import {
+  buildMovieDetailBySlugQuery,
+  buildMovieWatchBySlugQuery,
+} from './movie-query-sql.ts';
 import { readCanonicalPlaybackOptions } from './video-db-common.ts';
 import {
   buildDownloadGroups,
@@ -30,7 +30,6 @@ import {
   applyLk21ExternalFallback,
   buildMovieGenreAnyMatchCondition,
   buildMovieItemSlugExpression,
-  buildMovieScopeCondition,
   DETAIL_CACHE_TTL_SECONDS,
   fetchOptionalMovieGatewayJson,
   formatDuration,
@@ -74,37 +73,10 @@ export async function getMovieDetailBySlug(slug: string, options: VisibilityOpti
     }
 
     const schemaCapabilities = await getComicDbSchemaCapabilities(sql);
-    const rows = await sql.unsafe<VideoItemRow[]>(`
-      select
-        i.item_key,
-        ${buildCanonicalItemFlagSelection('i', schemaCapabilities)},
-        i.source,
-        i.media_type,
-        ${buildMovieItemSlugExpression('i')} as slug,
-        i.title,
-        i.cover_url,
-        i.status,
-        i.release_year,
-        i.score,
-        i.detail,
-        f.payload as fanart_payload,
-        e.payload as tmdb_payload,
-        i.updated_at,
-        0::int as unit_count
-      from public.media_items i
-      left join public.media_item_enrichments f
-        on f.item_key = i.item_key
-       and f.provider = 'fanart'
-       and f.match_status = 'matched'
-      left join public.media_item_enrichments e
-        on e.item_key = i.item_key
-       and e.provider = 'tmdb'
-       and e.match_status = 'matched'
-      where ${buildMovieScopeCondition('i')}
-        and ${buildMovieItemSlugExpression('i')} = $1
-      order by ${buildCanonicalItemOrdering('i', schemaCapabilities)}i.updated_at desc
-      limit 1
-    `, [normalizedSlug]);
+    const rows = await sql.unsafe<VideoItemRow[]>(
+      buildMovieDetailBySlugQuery(schemaCapabilities),
+      [normalizedSlug],
+    );
 
     const row = rows[0];
     if (!row) {
@@ -192,70 +164,10 @@ export async function getMovieWatchBySlug(slug: string, options: VisibilityOptio
     }
 
     const schemaCapabilities = await getComicDbSchemaCapabilities(sql);
-    const rows = await sql.unsafe<Array<VideoUnitRow & { canonical_unit_key?: string | null }>>(`
-      with selected_item as (
-        select
-          i.item_key,
-          exists (
-            select 1
-            from public.media_units candidate_units
-            where candidate_units.item_key = i.item_key
-              and candidate_units.unit_type in ('movie', 'episode')
-          ) as has_units,
-          ${buildMovieItemSlugExpression('i')} as item_slug,
-          i.title as item_title,
-          i.media_type,
-          i.cover_url,
-          i.detail as item_detail,
-          f.payload as item_fanart_payload,
-          e.payload as item_tmdb_payload
-        from public.media_items i
-        left join public.media_item_enrichments f
-          on f.item_key = i.item_key
-         and f.provider = 'fanart'
-         and f.match_status = 'matched'
-        left join public.media_item_enrichments e
-          on e.item_key = i.item_key
-         and e.provider = 'tmdb'
-         and e.match_status = 'matched'
-        where ${buildMovieScopeCondition('i')}
-          and ${buildMovieItemSlugExpression('i')} = $1
-        order by has_units desc, ${buildCanonicalItemOrdering('i', schemaCapabilities)}i.updated_at desc
-        limit 1
-      )
-      select
-        u.item_key,
-        si.item_slug,
-        si.item_title,
-        si.media_type,
-        si.cover_url,
-        si.item_detail,
-        si.item_fanart_payload,
-        si.item_tmdb_payload,
-        u.title,
-        u.label,
-        u.number,
-        u.published_at,
-        u.detail,
-        ${buildCanonicalUnitKeyExpression('u', schemaCapabilities)} as canonical_unit_key
-      from selected_item si
-      join lateral (
-        select
-          u.item_key,
-          u.unit_key,
-          u.title,
-          u.label,
-          u.number,
-          u.published_at,
-          u.detail
-        from public.media_units u
-        where u.item_key = si.item_key
-          and u.unit_type in ('movie', 'episode')
-        order by ${buildCanonicalUnitOrdering('u', schemaCapabilities)}u.updated_at desc
-        limit 1
-      ) u on true
-      limit 1
-    `, [normalizedSlug]);
+    const rows = await sql.unsafe<Array<VideoUnitRow & { canonical_unit_key?: string | null }>>(
+      buildMovieWatchBySlugQuery(schemaCapabilities),
+      [normalizedSlug],
+    );
 
     const row = rows[0];
     if (!row) {

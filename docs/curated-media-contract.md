@@ -113,11 +113,16 @@ npm run typecheck
 npm run build
 ```
 
-For production smoke checks, verify representative routes:
+For production smoke checks, verify representative canonical routes:
 
-- `/comic/<slug>`
-- `/comic/<chapter-slug>`
+- `/comics/<slug>`
+- `/comics/<slug>/ch/<number>`
 - `/series/<slug>`
-- `/series/watch/<episode-slug>`
+- `/series/<slug>/ep/<number>`
 - `/movies/<slug>`
-- `/movies/watch/<slug>`
+
+Legacy redirects should also be verified:
+
+- `/comic/<slug>` (redirects to `/comics/<slug>`)
+- `/series/watch/<slug>` (redirects to canonical episode route)
+- `/movies/watch/<slug>` (redirects to `/movies/<slug>`)

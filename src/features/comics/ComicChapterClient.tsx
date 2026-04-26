@@ -12,6 +12,7 @@ import { UnitCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredReadingSettings } from '@/components/molecules/DeferredReadingSettings';
 import { ImageReaderScaffold } from '@/components/organisms/ImageReaderScaffold';
 import { useUIStore } from '@/store/useUIStore';
+import { buildComicChapterHref } from '@/lib/comic-chapter-paths';
 import type { ChapterDetail } from '@/lib/types';
 import ComicChapterHistoryTracker from './ComicChapterHistoryTracker';
 
@@ -22,27 +23,42 @@ interface ComicChapterClientProps {
   routeBase?: string;
 }
 
-function extractChapterSegment(value?: string | null): string | null {
+function extractChapterRouteInput(value?: string | null): { slug?: string; number?: string } | null {
   if (!value) return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
-  if (!trimmed.includes('/')) return trimmed;
   const segments = trimmed.split('/').filter(Boolean);
-  return segments.at(-1) ?? null;
+
+  if (!segments.length) {
+    return { slug: trimmed };
+  }
+
+  const chapterNumberIndex = segments.lastIndexOf('ch');
+  if (chapterNumberIndex >= 0) {
+    const number = segments[chapterNumberIndex + 1];
+    return number ? { number } : null;
+  }
+
+  const chapterSlugIndex = segments.lastIndexOf('chapter');
+  if (chapterSlugIndex >= 0) {
+    const slug = segments[chapterSlugIndex + 1];
+    return slug ? { slug } : null;
+  }
+
+  return { slug: segments.at(-1) ?? trimmed };
 }
 
 function buildChapterHref(
-  routeBase: string,
   slug: string,
   navigation: ChapterDetail['navigation'],
   direction: 'next' | 'prev',
 ): string | null {
-  const segment =
+  const chapter =
     direction === 'next'
-      ? extractChapterSegment(navigation.nextChapter ?? navigation.next)
-      : extractChapterSegment(navigation.previousChapter ?? navigation.prev);
+      ? extractChapterRouteInput(navigation.nextChapter ?? navigation.next)
+      : extractChapterRouteInput(navigation.previousChapter ?? navigation.prev);
 
-  return segment ? `${routeBase}/${slug}/${segment}` : null;
+  return chapter ? buildComicChapterHref(slug, chapter) : null;
 }
 
 export default function ComicChapterClient({ slug, chapterSlug, chapter, routeBase = '/comics' }: ComicChapterClientProps) {
@@ -51,15 +67,19 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter, routeBa
   const { readerWidth } = useUIStore();
   const router = useRouter();
   const endSentinelRef = useRef<HTMLDivElement | null>(null);
+  const currentChapterHref = buildComicChapterHref(chapter.manga_slug || slug, {
+    slug: chapter.slug || chapterSlug,
+    number: chapter.number,
+  });
 
   const previousChapterHref = useMemo(
-    () => buildChapterHref(routeBase, slug, chapter.navigation, 'prev'),
-    [chapter.navigation, routeBase, slug]
+    () => buildChapterHref(slug, chapter.navigation, 'prev'),
+    [chapter.navigation, slug]
   );
 
   const nextChapterHref = useMemo(
-    () => buildChapterHref(routeBase, slug, chapter.navigation, 'next'),
-    [chapter.navigation, routeBase, slug]
+    () => buildChapterHref(slug, chapter.navigation, 'next'),
+    [chapter.navigation, slug]
   );
 
   useEffect(() => {
@@ -119,7 +139,7 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter, routeBa
         slug={slug}
         title={chapter.manga_title || chapter.title}
         image=""
-        href={`${routeBase}/${slug}/${chapterSlug}`}
+        href={currentChapterHref}
         chapterLabel={chapter.chapter_title || chapterSlug}
       />
 
@@ -235,7 +255,7 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter, routeBa
                 titleLabel={chapter.manga_title || chapter.title}
                 unitId={`chapter:${chapterSlug}`}
                 unitLabel={chapter.chapter_title || chapterSlug}
-                unitHref={`${routeBase}/${slug}/chapters/${chapterSlug}`}
+                unitHref={currentChapterHref}
                 mediaType="manga"
                 theme="manga"
               />

@@ -35,6 +35,8 @@ export function isUnitPath(path: string): boolean {
     /^\/series\/[^/]+\/special\/[^/]+$/.test(pathname) ||
     /^\/series\/[^/]+\/episodes\/[^/]+$/.test(pathname) ||
     /^\/shorts\/[^/]+\/episodes\/[^/]+$/.test(pathname) ||
+    /^\/comics\/[^/]+\/ch\/[^/]+$/.test(pathname) ||
+    /^\/comics\/[^/]+\/chapter\/[^/]+$/.test(pathname) ||
     /^\/comics\/[^/]+\/chapters\/[^/]+$/.test(pathname)
   );
 }

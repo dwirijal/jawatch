@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { cn, type ThemeType } from '@/lib/utils';
 import { resolveVideoPlayerMediaMode } from '@/lib/video-player-media';
 import { useUIStore } from '@/store/useUIStore';
@@ -17,6 +18,7 @@ interface VideoPlayerProps {
   theme?: WatchPlayerTheme;
   format?: 'landscape' | 'vertical' | 'shorts';
   onNext?: () => void;
+  nextHref?: string | null;
   hasNext?: boolean;
   onEnded?: () => void;
 }
@@ -64,9 +66,11 @@ export function VideoPlayer({
   theme = 'anime',
   format = 'landscape',
   onNext,
+  nextHref,
   hasNext = false,
   onEnded,
 }: VideoPlayerProps) {
+  const router = useRouter();
   const { isTheaterMode, setTheaterMode, isLightsDimmed, setLightsDimmed } = useUIStore();
   const accent = THEME_ACCENT[theme];
   const {
@@ -85,6 +89,18 @@ export function VideoPlayer({
   });
   const mediaMode = resolveVideoPlayerMediaMode(activeUrl || '');
   const frameClassName = resolveFrameClassName(format, isTheaterMode);
+  const canGoNext = hasNext && Boolean(onNext || nextHref);
+
+  const handleNext = React.useCallback(() => {
+    if (onNext) {
+      onNext();
+      return;
+    }
+
+    if (nextHref) {
+      router.push(nextHref);
+    }
+  }, [nextHref, onNext, router]);
 
   const toggleLights = React.useCallback(() => {
     setLightsDimmed(!isLightsDimmed);
@@ -106,7 +122,8 @@ export function VideoPlayer({
   return (
     <div
       className={cn(
-        'relative z-[150] h-full w-full transition-all duration-500 ease-out',
+        'relative z-[150] w-full transition-all duration-500 ease-out',
+        format === 'shorts' && 'h-full',
         format !== 'shorts' && 'space-y-4 md:space-y-6',
       )}
     >
@@ -159,10 +176,10 @@ export function VideoPlayer({
             )}
           >
             <VideoPlayerControls
-              hasNext={hasNext}
+              hasNext={canGoNext}
               isLightsDimmed={isLightsDimmed}
               isTheaterMode={isTheaterMode}
-              onNext={onNext}
+              onNext={canGoNext ? handleNext : undefined}
               onRefresh={refreshPlayer}
               onReport={handleReportCurrentMirror}
               onToggleLights={toggleLights}

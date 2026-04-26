@@ -4,19 +4,20 @@ Next.js 16 app for the `jawatch.web.id` frontend.
 
 ## Data Access Model
 
-`jawatch` now supports two comic read modes while keeping the rest of the media catalog on HTTP gateway reads:
+Production Jawatch is a media-only runtime:
 
-- `COMIC_DATA_SOURCE=database`: comic surfaces (`manga`, `manhwa`, `manhua`) read directly from `DATABASE_URL`
-- `COMIC_DATA_SOURCE=gateway`: comic surfaces read from `COMIC_API_BASE_URL` over HTTP
-- the remaining media surfaces continue to read through the API gateway (default `https://api.dwizzy.my.id`)
+- watch/read catalog data is served from the compact Jawatch Supabase media DB
+- profile, preference, history, bookmarks, and community data stays in the dwizzyOS Supabase DB
+- `sloane/dwizzySCRAPE` owns media import and should write only fields used by the app
+- Valkey/Redis or Upstash can be used as shared hot cache
+- OpenSearch is optional; Postgres search-vector and trigram indexes are the fallback
 
-This keeps Vercel isolated from vendor-specific database wiring. To switch between local/dev DB, Aiven, or another SQL backend later, move the datasource behind the HTTP origin instead of changing the frontend contract.
+The legacy env name `COMIC_DATA_SOURCE` is still the switch for direct DB versus gateway reads:
 
-- The app-facing curated media rules are documented in [`docs/curated-media-contract.md`](docs/curated-media-contract.md).
-- Aiven Valkey / Redis can be used as the primary shared comic cache and hot leaderboard
-- Upstash Redis can remain as REST fallback cache
-- Supabase analytics is optional for comic access events
-- `dwizzyBRAIN` is not required for the comic read path
+- `COMIC_DATA_SOURCE=database`: watch/read media surfaces read directly from Postgres/Supabase
+- `COMIC_DATA_SOURCE=gateway`: media surfaces read from `COMIC_API_BASE_URL` over HTTP
+
+Operational details live in [`docs/production-media-runtime.md`](docs/production-media-runtime.md). App-facing curated media rules are documented in [`docs/curated-media-contract.md`](docs/curated-media-contract.md).
 
 ## Getting Started
 
@@ -40,11 +41,13 @@ Main envs:
 
 - `DWIZZY_API_BASE_URL` (server fetch base, default: `https://api.dwizzy.my.id`)
 - `NEXT_PUBLIC_DWIZZY_API_BASE_URL` (optional client-safe mirror)
-- `DATABASE_URL` (optional direct Postgres read path for comics when `COMIC_DATA_SOURCE=database`)
-- `COMIC_DATA_SOURCE` (`database` or `gateway`; default falls back to `database` when `DATABASE_URL` is set, otherwise `gateway`)
+- `DATABASE_PROVIDER=supabase` (recommended for the Jawatch media DB)
+- `SUPABASE_DATABASE_POOL_URL` or `SUPABASE_DATABASE_URL` (preferred direct Postgres read path)
+- `DATABASE_URL` (fallback direct Postgres read path)
+- `COMIC_DATA_SOURCE` (`database` or `gateway`; default falls back to `database` when a database URL is set, otherwise `gateway`)
 - `COMIC_API_BASE_URL` (remote comic origin used when `COMIC_DATA_SOURCE=gateway`)
 - `COMIC_ORIGIN_SHARED_TOKEN` (shared secret for trusted comic-origin forwarding across Vercel and the self-hosted origin)
-- `AIVEN_POSTGRES_CA_PEM` or `DATABASE_CA_PEM` (optional Postgres CA bundle for TLS verification)
+- `SUPABASE_POSTGRES_CA_PEM`, `SUPABASE_DB_CA_PEM`, `AIVEN_POSTGRES_CA_PEM`, or `DATABASE_CA_PEM` (optional Postgres CA bundle for TLS verification)
 - `VALKEY_URL` or `REDIS_URL` (optional primary shared comic cache)
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (optional Redis REST fallback)
 - `SUPABASE_COMIC_ANALYTICS_TABLE` + Supabase service role envs (optional comic analytics sink)
@@ -109,11 +112,14 @@ Recommended Vercel envs:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- optional `DATABASE_URL`
+- `DATABASE_PROVIDER=supabase`
+- `SUPABASE_DATABASE_POOL_URL` or Supabase pooler parts documented in `docs/production-media-runtime.md`
 - `COMIC_DATA_SOURCE`
 - optional `COMIC_API_BASE_URL`
 - optional `COMIC_ORIGIN_SHARED_TOKEN`
-- `AIVEN_POSTGRES_CA_PEM` or `DATABASE_CA_PEM`
+- optional `VALKEY_URL` / `AIVEN_VALKEY_URL`
+- optional `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
+- optional `SUPABASE_POSTGRES_CA_PEM` / `DATABASE_CA_PEM`
 - optional `SITE_URL`
 - optional `NEXT_PUBLIC_SITE_URL`
 

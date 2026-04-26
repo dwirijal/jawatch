@@ -1,10 +1,10 @@
 import { getMangaChapter } from '@/lib/adapters/comic-server';
 import { buildPrivateCacheControl } from '@/platform/cache/http/cache-headers';
-import {
-  resolveComicRouteIncludeNsfw,
-  resolveComicRouteRecordAccess,
-} from '@/lib/server/comic-route-access';
+import { resolveComicRouteRecordAccess } from '@/lib/server/comic-route-access';
+import { resolvePublicApiRequestContext } from '@/lib/server/public-api-cache';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
+
+const PUBLIC_CACHE_TTL_SECONDS = 300;
 
 interface RouteContext {
   params: Promise<{ slug: string }>;
@@ -17,13 +17,13 @@ export async function GET(request: Request, context: RouteContext) {
 
   const { slug } = await context.params;
   try {
-    const includeNsfw = await resolveComicRouteIncludeNsfw(request);
+    const { includeNsfw, responseHeaders } = await resolvePublicApiRequestContext(request, PUBLIC_CACHE_TTL_SECONDS);
     const payload = await getMangaChapter(slug, {
       includeNsfw,
       recordAccess: resolveComicRouteRecordAccess(request),
     });
     return Response.json(payload, {
-      headers: buildPrivateCacheControl(),
+      headers: responseHeaders,
     });
   } catch {
     return Response.json({ message: 'Chapter not found' }, {

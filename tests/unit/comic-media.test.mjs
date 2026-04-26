@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  isProxyableComicImageHost,
   normalizeComicImageUrl,
   pickSubtypePosterImage,
 } from '../../src/lib/comic-media.ts';
@@ -25,6 +26,16 @@ test('routes hotlink-protected comic posters through the internal proxy', () => 
     normalizeComicImageUrl('https://bacaman00.sokuja.id/2024/10/BACAMAN-ao_no_hako-3.jpg'),
     '/api/comic/image?url=https%3A%2F%2Fbacaman00.sokuja.id%2F2024%2F10%2FBACAMAN-ao_no_hako-3.jpg',
   );
+  assert.equal(
+    normalizeComicImageUrl('https://02.ikiru.wtf/wp-content/uploads/2026/04/poster.png?resize=320'),
+    '/api/comic/image?url=https%3A%2F%2F02.ikiru.wtf%2Fwp-content%2Fuploads%2F2026%2F04%2Fposter.png',
+  );
+});
+
+test('comic image proxy allowlist includes only supported hotlink hosts', () => {
+  assert.equal(isProxyableComicImageHost('bacaman00.sokuja.id'), true);
+  assert.equal(isProxyableComicImageHost('03.ikiru.wtf'), true);
+  assert.equal(isProxyableComicImageHost('images.example.com'), false);
 });
 
 test('picks a matching subtype poster from the primary comic shelf first', () => {

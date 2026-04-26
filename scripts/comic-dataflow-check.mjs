@@ -9,14 +9,19 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.join(__dirname, '..');
 const comicClientPath = path.join(repoRoot, 'src', 'lib', 'adapters', 'comic.ts');
 const comicServerPath = path.join(repoRoot, 'src', 'lib', 'adapters', 'comic-server.ts');
-const comicPagePath = path.join(repoRoot, 'src', 'app', 'comic', 'page.tsx');
-const comicDetailPagePath = path.join(repoRoot, 'src', 'app', 'comic', '[slug]', 'page.tsx');
-const comicChapterPagePath = path.join(repoRoot, 'src', 'app', 'comic', '[slug]', '[chapter]', 'page.tsx');
-const comicSubtypePagePaths = [
-  path.join(repoRoot, 'src', 'app', 'comic', 'manga', 'page.tsx'),
-  path.join(repoRoot, 'src', 'app', 'comic', 'manhwa', 'page.tsx'),
-  path.join(repoRoot, 'src', 'app', 'comic', 'manhua', 'page.tsx'),
-];
+const comicPagePath = path.join(repoRoot, 'src', 'app', '(public)', 'read', 'comics', 'page.tsx');
+const comicDetailPagePath = path.join(repoRoot, 'src', 'app', '(public)', 'comics', '[slug]', 'page.tsx');
+const comicChapterPagePath = path.join(
+  repoRoot,
+  'src',
+  'app',
+  '(public)',
+  'comics',
+  '[slug]',
+  'ch',
+  '[chapterNumber]',
+  'page.tsx',
+);
 const comicSearchRoutePath = path.join(repoRoot, 'src', 'app', 'api', 'search', 'comic', 'route.ts');
 const comicApiPaths = [
   path.join(repoRoot, 'src', 'app', 'api', 'comic', 'popular', 'route.ts'),
@@ -77,16 +82,16 @@ assert.ok(
 assert.ok(!comicClientSource.includes('buildApiUrl'), 'comic client adapter should not build server-side absolute URLs');
 
 assert.ok(comicPageSource.includes(`ComicPageClient`), 'comic hub should use ComicPageClient');
+assert.ok(
+  comicPageSource.includes('normalizeComicVariant'),
+  'comic hub should route manga/manhwa/manhua variants via query params',
+);
 assert.ok(comicSearchRouteSource.includes(`from '@/lib/adapters/comic-server'`), 'comic search route should use comic server adapter');
-assert.ok(comicDetailPageSource.includes(`from '@/lib/adapters/comic-server'`), 'comic detail page should load data from comic server adapter');
-assert.ok(comicDetailPageSource.includes('ComicDetailHistoryTracker'), 'comic detail page should keep client history tracking');
-assert.ok(comicChapterPageSource.includes(`from '@/lib/adapters/comic-server'`), 'comic chapter page should load data from comic server adapter');
-assert.ok(comicChapterPageSource.includes('ComicChapterClient'), 'comic chapter page should delegate interactivity to the client wrapper');
-
-for (const pagePath of comicSubtypePagePaths) {
-  const source = fs.readFileSync(pagePath, 'utf8');
-  assert.ok(source.includes(`ComicPageClient`), `comic subtype page should use ComicPageClient: ${pagePath}`);
-}
+assert.ok(comicDetailPageSource.includes(`@/features/comics/ComicTitlePage`), 'comic detail page should delegate to ComicTitlePage');
+assert.ok(
+  comicChapterPageSource.includes(`@/features/comics/ComicChapterPage`),
+  'numeric comic chapter route should delegate to ComicChapterPage',
+);
 
 for (const routePath of comicApiPaths) {
   const source = fs.readFileSync(routePath, 'utf8');

@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { CssBaseline } from "@/components/atoms/CssBaseline";
 import { ColorModeScript } from "@/components/atoms/ColorModeScript";
 import { JsonLd } from "@/components/atoms/JsonLd";
 import { Footer } from "@/components/organisms/Footer";
 import { FooterContent } from "@/components/organisms/FooterContent";
-import { AdNetworkScripts } from "@/components/organisms/AdNetworkScripts";
 import { ClientShell } from "@/components/organisms/ClientShell";
 import { MainFrame } from "@/components/organisms/MainFrame";
 import { JAWATCH_MARKETING } from "@/lib/marketing";
@@ -105,7 +105,12 @@ export default function RootLayout({
         <CssBaseline />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
-        <AdNetworkScripts />
+        <Script
+          id="ahrefs-analytics"
+          src="https://analytics.ahrefs.com/analytics.js"
+          data-key="9conK1TrStSjw+RqnvRU4g"
+          strategy="afterInteractive"
+        />
         <ClientShell />
         <JsonLd data={buildOrganizationJsonLd()} />
         <MainFrame>

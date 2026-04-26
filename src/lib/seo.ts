@@ -17,6 +17,10 @@ type BuildMetadataOptions = {
   keywords?: string[];
 };
 
+const MIN_DESCRIPTION_LENGTH = 100;
+const DESCRIPTION_FALLBACK =
+  ' Jelajahi katalog jawatch untuk nonton film, anime, donghua, drama subtitle Indonesia, serta baca manga, manhwa, dan manhua bahasa Indonesia.';
+
 function normalizePath(path: string): string {
   if (!path || path === '/') {
     return '/';
@@ -27,11 +31,15 @@ function normalizePath(path: string): string {
 
 function normalizeDescription(description: string): string {
   const normalized = description.replace(/\s+/g, ' ').trim();
-  if (normalized.length <= 170) {
-    return normalized;
+  const expanded = normalized.length < MIN_DESCRIPTION_LENGTH
+    ? `${normalized}${DESCRIPTION_FALLBACK}`
+    : normalized;
+
+  if (expanded.length <= 170) {
+    return expanded;
   }
 
-  return `${normalized.slice(0, 167).trimEnd()}...`;
+  return `${expanded.slice(0, 167).trimEnd()}...`;
 }
 
 export function absoluteUrl(path: string): string {

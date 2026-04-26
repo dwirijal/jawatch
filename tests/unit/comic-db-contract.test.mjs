@@ -19,8 +19,9 @@ test('public comic visibility excludes explicit and tagged NSFW rows', () => {
   const condition = buildComicVisibilityCondition(false, 'i');
 
   assert.match(condition, /coalesce\(i\.is_nsfw, false\) = false/);
-  assert.match(condition, /i\.detail -> 'genres' @> '\["nsfw"\]'/i);
-  assert.match(condition, /i\.detail -> 'tags' @> '\["nsfw"\]'/i);
+  assert.match(condition, /coalesce\(\(i\.detail -> 'genres' @> '\["nsfw"\]'::jsonb\), false\) = false/i);
+  assert.match(condition, /coalesce\(\(i\.detail -> 'tags' @> '\["nsfw"\]'::jsonb\), false\) = false/i);
+  assert.equal(condition.includes('not (i.detail'), false);
 });
 
 test('authenticated comic visibility does not add public NSFW filtering', () => {

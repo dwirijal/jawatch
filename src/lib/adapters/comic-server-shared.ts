@@ -1,6 +1,7 @@
 import 'server-only';
 
 import {
+  COMIC_MEDIA_TYPES,
   buildComicItemScopeCondition,
   buildComicReadyChapterCondition,
   buildComicReadyItemCondition,
@@ -39,6 +40,7 @@ import {
   buildSqlComicItemSlugExpression,
   slugifyRouteSegment,
 } from '../media-slugs.ts';
+import { buildComicChapterHref } from '../comic-chapter-paths.ts';
 import type {
   ChapterDetail,
   JikanEnrichment,
@@ -195,6 +197,26 @@ function buildComicChapterSlugExpression(itemAlias: string, unitAlias: string): 
   );
 }
 
+function buildComicChapterSlugFromItemSlugExpression(itemSlugExpression: string, unitAlias: string): string {
+  return buildSqlComicChapterSlugExpression(
+    itemSlugExpression,
+    `${unitAlias}.label`,
+    `${unitAlias}.title`,
+    `${unitAlias}.number::text`,
+    `${unitAlias}.unit_key`,
+  );
+}
+
+function inferComicSlugFromChapterSlug(chapterSlug: string): string {
+  const normalizedSlug = readText(chapterSlug);
+  const markerIndex = normalizedSlug.toLowerCase().lastIndexOf('-chapter-');
+  if (markerIndex <= 0) {
+    return '';
+  }
+
+  return normalizedSlug.slice(0, markerIndex);
+}
+
 function mapComicCard(row: ComicItemRow): MangaSearchResult {
   const detail = readRecord(row.detail);
   const subtype = normalizeSubtype(row.media_type, detail.type);
@@ -261,22 +283,22 @@ function sortComicChapterRows(rows: ComicChapterRow[]): ComicChapterRow[] {
 }
 
 function mapComicChapters(rows: ComicChapterRow[], comicSlug: string): MangaDetail['chapters'] {
-  return sortComicChapterRows(rows).map((row) => ({
-    chapter: readText(row.label) || readText(row.title),
-    slug: buildComicChapterSlug({
+  return sortComicChapterRows(rows).map((row) => {
+    const chapterSlug = buildComicChapterSlug({
       comicSlug,
       label: row.label,
       title: row.title,
       number: row.number,
-    }),
-    link: `/comics/${comicSlug}/chapters/${buildComicChapterSlug({
-      comicSlug,
-      label: row.label,
-      title: row.title,
+    });
+
+    return {
+      chapter: readText(row.label) || readText(row.title),
+      slug: chapterSlug,
       number: row.number,
-    })}`,
-    date: readText(row.published_at),
-  }));
+      link: buildComicChapterHref(comicSlug, { slug: chapterSlug, number: row.number }),
+      date: readText(row.published_at),
+    };
+  });
 }
 
 function buildFallbackRecommendations(
@@ -448,17 +470,12 @@ async function getPopularFallbackRows(limit: number, includeNsfw: boolean): Prom
       m.score,
       m.detail,
       m.updated_at,
-      coalesce(chapter_stats.chapter_count, 0) as chapter_count
+      0::int as chapter_count
     from public.media_items m
-    left join lateral (
-      select count(*)::int as chapter_count
-      from public.media_units u
-      where u.item_key = m.item_key
-        and ${buildComicReadyChapterCondition('u')}
-    ) chapter_stats on true
     where ${buildComicItemScopeCondition('m')}
       ${buildComicVisibilityCondition(includeNsfw, 'm')}
-    order by coalesce(chapter_stats.chapter_count, 0) desc, m.updated_at desc
+      and ${buildComicReadyItemCondition('m')}
+    order by m.score desc nulls last, m.updated_at desc
     limit $1
   `,
     [Math.max(limit, 1)],
@@ -581,21 +598,25 @@ export async function queryGenreComics(genre: string, page = 1, limit = 24, incl
 
 export async function querySubtypePosterMap(includeNsfw = false): Promise<Partial<Record<MangaSubtype, string>>> {
   const sql = await getSql();
-  const rows = await sql.unsafe<SubtypePosterRow[]>(
-    `
-    select distinct on (media_type)
-      media_type,
-      cover_url
-    from public.media_items m
-    where ${buildComicItemScopeCondition('m')}
-      and m.cover_url is not null
-      and m.cover_url <> ''
-      ${buildComicVisibilityCondition(includeNsfw, 'm')}
-      and ${buildComicReadyItemCondition('m')}
-    order by m.media_type, m.updated_at desc
-  `,
-    [],
-  );
+  const rowsBySubtype = await Promise.all(COMIC_MEDIA_TYPES.map((mediaType) => (
+    sql.unsafe<SubtypePosterRow[]>(
+      `
+      select
+        m.media_type,
+        m.cover_url
+      from public.media_items m
+      where m.media_type = $1
+        and m.cover_url is not null
+        and trim(m.cover_url) <> ''
+        ${buildComicVisibilityCondition(includeNsfw, 'm')}
+        and ${buildComicReadyItemCondition('m')}
+      order by m.updated_at desc
+      limit 1
+    `,
+      [mediaType],
+    )
+  )));
+  const rows = rowsBySubtype.flat();
 
   return rows.reduce<Partial<Record<MangaSubtype, string>>>((accumulator, row) => {
     const subtype = normalizeSubtype(row.media_type);
@@ -626,45 +647,45 @@ export async function queryComicDetail(slug: string, includeNsfw = false): Promi
   }
 
   const detail = readRecord(currentRow.detail);
-  const chapters = await sql.unsafe<ComicChapterRow[]>(
-    `
+  const currentGenres = readStringArray(detail.genres);
+  const currentSubtype = normalizeSubtype(currentRow.media_type, detail.type);
+  const [chapters, similarRows] = await Promise.all([
+    sql.unsafe<ComicChapterRow[]>(
+      `
     select title, label, number, published_at, detail
     from public.media_units u
     where u.item_key = $1
       and ${buildComicReadyChapterCondition('u')}
     order by number desc nulls last, published_at desc nulls last, u.updated_at desc
   `,
-    [currentRow.item_key],
-  );
-
-  const currentGenres = readStringArray(detail.genres);
-  let similarRows: ComicItemRow[] = [];
-  if (currentGenres.length > 0) {
-    similarRows = await sql.unsafe<ComicItemRow[]>(
+      [currentRow.item_key],
+    ),
+    currentGenres.length > 0 ? sql.unsafe<ComicItemRow[]>(
       `
       select m.item_key, m.source, m.media_type, ${buildComicItemSlugExpression('m')} as slug, m.title, m.cover_url, m.status, m.release_year, m.score, m.detail, m.updated_at
       from public.media_items m
       where ${buildComicItemScopeCondition('m')} and ${buildComicItemSlugExpression('m')} <> $1
+        and (
+          m.detail -> 'genres' ?| $2::text[]
+          or m.detail -> 'genre_names' ?| $2::text[]
+          or m.detail -> 'category_names' ?| $2::text[]
+        )
         ${buildComicVisibilityCondition(includeNsfw, 'm')}
         and ${buildComicReadyItemCondition('m')}
-      order by m.updated_at desc
-      limit 40
+      order by
+        case when m.media_type = $3 then 1 else 0 end desc,
+        m.updated_at desc
+      limit 16
     `,
-      [slug],
-    );
-  }
+      [slug, currentGenres, currentSubtype],
+    ) : Promise.resolve([] as ComicItemRow[]),
+  ]);
 
-  const filteredSimilarRows = similarRows.filter((row) => {
-    const rowGenres = readStringArray(readRecord(row.detail).genres);
-    return rowGenres.some((genre) => currentGenres.includes(genre));
-  });
-
-  const subtype = normalizeSubtype(currentRow.media_type, detail.type);
   const synopsis = readText(detail.synopsis);
   return {
     creator: currentRow.source || 'jawatch',
     slug: currentRow.slug,
-    subtype,
+    subtype: currentSubtype,
     title: currentRow.title,
     title_indonesian: readText(detail.alt_title),
     image: getHDThumbnail(currentRow.cover_url),
@@ -675,7 +696,7 @@ export async function queryComicDetail(slug: string, includeNsfw = false): Promi
     summary: synopsis,
     background_story: '',
     metadata: {
-      type: toTitleCase(subtype),
+      type: toTitleCase(currentSubtype),
       author: readText(detail.author),
       status: currentRow.status || '',
       concept: '',
@@ -684,18 +705,108 @@ export async function queryComicDetail(slug: string, includeNsfw = false): Promi
     },
     genres: mapComicGenres(detail),
     chapters: mapComicChapters(chapters, currentRow.slug),
-    similar_manga: buildFallbackRecommendations(currentRow, filteredSimilarRows),
+    similar_manga: buildFallbackRecommendations(currentRow, similarRows),
   };
 }
 
-export async function queryComicChapter(slug: string, includeNsfw = false): Promise<ChapterDetail> {
+export async function queryComicChapter(
+  slug: string,
+  includeNsfw = false,
+  comicSlug = '',
+): Promise<ChapterDetail> {
   const sql = await getSql();
+  const constrainedComicSlug = readText(comicSlug) || inferComicSlugFromChapterSlug(slug);
+  const chapterSlugExpression = constrainedComicSlug
+    ? buildComicChapterSlugFromItemSlugExpression('i.item_slug', 'u')
+    : buildComicChapterSlugExpression('i', 'u');
   const rows = await sql.unsafe<ComicChapterDetailRow[]>(
-    `
+    constrainedComicSlug ? `
+    with selected_item as (
+      select
+        i.item_key,
+        ${buildComicItemSlugExpression('i')} as item_slug,
+        i.title as item_title,
+        i.media_type,
+        i.source,
+        i.cover_url,
+        i.detail as item_detail
+      from public.media_items i
+      where ${buildComicItemScopeCondition('i')}
+        and ${buildComicItemSlugExpression('i')} = $1
+        ${buildComicVisibilityCondition(includeNsfw, 'i')}
+        and ${buildComicReadyItemCondition('i')}
+      limit 1
+    ),
+    ordered_chapters as (
+      select
+        u.item_key,
+        ${chapterSlugExpression} as slug,
+        u.title,
+        u.label,
+        u.number,
+        u.published_at,
+        u.updated_at,
+        u.detail,
+        i.item_slug,
+        i.item_title,
+        i.media_type,
+        i.source,
+        i.cover_url,
+        i.item_detail
+      from selected_item i
+      join public.media_units u on u.item_key = i.item_key
+      where ${buildComicReadyChapterCondition('u')}
+    ),
+    chapter_rows as (
+      select
+        item_key,
+        slug,
+        title,
+        label,
+        number,
+        published_at,
+        detail,
+        item_slug,
+        item_title,
+        media_type,
+        source,
+        cover_url,
+        item_detail,
+        lag(slug) over (
+          partition by item_key
+          order by number desc nulls last, published_at desc nulls last, updated_at desc
+        ) as next_slug,
+        lead(slug) over (
+          partition by item_key
+          order by number desc nulls last, published_at desc nulls last, updated_at desc
+        ) as prev_slug
+      from ordered_chapters
+    )
+    select
+      item_key,
+      slug,
+      title,
+      label,
+      number,
+      published_at,
+      detail,
+      item_slug,
+      item_title,
+      media_type,
+      source,
+      cover_url,
+      item_detail,
+      next_slug,
+      prev_slug
+    from chapter_rows
+    where slug = $2
+      or slug = item_slug || '-' || $2
+    limit 1
+  ` : `
     with ordered_chapters as (
       select
         u.item_key,
-        ${buildComicChapterSlugExpression('i', 'u')} as slug,
+        ${chapterSlugExpression} as slug,
         u.title,
         u.label,
         u.number,
@@ -759,7 +870,7 @@ export async function queryComicChapter(slug: string, includeNsfw = false): Prom
     where slug = $1
     limit 1
   `,
-    [slug],
+    constrainedComicSlug ? [constrainedComicSlug, slug] : [slug],
   );
 
   const row = rows[0];
@@ -771,6 +882,7 @@ export async function queryComicChapter(slug: string, includeNsfw = false): Prom
 
   return {
     slug: row.slug,
+    number: row.number,
     title: row.title || row.label || row.slug,
     subtype: normalizeSubtype(row.media_type, readRecord(row.item_detail).type),
     manga_slug: row.item_slug,
@@ -798,7 +910,6 @@ export async function queryComicJikanEnrichment(slug: string, includeNsfw = fals
       and e.provider = 'jikan'
       and e.match_status = 'matched'
       ${buildComicVisibilityCondition(includeNsfw, 'i')}
-      and ${buildComicReadyItemCondition('i')}
     order by e.updated_at desc nulls last
     limit 1
   `,

@@ -5,6 +5,7 @@ import { getNewManga, getPopularManga } from '@/lib/adapters/comic-server';
 import { getMovieHubData } from '@/lib/adapters/movie';
 import { getSeriesHubData } from '@/lib/adapters/series';
 import { buildSearchWarmDocuments, warmSearchIndexDocuments } from '@/domains/search/server/search-service';
+import { shouldWarmSearchIndex } from '@/lib/server/build-phase';
 import { resolveViewerNsfwAccess } from '@/lib/server/viewer-nsfw-access';
 import {
   buildHomeHeroItems,
@@ -21,36 +22,41 @@ import {
 
 const HOME_FEED_REVALIDATE_SECONDS = 60 * 5;
 const HOME_FEED_CACHE_VERSION = 'ia-v2';
+const HOME_FEED_PRELOAD_LIMIT = 24;
 
 async function buildHomePageData(includeNsfw: boolean): Promise<HomePageData> {
   const [seriesHub, movieHub, mangaPopularResponse, mangaLatestResponse] = await Promise.all([
-    getSeriesHubData(32, { includeNsfw, includeFilters: false }).catch(() => ({
+    getSeriesHubData(HOME_FEED_PRELOAD_LIMIT, { includeNsfw, includeFilters: false }).catch(() => ({
       popular: [],
       latest: [],
       dramaSpotlight: [],
       weeklySchedule: [],
       filters: [],
     })),
-    getMovieHubData(32, { includeNsfw }).catch(() => ({ popular: [], latest: [] })),
-    getPopularManga(40, { includeNsfw }).catch(() => ({ comics: [] })),
-    getNewManga(1, 40, { includeNsfw }).catch(() => ({ comics: [] })),
+    getMovieHubData(HOME_FEED_PRELOAD_LIMIT, { includeNsfw }).catch(() => ({ popular: [], latest: [] })),
+    getPopularManga(HOME_FEED_PRELOAD_LIMIT, { includeNsfw }).catch(() => ({ comics: [] })),
+    getNewManga(1, HOME_FEED_PRELOAD_LIMIT, { includeNsfw }).catch(() => ({ comics: [] })),
   ]);
+  const mangaPopularItems = mangaPopularResponse.comics || [];
+  const mangaLatestItems = mangaLatestResponse.comics || [];
 
-  void warmSearchIndexDocuments(buildSearchWarmDocuments({
-    series: [
-      ...seriesHub.popular.slice(0, 16),
-      ...seriesHub.latest.slice(0, 16),
-      ...seriesHub.dramaSpotlight.slice(0, 8),
-    ],
-    movies: [
-      ...movieHub.popular.slice(0, 16),
-      ...movieHub.latest.slice(0, 16),
-    ],
-    comics: [
-      ...(mangaPopularResponse.comics || []).slice(0, 16),
-      ...(mangaLatestResponse.comics || []).slice(0, 16),
-    ],
-  }));
+  if (shouldWarmSearchIndex()) {
+    void warmSearchIndexDocuments(buildSearchWarmDocuments({
+      series: [
+        ...seriesHub.popular.slice(0, 16),
+        ...seriesHub.latest.slice(0, 16),
+        ...seriesHub.dramaSpotlight.slice(0, 8),
+      ],
+      movies: [
+        ...movieHub.popular.slice(0, 16),
+        ...movieHub.latest.slice(0, 16),
+      ],
+      comics: [
+        ...mangaPopularItems.slice(0, 16),
+        ...mangaLatestItems.slice(0, 16),
+      ],
+    }));
+  }
 
   const seriesBuckets = bucketSeriesItems(seriesHub.latest);
   const seriesPopularItems = toSeriesItems(seriesHub.popular);
@@ -61,8 +67,8 @@ async function buildHomePageData(includeNsfw: boolean): Promise<HomePageData> {
   const moviePopularItems = toMovieItems(movieHub.popular);
 
   const comicBuckets = bucketComicItems(
-    mangaLatestResponse.comics || [],
-    mangaPopularResponse.comics || [],
+    mangaLatestItems,
+    mangaPopularItems,
   );
 
   const popularMedia = uniqueItemsById([

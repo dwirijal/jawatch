@@ -11,6 +11,7 @@ import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeadin
 import { TitleCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
+import { LazyTrailerEmbed } from '@/components/organisms/LazyTrailerEmbed';
 import { SeriesRecommendationsSection } from '@/components/organisms/SeriesRecommendationsSection';
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
 import { getSeriesDetailPageData } from '@/domains/series/server/series-detail-data';
@@ -295,16 +296,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
           <section id="trailer" className="space-y-8">
           <DetailSectionHeading title="Trailer" theme={theme} />
           <Paper tone="muted" shadow="sm" padded={false} className="overflow-hidden">
-            <div className="aspect-video w-full bg-black">
-              <iframe
-                src={trailerEmbedUrl}
-                title={`${series.title} trailer`}
-                loading="lazy"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                className="h-full w-full"
-              />
-            </div>
+            <LazyTrailerEmbed embedUrl={trailerEmbedUrl} title={series.title} />
           </Paper>
           </section>
         ) : null}

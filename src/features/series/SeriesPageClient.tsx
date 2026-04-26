@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { Activity, Calendar, Clapperboard, Flame, Info, Play, Sparkles, Timer } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
@@ -41,6 +42,19 @@ interface SeriesPageClientProps {
   initialDramaSpotlight: SeriesCardItem[];
   initialWeeklySchedule: SeriesScheduleLane[];
   activeFilter?: 'anime' | 'donghua' | 'drama' | null;
+}
+
+function normalizeSeriesType(value?: string | null): 'anime' | 'donghua' | 'drama' | null {
+  switch ((value || '').trim().toLowerCase()) {
+    case 'anime':
+      return 'anime';
+    case 'donghua':
+      return 'donghua';
+    case 'drama':
+      return 'drama';
+    default:
+      return null;
+  }
 }
 
 function getCardTheme(item: SeriesCardItem): 'anime' | 'donghua' | 'drama' {
@@ -407,4 +421,11 @@ export default function SeriesPageClient({
       </StaggerEntry>
     </MediaHubTemplate>
   );
+}
+
+export function SeriesPageClientFromSearchParams(props: Omit<SeriesPageClientProps, 'activeFilter'>) {
+  const searchParams = useSearchParams();
+  const activeFilter = normalizeSeriesType(searchParams.get('type'));
+
+  return <SeriesPageClient {...props} activeFilter={activeFilter} />;
 }

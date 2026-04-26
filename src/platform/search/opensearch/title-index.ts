@@ -82,6 +82,32 @@ function normalizeEnvValue(value: string | undefined): string {
   return trimmed;
 }
 
+function readIntegerEnv(name: string, fallback: number, minimum: number): number {
+  const raw = process.env[name]?.trim();
+  if (!raw) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < minimum) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
+function readOpenSearchTimeoutMs(): number {
+  return readIntegerEnv('OPENSEARCH_TIMEOUT_MS', 1_500, 250);
+}
+
+function readOpenSearchSearchTimeoutMs(): number {
+  return readIntegerEnv('OPENSEARCH_SEARCH_TIMEOUT_MS', readOpenSearchTimeoutMs(), 250);
+}
+
+function readOpenSearchWriteTimeoutMs(): number {
+  return readIntegerEnv('OPENSEARCH_WRITE_TIMEOUT_MS', 3_500, 500);
+}
+
 function readOpenSearchConfig(): OpenSearchConfig | null {
   const rawUrl =
     normalizeEnvValue(process.env.AIVEN_OPENSEARCH_URL) ||
@@ -134,7 +160,7 @@ async function requestOpenSearch<T>(
 ): Promise<{ ok: boolean; status: number; data: T | null }> {
   try {
     const response = await fetchWithTimeout(`${config.baseUrl}${path}`, {
-      timeoutMs: init?.timeoutMs ?? 8_000,
+      timeoutMs: init?.timeoutMs ?? readOpenSearchTimeoutMs(),
       method: init?.method,
       headers: buildHeaders(config, init?.headers),
       body: init?.body,
@@ -165,7 +191,7 @@ async function requestOpenSearch<T>(
 async function ensureIndexInternal(config: OpenSearchConfig): Promise<boolean> {
   const headResult = await requestOpenSearch<Record<string, unknown>>(config, `/${config.indexName}`, {
     method: 'GET',
-    timeoutMs: 5_000,
+    timeoutMs: readOpenSearchWriteTimeoutMs(),
   });
 
   if (headResult.ok) {
@@ -174,7 +200,7 @@ async function ensureIndexInternal(config: OpenSearchConfig): Promise<boolean> {
 
   const createResult = await requestOpenSearch<Record<string, unknown>>(config, `/${config.indexName}`, {
     method: 'PUT',
-    timeoutMs: 8_000,
+    timeoutMs: readOpenSearchWriteTimeoutMs(),
     headers: {
       'Content-Type': 'application/json',
     },
@@ -238,7 +264,7 @@ export async function upsertSearchDocuments(documents: SearchIndexDocument[]): P
 
   const response = await requestOpenSearch<Record<string, unknown>>(config, '/_bulk', {
     method: 'POST',
-    timeoutMs: 10_000,
+    timeoutMs: readOpenSearchWriteTimeoutMs(),
     headers: {
       'Content-Type': 'application/x-ndjson',
     },
@@ -279,7 +305,7 @@ async function executeSearchRequest(
 ): Promise<Array<SearchIndexDocument & { score?: number }> | null> {
   const response = await requestOpenSearch<OpenSearchSearchResponse>(config, `/${indexName}/_search`, {
     method: 'POST',
-    timeoutMs: 8_000,
+    timeoutMs: readOpenSearchSearchTimeoutMs(),
     headers: {
       'Content-Type': 'application/json',
     },

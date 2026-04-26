@@ -54,6 +54,16 @@ interface MoviesPageClientProps {
   activeSort?: string | null;
 }
 
+function normalizeMovieGenreParam(value?: string | null): string | null {
+  const normalized = (value || '').trim().slice(0, 64);
+  return normalized || null;
+}
+
+function normalizeMovieSortParam(value?: string | null): string | null {
+  const normalized = (value || '').trim().slice(0, 24);
+  return normalized || null;
+}
+
 function MovieCardList({ items, skeletonKey, limit = 12 }: { items: MovieCardItem[]; skeletonKey: string; limit?: number }) {
   if (items.length === 0) {
     return Array.from({ length: limit }).map((_, index) => <SkeletonCard key={`${skeletonKey}-skeleton-${index}`} />);
@@ -82,13 +92,15 @@ export default function MoviesPageClient({
 }: MoviesPageClientProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const activeSortMode = normalizeMovieSortMode(activeSort);
+  const initialResultsGenreRef = React.useRef(activeGenre);
+  const [genreResults, setGenreResults] = React.useState<MovieCardItem[] | null>(initialResults);
+  const [genreResultsFor, setGenreResultsFor] = React.useState<string | null>(activeGenre);
   const featuredMovie = React.useMemo(() => getFeaturedMovie(initialPopular, initialLatest), [initialPopular, initialLatest]);
   const combinedMovies = React.useMemo(() => uniqueMovieCards([...initialPopular, ...initialLatest]), [initialPopular, initialLatest]);
   const filteredResults = React.useMemo(
-    () => initialResults ? sortMovieCards(initialResults, activeSortMode) : null,
-    [activeSortMode, initialResults],
+    () => activeGenre ? sortMovieCards(genreResultsFor === activeGenre ? (genreResults ?? []) : [], activeSortMode) : null,
+    [activeGenre, activeSortMode, genreResults, genreResultsFor],
   );
   const topRated = React.useMemo(
     () => sortMovieCards(combinedMovies.filter((item) => parseMovieRating(item.rating) > 0), 'rating').slice(0, 12),
@@ -125,8 +137,43 @@ export default function MoviesPageClient({
     incrementInterest('movie');
   }, []);
 
+  React.useEffect(() => {
+    if (!activeGenre) {
+      setGenreResults(null);
+      setGenreResultsFor(null);
+      return;
+    }
+
+    if (initialResults && initialResultsGenreRef.current === activeGenre) {
+      setGenreResults(initialResults);
+      setGenreResultsFor(activeGenre);
+      return;
+    }
+
+    const controller = new AbortController();
+    setGenreResults(null);
+    setGenreResultsFor(activeGenre);
+
+    fetch(`/api/movies/genre?genre=${encodeURIComponent(activeGenre)}&limit=24`, {
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : []))
+      .then((results: MovieCardItem[]) => {
+        if (!controller.signal.aborted) {
+          setGenreResults(Array.isArray(results) ? results : []);
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setGenreResults([]);
+        }
+      });
+
+    return () => controller.abort();
+  }, [activeGenre, initialResults]);
+
   const buildMoviesHref = React.useCallback((nextGenre: string | null, nextSort: MovieSortMode) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams();
 
     if (nextGenre) {
       params.set('genre', nextGenre);
@@ -142,7 +189,7 @@ export default function MoviesPageClient({
 
     const queryString = params.toString();
     return queryString ? `${pathname}?${queryString}` : pathname;
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   const handleGenreClick = React.useCallback((genre: string | null) => {
     router.push(buildMoviesHref(genre, activeSortMode));
@@ -377,4 +424,12 @@ export default function MoviesPageClient({
       </StaggerEntry>
     </MediaHubTemplate>
   );
+}
+
+export function MoviesPageClientFromSearchParams(props: Omit<MoviesPageClientProps, 'activeGenre' | 'activeSort'>) {
+  const searchParams = useSearchParams();
+  const activeGenre = normalizeMovieGenreParam(searchParams.get('genre'));
+  const activeSort = normalizeMovieSortParam(searchParams.get('sort'));
+
+  return <MoviesPageClient {...props} activeGenre={activeGenre} activeSort={activeSort} />;
 }

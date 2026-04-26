@@ -24,11 +24,13 @@ This document records the implemented public information architecture for Jawatc
 | --- | --- |
 | `/movies/[slug]` | Movie title detail and inline player entry. |
 | `/series/[slug]` | Series title detail and episode list. |
-| `/series/[slug]/episodes/[episodeSlug]` | Canonical series episode playback. |
+| `/series/[slug]/ep/[number]` | Canonical numbered series episode playback. |
+| `/series/[slug]/special/[episodeSlug]` | Canonical non-numbered series episode playback. |
 | `/shorts/[slug]` | Short-series title detail. |
 | `/shorts/[slug]/episodes/[episodeSlug]` | Canonical short-series episode playback. |
 | `/comics/[slug]` | Comic title detail and chapter list. |
-| `/comics/[slug]/chapters/[chapterSlug]` | Canonical comic reader route. |
+| `/comics/[slug]/ch/[number]` | Canonical numbered comic reader route. |
+| `/comics/[slug]/chapter/[chapterSlug]` | Fallback non-numbered comic reader route. |
 
 ## Removed Public Routes
 
@@ -49,7 +51,7 @@ These folders/routes are intentionally removed instead of redirected:
 | `/series/country/[country]` | `/watch/series` with canonical filters |
 | `/series/genre/[genre]` | `/watch/series` with canonical filters |
 | `/series/year/[year]` | `/watch/series` with canonical filters |
-| `/series/watch/[slug]` | `/series/[slug]/episodes/[episodeSlug]` |
+| `/series/watch/[slug]` | `/series/[slug]/ep/[number]` or `/series/[slug]/special/[episodeSlug]` |
 | `/series/short/*` | `/watch/shorts`, `/shorts/[slug]`, `/shorts/[slug]/episodes/[episodeSlug]` |
 | `/drachin/*` | `/watch/shorts` and `/shorts/*` |
 | `/dramabox/*` | `/watch/shorts` and `/shorts/*` |
@@ -61,8 +63,8 @@ These folders/routes are intentionally removed instead of redirected:
 ## Implementation Notes
 
 - Private implementation folders use `_comics`, `_shorts`, and `_vault`; they are modules only and are not public Next routes.
-- Removed public aliases are blocked in `src/proxy.ts` with hard `404` responses, not redirected.
-- `next.config.ts` does not define IA compatibility redirects; new links must target the canonical routes above.
+- Removed public aliases are redirected to their canonical counterparts in `src/proxy.ts` (308 permanent redirect) or via dedicated Next.js redirect pages.
+- `next.config.ts` does not define IA compatibility redirects; redirection logic is handled by the proxy and legacy route shims.
 - Browse pages do not include duplicate search bars because global search already lives in the navbar.
 - Card sizing remains consistent: default cards use `3:4`; featured/radar/recommendation section reels may opt into `2:3`.
 - `SectionCard` supports stable `id` anchors for `#latest`, `#popular`, and `#release-radar` without extra route folders.
@@ -86,8 +88,8 @@ For deployed preview smoke checks, expected HTTP behavior is:
 
 ```text
 200 / /watch /watch/movies /watch/series /read /read/comics
-404 /drachin /dramabox /comic/* /manga/* /novel /collection
-404 /movies/watch/* /movies/latest /movies/popular
-404 /series/watch/* /series/short /series/anime /series/donghua /series/drama
-404 /comics/manga /comics/manhwa /comics/manhua
+308 /drachin /dramabox /collection /novel
+308 /comic /comic/* /manga/* /manhua/* /manhwa/*
+308 /movies/watch/* /movies/latest /movies/popular
+308 /series/watch/* /series/short /series/anime /series/donghua /series/drama
 ```

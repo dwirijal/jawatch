@@ -83,7 +83,7 @@ const securityHeaders = [
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https:",
       "style-src 'self' 'unsafe-inline' https:",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googlesyndication.com https://*.googleadservices.com https://www.google.com https://www.gstatic.com https://va.vercel-scripts.com https://vercel.live https://a.magsrv.com https://*.magsrv.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googlesyndication.com https://*.googleadservices.com https://www.google.com https://www.gstatic.com https://va.vercel-scripts.com https://vercel.live https://analytics.ahrefs.com https://a.magsrv.com https://*.magsrv.com",
       "connect-src 'self' https: ws: wss: *.ingest.sentry.io *.ingest.us.sentry.io",
       "frame-src 'self' https:",
       "media-src 'self' data: blob: https:",
@@ -155,6 +155,3 @@ export default withSentryConfig(withPWA(nextConfig), {
   },
   tunnelRoute: "/monitoring",
 });
-
-
-

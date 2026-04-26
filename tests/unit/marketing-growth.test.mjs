@@ -48,6 +48,21 @@ test('metadata helper uses the branded share image instead of favicon', () => {
   assert.doesNotMatch(seo, /image \|\| '\/favicon\.ico'/);
 });
 
+test('metadata helper expands short indexable descriptions', async () => {
+  const { buildMetadata } = await import('../../src/lib/seo.ts');
+  const metadata = buildMetadata({
+    title: 'Baca Lookism Bahasa Indonesia',
+    description: 'Temukan chapter terbaru Lookism dan baca online di jawatch.',
+    path: '/comics/lookism',
+  });
+
+  assert.equal(typeof metadata.description, 'string');
+  assert.ok(metadata.description.length >= 100);
+  assert.match(metadata.description, /jawatch/);
+  assert.match(metadata.openGraph.description, /katalog/i);
+  assert.match(metadata.twitter.description, /subtitle Indonesia/i);
+});
+
 test('footer exposes a direct Trakteer support CTA', () => {
   const footer = fs.readFileSync(new URL('../../src/components/organisms/FooterContent.tsx', import.meta.url), 'utf8');
 

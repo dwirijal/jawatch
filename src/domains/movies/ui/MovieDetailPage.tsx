@@ -12,6 +12,7 @@ import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeadin
 import { UnitCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
+import { LazyTrailerEmbed } from '@/components/organisms/LazyTrailerEmbed';
 import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { resolveViewerNsfwAccess } from '@/lib/server/viewer-nsfw-access';
@@ -283,16 +284,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
           <section id="trailer" className="space-y-8">
             <DetailSectionHeading title="Trailer" theme="movie" />
             <Paper tone="muted" shadow="sm" padded={false} className="overflow-hidden">
-              <div className="aspect-video w-full bg-black">
-                <iframe
-                  src={trailerEmbedUrl}
-                  title={`${movie.title} trailer`}
-                  loading="lazy"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="h-full w-full"
-                />
-              </div>
+              <LazyTrailerEmbed embedUrl={trailerEmbedUrl} title={movie.title} />
             </Paper>
           </section>
         ) : null}

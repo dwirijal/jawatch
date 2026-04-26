@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { connection } from 'next/server';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { HomePageView } from '@/components/organisms/HomePageView';
 import { getHomePageData } from '@/features/home/server/loadHomePageData';
@@ -22,7 +21,7 @@ export const metadata: Metadata = buildMetadata({
   ],
 });
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 
 function toHomeJsonLdUrl(item: { id: string; type: string }) {
   if (item.type === 'movie') return `/movies/${item.id}`;
@@ -31,7 +30,6 @@ function toHomeJsonLdUrl(item: { id: string; type: string }) {
 }
 
 export default async function HomePage() {
-  await connection();
   const { sections, heroItems } = await getHomePageData({ includeNsfw: false });
   return (
     <>

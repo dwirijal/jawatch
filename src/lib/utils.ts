@@ -131,11 +131,12 @@ export function resolveThemeFromPathname(pathname?: string | null): ThemeType {
 export function getMediaPosterAspectClass(theme: ThemeType): string {
   switch (theme) {
     case 'movie':
+      return 'aspect-[2/3]';
     case 'anime':
     case 'donghua':
     case 'drama':
     case 'default':
-      return 'aspect-[2/3]';
+      return 'aspect-[3/4]';
     case 'manga':
       return 'aspect-[3/4]';
     case 'novel':

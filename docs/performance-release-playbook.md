@@ -46,11 +46,13 @@ If a route regresses:
 
 Recommended release flow for production:
 
-1. `npm run verify`
-2. commit and push to `main`
-3. wait for GitHub Actions CI to pass
-4. deploy to Vercel
-5. confirm the deployment is healthy
+1. confirm the media DB/env checklist in `docs/production-media-runtime.md`
+2. `npm run verify`
+3. commit and push to `main`
+4. wait for GitHub Actions CI to pass
+5. deploy to Vercel
+6. run `npm run smoke:production`
+7. confirm the deployment has no Vercel 5xx/error logs
 
 ## Deployment Commands
 

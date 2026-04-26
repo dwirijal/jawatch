@@ -462,7 +462,8 @@ Player surfaces memakai compact control sizes, blur-backed controls, and strong 
 
 **Real Use Cases**
 
-- `/series/[slug]/episodes/[episodeSlug]`
+- `/series/[slug]/ep/[number]`
+- `/series/[slug]/special/[episodeSlug]`
 - `/shorts/[slug]/episodes/[episodeSlug]`
 
 ### Search and Overlay Surfaces

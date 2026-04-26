@@ -28,13 +28,16 @@ export function buildComicVisibilityCondition(includeNsfw: boolean, itemAlias = 
   const prefix = normalizeAlias(itemAlias);
   const detailColumn = `${prefix}detail`;
   const nsfwColumn = `${prefix}is_nsfw`;
+  const isNotNsfwTag = (field: string) => `
+    coalesce((${detailColumn} -> '${field}' @> '["NSFW"]'::jsonb), false) = false
+    and coalesce((${detailColumn} -> '${field}' @> '["nsfw"]'::jsonb), false) = false`;
 
   return `
     and coalesce(${nsfwColumn}, false) = false
-    and not (${detailColumn} -> 'genres' @> '["NSFW"]' or ${detailColumn} -> 'genres' @> '["nsfw"]')
-    and not (${detailColumn} -> 'genre_names' @> '["NSFW"]' or ${detailColumn} -> 'genre_names' @> '["nsfw"]')
-    and not (${detailColumn} -> 'category_names' @> '["NSFW"]' or ${detailColumn} -> 'category_names' @> '["nsfw"]')
-    and not (${detailColumn} -> 'tags' @> '["NSFW"]' or ${detailColumn} -> 'tags' @> '["nsfw"]')
+    and ${isNotNsfwTag('genres')}
+    and ${isNotNsfwTag('genre_names')}
+    and ${isNotNsfwTag('category_names')}
+    and ${isNotNsfwTag('tags')}
   `;
 }
 

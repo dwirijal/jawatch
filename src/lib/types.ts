@@ -42,6 +42,7 @@ export interface MangaSearchResult {
 export interface MangaChapter {
   chapter: string;
   slug: string;
+  number?: string | number | null;
   link: string;
   date: string;
 }
@@ -74,6 +75,7 @@ export interface MangaDetail {
 
 export interface ChapterDetail {
   slug?: string;
+  number?: string | number | null;
   title: string;
   subtype?: MangaSubtype;
   manga_slug?: string;

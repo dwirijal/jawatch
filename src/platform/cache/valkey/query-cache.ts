@@ -21,6 +21,28 @@ function normalizeEnvValue(value: string | undefined): string {
   return trimmed;
 }
 
+function readIntegerEnv(name: string, fallback: number, minimum: number): number {
+  const raw = process.env[name]?.trim();
+  if (!raw) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < minimum) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
+function readCacheConnectTimeoutMs(): number {
+  return readIntegerEnv('QUERY_CACHE_CONNECT_TIMEOUT_MS', readIntegerEnv('CACHE_CONNECT_TIMEOUT_MS', 1_500, 250), 250);
+}
+
+function readCacheOperationTimeoutMs(): number {
+  return readIntegerEnv('QUERY_CACHE_OPERATION_TIMEOUT_MS', readIntegerEnv('CACHE_OPERATION_TIMEOUT_MS', 800, 100), 100);
+}
+
 function readValkeyConfig(): ValkeyConfig | null {
   const url =
     normalizeEnvValue(process.env.AIVEN_VALKEY_URL) ||
@@ -54,7 +76,7 @@ async function getQueryCacheClient(): Promise<QueryCacheClient | null> {
       const client = createClient({
         url: config.url,
         socket: {
-          connectTimeout: 10_000,
+          connectTimeout: readCacheConnectTimeoutMs(),
           reconnectStrategy: false,
         },
       });
@@ -72,6 +94,22 @@ async function getQueryCacheClient(): Promise<QueryCacheClient | null> {
   })();
 
   return queryClientPromise;
+}
+
+async function withCacheTimeout<T>(operation: Promise<T>): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Cache operation timeout')), readCacheOperationTimeoutMs());
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
 
 function serializeCacheValue<T>(value: T): string {
@@ -112,7 +150,7 @@ export async function getQueryCacheValue<T>(key: string): Promise<T | null> {
   }
 
   try {
-    const value = await client.get(key);
+    const value = await withCacheTimeout(client.get(key));
     return deserializeCacheValue<T>(value);
   } catch {
     return null;
@@ -130,9 +168,9 @@ export async function setQueryCacheValue<T>(key: string, value: T, ttlSeconds: n
   }
 
   try {
-    const response = await client.set(key, serializeCacheValue(value), {
+    const response = await withCacheTimeout(client.set(key, serializeCacheValue(value), {
       EX: ttlSeconds,
-    });
+    }));
     return response === 'OK';
   } catch {
     return false;
@@ -150,7 +188,7 @@ export async function deleteQueryCacheValue(key: string): Promise<boolean> {
   }
 
   try {
-    return (await client.del(key)) > 0;
+    return (await withCacheTimeout(client.del(key))) > 0;
   } catch {
     return false;
   }

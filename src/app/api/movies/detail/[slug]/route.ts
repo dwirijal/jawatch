@@ -1,7 +1,9 @@
 import { getMovieDetailBySlug } from '@/lib/adapters/movie';
 import { buildPrivateCacheControl } from '@/platform/cache/http/cache-headers';
-import { resolveComicRouteIncludeNsfw } from '@/lib/server/comic-route-access';
+import { resolvePublicApiRequestContext } from '@/lib/server/public-api-cache';
 import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
+
+const PUBLIC_CACHE_TTL_SECONDS = 300;
 
 interface RouteContext {
   params: Promise<{ slug: string }>;
@@ -13,7 +15,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   const { slug } = await context.params;
-  const includeNsfw = await resolveComicRouteIncludeNsfw(request);
+  const { includeNsfw, responseHeaders } = await resolvePublicApiRequestContext(request, PUBLIC_CACHE_TTL_SECONDS);
   const payload = await getMovieDetailBySlug(slug, {
     includeNsfw,
   });
@@ -26,6 +28,6 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   return Response.json(payload, {
-    headers: buildPrivateCacheControl(),
+    headers: responseHeaders,
   });
 }

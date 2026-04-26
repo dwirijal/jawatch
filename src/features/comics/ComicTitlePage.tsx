@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { getComicJikanEnrichment, getHDThumbnail, getMangaDetail } from '@/lib/adapters/comic-server';
+import { getHDThumbnail, getMangaDetail } from '@/lib/adapters/comic-server';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { JsonLd } from '@/components/atoms/JsonLd';
@@ -15,10 +15,10 @@ import { TitleBlock } from '@/components/atoms/TitleBlock';
 import { TitleCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { ReaderMediaDetailPage } from '@/components/organisms/ReaderMediaDetailPage';
-import { MetadataPanel } from '@/components/organisms/MetadataPanel';
 import { User, Activity, Layout, ShieldAlert, ChevronLeft, Play } from 'lucide-react';
 import { resolveViewerNsfwAccess } from '@/lib/server/viewer-nsfw-access';
 import { isReservedComicSlug } from '@/lib/canonical-route-guards';
+import { buildComicChapterHref } from '@/lib/comic-chapter-paths';
 import { buildComicDetailJsonLd, buildMetadata } from '@/lib/seo';
 import { resolveMediaBackgroundUrl } from '@/lib/utils';
 import ComicDetailHistoryTracker from './ComicDetailHistoryTracker';
@@ -84,10 +84,11 @@ export default async function ComicDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const enrichment = await getComicJikanEnrichment(manga.slug).catch(() => null);
   const hdImage = getHDThumbnail(manga.image);
   const latestChapter = manga.chapters[0];
+  const latestChapterHref = latestChapter ? buildComicChapterHref(manga.slug, latestChapter) : null;
   const backgroundImage = resolveMediaBackgroundUrl(manga.background, hdImage);
+  const synopsis = manga.synopsis_full || manga.synopsis;
 
   return (
     <>
@@ -96,7 +97,7 @@ export default async function ComicDetailPage({ params }: PageProps) {
           title: manga.title,
           slug: manga.slug,
           poster: hdImage,
-          description: enrichment?.synopsis || manga.synopsis_full || manga.synopsis,
+          description: synopsis,
           genres: manga.genres.map((genre) => genre.name),
           author: manga.metadata.author,
         })}
@@ -181,9 +182,9 @@ export default async function ComicDetailPage({ params }: PageProps) {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3">
-                    {latestChapter ? (
+                    {latestChapterHref ? (
                       <Button variant="manga" size="lg" asChild>
-                        <Link href={`/comics/${slug}/chapters/${latestChapter.slug}`}>
+                        <Link href={latestChapterHref}>
                           Baca terbaru
                           <Play className="ml-2 h-4 w-4 fill-current" />
                         </Link>
@@ -200,13 +201,13 @@ export default async function ComicDetailPage({ params }: PageProps) {
         }
         sidebar={
           <>
-            {latestChapter ? (
+            {latestChapterHref ? (
               <DetailActionCard
                 theme="manga"
                 title="Mau lanjut baca?"
                 description="Info komik tetap rapi, tombol baca tetap dekat saat kamu sudah siap lanjut."
                 actions={[
-                  { href: `/comics/${slug}/chapters/${latestChapter.slug}`, label: 'Baca chapter terbaru' },
+                  { href: latestChapterHref, label: 'Baca chapter terbaru' },
                   { href: '#chapters', label: 'Buka daftar chapter', variant: 'outline' },
                 ]}
               />
@@ -244,18 +245,11 @@ export default async function ComicDetailPage({ params }: PageProps) {
           </>
         }
       >
-        {enrichment ? (
-          <section className="space-y-6">
-            <DetailSectionHeading title="Stat global" theme="manga" />
-            <MetadataPanel data={enrichment} loading={false} />
-          </section>
-        ) : null}
-
         <section className="space-y-6">
           <DetailSectionHeading title="Sinopsis" theme="manga" />
           <Paper tone="muted" shadow="sm" className="p-5 md:p-6">
             <p className="whitespace-pre-wrap text-base leading-8 text-muted-foreground">
-              {enrichment?.synopsis || manga.synopsis_full || manga.synopsis}
+              {synopsis}
             </p>
           </Paper>
         </section>
@@ -267,7 +261,7 @@ export default async function ComicDetailPage({ params }: PageProps) {
               {manga.chapters.map((chapter) => (
                 <Link
                   key={chapter.slug}
-                  href={`/comics/${slug}/chapters/${chapter.slug}`}
+                  href={buildComicChapterHref(manga.slug, chapter)}
                   className="flex items-center justify-between gap-4 border-b border-border-subtle px-5 py-4 text-sm transition-colors hover:bg-surface-elevated last:border-b-0 md:px-6"
                 >
                   <div className="space-y-1">
@@ -299,7 +293,7 @@ export default async function ComicDetailPage({ params }: PageProps) {
             units={manga.chapters.map((chapter) => ({
               id: `chapter:${chapter.slug}`,
               label: chapter.chapter,
-              href: `/comics/${slug}/chapters/${chapter.slug}`,
+              href: buildComicChapterHref(manga.slug, chapter),
             }))}
           />
         </section>

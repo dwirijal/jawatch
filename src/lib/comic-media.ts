@@ -3,6 +3,12 @@ import type { MangaSearchResult, MangaSubtype } from '@/lib/types';
 const HOTLINK_PROTECTED_COMIC_HOSTS = new Set([
   'bacaman00.sokuja.id',
 ]);
+const NUMBERED_IKIRU_HOST_PATTERN = /^\d{2}\.ikiru\.wtf$/i;
+
+export function isProxyableComicImageHost(hostname: string): boolean {
+  const normalized = hostname.trim().toLowerCase();
+  return HOTLINK_PROTECTED_COMIC_HOSTS.has(normalized) || NUMBERED_IKIRU_HOST_PATTERN.test(normalized);
+}
 
 function inferComicSubtype(item: Pick<MangaSearchResult, 'type' | 'subtype'>): MangaSubtype {
   const subtype = item.subtype?.toLowerCase() ?? '';
@@ -31,7 +37,7 @@ export function normalizeComicImageUrl(url: string): string {
 
   try {
     const parsed = new URL(normalized);
-    if (HOTLINK_PROTECTED_COMIC_HOSTS.has(parsed.hostname)) {
+    if (isProxyableComicImageHost(parsed.hostname)) {
       return `/api/comic/image?url=${encodeURIComponent(parsed.toString())}`;
     }
   } catch {

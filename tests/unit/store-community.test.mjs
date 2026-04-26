@@ -51,7 +51,7 @@ test('unit likes and comments stay local-first and aggregate cleanly at the titl
     titleLabel: 'Blue Lock',
     unitId: 'episode:1',
     unitLabel: 'Episode 1',
-    unitHref: '/series/blue-lock/episodes/ep-1',
+    unitHref: '/series/blue-lock/ep/1',
     mediaType: 'anime',
   });
 
@@ -60,7 +60,7 @@ test('unit likes and comments stay local-first and aggregate cleanly at the titl
     titleLabel: 'Blue Lock',
     unitId: 'episode:1',
     unitLabel: 'Episode 1',
-    unitHref: '/series/blue-lock/episodes/ep-1',
+    unitHref: '/series/blue-lock/ep/1',
     mediaType: 'anime',
     authorName: 'Guest',
     content: 'This episode hits hard.',
@@ -92,7 +92,7 @@ test('signing in merges guest community activity into the signed-in owner scope'
     titleLabel: 'Blue Lock',
     unitId: 'chapter:1',
     unitLabel: 'Chapter 1',
-    unitHref: '/comics/blue-lock/chapters/chapter-1',
+    unitHref: '/comics/blue-lock/ch/1',
     mediaType: 'manga',
     authorName: 'Guest',
     content: 'First comment from guest mode.',
@@ -103,7 +103,7 @@ test('signing in merges guest community activity into the signed-in owner scope'
     titleLabel: 'Blue Lock',
     unitId: 'chapter:1',
     unitLabel: 'Chapter 1',
-    unitHref: '/comics/blue-lock/chapters/chapter-1',
+    unitHref: '/comics/blue-lock/ch/1',
     mediaType: 'manga',
   });
 

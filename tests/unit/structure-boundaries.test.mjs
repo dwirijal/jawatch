@@ -99,6 +99,18 @@ test('domain cache accepts Aiven Valkey env aliases', () => {
   assert.equal(source.includes('process.env.VALKEY_URL'), true);
 });
 
+test('postgres client does not send startup timeout parameters to Supabase poolers', () => {
+  const source = read('src/platform/db/postgres/client.ts');
+
+  assert.equal(source.includes('function isSupabaseDatabaseUrl'), true);
+  assert.equal(source.includes('hostname.endsWith(\'.supabase.co\')'), true);
+  assert.equal(source.includes('hostname.endsWith(\'.pooler.supabase.com\')'), true);
+  assert.equal(source.includes('function buildStartupConnectionParameters'), true);
+  assert.equal(source.includes('shouldUseSupabaseDatabase() || isSupabaseDatabaseUrl(databaseUrl)'), true);
+  assert.equal(source.includes('statement_timeout: readStatementTimeoutMs()'), true);
+  assert.equal(source.includes('...buildComicDbOptions(databaseUrl)'), true);
+});
+
 test('store root file is a thin facade instead of a persistence implementation', () => {
   const source = read('src/lib/store.ts');
 
@@ -285,14 +297,83 @@ test('vertical drama db routes generate public slugs instead of reading slug col
   assert.equal(source.includes('next_slug'), false);
 });
 
-test('home page and sitemap defer heavy work to request time instead of build time', () => {
+test('home page uses request-time cached public feed while sitemap keeps dynamic entries opt-in', () => {
   const homePageSource = read('src/app/(public)/page.tsx');
+  const homeLoaderSource = read('src/features/home/server/home-feed-loader.ts');
+  const buildPhaseSource = read('src/lib/server/build-phase.ts');
   const sitemapSource = read('src/app/sitemap.ts');
 
-  assert.equal(homePageSource.includes("from 'next/server'"), true);
-  assert.equal(homePageSource.includes('await connection()'), true);
+  assert.equal(homePageSource.includes("from 'next/server'"), false);
+  assert.equal(homePageSource.includes('await connection()'), false);
+  assert.equal(homePageSource.includes("dynamic = 'force-dynamic'"), true);
+  assert.equal(homePageSource.includes('getHomePageData({ includeNsfw: false })'), true);
+  assert.equal(homeLoaderSource.includes('HOME_FEED_PRELOAD_LIMIT = 24'), true);
+  assert.equal(homeLoaderSource.includes("from '@/lib/server/build-phase'"), true);
+  assert.equal(buildPhaseSource.includes("process.env.NEXT_PHASE !== 'phase-production-build'"), true);
   assert.equal(sitemapSource.includes("from 'next/server'"), true);
+  assert.equal(sitemapSource.includes("process.env.ENABLE_DYNAMIC_SITEMAP === 'true'"), true);
   assert.equal(sitemapSource.includes('await connection()'), true);
+});
+
+test('watch hub pages use public ISR with client-side search param filters', () => {
+  const movieRouteSource = read('src/app/(public)/watch/movies/page.tsx');
+  const seriesRouteSource = read('src/app/(public)/watch/series/page.tsx');
+  const moviePageSource = read('src/features/movies/WatchMoviesPage.tsx');
+  const seriesPageSource = read('src/features/series/WatchSeriesPage.tsx');
+  const movieClientSource = read('src/features/movies/MoviesPageClient.tsx');
+  const seriesClientSource = read('src/features/series/SeriesPageClient.tsx');
+
+  for (const source of [movieRouteSource, seriesRouteSource, moviePageSource, seriesPageSource]) {
+    assert.equal(source.includes("dynamic = 'force-dynamic'"), false);
+    assert.equal(source.includes('resolveViewerNsfwAccess'), false);
+  }
+
+  assert.equal(movieRouteSource.includes('export const revalidate = 300'), true);
+  assert.equal(seriesRouteSource.includes('export const revalidate = 300'), true);
+  assert.equal(moviePageSource.includes('<Suspense'), true);
+  assert.equal(seriesPageSource.includes('<Suspense'), true);
+  assert.equal(moviePageSource.includes('includeNsfw: false'), true);
+  assert.equal(seriesPageSource.includes('includeNsfw: false'), true);
+  assert.equal(movieClientSource.includes('MoviesPageClientFromSearchParams'), true);
+  assert.equal(seriesClientSource.includes('SeriesPageClientFromSearchParams'), true);
+  assert.equal(movieClientSource.includes('/api/movies/genre?genre='), true);
+});
+
+test('comic browse page uses request-time cached public data instead of viewer-specific SSR', () => {
+  const pageSource = read('src/app/(public)/read/comics/page.tsx');
+  const loaderSource = read('src/features/comics/loadComicPageData.ts');
+  const buildPhaseSource = read('src/lib/server/build-phase.ts');
+  const clientSource = read('src/features/comics/ComicPageClient.tsx');
+
+  assert.equal(pageSource.includes("dynamic = 'force-dynamic'"), true);
+  assert.equal(pageSource.includes("loadComicPageData('all', { includeNsfw: false })"), true);
+  assert.equal(pageSource.includes('searchParams'), false);
+  assert.equal(pageSource.includes('ComicPageClientFromSearchParams'), true);
+  assert.equal(clientSource.includes('useSearchParams'), true);
+  assert.equal(loaderSource.includes('COMIC_PAGE_PRELOAD_LIMIT = 24'), true);
+  assert.equal(loaderSource.includes("from '@/lib/server/build-phase'"), true);
+  assert.equal(buildPhaseSource.includes("process.env.NEXT_PHASE !== 'phase-production-build'"), true);
+  assert.equal(loaderSource.includes("await import('@/lib/server/viewer-nsfw-access')"), true);
+  assert.equal(loaderSource.includes("import { resolveViewerNsfwAccess }"), false);
+});
+
+test('high-traffic detail APIs use anonymous public cache headers', () => {
+  const routes = [
+    'src/app/api/movies/detail/[slug]/route.ts',
+    'src/app/api/movies/watch/[slug]/route.ts',
+    'src/app/api/series/episode/[slug]/route.ts',
+    'src/app/api/comic/title/[slug]/route.ts',
+    'src/app/api/comic/chapter/[slug]/route.ts',
+  ];
+
+  for (const route of routes) {
+    const source = read(route);
+
+    assert.equal(source.includes('resolvePublicApiRequestContext'), true, route);
+    assert.equal(source.includes('const PUBLIC_CACHE_TTL_SECONDS = 300'), true, route);
+    assert.equal(source.includes('headers: responseHeaders'), true, route);
+    assert.equal(source.includes('resolveComicRouteIncludeNsfw'), false, route);
+  }
 });
 
 test('home page view delegates hero and section rendering to feature home modules', () => {
@@ -376,6 +457,15 @@ test('movie and series browse adapters define shared hub cache keys for Redis-ba
 
   assert.equal(movieBrowseSource.includes("buildComicCacheKey(MOVIE_CACHE_NAMESPACE, 'hub'"), true);
   assert.equal(seriesBrowseSource.includes("buildComicCacheKey(SERIES_CACHE_NAMESPACE, visibility, 'hub'"), true);
+});
+
+test('comic browse adapter versions list cache keys separately from leaderboard keys', () => {
+  const source = read('src/lib/adapters/comic-server-browse.ts');
+
+  assert.equal(source.includes("const COMIC_BROWSE_CACHE_NAMESPACE = 'browse-v2'"), true);
+  assert.equal(source.includes('buildComicCacheKey(\n    COMIC_BROWSE_CACHE_NAMESPACE,\n    \'list\','), true);
+  assert.equal(source.includes('buildComicCacheKey(\n    COMIC_BROWSE_CACHE_NAMESPACE,\n    \'search\','), true);
+  assert.equal(source.includes("buildComicCacheKey('leaderboard'"), false);
 });
 
 test('comic chapter query resolves adjacent navigation in SQL instead of sibling scans', () => {

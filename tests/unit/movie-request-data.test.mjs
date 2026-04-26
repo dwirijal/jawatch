@@ -7,6 +7,10 @@ import { createMoviePageDataLoader } from '../../src/features/movies/server/load
 import { resolveMoviePlaybackState } from '../../src/domains/movies/server/movie-playback-state.ts';
 import { resolveDynamicSitemapEntries } from '../../src/app/_shared/metadata/sitemap-utils.ts';
 import {
+  buildMovieDetailBySlugQuery,
+  buildMovieWatchBySlugQuery,
+} from '../../src/lib/adapters/movie-query-sql.ts';
+import {
   buildMovieGenreRows,
   getFeaturedMovie,
   normalizeMovieSortMode,
@@ -209,4 +213,28 @@ test('movie page data loader starts hub and genre loads without a waterfall', as
     latest: ['latest'],
     initialResults: ['genre'],
   });
+});
+
+test('movie detail query prefers rows that already have units before stale duplicates', () => {
+  const sql = buildMovieDetailBySlugQuery({
+    itemCanonicalFlag: true,
+    unitCanonicalFlag: true,
+    itemLinks: true,
+    unitLinks: true,
+  });
+
+  assert.match(sql, /\bexists\s*\([\s\S]*from public\.media_units candidate_units[\s\S]*\)\s+as has_units/i);
+  assert.match(sql, /\border by has_units desc,\s*coalesce\(i\.is_canonical, false\) desc,\s*i\.updated_at desc/i);
+});
+
+test('movie watch query projects unit canonical flag from the lateral subquery', () => {
+  const sql = buildMovieWatchBySlugQuery({
+    itemCanonicalFlag: true,
+    unitCanonicalFlag: true,
+    itemLinks: true,
+    unitLinks: true,
+  });
+
+  assert.match(sql, /\bjoin lateral\b[\s\S]*\bu\.is_canonical\b/i);
+  assert.match(sql, /\bcoalesce\(\s*case when coalesce\(u\.is_canonical, false\) then u\.unit_key end/i);
 });

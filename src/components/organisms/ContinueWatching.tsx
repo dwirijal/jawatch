@@ -124,7 +124,7 @@ export function ContinueWatching({
                 <Link href={item.lastLink} className="block">
                   <div className="relative aspect-video border-b border-border-subtle bg-surface-2">
                     <Image
-                      src={item.image || '/placeholder-poster.jpg'}
+                      src={item.image || '/poster-missing-dark.png'}
                       alt={item.title}
                       fill
                       className="h-full w-full object-cover opacity-60 transition-all duration-700 group-hover:scale-105 group-hover:opacity-40"

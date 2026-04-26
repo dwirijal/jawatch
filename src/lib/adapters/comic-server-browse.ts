@@ -18,12 +18,20 @@ import {
   SEARCH_CACHE_TTL_SECONDS,
 } from './comic-server-shared.ts';
 
+const COMIC_BROWSE_CACHE_NAMESPACE = 'browse-v2';
+
 export async function getPopularManga(
   limit = 40,
   options: { includeNsfw?: boolean } = {},
 ): Promise<{ comics: MangaSearchResult[] }> {
   const includeNsfw = options.includeNsfw === true;
-  const key = buildComicCacheKey('list', 'popular', getVisibilityCacheSegment(includeNsfw), limit);
+  const key = buildComicCacheKey(
+    COMIC_BROWSE_CACHE_NAMESPACE,
+    'list',
+    'popular',
+    getVisibilityCacheSegment(includeNsfw),
+    limit,
+  );
 
   return rememberComicListPayload(
     key,
@@ -45,7 +53,14 @@ export async function getNewManga(
   options: { includeNsfw?: boolean } = {},
 ): Promise<{ comics: MangaSearchResult[] }> {
   const includeNsfw = options.includeNsfw === true;
-  const key = buildComicCacheKey('list', 'latest', getVisibilityCacheSegment(includeNsfw), page, limit);
+  const key = buildComicCacheKey(
+    COMIC_BROWSE_CACHE_NAMESPACE,
+    'list',
+    'latest',
+    getVisibilityCacheSegment(includeNsfw),
+    page,
+    limit,
+  );
 
   return rememberComicListPayload(
     key,
@@ -67,7 +82,13 @@ export async function getOngoingManga(
   options: { includeNsfw?: boolean } = {},
 ): Promise<{ comics: MangaSearchResult[] }> {
   const includeNsfw = options.includeNsfw === true;
-  const key = buildComicCacheKey('list', 'ongoing', getVisibilityCacheSegment(includeNsfw), limit);
+  const key = buildComicCacheKey(
+    COMIC_BROWSE_CACHE_NAMESPACE,
+    'list',
+    'ongoing',
+    getVisibilityCacheSegment(includeNsfw),
+    limit,
+  );
 
   return rememberComicListPayload(
     key,
@@ -90,7 +111,14 @@ export async function searchManga(
   options: { includeNsfw?: boolean } = {},
 ): Promise<{ data: MangaSearchResult[] }> {
   const includeNsfw = options.includeNsfw === true;
-  const key = buildComicCacheKey('search', getVisibilityCacheSegment(includeNsfw), query.toLowerCase(), page, limit);
+  const key = buildComicCacheKey(
+    COMIC_BROWSE_CACHE_NAMESPACE,
+    'search',
+    getVisibilityCacheSegment(includeNsfw),
+    query.toLowerCase(),
+    page,
+    limit,
+  );
 
   return rememberComicSearchPayload(
     key,
@@ -115,7 +143,14 @@ export async function getMangaByGenre(
   options: { includeNsfw?: boolean } = {},
 ): Promise<{ comics: MangaSearchResult[] }> {
   const includeNsfw = options.includeNsfw === true;
-  const key = buildComicCacheKey('genre', getVisibilityCacheSegment(includeNsfw), genre.toLowerCase(), page, limit);
+  const key = buildComicCacheKey(
+    COMIC_BROWSE_CACHE_NAMESPACE,
+    'genre',
+    getVisibilityCacheSegment(includeNsfw),
+    genre.toLowerCase(),
+    page,
+    limit,
+  );
 
   return rememberComicListPayload(
     key,
@@ -139,7 +174,7 @@ export async function getComicSubtypePosters(
   const includeNsfw = options.includeNsfw === true;
   if (shouldUseComicGateway()) {
     return rememberComicCacheValue(
-      buildComicCacheKey('subtype-posters', getVisibilityCacheSegment(includeNsfw)),
+      buildComicCacheKey(COMIC_BROWSE_CACHE_NAMESPACE, 'subtype-posters', getVisibilityCacheSegment(includeNsfw)),
       LIST_CACHE_TTL_SECONDS,
       () => fetchComicGatewayJson<Partial<Record<MangaSubtype, string>>>('/api/comic/subtype-posters', {
         includeNsfw,
@@ -148,7 +183,7 @@ export async function getComicSubtypePosters(
   }
 
   return rememberComicCacheValue(
-    buildComicCacheKey('subtype-posters', getVisibilityCacheSegment(includeNsfw)),
+    buildComicCacheKey(COMIC_BROWSE_CACHE_NAMESPACE, 'subtype-posters', getVisibilityCacheSegment(includeNsfw)),
     LIST_CACHE_TTL_SECONDS,
     () => querySubtypePosterMap(includeNsfw),
   );

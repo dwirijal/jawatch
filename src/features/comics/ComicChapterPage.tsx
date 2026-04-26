@@ -4,20 +4,27 @@ import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { resolveViewerNsfwAccess } from '@/lib/server/viewer-nsfw-access';
 import { getMangaChapter } from '@/lib/adapters/comic-server';
+import {
+  buildComicChapterHref,
+  buildComicChapterSlugFromNumber,
+} from '@/lib/comic-chapter-paths';
 import ComicChapterClient from './ComicChapterClient';
 
 interface PageProps {
-  params: Promise<{ slug: string; chapter?: string; chapterSlug?: string }>;
+  params: Promise<{ slug: string; chapter?: string; chapterNumber?: string; chapterSlug?: string }>;
 }
 
 export default async function ComicChapterPage({ params }: PageProps) {
   const resolvedParams = await params;
   const slug = resolvedParams.slug;
-  const chapterSlug = resolvedParams.chapterSlug || resolvedParams.chapter || '';
+  const chapterSlug = resolvedParams.chapterSlug || resolvedParams.chapter || (
+    resolvedParams.chapterNumber ? buildComicChapterSlugFromNumber(slug, resolvedParams.chapterNumber) : ''
+  );
   const includeNsfw = await resolveViewerNsfwAccess();
 
   const chapter = await getMangaChapter(chapterSlug, {
     includeNsfw,
+    comicSlug: slug,
   }).catch(() => null);
 
   if (!chapter) {
@@ -34,8 +41,18 @@ export default async function ComicChapterPage({ params }: PageProps) {
     );
   }
 
-  if ((chapter.manga_slug && chapter.manga_slug !== slug) || (chapter.slug && chapter.slug !== chapterSlug)) {
-    redirect(`/comics/${chapter.manga_slug || slug}/chapters/${chapter.slug || chapterSlug}`);
+  const canonicalHref = buildComicChapterHref(chapter.manga_slug || slug, {
+    slug: chapter.slug || chapterSlug,
+    number: chapter.number,
+  });
+  const requestedHref = resolvedParams.chapterNumber
+    ? `/comics/${slug}/ch/${resolvedParams.chapterNumber}`
+    : resolvedParams.chapterSlug
+      ? `/comics/${slug}/chapter/${resolvedParams.chapterSlug}`
+      : `/comics/${slug}/chapters/${chapterSlug}`;
+
+  if ((chapter.manga_slug && chapter.manga_slug !== slug) || canonicalHref !== requestedHref) {
+    redirect(canonicalHref);
   }
 
   return <ComicChapterClient slug={slug} chapterSlug={chapterSlug} chapter={chapter} />;

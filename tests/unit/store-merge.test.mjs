@@ -50,7 +50,7 @@ test('guest history stays readable before login', () => {
     title: 'Blue Lock',
     image: '/blue-lock.jpg',
     lastChapterOrEpisode: 'Chapter 12',
-    lastLink: '/comics/blue-lock/chapters/chapter-12',
+    lastLink: '/comics/blue-lock/ch/12',
     timestamp: 1700000000000,
   });
 
@@ -68,7 +68,7 @@ test('signing in merges guest history and bookmarks into the active owner scope'
     title: 'Dandadan',
     image: '/dandadan.jpg',
     lastChapterOrEpisode: 'Chapter 7',
-    lastLink: '/comics/dandadan/chapters/chapter-7',
+    lastLink: '/comics/dandadan/ch/7',
     timestamp: 1700000000000,
   });
 

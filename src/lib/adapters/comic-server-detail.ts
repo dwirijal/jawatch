@@ -79,12 +79,17 @@ export async function getComicJikanEnrichment(
 
 export async function getMangaChapter(
   slug: string,
-  options: { includeNsfw?: boolean; recordAccess?: boolean } = {},
+  options: { includeNsfw?: boolean; recordAccess?: boolean; comicSlug?: string } = {},
 ): Promise<ChapterDetail> {
   const includeNsfw = 'includeNsfw' in options && options.includeNsfw === true;
+  const comicSlug = options.comicSlug?.trim() || '';
+  const cacheKey = comicSlug
+    ? buildComicCacheKey('chapter', getVisibilityCacheSegment(includeNsfw), comicSlug, slug)
+    : buildComicCacheKey('chapter', getVisibilityCacheSegment(includeNsfw), slug);
+
   if (shouldUseComicGateway()) {
     return rememberComicCacheValue(
-      buildComicCacheKey('chapter', getVisibilityCacheSegment(includeNsfw), slug),
+      cacheKey,
       CHAPTER_CACHE_TTL_SECONDS,
       async () => normalizeChapterDetailPayload(
         await fetchComicGatewayJson<ChapterDetail>(`/api/comic/chapter/${encodeURIComponent(slug)}`, {
@@ -96,9 +101,9 @@ export async function getMangaChapter(
   }
 
   const normalizedChapter = await rememberComicCacheValue(
-    buildComicCacheKey('chapter', getVisibilityCacheSegment(includeNsfw), slug),
+    cacheKey,
     CHAPTER_CACHE_TTL_SECONDS,
-    async () => normalizeChapterDetailPayload(await queryComicChapter(slug, includeNsfw)),
+    async () => normalizeChapterDetailPayload(await queryComicChapter(slug, includeNsfw, comicSlug)),
   );
 
   if (options.recordAccess) {

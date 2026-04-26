@@ -1,6 +1,4 @@
-const ALLOWED_COMIC_IMAGE_HOSTS = new Set([
-  'bacaman00.sokuja.id',
-]);
+import { isProxyableComicImageHost } from '@/lib/comic-media';
 
 function inferImageContentType(url: URL): string {
   const pathname = url.pathname.toLowerCase();
@@ -27,7 +25,7 @@ export async function GET(request: Request) {
     return new Response('Invalid image url', { status: 400 });
   }
 
-  if ((targetUrl.protocol !== 'https:' && targetUrl.protocol !== 'http:') || !ALLOWED_COMIC_IMAGE_HOSTS.has(targetUrl.hostname)) {
+  if ((targetUrl.protocol !== 'https:' && targetUrl.protocol !== 'http:') || !isProxyableComicImageHost(targetUrl.hostname)) {
     return new Response('Image host not allowed', { status: 400 });
   }
 

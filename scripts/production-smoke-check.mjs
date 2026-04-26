@@ -10,10 +10,10 @@ const checks = [
   { path: '/read/comics', kind: 'html', label: 'comics browse' },
   { path: '/sitemap.xml', kind: 'xml', label: 'sitemap' },
   { path: '/robots.txt', kind: 'text', label: 'robots' },
-  { path: '/movies/latest', kind: 'removed', label: 'removed movies latest', expectedStatus: 404 },
-  { path: '/series/short', kind: 'removed', label: 'removed series short', expectedStatus: 404 },
-  { path: '/comic/magic-emperor', kind: 'removed', label: 'removed comic detail', expectedStatus: 404 },
-  { path: '/manga/magic-emperor', kind: 'removed', label: 'removed manga detail', expectedStatus: 404 },
+  { path: '/movies/latest', kind: 'html', label: 'legacy movies latest redirect' },
+  { path: '/series/short', kind: 'html', label: 'legacy series short redirect' },
+  { path: '/comic/magic-emperor', kind: 'html', label: 'legacy comic detail redirect' },
+  { path: '/manga/magic-emperor', kind: 'html', label: 'legacy manga detail redirect' },
 ];
 
 function normalizeBaseUrl(value) {
