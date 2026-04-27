@@ -2,7 +2,7 @@ import 'server-only';
 
 import { createHash } from 'node:crypto';
 import { buildComicCacheKey, incrementComicCacheCounter } from './comic-cache.ts';
-import { buildPrivateNoStoreCacheControl } from '../cloudflare-cache.ts';
+import { buildPrivateCacheControl, buildPrivateNoStoreCacheControl } from '../cloudflare-cache.ts';
 import { incrementLocalRateLimitCounter } from './request-rate-limit-local.ts';
 
 function getClientIp(request: Request): string | null {
@@ -96,5 +96,12 @@ export async function enforcePublicApiRateLimit(
         'X-RateLimit-Remaining': '0',
       },
     },
+  );
+}
+
+export function buildApiRateLimitResponse() {
+  return Response.json(
+    { message: 'Too Many Requests' },
+    { status: 429, headers: buildPrivateCacheControl() },
   );
 }

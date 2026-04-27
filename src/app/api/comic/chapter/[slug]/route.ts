@@ -2,7 +2,7 @@ import { getMangaChapter } from '@/lib/adapters/comic-server';
 import { buildPrivateCacheControl } from '@/platform/cache/http/cache-headers';
 import { resolveComicRouteRecordAccess } from '@/lib/server/comic-route-access';
 import { resolvePublicApiRequestContext } from '@/lib/server/public-api-cache';
-import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
+import { allowRequestWithinRateLimit, buildApiRateLimitResponse } from '@/lib/server/request-rate-limit';
 
 const PUBLIC_CACHE_TTL_SECONDS = 300;
 
@@ -12,7 +12,7 @@ interface RouteContext {
 
 export async function GET(request: Request, context: RouteContext) {
   if (!(await allowRequestWithinRateLimit(request, { bucket: 'api-comic-chapter', limit: 120, windowSeconds: 60 }))) {
-    return Response.json({ message: 'Too Many Requests' }, { status: 429, headers: buildPrivateCacheControl() });
+    return buildApiRateLimitResponse();
   }
 
   const { slug } = await context.params;

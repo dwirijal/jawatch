@@ -1,13 +1,12 @@
 import { getMovieHomeSection } from '@/lib/adapters/movie';
-import { buildPrivateCacheControl } from '@/platform/cache/http/cache-headers';
 import { resolvePublicApiRequestContext } from '@/lib/server/public-api-cache';
-import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
+import { allowRequestWithinRateLimit, buildApiRateLimitResponse } from '@/lib/server/request-rate-limit';
 
 const PUBLIC_CACHE_TTL_SECONDS = 180;
 
 export async function GET(request: Request) {
   if (!(await allowRequestWithinRateLimit(request, { bucket: 'api-movies-latest', limit: 120, windowSeconds: 60 }))) {
-    return Response.json({ message: 'Too Many Requests' }, { status: 429, headers: buildPrivateCacheControl() });
+    return buildApiRateLimitResponse();
   }
 
   const { searchParams } = new URL(request.url);

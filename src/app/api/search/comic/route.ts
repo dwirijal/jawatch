@@ -2,7 +2,7 @@ import { searchManga } from '@/lib/adapters/comic-server';
 import { buildPrivateCacheControl, buildPublicCacheHeaders } from '@/platform/cache/http/cache-headers';
 import { requestHasSupabaseAuthCookie } from '@/lib/auth/supabase-auth-cookie';
 import { resolveComicRouteIncludeNsfw } from '@/lib/server/comic-route-access';
-import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
+import { allowRequestWithinRateLimit, buildApiRateLimitResponse } from '@/lib/server/request-rate-limit';
 
 const PUBLIC_SEARCH_CACHE_TTL_SECONDS = 60;
 
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   }
 
   if (!(await allowRequestWithinRateLimit(request, { bucket: 'api-search-comic', limit: 120, windowSeconds: 60 }))) {
-    return Response.json({ message: 'Too Many Requests' }, { status: 429, headers: buildPrivateCacheControl() });
+    return buildApiRateLimitResponse();
   }
 
   const includeNsfw = trustedOriginRequest || authenticatedViewerRequest

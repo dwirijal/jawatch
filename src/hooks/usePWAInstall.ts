@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getMediaQueryMatches } from '@/lib/media-query';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -11,9 +12,21 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-// Extend Navigator type for iOS standalone detection
 interface NavigatorStandalone extends Navigator {
   standalone?: boolean;
+}
+
+function isInstalledPwa() {
+  const nav = window.navigator as NavigatorStandalone;
+  return (
+    getMediaQueryMatches('(display-mode: standalone)') ||
+    Boolean(nav.standalone) ||
+    document.referrer.includes('android-app://')
+  );
+}
+
+function isIOSDevice() {
+  return /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
 }
 
 export function usePWAInstall() {
@@ -22,22 +35,11 @@ export function usePWAInstall() {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    // Detect if app is already installed
-    const nav = window.navigator as NavigatorStandalone;
-    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches 
-      || nav.standalone 
-      || (typeof document !== 'undefined' && document.referrer.includes('android-app://'));
-    
-    // Use requestAnimationFrame to avoid cascading render warning in ESLint
-    requestAnimationFrame(() => {
-      setIsStandalone(!!isStandaloneMode);
-      
-      // Detect iOS
-      const userAgent = window.navigator.userAgent.toLowerCase();
-      setIsIOS(/iphone|ipad|ipod/.test(userAgent));
+    const frameId = requestAnimationFrame(() => {
+      setIsStandalone(isInstalledPwa());
+      setIsIOS(isIOSDevice());
     });
 
-    // Handle standard PWA prompt
     const handler = (e: Event) => {
       e.preventDefault();
       setInstallPrompt(e as BeforeInstallPromptEvent);
@@ -45,7 +47,10 @@ export function usePWAInstall() {
 
     window.addEventListener('beforeinstallprompt', handler);
 
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    return () => {
+      cancelAnimationFrame(frameId);
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
   }, []);
 
   const handleInstall = async () => {
@@ -63,6 +68,6 @@ export function usePWAInstall() {
     showPrompt: !!installPrompt,
     showIOSGuide: isIOS && !isStandalone,
     handleInstall,
-    isStandalone
+    isStandalone,
   };
 }

@@ -1,7 +1,7 @@
 import { getComicJikanEnrichment } from '@/lib/adapters/comic-server';
 import { buildPrivateCacheControl } from '@/platform/cache/http/cache-headers';
 import { resolveComicRouteIncludeNsfw } from '@/lib/server/comic-route-access';
-import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
+import { allowRequestWithinRateLimit, buildApiRateLimitResponse } from '@/lib/server/request-rate-limit';
 
 interface RouteContext {
   params: Promise<{ slug: string }>;
@@ -9,7 +9,7 @@ interface RouteContext {
 
 export async function GET(request: Request, context: RouteContext) {
   if (!(await allowRequestWithinRateLimit(request, { bucket: 'api-comic-jikan', limit: 120, windowSeconds: 60 }))) {
-    return Response.json({ message: 'Too Many Requests' }, { status: 429, headers: buildPrivateCacheControl() });
+    return buildApiRateLimitResponse();
   }
 
   const { slug } = await context.params;

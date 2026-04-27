@@ -2,7 +2,7 @@ import { searchSeriesCatalog } from '@/lib/adapters/series';
 import { resolveViewerNsfwAccess } from '@/lib/server/viewer-nsfw-access';
 import { buildPrivateCacheControl, buildPublicCacheHeaders } from '@/platform/cache/http/cache-headers';
 import { requestHasSupabaseAuthCookie } from '@/lib/auth/supabase-auth-cookie';
-import { allowRequestWithinRateLimit } from '@/lib/server/request-rate-limit';
+import { allowRequestWithinRateLimit, buildApiRateLimitResponse } from '@/lib/server/request-rate-limit';
 
 const PUBLIC_SEARCH_CACHE_TTL_SECONDS = 60;
 
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   }
 
   if (!(await allowRequestWithinRateLimit(request, { bucket: 'api-search-series', limit: 120, windowSeconds: 60 }))) {
-    return Response.json({ message: 'Too Many Requests' }, { status: 429, headers: buildPrivateCacheControl() });
+    return buildApiRateLimitResponse();
   }
 
   const includeNsfw = authenticatedViewerRequest ? await resolveViewerNsfwAccess() : false;

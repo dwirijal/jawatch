@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { DeviceListener } from '@/components/atoms/DeviceListener';
 import { DeferredAnalytics } from '@/components/organisms/DeferredAnalytics';
 import { ColorModeController } from '@/components/organisms/ColorModeController';
+import { subscribeToMediaQuery } from '@/lib/media-query';
 import { isChromelessPath, isImmersivePlaybackPath } from '@/lib/route-chrome';
 
 const DesktopNavbar = dynamic(() => import('@/components/organisms/Navbar').then((mod) => mod.Navbar), {
@@ -122,28 +123,9 @@ export function ClientShell() {
       return;
     }
 
-    const mediaQuery = window.matchMedia('(min-width: 768px)');
-    const legacyMediaQuery = mediaQuery as MediaQueryList & {
-      addListener?: (listener: (event: MediaQueryListEvent) => void) => void;
-      removeListener?: (listener: (event: MediaQueryListEvent) => void) => void;
-    };
-    const updateDesktopChrome = (matches: boolean) => {
+    return subscribeToMediaQuery('(min-width: 768px)', (matches) => {
       setDesktopChromeMounted(matches);
-    };
-
-    updateDesktopChrome(mediaQuery.matches);
-
-    const handleChange = (event: MediaQueryListEvent) => {
-      updateDesktopChrome(event.matches);
-    };
-
-    if ('addEventListener' in mediaQuery) {
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-
-    legacyMediaQuery.addListener?.(handleChange);
-    return () => legacyMediaQuery.removeListener?.(handleChange);
+    });
   }, [chromeEnabled]);
 
   React.useEffect(() => {
@@ -152,28 +134,9 @@ export function ClientShell() {
       return;
     }
 
-    const mediaQuery = window.matchMedia('(max-width: 767px)');
-    const legacyMediaQuery = mediaQuery as MediaQueryList & {
-      addListener?: (listener: (event: MediaQueryListEvent) => void) => void;
-      removeListener?: (listener: (event: MediaQueryListEvent) => void) => void;
-    };
-    const updateMobileNav = (matches: boolean) => {
+    return subscribeToMediaQuery('(max-width: 767px)', (matches) => {
       setMobileNavMounted(matches);
-    };
-
-    updateMobileNav(mediaQuery.matches);
-
-    const handleChange = (event: MediaQueryListEvent) => {
-      updateMobileNav(event.matches);
-    };
-
-    if ('addEventListener' in mediaQuery) {
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-
-    legacyMediaQuery.addListener?.(handleChange);
-    return () => legacyMediaQuery.removeListener?.(handleChange);
+    });
   }, [chromeEnabled]);
 
   React.useEffect(() => {
