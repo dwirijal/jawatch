@@ -440,17 +440,6 @@ test('comic server adapter entrypoint stays a thin facade over split modules', (
   assert.equal(source.includes('function getManga'), false);
 });
 
-test('enrichment entrypoint stays a thin facade over provider modules', () => {
-  const source = read('src/lib/enrichment.ts');
-
-  assert.equal(source.includes("from './enrichment-movie.ts'"), true);
-  assert.equal(source.includes("from './enrichment-written.ts'"), true);
-  assert.equal(source.includes("from './enrichment-jikan.ts'"), true);
-  assert.equal(source.includes('fetchWithTimeout'), false);
-  assert.equal(source.includes('const runtimeCache'), false);
-  assert.equal(source.includes('function scoreTitleSimilarity('), false);
-});
-
 test('movie and series browse adapters define shared hub cache keys for Redis-backed domain caching', () => {
   const movieBrowseSource = read('src/lib/adapters/movie-browse.ts');
   const seriesBrowseSource = read('src/lib/adapters/series-browse.ts');

@@ -19,7 +19,7 @@ const ADS_SIZES = {
   square: 'aspect-square w-full',
 } as const;
 
-const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-8868090753979495';
+const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || '';
 const ADSENSE_SLOT_IDS = {
   horizontal: process.env.NEXT_PUBLIC_ADSENSE_SLOT_HORIZONTAL || '',
   vertical: process.env.NEXT_PUBLIC_ADSENSE_SLOT_VERTICAL || '',

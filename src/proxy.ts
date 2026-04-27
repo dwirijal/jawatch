@@ -12,7 +12,6 @@ import {
   buildCanonicalAppRedirectUrl,
   getLegacyRedirectPath,
   isLegacyAppHost,
-  isRemovedPublicRoute,
   isScannerPath,
   shouldRefreshSupabaseSession,
 } from '@/platform/gateway/legacy/routing';
@@ -40,32 +39,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(buildLegacyRedirectUrl(legacyRedirectPath, request.url), 308);
   }
 
-  if (isRemovedPublicRoute(pathname)) {
-    return notFoundResponse();
-  }
-
-  if (shouldBypassProxyAuthGates(pathname)) {
-    if (!shouldRefreshSupabaseSession(pathname) || !hasSupabaseProxyEnv()) {
-      return NextResponse.next();
+  if (shouldBypassProxyAuthGates(pathname) || !isProxyProtectedPath(pathname)) {
+    if (shouldRefreshSupabaseSession(pathname) && hasSupabaseProxyEnv()) {
+      try {
+        return await refreshSupabaseSession(request);
+      } catch {
+        // Fallthrough
+      }
     }
-
-    try {
-      return await refreshSupabaseSession(request);
-    } catch {
-      return NextResponse.next();
-    }
-  }
-
-  if (!isProxyProtectedPath(pathname)) {
-    if (!shouldRefreshSupabaseSession(pathname)) {
-      return NextResponse.next();
-    }
-
-    try {
-      return await refreshSupabaseSession(request);
-    } catch {
-      return NextResponse.next();
-    }
+    return NextResponse.next();
   }
 
   if (!hasSupabaseProxyEnv()) {

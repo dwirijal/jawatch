@@ -91,13 +91,13 @@ export function WatchModeSurface({
   return (
     <div
       className={cn(
-        'app-shell bg-background text-foreground transition-colors duration-300',
-        layout.effectiveMode === 'theatrical' && 'bg-[#f4f1ec]'
+        'w-full transition-colors duration-300',
+        layout.effectiveMode === 'theatrical' && 'bg-[#f4f1ec] md:-mt-[5.25rem]'
       )}
       data-watch-kind={kind}
       data-watch-mode={layout.effectiveMode}
     >
-      <main className="mx-auto flex w-[min(var(--layout-max-immersive),calc(100%-var(--layout-pad)*2))] flex-col gap-6 py-4 md:gap-8 md:py-6">
+      <div className="mx-auto flex w-[min(var(--layout-max-immersive),calc(100%-var(--layout-pad)*2))] flex-col gap-6 py-4 md:gap-8 md:py-6">
         <section className="flex flex-col gap-4 border-b border-border-subtle/80 pb-4 md:flex-row md:items-end md:justify-between md:gap-6">
           <div className="min-w-0 flex-1">{header}</div>
           <div className="flex flex-wrap items-center gap-2 md:justify-end">
@@ -181,7 +181,7 @@ export function WatchModeSurface({
             ) : null}
           </>
         )}
-      </main>
+      </div>
     </div>
   );
 }

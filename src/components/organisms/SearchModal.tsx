@@ -12,6 +12,7 @@ import { ModalContent, ModalRoot, ModalTitle } from '@/components/atoms/Modal';
 import { Paper } from '@/components/atoms/Paper';
 import { ScrollArea } from '@/components/atoms/ScrollArea';
 import { useUIStore } from '@/store/useUIStore';
+import { reportClientError } from '@/lib/client-log';
 import { cn } from '@/lib/utils';
 import type { SearchResultItem, UnifiedSearchResult } from '@/lib/search/search-contract';
 
@@ -121,7 +122,7 @@ export function SearchModal() {
           }
 
           if (latestRequestId.current === requestId) {
-            console.error(error);
+            reportClientError(error, 'Search preview request failed');
             setResult(createEmptySearchState(deferredQuery));
           }
         } finally {

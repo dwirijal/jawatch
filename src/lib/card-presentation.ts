@@ -1,4 +1,4 @@
-import type { MangaSearchResult, MovieCardItem, NovelListItem } from '@/lib/types';
+import type { MangaSearchResult, MovieCardItem } from '@/lib/types';
 
 export function getMovieCardBadgeText(): string {
   return 'MOVIE';
@@ -29,15 +29,4 @@ export function getComicCardBadgeText(item: Pick<MangaSearchResult, 'type' | 'su
 
   const type = item.type?.trim();
   return type ? type.toUpperCase() : 'COMIC';
-}
-
-export function formatNovelCardSubtitle(item: Pick<NovelListItem, 'latestChapter' | 'status' | 'type'>): string | undefined {
-  const latestChapter = item.latestChapter?.trim();
-  const status = item.status?.trim();
-  const type = item.type?.trim();
-  return latestChapter || status || type || undefined;
-}
-
-export function getNovelCardBadgeText(): string {
-  return 'NOVEL';
 }

@@ -14,6 +14,7 @@ import { getCardAspectClass, type ThemeType } from '@/lib/utils';
 
 interface SeriesRecommendationsSectionProps {
   currentSlug: string;
+  currentTitle: string;
   mediaType: SeriesMediaType;
   genres: string[];
   country: string;
@@ -22,6 +23,7 @@ interface SeriesRecommendationsSectionProps {
 
 export async function SeriesRecommendationsSection({
   currentSlug,
+  currentTitle,
   mediaType,
   genres,
   country,
@@ -29,6 +31,7 @@ export async function SeriesRecommendationsSection({
 }: SeriesRecommendationsSectionProps) {
   const recommendations = await getSeriesRecommendations({
     currentSlug,
+    currentTitle,
     currentType: mediaType,
     genres,
     country,
@@ -42,7 +45,7 @@ export async function SeriesRecommendationsSection({
   return (
     <section id="related" className="space-y-8">
       <DetailSectionHeading
-        title="More Like This"
+        title="Koleksi Terkait"
         theme={theme}
         aside={<Badge variant="outline">{recommendations.length} Judul Menantimu</Badge>}
       />

@@ -4,6 +4,7 @@ import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
+import { Typography } from '@/components/atoms/Typography';
 import { MediaWatchExtras } from '@/components/organisms/MediaWatchExtras';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { WatchModeSurface } from '@/components/organisms/WatchModeSurface';
@@ -34,13 +35,9 @@ type EpisodeRouteInput =
   | { mode: 'number'; seriesSlug: string; episodeNumber: string }
   | { mode: 'special'; seriesSlug: string; episodeSlug: string };
 
-function buildLegacySeriesEpisodeHref(seriesSlug: string, episodeSlug: string): string {
-  return `/series/${seriesSlug}/episodes/${episodeSlug}`;
-}
-
 function buildRequestedEpisodePath(route: EpisodeRouteInput): string {
   if (route.mode === 'legacy') {
-    return buildLegacySeriesEpisodeHref(route.seriesSlug, route.episodeSlug);
+    return `/series/${route.seriesSlug}/episodes/${route.episodeSlug}`;
   }
 
   if (route.mode === 'number') {
@@ -162,11 +159,13 @@ async function renderSeriesEpisodePageForRoute(route: EpisodeRouteInput) {
               {episode.country ? <Badge variant="outline">{episode.country}</Badge> : null}
               {episode.mirrors.length > 0 ? <Badge variant="outline">{episode.mirrors.length} sumber</Badge> : null}
             </div>
-            <div className="space-y-2">
-              <h1 className="max-w-4xl text-3xl font-black tracking-tight text-foreground md:text-5xl">
+            <div className="space-y-1">
+              <Typography as="h1" size="4xl" className="font-black text-foreground">
                 {episode.seriesTitle}
-              </h1>
-              <p className="text-base font-bold text-zinc-600 md:text-lg">{episode.title}</p>
+              </Typography>
+              <Typography as="p" size="lg" className="font-bold text-muted-foreground">
+                {episode.title}
+              </Typography>
             </div>
           </div>
         }
@@ -182,7 +181,7 @@ async function renderSeriesEpisodePageForRoute(route: EpisodeRouteInput) {
         body={
           <>
             <section className="grid gap-6 border-b border-border-subtle/80 pb-6 lg:grid-cols-[minmax(0,1fr)_minmax(15rem,18rem)] lg:gap-8">
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" className="h-9 rounded-full px-4 text-[10px] font-black uppercase tracking-widest" asChild>
                     <Link href={episode.detailHref}>Detail series</Link>
@@ -193,12 +192,12 @@ async function renderSeriesEpisodePageForRoute(route: EpisodeRouteInput) {
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500">
+                  <Typography size="xs" uppercase className="text-zinc-500">
                     Konteks episode
-                  </p>
-                  <p className="max-w-3xl text-sm leading-7 text-zinc-600 md:text-[15px]">
+                  </Typography>
+                  <Typography size="base" className="max-w-3xl leading-relaxed text-muted-foreground">
                     {episode.synopsis}
-                  </p>
+                  </Typography>
                 </div>
 
                 <div className="flex flex-wrap gap-2">

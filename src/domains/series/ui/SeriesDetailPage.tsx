@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
+import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { Play } from 'lucide-react';
 import { Badge } from '@/components/atoms/Badge';
@@ -25,6 +25,12 @@ import {
 } from '@/lib/series-detail-presentation';
 import { getSeriesTheme } from '@/lib/series-presentation';
 import { resolveSeriesCanonicalRedirect } from '@/lib/adapters/series-canonical-utils';
+import { searchSeriesCatalog } from '@/lib/adapters/series-browse';
+import {
+  buildSeriesAliasSearchQueries,
+  pickPreferredSeriesRouteCandidate,
+  resolveKnownSeriesRouteAlias,
+} from '@/lib/adapters/series-route-alias';
 import { isReservedSeriesSlug } from '@/lib/canonical-route-guards';
 import { resolveMediaBackgroundUrl } from '@/lib/utils';
 
@@ -83,6 +89,32 @@ function buildEpisodeQueryHref(slug: string, page: number, sort: EpisodeSortMode
   return query ? `/series/${slug}?${query}#episodes` : `/series/${slug}#episodes`;
 }
 
+async function resolveSeriesDetailAliasSlug(requestedSlug: string, includeNsfw: boolean): Promise<string | null> {
+  const knownAlias = resolveKnownSeriesRouteAlias(requestedSlug);
+  if (knownAlias && knownAlias !== requestedSlug) {
+    return knownAlias;
+  }
+
+  const queries = buildSeriesAliasSearchQueries(requestedSlug);
+  if (queries.length === 0) {
+    return null;
+  }
+
+  const candidateMap = new Map<string, { slug: string; title: string }>();
+  for (const query of queries) {
+    const results = await searchSeriesCatalog(query, 12, { includeNsfw });
+    for (const item of results) {
+      if (!candidateMap.has(item.slug)) {
+        candidateMap.set(item.slug, { slug: item.slug, title: item.title });
+      }
+    }
+  }
+
+  const preferred = pickPreferredSeriesRouteCandidate(requestedSlug, [...candidateMap.values()]);
+
+  return preferred && preferred.slug !== requestedSlug ? preferred.slug : null;
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   if (isReservedSeriesSlug(slug)) {
@@ -121,11 +153,21 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
     notFound();
   }
 
+  const knownAlias = resolveKnownSeriesRouteAlias(slug);
+  if (knownAlias && knownAlias !== slug) {
+    permanentRedirect(`/series/${knownAlias}`);
+  }
+
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const includeNsfw = await resolveViewerNsfwAccess();
   const series = await getSeriesDetailPageData(slug, { includeNsfw });
 
   if (!series) {
+    const redirectSlug = await resolveSeriesDetailAliasSlug(slug, includeNsfw);
+    if (redirectSlug) {
+      permanentRedirect(`/series/${redirectSlug}`);
+    }
+
     notFound();
   }
 
@@ -339,6 +381,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
         <Suspense fallback={null}>
           <SeriesRecommendationsSection
             currentSlug={series.slug}
+            currentTitle={series.title}
             mediaType={series.mediaType}
             genres={series.genres}
             country={series.country}

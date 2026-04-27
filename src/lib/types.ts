@@ -137,27 +137,6 @@ export interface AnimeListGroup {
   list: Array<{ title: string; slug: string }>;
 }
 
-export interface KanataAnimeBatch {
-  title: string;
-  thumb: string;
-  download_list: Array<{
-    title: string;
-    links: Array<{
-      quality: string;
-      size: string;
-      links: Array<{ name: string; url: string }>;
-    }>;
-  }>;
-}
-
-export interface KanataCompletedAnime {
-  title: string;
-  slug: string;
-  thumb: string;
-  episode: string;
-  date: string;
-}
-
 export interface KanataGenre {
   name: string;
   slug: string;
@@ -168,47 +147,6 @@ export type AnimePaginationResult<T> = {
   items: T[];
   hasNextPage: boolean;
 };
-
-export interface AnichinDonghua {
-  title: string;
-  slug: string;
-  thumb: string;
-  episode: string;
-  image?: string;
-  status?: string;
-  type?: string;
-  link?: string;
-}
-
-export interface AnichinHomeResult {
-  latest_updates: AnichinDonghua[];
-  ongoing_series: AnichinDonghua[];
-  completed_series: AnichinDonghua[];
-}
-
-export interface AnichinDetail {
-  title: string;
-  meta: {
-    studio: string;
-    status: string;
-    episodes: string;
-    season: string;
-    country: string;
-    network: string;
-    duration: string;
-    released: string;
-    updated_on: string;
-  };
-  episodes: Array<{
-    slug: string;
-    title: string;
-    episode: string;
-    date: string;
-  }>;
-  synopsis: string;
-  thumb: string;
-  genres: string[];
-}
 
 export interface AnimeCastMember {
   id: number;
@@ -272,52 +210,5 @@ export interface MovieDetail {
   recommendations?: MovieCardItem[];
 }
 
-export interface NovelListItem {
-  title: string;
-  slug: string;
-  poster: string;
-  latestChapter?: string;
-  summary?: string;
-  type: string;
-  rating?: string;
-  status?: string;
-}
-
-export interface NovelGenre {
-  name: string;
-  slug: string;
-  count?: string;
-}
-
-export interface NovelDetail {
-  title: string;
-  altTitle: string;
-  slug: string;
-  poster: string;
-  rating: string;
-  status: string;
-  type: string;
-  synopsis: string;
-  info: {
-    country: string;
-    published: string;
-    author: string;
-    totalChapters: string;
-    tags: string;
-  };
-  genres: NovelGenre[];
-  chapters: Array<{
-    title: string;
-    date: string;
-    slug: string;
-  }>;
-}
-
-export interface NovelRead {
-  title: string;
-  content: string;
-}
-
 export type NewManga = MangaSearchResult;
 export type RecommendationManga = MangaSearchResult;
-export type AnimasuSearchResult = KanataAnime;

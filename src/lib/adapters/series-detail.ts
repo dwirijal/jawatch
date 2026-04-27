@@ -35,6 +35,8 @@ import {
   selectCanonicalSeriesRow,
   selectSeriesPlaybackSources,
 } from './series-canonical-utils';
+import { searchSeriesCatalog } from './series-browse.ts';
+import { selectSeriesRecommendations } from '../series-recommendations.ts';
 import { buildSeriesEpisodeRailState } from './series-episode-playlist.ts';
 import {
   resolveLk21MovieProviderUrl,
@@ -74,6 +76,7 @@ import {
   type SeriesRow,
 } from './series-shared.ts';
 import { type SeriesMediaType } from '../series-presentation.ts';
+import { buildSeriesFranchiseSearchQuery } from '../series-franchise.ts';
 
 type SeriesSqlClient = NonNullable<ReturnType<typeof getComicDb>>;
 type SeriesDbSchemaCapabilities = Awaited<ReturnType<typeof getComicDbSchemaCapabilities>>;
@@ -276,6 +279,7 @@ export async function getSeriesDetailBySlug(
 
 export async function getSeriesRecommendations({
   currentSlug,
+  currentTitle,
   currentType,
   genres,
   country,
@@ -283,19 +287,37 @@ export async function getSeriesRecommendations({
   limit = 8,
 }: {
   currentSlug: string;
+  currentTitle?: string;
   currentType?: SeriesMediaType;
   genres: string[];
   country: string;
   includeNsfw?: boolean;
   limit?: number;
 }) {
-  return querySeriesRecommendationItems({
+  const expandedLimit = Math.max(limit * 3, 12);
+  const familyQuery = buildSeriesFranchiseSearchQuery(currentTitle || currentSlug);
+  const [relatedItems, familyItems] = await Promise.all([
+    querySeriesRecommendationItems({
+      currentSlug,
+      currentType,
+      genres,
+      country,
+      includeNsfw,
+      limit: expandedLimit,
+    }),
+    familyQuery.length >= 2
+      ? searchSeriesCatalog(familyQuery, expandedLimit, { includeNsfw })
+      : Promise.resolve([]),
+  ]);
+
+  return selectSeriesRecommendations({
     currentSlug,
+    currentTitle,
     currentType,
     genres,
     country,
-    includeNsfw,
     limit,
+    items: [...familyItems, ...relatedItems],
   });
 }
 

@@ -4,6 +4,10 @@ import { unstable_cache } from 'next/cache';
 import { buildComicCacheKey, rememberComicCacheValue } from '../server/comic-cache.ts';
 import { getComicDb } from '../server/comic-db.ts';
 import {
+  expandSeriesSearchTerms,
+  shouldAllowPublicSeriesSearch,
+} from '../search/series-query-aliases.ts';
+import {
   buildCanonicalItemFlagSelection,
   buildCanonicalItemKeySelection,
   buildCanonicalItemLateralSubquery,
@@ -42,6 +46,18 @@ import {
   collapseCanonicalSeriesRows,
   getSeriesSearchCandidateLimit,
 } from './series-canonical-utils';
+
+function buildSearchTerms(query: string): string[] {
+  return expandSeriesSearchTerms(query);
+}
+
+function buildTitleLikePatterns(terms: string[]): string[] {
+  return terms.map((term) => `%${term}%`);
+}
+
+function buildSlugPatterns(terms: string[]): string[] {
+  return terms.map((term) => `%${slugify(term)}%`);
+}
 
 async function loadSeriesBrowseItems(
   kind: SeriesBrowseKind,
@@ -243,6 +259,89 @@ export async function getSeriesFilteredItems(
   return getSeriesBrowseItems('country', normalizedFilter, limit, options);
 }
 
+async function searchSeriesCatalogFallbackRows(
+  sql: NonNullable<ReturnType<typeof getComicDb>>,
+  schemaCapabilities: Awaited<ReturnType<typeof getComicDbSchemaCapabilities>>,
+  terms: string[],
+  includeNsfw: boolean,
+  limit: number,
+): Promise<SeriesCatalogRow[]> {
+  return sql.unsafe<SeriesCatalogRow[]>(`
+    select
+      i.item_key,
+      ${buildCanonicalItemKeySelection('i', schemaCapabilities)} as canonical_item_key,
+      ${buildCanonicalItemFlagSelection('i', schemaCapabilities)},
+      i.media_type,
+      i.surface_type,
+      i.presentation_type,
+      i.origin_type,
+      i.release_country,
+      i.is_nsfw,
+      i.source,
+      ${buildSeriesItemSlugExpression('i')} as slug,
+      i.title,
+      i.cover_url,
+      i.status,
+      i.release_year,
+      i.score,
+      i.updated_at,
+      i.release_day,
+      i.release_window,
+      i.release_timezone,
+      i.cadence,
+      i.next_release_at,
+      i.detail ->> 'poster_url' as poster_url,
+      i.detail ->> 'background_url' as background_url,
+      i.detail ->> 'backdrop_url' as backdrop_url,
+      i.detail ->> 'logo_url' as logo_url,
+      coalesce(i.detail ->> 'release_year', i.detail ->> 'year') as detail_year,
+      i.detail ->> 'rating' as detail_rating,
+      coalesce(
+        i.detail ->> 'latest_episode',
+        i.detail ->> 'latest_label',
+        i.detail ->> 'latest_chapter_label'
+      ) as latest_episode,
+      coalesce(
+        i.detail ->> 'country',
+        i.detail ->> 'region',
+        i.detail -> 'country_names' ->> 0
+      ) as detail_country,
+      i.detail -> 'genres' as genres,
+      i.detail -> 'genre_names' as genre_names,
+      to_jsonb(i.genre_names) as canonical_genre_names,
+      i.detail -> 'category_names' as category_names,
+      0::int as episode_count
+    from public.media_items i
+    left join lateral (
+      ${buildCanonicalItemLateralSubquery('cl', 'i', schemaCapabilities.itemLinks)}
+    ) cl on true
+    where ${buildSeriesScopeCondition('i')}
+      ${buildVisibilityCondition(includeNsfw, 'i.detail', 'i.is_nsfw')}
+      ${buildSeriesCanonicalShadowFilter('i', schemaCapabilities)}
+      and (
+        lower(i.title) = any($1::text[])
+        or ${buildSeriesItemSlugExpression('i')} = any($2::text[])
+        or i.title ilike any($3::text[])
+        or ${buildSeriesItemSlugExpression('i')} ilike any($4::text[])
+      )
+    order by
+      case
+        when lower(i.title) = any($1::text[]) then 0
+        when ${buildSeriesItemSlugExpression('i')} = any($2::text[]) then 1
+        else 2
+      end,
+      i.score desc nulls last,
+      i.updated_at desc
+    limit $5
+  `, [
+    terms.map((term) => term.toLowerCase()),
+    terms.map((term) => slugify(term)),
+    buildTitleLikePatterns(terms),
+    buildSlugPatterns(terms),
+    getSeriesSearchCandidateLimit(limit),
+  ]);
+}
+
 export async function searchSeriesCatalog(
   query: string,
   limit = 8,
@@ -254,119 +353,152 @@ export async function searchSeriesCatalog(
   }
 
   const visibility = getVisibilityCacheSegment(Boolean(options.includeNsfw));
-  const key = buildComicCacheKey(SERIES_CACHE_NAMESPACE, visibility, 'search', trimmed.toLowerCase(), limit);
+  const key = buildComicCacheKey(SERIES_CACHE_NAMESPACE, visibility, 'search-v2', trimmed.toLowerCase(), limit);
   return rememberComicCacheValue(key, SEARCH_CACHE_TTL_SECONDS, async () => {
     const sql = getComicDb();
     if (!sql) {
       return [];
     }
 
+    const includeNsfw = Boolean(options.includeNsfw) || shouldAllowPublicSeriesSearch(trimmed);
     const schemaCapabilities = await getComicDbSchemaCapabilities(sql);
-    const rows = await sql.unsafe<SeriesCatalogRow[]>(`
-      select
-        i.item_key,
-        ${buildCanonicalItemKeySelection('i', schemaCapabilities)} as canonical_item_key,
-        ${buildCanonicalItemFlagSelection('i', schemaCapabilities)},
-        i.media_type,
-        i.surface_type,
-        i.presentation_type,
-        i.origin_type,
-        i.release_country,
-        i.is_nsfw,
-        i.source,
-        ${buildSeriesItemSlugExpression('i')} as slug,
-        i.title,
-        i.cover_url,
-        i.status,
-        i.release_year,
-        i.score,
-        i.updated_at,
-        i.release_window,
-        i.next_release_at,
-        i.detail ->> 'poster_url' as poster_url,
-        coalesce(
-          i.detail ->> 'background_url',
-          i.detail ->> 'background',
-          i.detail ->> 'background_image',
-          i.detail ->> 'backdrop_url',
-          i.detail ->> 'backdrop',
-          f.payload ->> 'background_url',
-          f.payload ->> 'background',
-          f.payload ->> 'backdrop_url',
-          f.payload ->> 'backdrop',
-          e.payload ->> 'background_url',
-          e.payload ->> 'background',
-          e.payload ->> 'backdrop_url',
-          e.payload ->> 'backdrop'
-        ) as background_url,
-        coalesce(
-          i.detail ->> 'backdrop_url',
-          i.detail ->> 'backdrop',
-          f.payload ->> 'backdrop_url',
-          f.payload ->> 'backdrop',
-          e.payload ->> 'backdrop_url',
-          e.payload ->> 'backdrop',
-          i.detail ->> 'background_url',
-          i.detail ->> 'background'
-        ) as backdrop_url,
-        coalesce(
-          i.detail ->> 'logo_url',
-          i.detail ->> 'logo',
-          i.detail ->> 'title_logo',
-          i.detail ->> 'title_logo_url',
-          f.payload ->> 'logo_url',
-          f.payload ->> 'logo',
-          f.payload ->> 'clearlogo',
-          f.payload ->> 'clearlogo_url',
-          e.payload ->> 'logo_url',
-          e.payload ->> 'logo'
-        ) as logo_url,
-        coalesce(i.detail ->> 'release_year', i.detail ->> 'year') as detail_year,
-        i.detail ->> 'rating' as detail_rating,
-        coalesce(
-          i.detail ->> 'latest_episode',
-          i.detail ->> 'latest_label',
-          i.detail ->> 'latest_chapter_label'
-        ) as latest_episode,
-        coalesce(
-          i.detail ->> 'country',
-          i.detail ->> 'region',
-          i.detail -> 'country_names' ->> 0
-        ) as detail_country,
-        i.detail -> 'genres' as genres,
-        i.detail -> 'genre_names' as genre_names,
-        to_jsonb(i.genre_names) as canonical_genre_names,
-        i.detail -> 'category_names' as category_names,
-        coalesce(episode_counts.episode_count, 0)::int as episode_count
-      from public.media_items i
-      left join lateral (
-        ${buildCanonicalItemLateralSubquery('cl', 'i', schemaCapabilities.itemLinks)}
-      ) cl on true
-      left join public.media_item_enrichments f
-        on f.item_key = i.item_key
-       and f.provider = 'fanart'
-       and f.match_status = 'matched'
-      left join public.media_item_enrichments e
-        on e.item_key = i.item_key
-       and e.provider = 'tmdb'
-       and e.match_status = 'matched'
-      left join lateral (
+    const terms = buildSearchTerms(trimmed);
+
+    let rows: SeriesCatalogRow[] = [];
+    try {
+      rows = await sql.unsafe<SeriesCatalogRow[]>(`
         select
-          count(*)::int as episode_count
-        from public.media_units u
-        where u.item_key = i.item_key
-          and u.unit_type = 'episode'
-      ) episode_counts on true
-      where ${buildSeriesScopeCondition('i')}
-        ${buildVisibilityCondition(Boolean(options.includeNsfw), 'i.detail', 'i.is_nsfw')}
-        ${buildSeriesCanonicalShadowFilter('i', schemaCapabilities)}
-        and (
-          search_vec @@ plainto_tsquery('simple', $1)
-          or title ilike $2
-        )
-      order by score desc nulls last, updated_at desc
-      limit $3
-    `, [trimmed, `%${trimmed}%`, getSeriesSearchCandidateLimit(limit)]);
+          i.item_key,
+          ${buildCanonicalItemKeySelection('i', schemaCapabilities)} as canonical_item_key,
+          ${buildCanonicalItemFlagSelection('i', schemaCapabilities)},
+          i.media_type,
+          i.surface_type,
+          i.presentation_type,
+          i.origin_type,
+          i.release_country,
+          i.is_nsfw,
+          i.source,
+          ${buildSeriesItemSlugExpression('i')} as slug,
+          i.title,
+          i.cover_url,
+          i.status,
+          i.release_year,
+          i.score,
+          i.updated_at,
+          i.release_window,
+          i.next_release_at,
+          i.detail ->> 'poster_url' as poster_url,
+          coalesce(
+            i.detail ->> 'background_url',
+            i.detail ->> 'background',
+            i.detail ->> 'background_image',
+            i.detail ->> 'backdrop_url',
+            i.detail ->> 'backdrop',
+            f.payload ->> 'background_url',
+            f.payload ->> 'background',
+            f.payload ->> 'backdrop_url',
+            f.payload ->> 'backdrop',
+            e.payload ->> 'background_url',
+            e.payload ->> 'background',
+            e.payload ->> 'backdrop_url',
+            e.payload ->> 'backdrop'
+          ) as background_url,
+          coalesce(
+            i.detail ->> 'backdrop_url',
+            i.detail ->> 'backdrop',
+            f.payload ->> 'backdrop_url',
+            f.payload ->> 'backdrop',
+            e.payload ->> 'backdrop_url',
+            e.payload ->> 'backdrop',
+            i.detail ->> 'background_url',
+            i.detail ->> 'background'
+          ) as backdrop_url,
+          coalesce(
+            i.detail ->> 'logo_url',
+            i.detail ->> 'logo',
+            i.detail ->> 'title_logo',
+            i.detail ->> 'title_logo_url',
+            f.payload ->> 'logo_url',
+            f.payload ->> 'logo',
+            f.payload ->> 'clearlogo',
+            f.payload ->> 'clearlogo_url',
+            e.payload ->> 'logo_url',
+            e.payload ->> 'logo'
+          ) as logo_url,
+          coalesce(i.detail ->> 'release_year', i.detail ->> 'year') as detail_year,
+          i.detail ->> 'rating' as detail_rating,
+          coalesce(
+            i.detail ->> 'latest_episode',
+            i.detail ->> 'latest_label',
+            i.detail ->> 'latest_chapter_label'
+          ) as latest_episode,
+          coalesce(
+            i.detail ->> 'country',
+            i.detail ->> 'region',
+            i.detail -> 'country_names' ->> 0
+          ) as detail_country,
+          i.detail -> 'genres' as genres,
+          i.detail -> 'genre_names' as genre_names,
+          to_jsonb(i.genre_names) as canonical_genre_names,
+          i.detail -> 'category_names' as category_names,
+          coalesce(episode_counts.episode_count, 0)::int as episode_count
+        from public.media_items i
+        left join lateral (
+          ${buildCanonicalItemLateralSubquery('cl', 'i', schemaCapabilities.itemLinks)}
+        ) cl on true
+        left join public.media_item_enrichments f
+          on f.item_key = i.item_key
+         and f.provider = 'fanart'
+         and f.match_status = 'matched'
+        left join public.media_item_enrichments e
+          on e.item_key = i.item_key
+         and e.provider = 'tmdb'
+         and e.match_status = 'matched'
+        left join lateral (
+          select
+            count(*)::int as episode_count
+          from public.media_units u
+          where u.item_key = i.item_key
+            and u.unit_type = 'episode'
+        ) episode_counts on true
+        where ${buildSeriesScopeCondition('i')}
+          ${buildVisibilityCondition(includeNsfw, 'i.detail', 'i.is_nsfw')}
+          ${buildSeriesCanonicalShadowFilter('i', schemaCapabilities)}
+          and (
+            search_vec @@ plainto_tsquery('simple', $1)
+            or i.title ilike any($2::text[])
+            or ${buildSeriesItemSlugExpression('i')} ilike any($3::text[])
+          )
+        order by
+          case
+            when lower(i.title) = any($4::text[]) then 0
+            when ${buildSeriesItemSlugExpression('i')} = any($5::text[]) then 1
+            else 2
+          end,
+          i.score desc nulls last,
+          i.updated_at desc
+        limit $6
+      `, [
+        trimmed,
+        buildTitleLikePatterns(terms),
+        buildSlugPatterns(terms),
+        terms.map((term) => term.toLowerCase()),
+        terms.map((term) => slugify(term)),
+        getSeriesSearchCandidateLimit(limit),
+      ]);
+    } catch {
+      rows = [];
+    }
+
+    if (rows.length === 0) {
+      rows = await searchSeriesCatalogFallbackRows(
+        sql,
+        schemaCapabilities,
+        terms,
+        includeNsfw,
+        limit,
+      );
+    }
 
     return collapseCanonicalSeriesRows(rows, { limit: Math.max(1, limit) }).map(mapSeriesCard);
   });

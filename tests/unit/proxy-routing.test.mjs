@@ -7,10 +7,9 @@ import {
   getLegacyComicChapterRedirectPath,
   getLegacyRedirectPath,
   isLegacyAppHost,
-  isRemovedPublicRoute,
   isScannerPath,
   shouldRefreshSupabaseSession,
-} from '../../src/lib/proxy/routing.ts';
+} from '../../src/platform/gateway/legacy/routing.ts';
 
 test('scanner routing blocks common exploit and dotfile probes', () => {
   assert.equal(isScannerPath('/wp-admin'), true);
@@ -18,13 +17,6 @@ test('scanner routing blocks common exploit and dotfile probes', () => {
   assert.equal(isScannerPath('/nsfw'), true);
   assert.equal(isScannerPath('/.well-known/security.txt'), false);
   assert.equal(isScannerPath('/watch/movies'), false);
-});
-
-test('removed public routes cover retired browse aliases', () => {
-  assert.equal(isRemovedPublicRoute('/series/genre'), true);
-  assert.equal(isRemovedPublicRoute('/series/watch/old-slug'), true);
-  assert.equal(isRemovedPublicRoute('/comic/magic-emperor'), true);
-  assert.equal(isRemovedPublicRoute('/watch/series'), false);
 });
 
 test('session refresh stays limited to auth and vault surfaces', () => {

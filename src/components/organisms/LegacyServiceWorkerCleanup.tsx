@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { reportClientWarning } from '@/lib/client-log';
 
 const LEGACY_CACHE_MATCHERS = [
   'apis',
@@ -72,7 +73,7 @@ export function LegacyServiceWorkerCleanup() {
           );
         }
       } catch (error) {
-        console.warn('[pwa-cleanup] failed to clear legacy service worker state', error);
+        reportClientWarning(error, '[pwa-cleanup] failed to clear legacy service worker state');
       }
     })();
   }, []);

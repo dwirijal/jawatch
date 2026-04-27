@@ -192,6 +192,47 @@ export function buildCollectionPageJsonLd(options: {
   };
 }
 
+export function buildArticleJsonLd(options: {
+  title: string;
+  description: string;
+  path: string;
+  image?: string | null;
+  publishedAt: string;
+  updatedAt: string;
+  tags?: string[];
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: options.title,
+    description: options.description,
+    url: absoluteUrl(options.path),
+    image: absoluteImageUrl(options.image) || undefined,
+    datePublished: options.publishedAt,
+    dateModified: options.updatedAt,
+    inLanguage: 'id-ID',
+    keywords: options.tags?.join(', ') || undefined,
+    author: {
+      '@type': 'Organization',
+      name: 'jawatch',
+      url: absoluteUrl('/'),
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'jawatch',
+      logo: {
+        '@type': 'ImageObject',
+        url: absoluteImageUrl(JAWATCH_MARKETING.share.defaultImage),
+      },
+    },
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'jawatch',
+      url: absoluteUrl('/'),
+    },
+  };
+}
+
 export function buildSeriesEpisodeJsonLd(options: {
   seriesTitle: string;
   seriesSlug: string;

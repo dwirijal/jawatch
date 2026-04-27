@@ -1,5 +1,19 @@
-export function canUseBrowserStorage() {
-  return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+type BrowserStorageArea = 'local' | 'session';
+
+function getBrowserStorage(area: BrowserStorageArea): Storage | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    return area === 'session' ? window.sessionStorage : window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+export function canUseBrowserStorage(area: BrowserStorageArea = 'local') {
+  return getBrowserStorage(area) !== null;
 }
 
 export function parseStoredJson(value: string | null): unknown {
@@ -14,51 +28,54 @@ export function parseStoredJson(value: string | null): unknown {
   }
 }
 
-export function readStoredString(key: string): string | null {
-  if (!canUseBrowserStorage()) {
+export function readStoredString(key: string, area: BrowserStorageArea = 'local'): string | null {
+  const storage = getBrowserStorage(area);
+  if (!storage) {
     return null;
   }
 
   try {
-    return localStorage.getItem(key);
+    return storage.getItem(key);
   } catch {
     return null;
   }
 }
 
-export function writeStoredString(key: string, value: string): boolean {
-  if (!canUseBrowserStorage()) {
+export function writeStoredString(key: string, value: string, area: BrowserStorageArea = 'local'): boolean {
+  const storage = getBrowserStorage(area);
+  if (!storage) {
     return false;
   }
 
   try {
-    localStorage.setItem(key, value);
+    storage.setItem(key, value);
     return true;
   } catch {
     return false;
   }
 }
 
-export function removeStoredItem(key: string): boolean {
-  if (!canUseBrowserStorage()) {
+export function removeStoredItem(key: string, area: BrowserStorageArea = 'local'): boolean {
+  const storage = getBrowserStorage(area);
+  if (!storage) {
     return false;
   }
 
   try {
-    localStorage.removeItem(key);
+    storage.removeItem(key);
     return true;
   } catch {
     return false;
   }
 }
 
-export function readStoredJson(key: string): unknown {
-  return parseStoredJson(readStoredString(key));
+export function readStoredJson(key: string, area: BrowserStorageArea = 'local'): unknown {
+  return parseStoredJson(readStoredString(key, area));
 }
 
-export function writeStoredJson(key: string, value: unknown): boolean {
+export function writeStoredJson(key: string, value: unknown, area: BrowserStorageArea = 'local'): boolean {
   try {
-    return writeStoredString(key, JSON.stringify(value));
+    return writeStoredString(key, JSON.stringify(value), area);
   } catch {
     return false;
   }

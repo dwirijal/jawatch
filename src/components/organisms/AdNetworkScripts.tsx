@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-8868090753979495';
+const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || '';
 const ADSENSE_SLOT_IDS = [
   process.env.NEXT_PUBLIC_ADSENSE_SLOT_HORIZONTAL || '',
   process.env.NEXT_PUBLIC_ADSENSE_SLOT_VERTICAL || '',

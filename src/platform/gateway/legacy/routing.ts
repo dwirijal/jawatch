@@ -25,57 +25,6 @@ const BLOCKED_EXACT_PATHS = new Set([
 
 const BLOCKED_PREFIXES = ['/api-docs/', '/debug/', '/nsfw/', '/ecp/', '/swagger/', '/webjars/'];
 
-const REMOVED_PUBLIC_EXACT_PATHS = new Set([
-  '/collection',
-  '/comic',
-  '/drachin',
-  '/dramabox',
-  '/movies',
-  '/manga',
-  '/manhua',
-  '/manhwa',
-  '/movies/latest',
-  '/movies/popular',
-  '/movies/watch',
-  '/novel',
-  '/series/anime',
-  '/series/country',
-  '/series/donghua',
-  '/series/drachin',
-  '/series/drama',
-  '/series/episode',
-  '/series/genre',
-  '/series/list',
-  '/series/ongoing',
-  '/series/short',
-  '/series/watch',
-  '/series/year',
-]);
-
-const REMOVED_PUBLIC_PREFIXES = [
-  '/collection/',
-  '/comic/',
-  '/drachin/',
-  '/dramabox/',
-  '/manga/',
-  '/manhua/',
-  '/manhwa/',
-  '/movies/watch/',
-  '/novel/',
-  '/series/anime/',
-  '/series/country/',
-  '/series/donghua/',
-  '/series/drachin/',
-  '/series/drama/',
-  '/series/episode/',
-  '/series/genre/',
-  '/series/list/',
-  '/series/ongoing/',
-  '/series/short/',
-  '/series/watch/',
-  '/series/year/',
-];
-
 const LEGACY_EXACT_REDIRECTS = new Map<string, string>([
   ['/collection', '/vault'],
   ['/comic', '/read/comics'],
@@ -293,11 +242,4 @@ export function isScannerPath(pathname: string) {
   }
 
   return false;
-}
-
-export function isRemovedPublicRoute(pathname: string) {
-  return (
-    REMOVED_PUBLIC_EXACT_PATHS.has(pathname) ||
-    REMOVED_PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))
-  );
 }

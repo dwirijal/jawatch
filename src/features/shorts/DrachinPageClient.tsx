@@ -13,6 +13,7 @@ import { StateInfo } from '@/components/molecules/StateInfo';
 import { AdSection } from '@/components/organisms/AdSection';
 import { VerticalShortsPager, type ShortDrama } from '@/components/organisms/VerticalShortsPager';
 import { getDrachinHome, getDramaboxHome, getDrachinEpisodeBySlug, type DrachinHomeData, type DramaboxHomeData } from '@/lib/adapters/drama';
+import { reportClientError } from '@/lib/client-log';
 import { getShortsDetailHref } from '@/lib/shorts-paths';
 import { useUIStore } from '@/store/useUIStore';
 
@@ -111,7 +112,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
             };
           }
         } catch (e) {
-          console.error(`Failed to fetch mirrors for ${item.slug}`, e);
+          reportClientError(e, `Failed to fetch mirrors for ${item.slug}`);
         }
         return null;
       })

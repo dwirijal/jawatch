@@ -13,6 +13,7 @@ import { Paper } from '@/components/atoms/Paper';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
 import { SectionCard } from '@/components/organisms/SectionCard';
+import { reportClientError } from '@/lib/client-log';
 import {
   getSearchGroupLabel,
   normalizeSearchDomain,
@@ -44,6 +45,22 @@ function createEmptySearchState(query: string, domain: SearchDomain): UnifiedSea
     topMatch: null,
     groups: [],
   };
+}
+
+function removeTopMatchFromGroups(
+  groups: SearchResultGroup[],
+  topMatchId: string | null | undefined,
+): SearchResultGroup[] {
+  if (!topMatchId) {
+    return groups;
+  }
+
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => item.id !== topMatchId),
+    }))
+    .filter((group) => group.items.length > 0);
 }
 
 export default function SearchResultsPageClient() {
@@ -99,7 +116,7 @@ export default function SearchResultsPageClient() {
         if (controller.signal.aborted || latestRequestId.current !== requestId) {
           return;
         }
-        console.error(error);
+        reportClientError(error, 'Search results request failed');
         setResult(createEmptySearchState(queryFromUrl, domainFromUrl));
       } finally {
         if (latestRequestId.current === requestId) {
@@ -137,8 +154,11 @@ export default function SearchResultsPageClient() {
     router.push(buildSearchHref(inputValue, domain));
   }, [buildSearchHref, inputValue, router]);
 
-  const groups = result.groups;
-  const totalResults = result.total;
+  const groups = React.useMemo(
+    () => removeTopMatchFromGroups(result.groups, result.topMatch?.id),
+    [result.groups, result.topMatch?.id],
+  );
+  const totalResults = (result.topMatch ? 1 : 0) + groups.reduce((count, group) => count + group.items.length, 0);
   const hasQuery = result.query.trim().length >= 2;
   const headerDescription = hasQuery
     ? 'Hasil pencarian dikelompokkan untuk tontonan dan bacaan. Episode dan chapter tetap dibuka dari halaman judul.'
@@ -202,7 +222,7 @@ export default function SearchResultsPageClient() {
 
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <Badge variant="outline">IA</Badge>
-            <span>Hasil paling cocok tetap muncul di alur hasil biasa.</span>
+            <span>Judul paling cocok ditonjolkan sekali di bagian atas.</span>
           </div>
         </Paper>
 

@@ -55,6 +55,27 @@ test('search merge prefers fallback hrefs for same-title documents so stale inde
   assert.equal(merged[0]?.href, '/movies/the-first-slam-dunk-2022');
 });
 
+test('search merge can prioritize fresh fallback documents ahead of a full indexed set', () => {
+  const merged = mergeSearchDocuments(
+    [createDoc({
+      id: 'series:dr-stone-season-4-part-3',
+      slug: 'dr-stone-season-4-part-3',
+      href: '/series/dr-stone-season-4-part-3',
+      title: 'Dr. Stone Season 4 Part 3',
+    })],
+    [
+      createDoc({ id: 'series:dr-stone-season-4-part-2', slug: 'dr-stone-season-4-part-2', href: '/series/dr-stone-season-4-part-2', title: 'Dr. Stone Season 4 Part 2' }),
+      createDoc({ id: 'series:dr-stone-science-future', slug: 'dr-stone-science-future', href: '/series/dr-stone-science-future', title: 'Dr. Stone Season 4 Part 1' }),
+    ],
+    2,
+  );
+
+  assert.deepEqual(merged.map((item) => item.id), [
+    'series:dr-stone-season-4-part-3',
+    'series:dr-stone-season-4-part-2',
+  ]);
+});
+
 test('fallback planning prioritizes missing domains before covered domains for all-domain search', () => {
   const phases = planUnifiedSearchFallbackPhases({
     domain: 'all',

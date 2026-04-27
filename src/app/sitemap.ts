@@ -3,6 +3,7 @@ import { connection } from 'next/server';
 import { SITE_URL } from '@/lib/site';
 import { SHORTS_HUB_ENABLED } from '@/lib/shorts-paths';
 import { absoluteImageUrl } from '@/lib/seo';
+import { getAllBlogPosts } from '@/lib/blog/posts';
 import { resolveDynamicSitemapEntries } from './_shared/metadata/sitemap-utils';
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
@@ -30,6 +31,7 @@ const staticRoutes = [
   ...(SHORTS_HUB_ENABLED ? [{ path: '/watch/shorts', priority: 0.85, changeFrequency: 'daily' as const }] : []),
   { path: '/read', priority: 0.9, changeFrequency: 'daily' },
   { path: '/read/comics', priority: 0.85, changeFrequency: 'daily' },
+  { path: '/blog', priority: 0.72, changeFrequency: 'weekly' },
   { path: '/support', priority: 0.55, changeFrequency: 'monthly' },
   { path: '/contact', priority: 0.45, changeFrequency: 'monthly' },
   { path: '/privacy', priority: 0.35, changeFrequency: 'yearly' },
@@ -136,6 +138,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries = staticRoutes.map(({ path, priority, changeFrequency }) =>
     toEntry(path, generatedAt, priority, changeFrequency),
   );
+  const blogEntries = getAllBlogPosts().map((post) =>
+    toEntry(`/blog/${post.slug}`, post.updatedAt, 0.68, 'weekly', pickSitemapImage({ poster: post.image })),
+  );
 
-  return dedupeEntries([...staticEntries, ...(await loadDynamicEntries())]);
+  return dedupeEntries([...staticEntries, ...blogEntries, ...(await loadDynamicEntries())]);
 }

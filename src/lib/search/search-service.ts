@@ -233,7 +233,7 @@ export async function searchUnifiedTitles(
   }
 
   const visibility = includeNsfw ? 'auth' : 'public';
-  const cacheKey = buildComicCacheKey('search', 'unified', visibility, domain, normalizedQuery.toLowerCase(), limit);
+  const cacheKey = buildComicCacheKey('search', 'unified-v2', visibility, domain, normalizedQuery.toLowerCase(), limit);
 
   return rememberComicCacheValue(cacheKey, SEARCH_RESPONSE_TTL_SECONDS, async () => {
     const indexedDocuments = await searchIndexedDocuments({
@@ -241,10 +241,6 @@ export async function searchUnifiedTitles(
       domain,
       limit,
     });
-
-    if (indexedDocuments && indexedDocuments.length >= limit) {
-      return buildResult(normalizedQuery, domain, 'opensearch', indexedDocuments, limit);
-    }
 
     const fallbackDocuments = await searchFallbackDocuments(
       normalizedQuery,
@@ -258,11 +254,15 @@ export async function searchUnifiedTitles(
     }
 
     if (indexedDocuments && indexedDocuments.length > 0) {
+      const mergedDocuments = fallbackDocuments.length > 0 && indexedDocuments.length >= limit
+        ? mergeSearchDocuments(fallbackDocuments, indexedDocuments, limit)
+        : mergeSearchDocuments(indexedDocuments, fallbackDocuments, limit);
+
       return buildResult(
         normalizedQuery,
         domain,
         fallbackDocuments.length > 0 ? 'fallback' : 'opensearch',
-        mergeSearchDocuments(indexedDocuments, fallbackDocuments, limit),
+        mergedDocuments,
         limit,
       );
     }

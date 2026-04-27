@@ -6,6 +6,7 @@ import { Download, X, Share, PlusSquare } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Paper } from '@/components/atoms/Paper';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { readStoredString, writeStoredString } from '@/lib/browser-storage';
 import { buildPwaPromptDismissedUntil, isPwaPromptAutoShowPath, isPwaPromptDismissed } from '@/lib/pwa';
 import { resolveThemeFromPathname, ThemeType, cn } from '@/lib/utils';
 
@@ -25,38 +26,30 @@ export function PWAInstallPrompt() {
   const shouldRenderPrompt = canShowPrompt && isPwaPromptAutoShowPath(pathname);
 
   React.useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    setHasSeenSessionPrompt(window.sessionStorage.getItem(PWA_PROMPT_SESSION_SEEN_KEY) === '1');
-    setIsDismissed(isPwaPromptDismissed(window.localStorage.getItem(PWA_PROMPT_DISMISSED_UNTIL_KEY), Date.now()));
+    setHasSeenSessionPrompt(readStoredString(PWA_PROMPT_SESSION_SEEN_KEY, 'session') === '1');
+    setIsDismissed(isPwaPromptDismissed(readStoredString(PWA_PROMPT_DISMISSED_UNTIL_KEY), Date.now()));
   }, []);
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (
-        hasSeenSessionPrompt === null ||
-        isDismissed === null ||
-        hasSeenSessionPrompt ||
-        isDismissed ||
-        isStandalone ||
-        !shouldRenderPrompt
-      ) {
-        return;
-      }
-
-      window.sessionStorage.setItem(PWA_PROMPT_SESSION_SEEN_KEY, '1');
-      setHasSeenSessionPrompt(true);
-      setIsVisible(true);
+    if (
+      hasSeenSessionPrompt === null ||
+      isDismissed === null ||
+      hasSeenSessionPrompt ||
+      isDismissed ||
+      isStandalone ||
+      !shouldRenderPrompt
+    ) {
+      return;
     }
+
+    writeStoredString(PWA_PROMPT_SESSION_SEEN_KEY, '1', 'session');
+    setHasSeenSessionPrompt(true);
+    setIsVisible(true);
   }, [hasSeenSessionPrompt, isDismissed, isStandalone, shouldRenderPrompt]);
 
   const dismissPrompt = React.useCallback(() => {
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem(PWA_PROMPT_SESSION_SEEN_KEY, '1');
-      window.localStorage.setItem(PWA_PROMPT_DISMISSED_UNTIL_KEY, String(buildPwaPromptDismissedUntil(Date.now())));
-    }
+    writeStoredString(PWA_PROMPT_SESSION_SEEN_KEY, '1', 'session');
+    writeStoredString(PWA_PROMPT_DISMISSED_UNTIL_KEY, String(buildPwaPromptDismissedUntil(Date.now())));
     setHasSeenSessionPrompt(true);
     setIsDismissed(true);
     setIsVisible(false);

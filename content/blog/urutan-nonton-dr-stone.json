@@ -1,0 +1,30 @@
+{
+  "slug": "urutan-nonton-dr-stone",
+  "title": "Urutan Nonton Dr. Stone",
+  "description": "Urutan nonton Dr. Stone dari season 1, Stone Wars, Ryuusui, New World, sampai Science Future agar perkembangan Senku dan Kingdom of Science tetap mudah diikuti.",
+  "category": "watch-guide",
+  "tags": ["dr stone", "anime", "urutan nonton"],
+  "publishedAt": "2026-04-27",
+  "updatedAt": "2026-04-27",
+  "image": "https://v2.samehadaku.how/wp-content/uploads/2024/07/98214.jpg",
+  "related": [
+    { "type": "series", "slug": "dr-stone", "label": "Dr. Stone" },
+    { "type": "series", "slug": "dr-stone-stone-wars-season-2", "label": "Dr. Stone: Stone Wars" },
+    { "type": "series", "slug": "dr-stone-ryuusui", "label": "Dr. Stone: Ryuusui" },
+    { "type": "series", "slug": "dr-stone-season-4-part-3", "label": "Dr. Stone Season 4 Part 3" }
+  ],
+  "sections": [
+    {
+      "heading": "Urutan rilis yang paling aman",
+      "body": "Tonton Dr. Stone season 1, Stone Wars, special Ryuusui, New World part 1, New World part 2, lalu Science Future atau season 4 sesuai part yang tersedia. Urutan rilis menjaga transisi kerajaan sains, kapal, dan konflik global tetap runtut."
+    },
+    {
+      "heading": "Posisi Ryuusui",
+      "body": "Ryuusui sebaiknya tidak dilewati karena menjadi jembatan penting sebelum New World. Special ini memperkenalkan kebutuhan navigasi dan karakter yang berpengaruh untuk arc setelah Stone Wars."
+    },
+    {
+      "heading": "Cek part terbaru",
+      "body": "Dr. Stone memiliki beberapa part yang judulnya bisa berbeda antar source. Di Jawatch, gunakan halaman collection season untuk memastikan kamu masuk ke part kanonis terbaru."
+    }
+  ]
+}

@@ -24,6 +24,7 @@ function item(overrides) {
 test('filters out the current title and ranks by genre overlap first, then country', () => {
   const results = selectSeriesRecommendations({
     currentSlug: 'current-series',
+    currentTitle: 'Current Series',
     genres: ['Action', 'Fantasy'],
     country: 'Japan',
     items: [
@@ -46,6 +47,7 @@ test('filters out the current title and ranks by genre overlap first, then count
 test('limits the result set to eight recommendations', () => {
   const results = selectSeriesRecommendations({
     currentSlug: 'current-series',
+    currentTitle: 'Current Series',
     genres: ['Fantasy'],
     country: 'Japan',
     items: Array.from({ length: 10 }, (_, index) =>
@@ -64,6 +66,7 @@ test('limits the result set to eight recommendations', () => {
 test('keeps recommendations within the current series media type when provided', () => {
   const results = selectSeriesRecommendations({
     currentSlug: 'current-series',
+    currentTitle: 'Current Series',
     currentType: 'anime',
     genres: ['Action'],
     country: 'Japan',
@@ -75,6 +78,36 @@ test('keeps recommendations within the current series media type when provided',
   });
 
   assert.deepEqual(results.map((entry) => entry.slug), ['anime-match']);
+});
+
+test('prioritizes franchise siblings and collapses duplicate title variants', () => {
+  const results = selectSeriesRecommendations({
+    currentSlug: 'dr-stone-science-future',
+    currentTitle: 'Dr. Stone Season 4 Part 1',
+    currentType: 'anime',
+    genres: ['Adventure', 'Sci-Fi'],
+    country: 'Japan',
+    items: [
+      item({ slug: 'dr-stone', title: 'Dr. Stone', genres: 'Adventure, Sci-Fi', country: 'Japan' }),
+      item({ slug: 'dr-stone-stone-wars-season-2', title: 'Dr. Stone: Stone Wars (season 2)', genres: 'Adventure, Sci-Fi', country: 'Japan' }),
+      item({ slug: 'dr-stone-science-future-cdc1accf', title: 'Dr. Stone: Science Future', genres: 'Adventure, Sci-Fi', country: 'Japan' }),
+      item({ slug: 'dr-stone-season-4-part-2', title: 'Dr. Stone Season 4 Part 2', genres: 'Adventure, Sci-Fi', country: 'Japan' }),
+      item({ slug: 'ds-future-part3-sub-indo', title: 'Dr. Stone: Science Future Part 3', genres: 'Adventure, Sci-Fi', country: 'Japan' }),
+      item({ slug: 'dr-stone-season-4-part-3', title: 'Dr. Stone Season 4 Part 3', genres: 'Adventure, Sci-Fi', country: 'Japan' }),
+      item({ slug: 'other-anime', title: 'Other Anime', genres: 'Adventure, Sci-Fi', country: 'Japan' }),
+      item({ slug: 'dr-stone-season-4-part-3-alt', title: 'Dr. Stone Season 4 Part 3', genres: 'Adventure, Sci-Fi', country: 'Japan' }),
+    ],
+  });
+
+  assert.deepEqual(results.map((entry) => entry.slug).slice(0, 5), [
+    'dr-stone',
+    'dr-stone-season-4-part-2',
+    'dr-stone-season-4-part-3',
+    'ds-future-part3-sub-indo',
+    'dr-stone-stone-wars-season-2',
+  ]);
+  assert.equal(results.some((entry) => entry.slug === 'dr-stone-season-4-part-3-alt'), false);
+  assert.equal(results.at(-1)?.slug, 'other-anime');
 });
 
 test('resolves drama and donghua providers before falling back to anime', () => {

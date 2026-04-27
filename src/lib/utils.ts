@@ -105,26 +105,14 @@ export const THEME_CONFIG = {
 
 export function resolveThemeFromPathname(pathname?: string | null): ThemeType {
   if (!pathname) return 'default';
+  if (pathname === '/watch/shorts' || pathname.startsWith('/watch/shorts/')) return 'drama';
+  if (pathname === '/read/comics' || pathname.startsWith('/read/comics/')) return 'manga';
+  if (pathname === '/shorts' || pathname.startsWith('/shorts/')) return 'drama';
+  if (pathname === '/comics' || pathname.startsWith('/comics/')) return 'manga';
   if (pathname === '/watch' || pathname.startsWith('/watch/')) return 'movie';
   if (pathname === '/read' || pathname.startsWith('/read/')) return 'manga';
   if (pathname === '/movies' || pathname.startsWith('/movies/')) return 'movie';
   if (pathname === '/series' || pathname.startsWith('/series/')) return 'drama';
-  if (
-    pathname === '/watch/shorts' ||
-    pathname.startsWith('/watch/shorts/') ||
-    pathname === '/shorts' ||
-    pathname.startsWith('/shorts/')
-  ) {
-    return 'drama';
-  }
-  if (
-    pathname === '/read/comics' ||
-    pathname.startsWith('/read/comics/') ||
-    pathname === '/comics' ||
-    pathname.startsWith('/comics/')
-  ) {
-    return 'manga';
-  }
   return 'default';
 }
 

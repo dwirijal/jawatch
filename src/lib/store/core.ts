@@ -1,5 +1,11 @@
 import type { MediaType } from './contracts.ts';
-import { canUseBrowserStorage, parseStoredJson } from '../browser-storage.ts';
+import {
+  canUseBrowserStorage,
+  parseStoredJson,
+  readStoredString,
+  removeStoredItem,
+  writeStoredString,
+} from '../browser-storage.ts';
 
 export type InterestMap = Record<MediaType, number>;
 export type TimestampedStoreItem = { id: string; timestamp: number };
@@ -68,7 +74,7 @@ export function readScopedTimestampedStore<T extends TimestampedStoreItem>(key: 
     return { guest: [], users: {} };
   }
 
-  const parsed = parseStoredJson(localStorage.getItem(key));
+  const parsed = parseStoredJson(readStoredString(key));
   if (Array.isArray(parsed)) {
     return {
       guest: dedupeTimestampedItems(parsed as T[], limit),
@@ -113,7 +119,7 @@ export function writeScopedTimestampedStore<T extends TimestampedStoreItem>(
     Object.entries(store.users).map(([ownerId, items]) => [ownerId, dedupeTimestampedItems(items, limit)]),
   );
 
-  localStorage.setItem(
+  writeStoredString(
     key,
     JSON.stringify({
       guest: dedupeTimestampedItems(store.guest, limit),
@@ -130,7 +136,7 @@ export function readScopedInterestStore(key: string): ScopedInterestStore {
     };
   }
 
-  const parsed = parseStoredJson(localStorage.getItem(key));
+  const parsed = parseStoredJson(readStoredString(key));
   if (!parsed || typeof parsed !== 'object') {
     return {
       guest: createDefaultInterests(),
@@ -174,7 +180,7 @@ export function writeScopedInterestStore(key: string, store: ScopedInterestStore
     return;
   }
 
-  localStorage.setItem(
+  writeStoredString(
     key,
     JSON.stringify({
       guest: normalizeInterestMap(store.guest),
@@ -190,7 +196,7 @@ export function getActiveStoreOwnerId(): string | null {
     return null;
   }
 
-  return normalizeOwnerId(localStorage.getItem(ACTIVE_STORE_OWNER_KEY));
+  return normalizeOwnerId(readStoredString(ACTIVE_STORE_OWNER_KEY));
 }
 
 export function setActiveStoreOwnerId(userId: string | null) {
@@ -200,11 +206,11 @@ export function setActiveStoreOwnerId(userId: string | null) {
 
   const normalizedUserId = normalizeOwnerId(userId);
   if (normalizedUserId) {
-    localStorage.setItem(ACTIVE_STORE_OWNER_KEY, normalizedUserId);
+    writeStoredString(ACTIVE_STORE_OWNER_KEY, normalizedUserId);
     return;
   }
 
-  localStorage.removeItem(ACTIVE_STORE_OWNER_KEY);
+  removeStoredItem(ACTIVE_STORE_OWNER_KEY);
 }
 
 export function getScopedItems<T extends TimestampedStoreItem>(store: ScopedTimestampedStore<T>): T[] {

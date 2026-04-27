@@ -110,6 +110,25 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['127.0.0.1'],
+  async redirects() {
+    return [
+      {
+        source: '/series/dr-stone-science-future',
+        destination: '/series/dr-stone-season-4-part-1',
+        permanent: true,
+      },
+      {
+        source: '/series/dr-stone-science-future-:legacy([a-f0-9]{8})',
+        destination: '/series/dr-stone-season-4-part-1',
+        permanent: true,
+      },
+      {
+        source: '/series/dr-stone-science-future-part-:part(2|3)',
+        destination: '/series/dr-stone-season-4-part-:part',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

@@ -1,0 +1,30 @@
+{
+  "slug": "panduan-tensura",
+  "title": "Panduan Nonton Tensura",
+  "description": "Panduan cepat untuk mengikuti Tensei shitara Slime Datta Ken, termasuk season utama, OVA, movie, dan spin-off Tensura Nikki.",
+  "category": "watch-guide",
+  "tags": ["tensura", "slime", "anime isekai"],
+  "publishedAt": "2026-04-27",
+  "updatedAt": "2026-04-27",
+  "image": "https://v2.samehadaku.how/wp-content/uploads/2021/04/112268.jpg",
+  "related": [
+    { "type": "series", "slug": "tensei-shitara-slime-datta-ken", "label": "Tensei shitara Slime Datta Ken" },
+    { "type": "series", "slug": "tensei-shitara-slime-datta-ken-season-2", "label": "Tensura Season 2" },
+    { "type": "series", "slug": "tensei-shitara-slime-datta-ken-season-3", "label": "Tensura Season 3" },
+    { "type": "series", "slug": "tensura-nikki-tensei-shitara-slime-datta-ken", "label": "Tensura Nikki" }
+  ],
+  "sections": [
+    {
+      "heading": "Mulai dari season utama",
+      "body": "Untuk alur cerita Rimuru dan Tempest, mulai dari Tensei shitara Slime Datta Ken season 1, lanjut season 2, kemudian season 3. Season utama adalah jalur paling penting untuk memahami politik, aliansi, dan konflik besar."
+    },
+    {
+      "heading": "Posisi OVA, movie, dan spin-off",
+      "body": "OVA dan movie bisa ditonton setelah kamu memahami karakter utama. Tensura Nikki lebih ringan dan cocok sebagai jeda, tetapi tidak perlu didahulukan jika tujuanmu mengejar alur utama."
+    },
+    {
+      "heading": "Gunakan alias pencarian",
+      "body": "Di Jawatch, pencarian Tensura juga diarahkan ke judul kanonis Tensei shitara Slime Datta Ken. Ini membantu karena source sering memakai nama Jepang, nama pendek, dan judul Inggris secara bergantian."
+    }
+  ]
+}

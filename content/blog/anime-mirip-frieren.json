@@ -1,0 +1,28 @@
+{
+  "slug": "anime-mirip-frieren",
+  "title": "Anime Mirip Frieren untuk Ditonton Setelah Sousou no Frieren",
+  "description": "Rekomendasi anime bernuansa perjalanan, fantasi, dan refleksi karakter untuk penonton yang suka Sousou no Frieren dan ingin tontonan dengan tempo serupa.",
+  "category": "recommendation",
+  "tags": ["frieren", "anime fantasy", "rekomendasi anime"],
+  "publishedAt": "2026-04-27",
+  "updatedAt": "2026-04-27",
+  "image": "https://v2.samehadaku.how/wp-content/uploads/2023/09/138006l.jpg",
+  "related": [
+    { "type": "series", "slug": "sousou-no-frieren", "label": "Sousou no Frieren" },
+    { "type": "series", "slug": "sousou-no-frieren-season-2", "label": "Sousou no Frieren Season 2" }
+  ],
+  "sections": [
+    {
+      "heading": "Cari rasa yang sama, bukan salinan cerita",
+      "body": "Daya tarik Frieren ada di perjalanan panjang, perubahan kecil dalam hubungan karakter, dan dunia fantasi yang tidak selalu terburu-buru. Saat mencari tontonan mirip, prioritaskan tone, tempo, dan tema perjalanan."
+    },
+    {
+      "heading": "Tipe tontonan yang cocok",
+      "body": "Pilih anime adventure fantasy dengan party kecil, cerita selepas konflik besar, atau kisah karakter yang belajar memahami manusia lain. Tontonan seperti ini biasanya memberi pengalaman paling dekat dengan Frieren."
+    },
+    {
+      "heading": "Cara pakai rekomendasi",
+      "body": "Mulai dari halaman Frieren, lalu gunakan genre dan rekomendasi series untuk menemukan judul fantasi lain. Simpan beberapa kandidat agar mudah dibandingkan sebelum mulai episode pertama."
+    }
+  ]
+}
