@@ -10,11 +10,11 @@ import { MediaCard } from '@/components/atoms/Card';
 import { SegmentedNav } from '@/components/molecules/SegmentedNav';
 import { ContinueWatching } from '@/components/organisms/ContinueWatching';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
-import { MediaHubTemplate, type MediaHubHero } from '@/components/organisms/MediaHubTemplate';
+import { MediaPageLayout, type MediaPageHero } from '@/components/organisms/MediaPageLayout';
 import { SavedContentSection } from '@/components/organisms/SavedContentSection';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
-import { StaggerEntry } from '@/components/molecules/StaggerEntry';
+import { StaggeredList } from '@/components/molecules/StaggeredList';
 import { buildSeriesFilterHref, SERIES_FILTER_SEGMENTS, WATCH_PRIMARY_SEGMENTS } from '@/lib/media-hub-segments';
 import { cn } from '@/lib/utils';
 import {
@@ -94,7 +94,7 @@ export default function SeriesPageClient({
       : []),
     [spotlightSeries],
   );
-  const seriesHero = React.useMemo<MediaHubHero>(() => ({
+  const seriesHero = React.useMemo<MediaPageHero>(() => ({
     title: spotlightSeries?.title || 'Series pilihan',
     description: activeFilter
       ? `Update ${activeFilter} terbaru yang bisa kamu cek sebelum lanjut pilih episode.`
@@ -210,7 +210,7 @@ export default function SeriesPageClient({
   );
 
   return (
-    <MediaHubTemplate
+    <MediaPageLayout
       title="Series"
       description="Anime, donghua, dan drama dalam satu rak yang gampang dipilih."
       icon={Clapperboard}
@@ -232,7 +232,7 @@ export default function SeriesPageClient({
         </>
       )}
     >
-      <StaggerEntry className="contents" delay={100}>
+      <StaggeredList className="contents" delay={100}>
         <section className="surface-panel relative overflow-hidden p-4 md:p-5">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top_left,var(--theme-drama-surface),transparent_74%)]" />
 
@@ -365,7 +365,7 @@ export default function SeriesPageClient({
 
                   {activeRadarLane ? (
                     <div className="space-y-8">
-                      <StaggerEntry key={activeRadarDay} className="media-grid border-t border-white/6 pt-8">
+                      <StaggeredList key={activeRadarDay} className="media-grid border-t border-white/6 pt-8">
                         {activeRadarLane.items.map((item) => (
                           <MediaCard
                             key={item.slug}
@@ -379,7 +379,7 @@ export default function SeriesPageClient({
                             aspectRatio="feature"
                           />
                         ))}
-                      </StaggerEntry>
+                      </StaggeredList>
                     </div>
                   ) : null}
                 </Paper>
@@ -418,8 +418,8 @@ export default function SeriesPageClient({
             ))}
           </SectionCard>
         ) : null}
-      </StaggerEntry>
-    </MediaHubTemplate>
+      </StaggeredList>
+    </MediaPageLayout>
   );
 }
 

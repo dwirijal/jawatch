@@ -28,3 +28,23 @@ test('shared UI avoids single-purpose wrappers for detail pages and cards', () =
     );
   }
 });
+
+test('shared UI component filenames use standard product-neutral names', () => {
+  const retiredComponentNames = [
+    'src/components/atoms/Popper.tsx',
+    'src/components/atoms/TitleBlock.tsx',
+    'src/components/molecules/HubLaneCard.tsx',
+    'src/components/molecules/StaggerEntry.tsx',
+    'src/components/organisms/MediaHubHeader.tsx',
+    'src/components/organisms/MediaHubTemplate.tsx',
+    'src/components/organisms/VideoDetailHeroFrame.tsx',
+  ];
+
+  for (const relativePath of retiredComponentNames) {
+    assert.equal(
+      existsSync(join(process.cwd(), relativePath)),
+      false,
+      `${relativePath} should stay renamed to the canonical design-system name`,
+    );
+  }
+});

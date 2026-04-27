@@ -17,14 +17,14 @@ import { Link } from '@/components/atoms/Link';
 import { MediaCard } from "@/components/atoms/Card";
 import { BookmarkButton } from '@/components/organisms/BookmarkButton';
 import { ContinueWatching } from '@/components/organisms/ContinueWatching';
-import { MediaHubTemplate, type MediaHubHero } from '@/components/organisms/MediaHubTemplate';
+import { MediaPageLayout, type MediaPageHero } from '@/components/organisms/MediaPageLayout';
 import { SavedContentSection } from '@/components/organisms/SavedContentSection';
 import { GenreFilter } from '@/components/molecules/GenreFilter';
 import { SegmentedNav } from '@/components/molecules/SegmentedNav';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { SectionCard } from '@/components/organisms/SectionCard';
-import { StaggerEntry } from '@/components/molecules/StaggerEntry';
+import { StaggeredList } from '@/components/molecules/StaggeredList';
 import { formatComicCardSubtitle, getComicCardBadgeText } from '@/lib/card-presentation';
 import { buildComicFilterHref, COMIC_FILTER_SEGMENTS, READ_PRIMARY_SEGMENTS } from '@/lib/media-hub-segments';
 import type { MangaSearchResult, MangaSubtype } from '@/lib/types';
@@ -200,7 +200,7 @@ export default function ComicPageClient({
   const heroDescription = isAllVariant
     ? 'Manga, manhwa, dan manhua terbaru siap kamu pilih dari sini.'
     : `Sorotan ${variant} terbaru buat kamu yang mau langsung baca.`;
-  const comicHero = React.useMemo<MediaHubHero>(() => ({
+  const comicHero = React.useMemo<MediaPageHero>(() => ({
     title: heroTitle,
     description: heroDescription,
     label: isAllVariant ? 'Pilihan komik' : `Sorotan ${variant}`,
@@ -394,7 +394,7 @@ export default function ComicPageClient({
   };
 
   return (
-    <MediaHubTemplate
+    <MediaPageLayout
       title={config.title}
       description={config.description}
       icon={BookOpen}
@@ -411,7 +411,7 @@ export default function ComicPageClient({
         </>
       )}
     >
-      <StaggerEntry className="contents" delay={100}>
+      <StaggeredList className="contents" delay={100}>
         <section className="surface-panel relative overflow-hidden p-4 md:p-5">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top_left,var(--theme-manga-surface),transparent_74%)]" />
 
@@ -578,8 +578,8 @@ export default function ComicPageClient({
               />
             ))}
         </SectionCard>
-      </StaggerEntry>
-      </MediaHubTemplate>
+      </StaggeredList>
+      </MediaPageLayout>
   );
 }
 

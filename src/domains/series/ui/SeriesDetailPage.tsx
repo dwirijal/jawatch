@@ -14,7 +14,7 @@ import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions'
 import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
 import { LazyTrailerEmbed } from '@/components/organisms/LazyTrailerEmbed';
 import { SeriesRecommendationsSection } from '@/components/organisms/SeriesRecommendationsSection';
-import { VideoDetailHeroFrame } from '@/components/organisms/VideoDetailHeroFrame';
+import { MediaDetailHero } from '@/components/organisms/MediaDetailHero';
 import { getSeriesDetailPageData } from '@/domains/series/server/series-detail-data';
 import { SeriesEpisodeSection } from '@/domains/series/ui/SeriesEpisodeSection';
 import { resolveViewerNsfwAccess } from '@/lib/server/viewer-nsfw-access';
@@ -224,7 +224,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
           />
         }
         hero={
-          <VideoDetailHeroFrame
+          <MediaDetailHero
             theme={theme}
             backHref="/watch/series"
             backLabel="Kembali ke series"

@@ -2,13 +2,13 @@
 
 import * as React from 'react';
 
-interface StaggerEntryProps {
+interface StaggeredListProps {
   children: React.ReactNode;
   className?: string;
   delay?: number;
 }
 
-export function StaggerEntry({ children, className, delay = 0 }: StaggerEntryProps) {
+export function StaggeredList({ children, className, delay = 0 }: StaggeredListProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {

@@ -4,22 +4,22 @@ import * as React from 'react';
 import { Clapperboard, CalendarDays, Globe2, Grid3X3, LayoutGrid, Tag, Tv, Zap, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { DeferredAdSection } from '@/components/organisms/DeferredAdSection';
-import { MediaHubHeader, type MediaHubSpotlight } from './MediaHubHeader';
+import { MediaPageHeader, type MediaPageFeature } from './MediaPageHeader';
 import { MediaCard } from '@/components/atoms/Card';
 import { GenreFilter } from '@/components/molecules/GenreFilter';
 import { SectionHeader } from '@/components/molecules/SectionHeader';
-import { StaggerEntry } from '@/components/molecules/StaggerEntry';
+import { StaggeredList } from '@/components/molecules/StaggeredList';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { StateInfo } from '@/components/molecules/StateInfo';
 import { ThemeType } from '@/lib/utils';
 import type { GenericMediaItem } from '@/lib/types';
 
-export interface MediaHubHero extends MediaHubSpotlight {
+export interface MediaPageHero extends MediaPageFeature {
   title: string;
   description: string;
 }
 
-const MEDIA_HUB_ICONS = {
+const MEDIA_PAGE_ICONS = {
   CalendarDays,
   Clapperboard,
   Globe2,
@@ -29,7 +29,7 @@ const MEDIA_HUB_ICONS = {
   Zap,
 } satisfies Record<string, LucideIcon>;
 
-interface MediaHubTemplateProps {
+interface MediaPageLayoutProps {
   title: string;
   description: string;
   icon?: LucideIcon;
@@ -46,7 +46,7 @@ interface MediaHubTemplateProps {
   children?: React.ReactNode;
   extraHeaderActions?: React.ReactNode;
   extraFilters?: React.ReactNode;
-  hero?: MediaHubHero;
+  hero?: MediaPageHero;
   heroFooter?: React.ReactNode;
   personalSection?: React.ReactNode;
   resultHrefBuilder?: (item: GenericMediaItem) => string;
@@ -61,7 +61,7 @@ function getResultSubtitle(item: GenericMediaItem): string {
   return item.latestEpisode || item.episode || item.chapter || item.country || item.year || '';
 }
 
-export function MediaHubTemplate({
+export function MediaPageLayout({
   title,
   description,
   icon,
@@ -83,9 +83,9 @@ export function MediaHubTemplate({
   personalSection,
   resultHrefBuilder,
   resultHrefPrefix,
-}: MediaHubTemplateProps) {
+}: MediaPageLayoutProps) {
   const gridDensity = 'default';
-  const resolvedIcon = icon ?? MEDIA_HUB_ICONS[iconName as keyof typeof MEDIA_HUB_ICONS] ?? Grid3X3;
+  const resolvedIcon = icon ?? MEDIA_PAGE_ICONS[iconName as keyof typeof MEDIA_PAGE_ICONS] ?? Grid3X3;
   const legacyFooter = genres && genres.length > 0 && onGenreClick ? (
     <>
       <div className="min-w-0 flex-1">
@@ -107,7 +107,7 @@ export function MediaHubTemplate({
 
   return (
     <div className="app-shell" data-theme={theme} data-view-mode="compact">
-      <MediaHubHeader
+      <MediaPageHeader
         title={hero?.title || title}
         description={hero?.description || description}
         icon={resolvedIcon}
@@ -116,11 +116,11 @@ export function MediaHubTemplate({
         containerClassName="app-container-wide"
         layoutVariant="editorial"
         footer={headerFooter}
-        spotlight={hero}
-        spotlightPriority={Boolean(hero?.image)}
+        featuredItem={hero}
+        featuredPriority={Boolean(hero?.image)}
       >
         {hero ? null : extraHeaderActions}
-      </MediaHubHeader>
+      </MediaPageHeader>
 
       <main className="app-container-wide mt-5 sm:mt-6 md:mt-7">
         <div className="app-section-stack">
@@ -148,7 +148,7 @@ export function MediaHubTemplate({
                 <StateInfo type="error" title="Pencarian belum bisa dibuka" description={error} />
               ) : results.length > 0 ? (
                 <div className="media-grid" data-grid-density={gridDensity}>
-                  <StaggerEntry className="contents">
+                  <StaggeredList className="contents">
                     {results.map((item, index) => (
                       <MediaCard
                         key={`${item.slug}-${index}`}
@@ -163,7 +163,7 @@ export function MediaHubTemplate({
                         theme={theme}
                       />
                     ))}
-                  </StaggerEntry>
+                  </StaggeredList>
                 </div>
               ) : (
                 <StateInfo title="Belum ada hasil" description="Coba genre atau filter lain." />

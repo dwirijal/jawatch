@@ -3,9 +3,9 @@ import { BookOpen, Clock3, Flame } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
-import { HubLaneCard } from '@/components/molecules/HubLaneCard';
+import { CategoryCard } from '@/components/molecules/CategoryCard';
 import { SegmentedNav } from '@/components/molecules/SegmentedNav';
-import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
+import { MediaPageHeader } from '@/components/organisms/MediaPageHeader';
 import { READ_PRIMARY_SEGMENTS } from '@/lib/media-hub-segments';
 import { buildCollectionPageJsonLd, buildMetadata } from '@/lib/seo';
 
@@ -31,7 +31,7 @@ export default function ReadPage() {
         })}
       />
 
-      <MediaHubHeader
+      <MediaPageHeader
         title="Baca"
         description="Pilih manga, manhwa, dan manhua dari satu katalog baca yang rapi."
         iconName="book-open"
@@ -57,11 +57,11 @@ export default function ReadPage() {
         <Button variant="outline" size="sm" asChild className="rounded-full px-4 font-black">
           <Link href="/read/comics#popular">Populer</Link>
         </Button>
-      </MediaHubHeader>
+      </MediaPageHeader>
 
       <div className="mx-auto w-full max-w-6xl py-6 sm:py-7 md:py-8">
         <div className="grid gap-4 lg:grid-cols-3">
-          <HubLaneCard
+          <CategoryCard
             href="/read/comics"
             title="Komik"
             eyebrow="Rak komik"
@@ -70,7 +70,7 @@ export default function ReadPage() {
             icon={BookOpen}
             highlights={['Manga', 'Manhwa', 'Manhua']}
           />
-          <HubLaneCard
+          <CategoryCard
             href="/read/comics#latest"
             title="Terbaru"
             eyebrow="Chapter baru"
@@ -79,7 +79,7 @@ export default function ReadPage() {
             icon={Clock3}
             highlights={['Update', 'Baru', 'Cepat']}
           />
-          <HubLaneCard
+          <CategoryCard
             href="/read/comics#popular"
             title="Populer"
             eyebrow="Paling dibuka"

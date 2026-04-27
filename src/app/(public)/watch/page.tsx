@@ -4,8 +4,8 @@ import { Button } from '@/components/atoms/Button';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { SegmentedNav } from '@/components/molecules/SegmentedNav';
-import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
-import { HubLaneCard } from '@/components/molecules/HubLaneCard';
+import { MediaPageHeader } from '@/components/organisms/MediaPageHeader';
+import { CategoryCard } from '@/components/molecules/CategoryCard';
 import { WATCH_PRIMARY_SEGMENTS } from '@/lib/media-hub-segments';
 import { buildCollectionPageJsonLd, buildMetadata } from '@/lib/seo';
 import { SHORTS_HUB_ENABLED } from '@/lib/shorts-paths';
@@ -38,7 +38,7 @@ export default function WatchPage() {
         })}
       />
 
-      <MediaHubHeader
+      <MediaPageHeader
         title="Nonton"
         description={
           SHORTS_HUB_ENABLED
@@ -73,11 +73,11 @@ export default function WatchPage() {
             <Link href="/watch/shorts">Shorts</Link>
           </Button>
         ) : null}
-      </MediaHubHeader>
+      </MediaPageHeader>
 
       <div className="app-container-wide py-6 sm:py-7 md:py-8">
         <div className="grid gap-4 lg:grid-cols-3">
-          <HubLaneCard
+          <CategoryCard
             href="/watch/series"
             title="Series"
             eyebrow="Episode berjalan"
@@ -86,7 +86,7 @@ export default function WatchPage() {
             icon={Tv}
             highlights={['Anime', 'Donghua', 'Drama']}
           />
-          <HubLaneCard
+          <CategoryCard
             href="/watch/movies"
             title="Film"
             eyebrow="Film pilihan"
@@ -96,7 +96,7 @@ export default function WatchPage() {
             highlights={['Populer', 'Terbaru', 'Tersimpan']}
           />
           {!SHORTS_HUB_ENABLED ? (
-            <HubLaneCard
+            <CategoryCard
               href="/watch/series#latest"
               title="Terbaru"
               eyebrow="Update cepat"
@@ -107,7 +107,7 @@ export default function WatchPage() {
             />
           ) : null}
           {SHORTS_HUB_ENABLED ? (
-            <HubLaneCard
+            <CategoryCard
               href="/watch/shorts"
               title="Shorts"
               eyebrow="Cerita vertikal"

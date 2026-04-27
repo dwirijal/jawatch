@@ -11,7 +11,7 @@ import { Input } from '@/components/atoms/Input';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StateInfo } from '@/components/molecules/StateInfo';
-import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
+import { MediaPageHeader } from '@/components/organisms/MediaPageHeader';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { reportClientError } from '@/lib/client-log';
 import {
@@ -167,7 +167,7 @@ export default function SearchResultsPageClient() {
   return (
     <main className="app-shell" data-theme="drama" data-view-mode="compact">
       <div className="app-container-wide mt-5 space-y-8 pb-12 sm:mt-6 md:space-y-10">
-        <MediaHubHeader
+        <MediaPageHeader
           title="Pencarian"
           description={headerDescription}
           icon={Search}
@@ -200,7 +200,7 @@ export default function SearchResultsPageClient() {
         >
           <Badge variant="drama">Hasil dikelompokkan</Badge>
           {result.topMatch ? <Badge variant="outline">Pilihan cocok siap</Badge> : null}
-        </MediaHubHeader>
+        </MediaPageHeader>
 
         <Paper tone="muted" shadow="sm" className="space-y-4 p-4 md:p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">

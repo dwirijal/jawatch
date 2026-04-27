@@ -13,7 +13,7 @@ const PUBLIC_COPY_FILES = [
   'src/features/movies/MoviesPageClient.tsx',
   'src/features/series/SeriesPageClient.tsx',
   'src/features/comics/ComicPageClient.tsx',
-  'src/components/organisms/MediaHubTemplate.tsx',
+  'src/components/organisms/MediaPageLayout.tsx',
   'src/app/(public)/movies/[slug]/page.tsx',
   'src/domains/movies/server/movie-playback-state.ts',
   'src/app/(public)/series/[slug]/page.tsx',

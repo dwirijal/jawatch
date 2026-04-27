@@ -14,7 +14,7 @@ import { UnitCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
 import { LazyTrailerEmbed } from '@/components/organisms/LazyTrailerEmbed';
-import { VideoDetailHeroFrame } from '@/components/organisms/VideoDetailHeroFrame';
+import { MediaDetailHero } from '@/components/organisms/MediaDetailHero';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { resolveViewerNsfwAccess } from '@/lib/server/viewer-nsfw-access';
 import {
@@ -194,7 +194,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
           />
         }
         hero={
-          <VideoDetailHeroFrame
+          <MediaDetailHero
             theme="movie"
             backHref="/watch/movies"
             backLabel="Kembali ke film"

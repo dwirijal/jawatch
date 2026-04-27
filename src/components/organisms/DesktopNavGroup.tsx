@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import { Link } from '@/components/atoms/Link';
-import { PopperContent, PopperRoot, PopperTrigger } from '@/components/atoms/Popper';
+import { PopoverContent, PopoverRoot, PopoverTrigger } from '@/components/atoms/Popover';
 import type { NavigationGroup } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 
@@ -24,9 +24,9 @@ export function DesktopNavGroup({ active, group, pathname }: DesktopNavGroupProp
   }, undefined);
 
   return (
-    <PopperRoot open={open} onOpenChange={setOpen}>
+    <PopoverRoot open={open} onOpenChange={setOpen}>
       <div className="relative">
-        <PopperTrigger asChild>
+        <PopoverTrigger asChild>
           <button
             type="button"
             aria-expanded={open}
@@ -43,9 +43,9 @@ export function DesktopNavGroup({ active, group, pathname }: DesktopNavGroupProp
             <ChevronDown className={cn('h-4 w-4 transition-transform duration-200', open ? 'rotate-180' : 'rotate-0')} />
             {active || open ? <span className="absolute inset-x-3 bottom-0 h-px bg-[var(--accent)]" /> : null}
           </button>
-        </PopperTrigger>
+        </PopoverTrigger>
 
-        <PopperContent
+        <PopoverContent
           align="start"
           sideOffset={14}
           className="z-[220] w-[22rem] rounded-[var(--radius-xl)] border border-border-subtle bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-elevated)_94%,white_6%)_0%,var(--surface-1)_100%)] p-[var(--space-xs)] shadow-[0_36px_92px_-52px_var(--shadow-color-strong)] backdrop-blur-2xl"
@@ -106,8 +106,8 @@ export function DesktopNavGroup({ active, group, pathname }: DesktopNavGroupProp
               })}
             </div>
           </div>
-        </PopperContent>
+        </PopoverContent>
       </div>
-    </PopperRoot>
+    </PopoverRoot>
   );
 }

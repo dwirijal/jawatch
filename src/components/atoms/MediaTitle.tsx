@@ -9,7 +9,7 @@ function isDefined<T>(value: T | null | undefined): value is T {
   return value != null;
 }
 
-interface TitleBlockProps {
+interface MediaTitleProps {
   title: string;
   subtitle?: string;
   theme: ThemeType;
@@ -19,7 +19,7 @@ interface TitleBlockProps {
   className?: string;
 }
 
-export function TitleBlock({
+export function MediaTitle({
   title,
   subtitle,
   theme,
@@ -27,7 +27,7 @@ export function TitleBlock({
   logoSrc,
   logoAlt,
   className,
-}: TitleBlockProps) {
+}: MediaTitleProps) {
   const eyebrowRef = React.useRef<HTMLParagraphElement>(null);
   const titleRef = React.useRef<HTMLElement>(null);
   const logoBlockRef = React.useRef<HTMLDivElement>(null);

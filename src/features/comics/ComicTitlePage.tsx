@@ -12,7 +12,7 @@ import { StatCard } from '@/components/molecules/StatCard';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
 import { Breadcrumbs } from '@/components/molecules/Breadcrumbs';
-import { TitleBlock } from '@/components/atoms/TitleBlock';
+import { MediaTitle } from '@/components/atoms/MediaTitle';
 import { TitleCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
@@ -177,7 +177,7 @@ export default async function ComicDetailPage({ params }: PageProps) {
                     </div>
                   </div>
 
-                  <TitleBlock
+                  <MediaTitle
                     title={manga.title}
                     subtitle={manga.title_indonesian}
                     eyebrow={manga.metadata.type}

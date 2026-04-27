@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Settings2, FastForward, Sliders } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
 import { Button } from '@/components/atoms/Button';
-import { PopperContent, PopperRoot, PopperTrigger } from '@/components/atoms/Popper';
+import { PopoverContent, PopoverRoot, PopoverTrigger } from '@/components/atoms/Popover';
 import { Slider } from '@/components/atoms/Slider';
 import { Switch } from '@/components/atoms/Switch';
 
@@ -12,13 +12,13 @@ export function ReadingSettings({ autoNext, setAutoNext }: { autoNext: boolean, 
   const { readerWidth, setReaderWidth } = useUIStore();
 
   return (
-    <PopperRoot>
-      <PopperTrigger asChild>
+    <PopoverRoot>
+      <PopoverTrigger asChild>
         <Button variant="outline" size="icon" className="h-[var(--size-control-md)] w-[var(--size-control-md)] rounded-[var(--radius-sm)] border-border-subtle bg-surface-1 text-foreground hover:bg-surface-elevated hover:text-foreground">
           <Settings2 className="h-4 w-4" />
         </Button>
-      </PopperTrigger>
-      <PopperContent className="z-[200] w-64 p-[var(--space-lg)]" sideOffset={8} align="end">
+      </PopoverTrigger>
+      <PopoverContent className="z-[200] w-64 p-[var(--space-lg)]" sideOffset={8} align="end">
         <div className="space-y-5">
           <div className="flex items-center gap-[var(--space-xs)]">
             <Sliders className="h-3.5 w-3.5 text-[var(--signal-warning)]" />
@@ -41,7 +41,7 @@ export function ReadingSettings({ autoNext, setAutoNext }: { autoNext: boolean, 
             <Switch checked={autoNext} onClick={() => setAutoNext(!autoNext)} />
           </div>
         </div>
-      </PopperContent>
-    </PopperRoot>
+      </PopoverContent>
+    </PopoverRoot>
   );
 }

@@ -7,12 +7,12 @@ import { Button } from '@/components/atoms/Button';
 import { MediaCard } from '@/components/atoms/Card';
 import { Link } from '@/components/atoms/Link';
 import { ContinueWatching } from '@/components/organisms/ContinueWatching';
-import { MediaHubTemplate, type MediaHubHero } from '@/components/organisms/MediaHubTemplate';
+import { MediaPageLayout, type MediaPageHero } from '@/components/organisms/MediaPageLayout';
 import { SavedContentSection } from '@/components/organisms/SavedContentSection';
 import { SegmentedNav } from '@/components/molecules/SegmentedNav';
 import { SkeletonCard } from '@/components/molecules/SkeletonCard';
 import { SectionCard } from '@/components/organisms/SectionCard';
-import { StaggerEntry } from '@/components/molecules/StaggerEntry';
+import { StaggeredList } from '@/components/molecules/StaggeredList';
 import { formatMovieCardMetaLine, formatMovieCardSubtitle, getMovieCardBadgeText } from '@/lib/card-presentation';
 import { WATCH_PRIMARY_SEGMENTS } from '@/lib/media-hub-segments';
 import { incrementInterest } from '@/lib/store';
@@ -210,7 +210,7 @@ export default function MoviesPageClient({
     featuredMovie?.rating && featuredMovie.rating !== 'N/A' ? `Rating ${featuredMovie.rating}` : null,
     featuredMovie?.status,
   ].filter(Boolean).join(' • ');
-  const movieHero = React.useMemo<MediaHubHero>(() => ({
+  const movieHero = React.useMemo<MediaPageHero>(() => ({
     title: featuredMovie?.title || 'Film pilihan',
     description: activeGenre
       ? `Film genre ${activeGenre} yang bisa kamu cek dulu sebelum pilih tontonan.`
@@ -258,7 +258,7 @@ export default function MoviesPageClient({
   }), [activeGenre, featuredGenres, featuredMovie, heroMeta, initialLatest, initialPopular]);
 
   return (
-    <MediaHubTemplate
+    <MediaPageLayout
       title="Film"
       description="Cari film populer, terbaru, dan pilihan genre tanpa muter-muter."
       icon={Clapperboard}
@@ -275,7 +275,7 @@ export default function MoviesPageClient({
         </>
       )}
     >
-      <StaggerEntry className="contents" delay={100}>
+      <StaggeredList className="contents" delay={100}>
         {filteredResults ? (
           <SectionCard
             title={activeGenre ? `Genre: ${activeGenre}` : 'Hasil film'}
@@ -421,8 +421,8 @@ export default function MoviesPageClient({
             ))}
           </div>
         </section>
-      </StaggerEntry>
-    </MediaHubTemplate>
+      </StaggeredList>
+    </MediaPageLayout>
   );
 }
 

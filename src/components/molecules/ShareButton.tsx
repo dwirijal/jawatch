@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Share2, Link as LinkIcon, Twitter, MessageCircle, Send, Check } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import { Kbd } from '@/components/atoms/Kbd';
-import { PopperContent, PopperRoot, PopperTrigger } from '@/components/atoms/Popper';
+import { PopoverContent, PopoverRoot, PopoverTrigger } from '@/components/atoms/Popover';
 import { trackMarketingEvent } from '@/lib/marketing-events';
 import { buildShareText, type ShareMediaType } from '@/lib/marketing';
 import { cn, ThemeType } from '@/lib/utils';
@@ -71,8 +71,8 @@ export function ShareButton({ title, mediaType = 'media', theme = 'default', cla
   ];
 
   return (
-    <PopperRoot>
-      <PopperTrigger asChild>
+    <PopoverRoot>
+      <PopoverTrigger asChild>
         <Button 
           variant="outline" 
           size="icon" 
@@ -81,9 +81,9 @@ export function ShareButton({ title, mediaType = 'media', theme = 'default', cla
         >
           <Share2 className="w-5 h-5 text-muted-foreground" />
         </Button>
-      </PopperTrigger>
+      </PopoverTrigger>
       
-      <PopperContent
+      <PopoverContent
         data-theme={theme}
         className="w-64"
         contentClassName="space-y-4"
@@ -135,7 +135,7 @@ export function ShareButton({ title, mediaType = 'media', theme = 'default', cla
             </div>
             {!copied && <Kbd>URL</Kbd>}
           </button>
-      </PopperContent>
-    </PopperRoot>
+      </PopoverContent>
+    </PopoverRoot>
   );
 }

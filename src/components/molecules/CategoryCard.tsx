@@ -3,7 +3,7 @@ import { ArrowRight, type LucideIcon } from 'lucide-react';
 import { Link } from '@/components/atoms/Link';
 import { cn, THEME_CONFIG, type ThemeType } from '@/lib/utils';
 
-interface HubLaneCardProps {
+interface CategoryCardProps {
   href: string;
   title: string;
   description: string;
@@ -14,7 +14,7 @@ interface HubLaneCardProps {
   className?: string;
 }
 
-export function HubLaneCard({
+export function CategoryCard({
   href,
   title,
   description,
@@ -23,7 +23,7 @@ export function HubLaneCard({
   icon: Icon,
   highlights = [],
   className,
-}: HubLaneCardProps) {
+}: CategoryCardProps) {
   const config = THEME_CONFIG[theme] ?? THEME_CONFIG.default;
 
   return (

@@ -5,15 +5,15 @@ import { Button } from '@/components/atoms/Button';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { PosterImageWithFallback } from '@/components/atoms/PosterImageWithFallback';
-import { TitleBlock } from '@/components/atoms/TitleBlock';
+import { MediaTitle } from '@/components/atoms/MediaTitle';
 import { DEFAULT_MEDIA_BACKGROUND, ThemeType, cn } from '@/lib/utils';
 
-interface VideoHeroMetaItem {
+interface MediaDetailMetaItem {
   label: string;
   value: string;
 }
 
-export interface VideoDetailHeroFrameProps {
+export interface MediaDetailHeroProps {
   theme: Extract<ThemeType, 'anime' | 'donghua' | 'movie' | 'drama'>;
   backHref: string;
   backLabel: string;
@@ -25,7 +25,7 @@ export interface VideoDetailHeroFrameProps {
   subtitle?: string;
   eyebrow?: string;
   badges: string[];
-  metadata: VideoHeroMetaItem[];
+  metadata: MediaDetailMetaItem[];
   controls?: React.ReactNode;
   primaryAction?: React.ReactNode;
   secondaryAction?: React.ReactNode;
@@ -34,7 +34,7 @@ export interface VideoDetailHeroFrameProps {
   headerAside?: React.ReactNode;
 }
 
-export function VideoDetailHeroFrame({
+export function MediaDetailHero({
   theme,
   backHref,
   backLabel,
@@ -53,7 +53,7 @@ export function VideoDetailHeroFrame({
   galleryVariant = 'default',
   backgroundLayer,
   headerAside,
-}: VideoDetailHeroFrameProps) {
+}: MediaDetailHeroProps) {
   const isCompactGallery = galleryVariant === 'compact';
   const heroBackground = backgroundImage || poster || DEFAULT_MEDIA_BACKGROUND;
 
@@ -101,7 +101,7 @@ export function VideoDetailHeroFrame({
                 {headerAside}
               </div>
 
-              <TitleBlock
+              <MediaTitle
                 title={title}
                 subtitle={subtitle}
                 eyebrow={eyebrow}

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Clapperboard, Flame, Sparkles, Play, ArrowLeft, Loader2 } from 'lucide-react';
-import { MediaHubHeader } from '@/components/organisms/MediaHubHeader';
+import { MediaPageHeader } from '@/components/organisms/MediaPageHeader';
 import { SectionCard } from '@/components/organisms/SectionCard';
 import { MediaCard } from '@/components/atoms/Card';
 import { Badge } from '@/components/atoms/Badge';
@@ -170,7 +170,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
 
   return (
     <div className="app-shell" data-theme="drama">
-      <MediaHubHeader
+      <MediaPageHeader
         title="Short Series"
         description={description}
         icon={Clapperboard}
@@ -202,7 +202,7 @@ export default function DrachinPageClient({ entry = 'drachin' }: DrachinPageClie
             Feed vertikal
           </Button>
         </div>
-      </MediaHubHeader>
+      </MediaPageHeader>
 
       <main className="app-container-wide mt-5 space-y-8 sm:mt-6 md:space-y-10">
         <Paper tone="muted" shadow="sm" className="p-4 md:p-5">

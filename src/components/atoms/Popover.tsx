@@ -4,17 +4,17 @@ import * as React from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { cn } from '@/lib/utils';
 
-export const PopperRoot = Popover.Root;
-export const PopperTrigger = Popover.Trigger;
-export const PopperAnchor = Popover.Anchor;
+export const PopoverRoot = Popover.Root;
+export const PopoverTrigger = Popover.Trigger;
+export const PopoverAnchor = Popover.Anchor;
 
-interface PopperContentProps extends React.ComponentPropsWithoutRef<typeof Popover.Content> {
+interface PopoverContentProps extends React.ComponentPropsWithoutRef<typeof Popover.Content> {
   contentClassName?: string;
 }
 
-export const PopperContent = React.forwardRef<
+export const PopoverContent = React.forwardRef<
   React.ElementRef<typeof Popover.Content>,
-  PopperContentProps
+  PopoverContentProps
 >(({ className, contentClassName, children, sideOffset = 8, align = 'end', ...props }, ref) => {
   return (
     <Popover.Portal>
@@ -35,4 +35,4 @@ export const PopperContent = React.forwardRef<
   );
 });
 
-PopperContent.displayName = 'PopperContent';
+PopoverContent.displayName = 'PopoverContent';

@@ -6,7 +6,7 @@ import { Grid3X3, type LucideIcon } from 'lucide-react';
 import { renderLucideIcon } from '@/lib/lucide-icons';
 import { cn, THEME_CONFIG, ThemeType } from '@/lib/utils';
 
-export interface MediaHubSpotlight {
+export interface MediaPageFeature {
   label?: string;
   meta?: string;
   image?: string;
@@ -18,7 +18,7 @@ export interface MediaHubSpotlight {
   actions?: React.ReactNode;
 }
 
-interface MediaHubHeaderProps {
+interface MediaPageHeaderProps {
   title: string;
   description: string;
   icon?: LucideIcon;
@@ -29,11 +29,11 @@ interface MediaHubHeaderProps {
   footer?: React.ReactNode;
   containerClassName?: string;
   layoutVariant?: 'default' | 'editorial';
-  spotlight?: MediaHubSpotlight;
-  spotlightPriority?: boolean;
+  featuredItem?: MediaPageFeature;
+  featuredPriority?: boolean;
 }
 
-export function MediaHubHeader({
+export function MediaPageHeader({
   title,
   description,
   icon: Icon,
@@ -44,9 +44,9 @@ export function MediaHubHeader({
   footer,
   containerClassName = 'app-container',
   layoutVariant = 'default',
-  spotlight,
-  spotlightPriority = false,
-}: MediaHubHeaderProps) {
+  featuredItem,
+  featuredPriority = false,
+}: MediaPageHeaderProps) {
   const config = THEME_CONFIG[theme] || THEME_CONFIG.default;
   const titleClassName = cn(
     'max-w-4xl text-balance font-[var(--font-heading)] font-bold tracking-[-0.06em] text-foreground',
@@ -60,29 +60,29 @@ export function MediaHubHeader({
     config.primary
   );
   const iconClassName = cn(layoutVariant === 'editorial' ? 'h-6 w-6 md:h-7 md:w-7' : 'h-5 w-5 md:h-6 md:w-6', config.contrast);
-  const spotlightBadges = spotlight?.badges?.map((badge) => badge.trim()).filter(Boolean) ?? [];
+  const featuredBadges = featuredItem?.badges?.map((badge) => badge.trim()).filter(Boolean) ?? [];
   const [imageFailed, setImageFailed] = React.useState(false);
   const [logoFailed, setLogoFailed] = React.useState(false);
-  const spotlightImage = imageFailed || !spotlight?.image?.trim() ? '' : spotlight.image.trim();
-  const spotlightLogo = spotlight?.useLogo === false || logoFailed || !spotlight?.logo?.trim() ? '' : spotlight.logo.trim();
+  const featuredImage = imageFailed || !featuredItem?.image?.trim() ? '' : featuredItem.image.trim();
+  const featuredLogo = featuredItem?.useLogo === false || logoFailed || !featuredItem?.logo?.trim() ? '' : featuredItem.logo.trim();
 
   React.useEffect(() => {
     setImageFailed(false);
-  }, [spotlight?.image]);
+  }, [featuredItem?.image]);
 
   React.useEffect(() => {
     setLogoFailed(false);
-  }, [spotlight?.logo]);
+  }, [featuredItem?.logo]);
 
-  if (layoutVariant === 'editorial' && spotlight) {
+  if (layoutVariant === 'editorial' && featuredItem) {
     return (
       <header className="relative isolate overflow-hidden border-b border-border-subtle/70">
-        {spotlightImage ? (
+        {featuredImage ? (
           <Image
-            src={spotlightImage}
-            alt={spotlight.imageAlt || title}
+            src={featuredImage}
+            alt={featuredItem.imageAlt || title}
             fill
-            priority={spotlightPriority}
+            priority={featuredPriority}
             className="object-cover"
             sizes="100vw"
             quality={82}
@@ -105,20 +105,20 @@ export function MediaHubHeader({
                   </span>
                 ) : null}
 
-                {spotlight.label ? (
+                {featuredItem.label ? (
                   <span className="rounded-full border border-white/14 bg-black/24 px-[var(--space-sm)] py-[var(--space-2xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-[var(--accent-contrast)]/92 backdrop-blur-sm">
-                    {spotlight.label}
+                    {featuredItem.label}
                   </span>
                 ) : null}
               </div>
 
               <div className="space-y-2.5 md:space-y-3">
-                {spotlightLogo ? (
+                {featuredLogo ? (
                   <div className="space-y-2">
                     <h1 className="sr-only">{title}</h1>
                     <Image
-                      src={spotlightLogo}
-                      alt={spotlight?.logoAlt || title}
+                      src={featuredLogo}
+                      alt={featuredItem?.logoAlt || title}
                       width={960}
                       height={384}
                       sizes="(max-width: 767px) 70vw, (max-width: 1279px) 34rem, 40rem"
@@ -135,16 +135,16 @@ export function MediaHubHeader({
                 <p className="max-w-2xl text-xs leading-5 text-foreground/84 sm:text-sm sm:leading-6 md:text-base md:leading-7">
                   {description}
                 </p>
-                {spotlight.meta ? (
+                {featuredItem.meta ? (
                   <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground/70 md:text-xs">
-                    {spotlight.meta}
+                    {featuredItem.meta}
                   </p>
                 ) : null}
               </div>
 
-              {spotlightBadges.length > 0 ? (
+              {featuredBadges.length > 0 ? (
                 <div className="flex flex-wrap gap-[var(--space-xs)]">
-                  {spotlightBadges.map((badge) => (
+                  {featuredBadges.map((badge) => (
                     <span
                       key={badge}
                       className="rounded-full border border-white/12 bg-surface-1/20 px-[var(--space-sm)] py-1.5 text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground backdrop-blur-sm"
@@ -155,10 +155,10 @@ export function MediaHubHeader({
                 </div>
               ) : null}
 
-              {spotlight.actions || children ? (
+              {featuredItem.actions || children ? (
                 <div className="w-fit max-w-full rounded-[var(--radius-xl)] border border-white/10 bg-black/26 p-2.5 shadow-[0_24px_70px_-38px_rgba(0,0,0,0.72)] backdrop-blur-md sm:p-3">
                   <div className="flex flex-wrap items-center gap-[calc(var(--space-xs)+var(--space-2xs))] sm:gap-3">
-                    {spotlight.actions}
+                    {featuredItem.actions}
                     {children}
                   </div>
                 </div>
