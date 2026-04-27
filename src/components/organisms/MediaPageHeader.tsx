@@ -92,21 +92,21 @@ export function MediaPageHeader({
         ) : null}
 
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_42%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(6,7,10,0.46)_0%,rgba(6,7,10,0.2)_44%,rgba(6,7,10,0.38)_100%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0.08)_0%,rgba(8,10,14,0.16)_24%,rgba(8,10,14,0.9)_100%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(6,7,10,0.74)_0%,rgba(6,7,10,0.38)_44%,rgba(6,7,10,0.62)_100%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0.18)_0%,rgba(8,10,14,0.34)_24%,rgba(8,10,14,0.94)_100%)]" />
 
         <div className={cn(containerClassName, 'relative z-10 flex min-h-[11.5rem] items-end py-[var(--space-md)] sm:min-h-[12.5rem] sm:py-5 md:min-h-[18rem] md:py-6 lg:min-h-[21rem] lg:py-8 xl:min-h-[23rem]')}>
           <div className="w-full space-y-4 md:space-y-5">
             <div className="max-w-3xl space-y-3 md:space-y-4">
               <div className="flex flex-wrap items-center gap-[calc(var(--space-xs)+var(--space-2xs))]">
                 {eyebrow ? (
-                  <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground/82">
+                  <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-white/82">
                     {eyebrow}
                   </span>
                 ) : null}
 
                 {featuredItem.label ? (
-                  <span className="rounded-full border border-white/14 bg-black/24 px-[var(--space-sm)] py-[var(--space-2xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-[var(--accent-contrast)]/92 backdrop-blur-sm">
+                  <span className="rounded-full border border-white/14 bg-black/24 px-[var(--space-sm)] py-[var(--space-2xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-white/92 backdrop-blur-sm">
                     {featuredItem.label}
                   </span>
                 ) : null}
@@ -128,15 +128,15 @@ export function MediaPageHeader({
                     />
                   </div>
                 ) : (
-                  <h1 className="line-clamp-2 max-w-3xl text-balance font-[var(--font-heading)] text-[clamp(1.85rem,7vw,4.5rem)] font-bold leading-[0.94] tracking-[-0.06em] text-[var(--accent-contrast)]">
+                  <h1 className="line-clamp-2 max-w-3xl text-balance font-[var(--font-heading)] text-[clamp(1.85rem,7vw,4.5rem)] font-bold leading-[0.94] tracking-[-0.06em] text-white">
                     {title}
                   </h1>
                 )}
-                <p className="max-w-2xl text-xs leading-5 text-foreground/84 sm:text-sm sm:leading-6 md:text-base md:leading-7">
+                <p className="max-w-2xl text-xs leading-5 text-white/84 sm:text-sm sm:leading-6 md:text-base md:leading-7">
                   {description}
                 </p>
                 {featuredItem.meta ? (
-                  <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground/70 md:text-xs">
+                  <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-white/70 md:text-xs">
                     {featuredItem.meta}
                   </p>
                 ) : null}
@@ -147,7 +147,7 @@ export function MediaPageHeader({
                   {featuredBadges.map((badge) => (
                     <span
                       key={badge}
-                      className="rounded-full border border-white/12 bg-surface-1/20 px-[var(--space-sm)] py-1.5 text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground backdrop-blur-sm"
+                      className="rounded-full border border-white/12 bg-black/24 px-[var(--space-sm)] py-1.5 text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-white backdrop-blur-sm"
                     >
                       {badge}
                     </span>
