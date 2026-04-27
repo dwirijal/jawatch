@@ -186,11 +186,89 @@ const THEME_SUFFIXES = ['fill', 'contrast', 'text', 'border', 'surface', 'shadow
 const LEGACY_THEME_FAMILIES = ['default', 'anime', 'manga', 'donghua', 'movie', 'drama', 'novel'];
 const THEME_EXPORT_FAMILIES = ['primary', 'success', 'warning', 'danger', 'info', 'neutral'];
 const SCALE_STEPS = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'];
+const FOUNDATION_TOKEN_VALUES = {
+  'breakpoint-mobile': '0rem',
+  'breakpoint-mobile-wide': '26.875rem',
+  'breakpoint-tablet': '48rem',
+  'breakpoint-desktop': '64rem',
+  'breakpoint-wide': '90rem',
+  'space-2xs': '0.25rem',
+  'space-xs': '0.5rem',
+  'space-sm': '0.75rem',
+  'space-md': '1rem',
+  'space-lg': '1.25rem',
+  'space-xl': '1.75rem',
+  'space-2xl': '2.5rem',
+  'space-3xl': '4rem',
+  'space-4xl': '6rem',
+  'size-touch': '2.75rem',
+  'size-control-sm': '2.25rem',
+  'size-control-md': '2.75rem',
+  'size-control-lg': '3rem',
+  'type-size-xs': '0.75rem',
+  'type-size-sm': '0.875rem',
+  'type-size-base': '1rem',
+  'type-size-lg': '1.125rem',
+  'type-size-xl': '1.25rem',
+  'type-size-2xl': '1.5rem',
+  'type-size-3xl': '1.875rem',
+  'type-size-4xl': '2.25rem',
+  'type-size-display': '3rem',
+  'type-size-section-title': '2rem',
+  'type-line-body': '1.6',
+  'type-line-relaxed': '1.72',
+  'type-tracking-normal': '0',
+  'grid-columns': '4',
+  'grid-gutter': 'var(--space-md)',
+  'grid-margin': 'var(--space-md)',
+  'grid-content-max': '76rem',
+  'grid-content-wide': '88rem',
+  'grid-content-immersive': '96rem',
+  'grid-card-columns': '2',
+  'grid-card-columns-dense': '2',
+  'grid-card-columns-comfortable': '1',
+  'grid-card-gap': '0.875rem',
+};
+
+const FOUNDATION_ALIASES = {
+  'layout-max': 'var(--grid-content-max)',
+  'layout-max-wide': 'var(--grid-content-wide)',
+  'layout-max-immersive': 'var(--grid-content-immersive)',
+  'layout-pad': 'var(--grid-margin)',
+  'section-gap': 'var(--grid-section-gap)',
+  'section-gap-wide': 'var(--grid-section-gap-wide)',
+  'card-columns': 'var(--grid-card-columns)',
+  'card-columns-dense': 'var(--grid-card-columns-dense)',
+  'card-columns-comfortable': 'var(--grid-card-columns-comfortable)',
+  'card-gap': 'var(--grid-card-gap)',
+};
 
 test('raw primitive palette matches the approved source-of-truth values', () => {
   for (const [token, expectedValue] of Object.entries(EXPECTED_PRIMITIVES)) {
     assert.equal(primitiveVars[token], expectedValue, `Unexpected value for ${token}`);
   }
+});
+
+test('foundation tokens define spacing, sizing, type, breakpoints, and grid aliases', () => {
+  for (const [token, expectedValue] of Object.entries(FOUNDATION_TOKEN_VALUES)) {
+    assert.equal(primitiveVars[token], expectedValue, `Unexpected foundation value for ${token}`);
+  }
+
+  for (const [token, expectedValue] of Object.entries(FOUNDATION_ALIASES)) {
+    assert.equal(primitiveVars[token], expectedValue, `${token} should alias the semantic grid token`);
+  }
+});
+
+test('layout grid breakpoints are mobile, tablet, desktop, and wide only', () => {
+  for (const breakpoint of ['430px', '768px', '1024px', '1440px']) {
+    assert.ok(css.includes(`@media (min-width: ${breakpoint})`), `Missing ${breakpoint} layout breakpoint`);
+  }
+
+  assert.equal(
+    [...css.matchAll(/@media \(min-width: 1440px\)/g)].length,
+    1,
+    'wide layout breakpoint should be defined once',
+  );
 });
 
 for (const [mode, vars] of [['light', lightVars], ['dark', darkVars]]) {

@@ -42,13 +42,15 @@ Dokumen ini mendefinisikan bahasa desain Jawatch untuk:
 Semua token mengikuti axis yang sama dengan foundation:
 
 - warna: `light` dan `dark`
-- angka: `mobile`, `tablet`, dan `desktop`
+- angka: `mobile`, `mobile-wide`, `tablet`, `desktop`, dan `wide`
 
 **Anatomy**
 
-- `mobile` = perilaku efektif phone, termasuk uplift `390-430`
-- `tablet` = perilaku efektif mulai `768px`
-- `desktop` = perilaku efektif `1440px+`
+- `mobile` = default phone
+- `mobile-wide` = uplift mulai `430px`
+- `tablet` = mulai `768px`
+- `desktop` = mulai `1024px`
+- `wide` = mulai `1440px`
 
 **Source References**
 
@@ -136,16 +138,16 @@ Typography Jawatch didokumentasikan berdasarkan skala, bukan berdasarkan role. E
 
 | Scale token | Editorial alias | Family | Mobile | Tablet | Desktop | Notes | Real use case |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `type-2xs` | `eyebrow` | sans | `10px / 1 / 800 / +0.18-0.24em` | same | same | compact uppercase utility band | badge, chip, kicker |
-| `type-xs` | `meta` | sans | `11px / 1 / 700 / +0.18-0.20em` | same | same | utility-label tier | back button labels, tiny metadata |
-| `type-sm` | `meta-body` | sans | `12px / relaxed` | same | same | compact support copy | secondary helper copy |
-| `type-md` | `body` | sans | `15px / relaxed` | `15px / relaxed` | `15px / relaxed` | baseline readable body | default paragraphs |
-| `type-lg` | `deck` | sans | `18px / relaxed / tight` | same | same | lead/supportive editorial paragraph | discovery intro copy |
-| `type-xl` | `title-compact` | sans | `20px / snug / medium` | same | same | compact title tier | modal title, compact feature title |
-| `type-2xl` | `title` | sans | `24px / snug / medium` | same | same | title tier | block title |
-| `type-3xl` | `headline-sm` | heading | `30px / tight / medium` | same | same | bridge between title and headline | section or hero compact title |
-| `type-4xl` | `headline` | heading | `36px / 1.1 / -0.04em` | `48px / 1.1 / -0.04em` | `48px / 1.1 / -0.04em` | canonical headline tier | major titles |
-| `type-display` | `display` | heading | `44.8px / 0.92 / -0.055em` | `61.44px / 0.92 / -0.055em` | `92.8px / 0.92 / -0.055em` | premium hero scale | home or major hero statements |
+| `type-xs` | `meta` | sans | `0.75rem / 1 / 0.24em` | same | same | utility-label tier | badge, chip, kicker |
+| `type-sm` | `meta-body` | sans | `0.875rem / 1.6 / 0` | same | same | compact support copy | secondary helper copy |
+| `type-base` | `body` | sans | `1rem / 1.6 / 0` | same | same | baseline readable body | default paragraphs |
+| `type-lg` | `deck` | sans | `1.125rem / 1.72 / 0` | same | same | lead/supportive editorial paragraph | discovery intro copy |
+| `type-xl` | `title-compact` | sans | `1.25rem / 1.1 / 0` | same | same | compact title tier | modal title, compact feature title |
+| `type-2xl` | `title` | sans | `1.5rem / 1.1 / 0` | same | same | title tier | block title |
+| `type-3xl` | `headline-sm` | heading | `1.875rem / 1.1 / 0` | same | same | bridge between title and headline | section or hero compact title |
+| `type-4xl` | `headline` | heading | `2.25rem / 1.1 / 0` | same | same | canonical headline tier | major titles |
+| `type-section-title` | `section-title` | heading | `2rem` | `2.5rem` | `3rem` | breakpoint-stepped, not viewport-scaled | section display headings |
+| `type-display` | `display` | heading | `3rem / 0.92 / 0` | `4rem / 0.92 / 0` | `5rem / 0.92 / 0` | breakpoint-stepped premium scale | home or major hero statements |
 
 ### Implementation Compatibility Note
 
@@ -174,19 +176,19 @@ Jawatch memakai scale spacing yang relatif ringkas, lalu memetakannya ke band se
 
 | Token | Mobile | Tablet | Desktop | Foundation source | Real use case |
 | --- | --- | --- | --- | --- | --- |
-| `spacing.inline-tight` | `4px` | `4px` | `4px` | `--space-xs` | icon/text micro gap |
-| `spacing.inline` | `8px` | `8px` | `8px` | `--space-sm` | chip rows, button internal gap |
-| `spacing.component` | `14px` | `14px` | `14px` | `--space-md` | compact panel/control padding |
-| `spacing.panel` | `20px` | `20px` | `20px` | `--space-lg` | card/panel body |
-| `spacing.roomy` | `28px` | `28px` | `28px` | `--space-xl` | generous separation inside feature block |
-| `spacing.section` | `1.5rem` | `1.5rem` | `2rem` effective | `--section-gap` | section stack rhythm |
-| `spacing.section-wide` | `2.5rem` | `2.5rem` | `3rem` effective | `--section-gap-wide` | wider section transitions |
+| `spacing.inline-tight` | `0.25rem` | same | same | `--space-2xs` | icon/text micro gap |
+| `spacing.inline` | `0.5rem` | same | same | `--space-xs` | chip rows, small inline gap |
+| `spacing.component` | `1rem` | same | same | `--space-md` | compact panel/control padding |
+| `spacing.panel` | `1.25rem` | same | same | `--space-lg` | card/panel body |
+| `spacing.roomy` | `1.75rem` | same | same | `--space-xl` | generous separation inside feature block |
+| `spacing.section` | `1.5rem` | `1.75rem` | `2rem` | `--grid-section-gap` / `--section-gap` | section stack rhythm |
+| `spacing.section-wide` | `2.5rem` | `2.75rem` | `3rem` | `--grid-section-gap-wide` / `--section-gap-wide` | wider section transitions |
 | `spacing.safe-shell-bottom` | `calc(4.9rem + safe-area + overlay)` | `3.5rem` | `3.5rem` | `.app-shell` | shell bottom breathing room |
-| `size.control-sm` | `36px` | `36px` | `36px` | `Button size=sm` | compact pills |
-| `size.control-md` | `44px` | `44px` | `44px` | `Button/Input default` | standard clickable controls |
-| `size.control-lg` | `48px` | `56px` | `56px` | `Button size=lg` | hero CTA |
-| `size.icon-control` | `44px` | `44px` | `44px` | `Button size=icon` | player/search controls |
-| `size.panel-padding` | `16px` | `20px` | `20px` | `Paper padded` | cards and panels |
+| `size.control-sm` | `2.25rem` | same | same | `--size-control-sm` | compact pills |
+| `size.control-md` | `2.75rem` | same | same | `--size-control-md` | standard clickable controls |
+| `size.control-lg` | `3rem` | same | same | `--size-control-lg` | hero CTA |
+| `size.touch` | `2.75rem` | same | same | `--size-touch` | minimum touch target |
+| `size.icon-sm/md/lg` | `1rem / 1.25rem / 1.5rem` | same | same | `--size-icon-*` | icon-only buttons |
 
 **Source References**
 
@@ -278,20 +280,24 @@ Layout Jawatch bukan 12-column editorial grid. Sistem yang dipakai saat ini adal
 | `layout.container.default` | `min(76rem, width - gutters)` | same | same | standard route shell |
 | `layout.container.wide` | `min(88rem, width - gutters)` | same | same | wide discovery/detail shell |
 | `layout.container.immersive` | `96rem cap available, but route use remains selective` | same | same | immersive watch-ready cap |
-| `layout.gutter` | `1rem -> 1.25rem` | `1.25rem` | `2rem` effective | shell side padding |
+| `layout.gutter` | `1rem` | `1.5rem` | `2rem` | shell side padding |
+| `layout.gutter-wide` | n/a | n/a | `2.5rem` from `1440px` | wide desktop breathing room |
 
 ### Rhythm and Grid Tokens
 
 | Token | Mobile | Tablet | Desktop | Real use case |
 | --- | --- | --- | --- | --- |
-| `layout.section.gap` | `1.5rem` | `1.5rem` | `2rem` effective | route vertical stack |
-| `layout.section.gap-wide` | `2.5rem` | `2.5rem` | `3rem` effective | wider section transitions |
-| `layout.grid.catalog.default` | `2` | `2` | `5` effective | standard grid |
-| `layout.grid.catalog.dense` | `2` | `2` | `6` effective | dense browse grid |
-| `layout.grid.catalog.comfortable` | `1 -> 2` | `2` | `4` effective | comfortable browse grid |
-| `layout.grid.rail.compact` | `2` | `2` | `5` effective | compact rails |
-| `layout.grid.rail.comfortable` | `1 -> 2` | `2` | `4` effective | comfortable rails |
-| `layout.grid.rail.shelf` | `1.08 -> 1.28` | `1.28` | `2.85` effective | editorial shelves |
+| `layout.section.gap` | `1.5rem` | `1.75rem` | `2rem` | route vertical stack |
+| `layout.section.gap-wide` | `2.5rem` | `2.75rem` | `3rem` | wider section transitions |
+| `layout.grid.columns` | `4` | `8` | `12` | page layout planning |
+| `layout.grid.catalog.default` | `2` | `3` | `4` | standard grid |
+| `layout.grid.catalog.dense` | `2` | `4` | `5` | dense browse grid |
+| `layout.grid.catalog.comfortable` | `1 -> 2` | `2` | `3` | comfortable browse grid |
+| `layout.grid.rail.compact` | `2` | `3` | `4` | compact rails |
+| `layout.grid.rail.comfortable` | `1 -> 2` | `2` | `3` | comfortable rails |
+| `layout.grid.rail.shelf` | `1.08 -> 1.28` | `1.8` | `2.35` | editorial shelves |
+
+At `1440px+`, catalog density steps up again to `5 / 6 / 4` and shelf rail to `2.85`.
 
 **Source References**
 
@@ -315,19 +321,11 @@ Responsive behavior Jawatch didokumentasikan sebagai state efektif, bukan sebaga
 
 | State | Trigger | What changes |
 | --- | --- | --- |
-| `mobile` | default, including wide phone `390-430` | gutters widen slightly, comfortable grid can climb from `1` to `2`, shelf rail becomes less cramped |
-| `tablet` | effective from `768px` | shell bottom padding drops, most grid values still inherit mobile-wide effective values |
-| `desktop` | effective from `1440px+` | gutters, section gaps, grid counts, rail density all escalate to cinematic discovery layout |
-
-### Desktop Override Rule
-
-Saat token desktop didokumentasikan, gunakan nilai efektif akhir:
-- gutters `2rem`
-- section gap `2rem`
-- section gap wide `3rem`
-- grid default/dense/comfortable `5 / 6 / 4`
-- card gap `1.25rem`
-- shelf `2.85`
+| `mobile` | default | 4-column planning grid, 2-up catalog cards, safe bottom shell |
+| `mobile-wide` | `430px` | gutter/card gap widen, comfortable catalog can become 2-up, shelf rail less cramped |
+| `tablet` | `768px` | 8-column planning grid, 3-up catalog default, shell bottom padding drops |
+| `desktop` | `1024px` | 12-column planning grid, 4-up catalog default, wider section rhythm |
+| `wide` | `1440px` | catalog density reaches `5 / 6 / 4`, card gap `1.25rem`, shelf rail `2.85` |
 
 **Source References**
 

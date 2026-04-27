@@ -50,15 +50,17 @@ Dokumen ini memetakan apa yang benar-benar hidup di implementasi sekarang:
 Jawatch mendokumentasikan primitive di dua axis:
 
 - `color` by `light` and `dark`
-- `number-based primitives` by `mobile`, `tablet`, and `desktop`
+- `number-based primitives` by `mobile`, `mobile-wide`, `tablet`, `desktop`, and `wide`
 
 **Anatomy**
 
 - `light`: state saat `:root, html[data-color-mode="light"]` aktif
 - `dark`: state saat `html[data-color-mode="dark"]` aktif
-- `mobile`: perilaku efektif phone, termasuk uplift lebar `390-430`
+- `mobile`: perilaku efektif phone default
+- `mobile-wide`: uplift mulai `430px`
 - `tablet`: perilaku efektif mulai `768px`
-- `desktop`: perilaku efektif `1440px+`
+- `desktop`: perilaku efektif mulai `1024px`
+- `wide`: density uplift mulai `1440px`
 
 **Source References**
 
@@ -279,9 +281,9 @@ Bagian ini memetakan angka tipografi mentah dari utility CSS global dan public a
 | body base | `16px / 1.6` | `16px / 1.6` | `16px / 1.6` | `body` default in base layer | page body copy |
 | heading base tracking | `-0.03em` | `-0.03em` | `-0.03em` | set on `h1-h6` | title rhythm |
 | `type-kicker` | `11.2px / 1 / 0.24em / 800` | same | same | uppercase signal text | hub eyebrow, section signal |
-| `type-body-large` | `16px / 1.72 / 500` | `18.43px / 1.72 / 500` | `18.88px / 1.72 / 500` | `clamp(1rem, 2.4vw, 1.18rem)` | lead text |
-| `type-section-title` | `27.2px / 1 / -0.042em / 700` | `38.4px / 1 / -0.042em / 700` | `48px / 1 / -0.042em / 700` | section headline utility | section headers |
-| `type-display` | `44.8px / 0.92 / -0.055em / 700` | `61.44px / 0.92 / -0.055em / 700` | `92.8px / 0.92 / -0.055em / 700` | hero display utility | premium hero statements |
+| `type-body-large` | `17px / 1.72 / 500` | same | same | `--type-size-body-large` | lead text |
+| `type-section-title` | `32px / 1 / 0 / 700` | `40px / 1 / 0 / 700` | `48px / 1 / 0 / 700` | `--type-size-section-title`, stepped by breakpoint | section headers |
+| `type-display` | `48px / 0.92 / 0 / 700` | `64px / 0.92 / 0 / 700` | `80px / 0.92 / 0 / 700` | `--type-size-display`, stepped by breakpoint | premium hero statements |
 | Typography `xs` | `11px / 1 / 0.2em / 700` | same | same | atom scale | labels, overlines |
 | Typography `sm` | `12px / relaxed` | same | same | atom scale | compact support copy |
 | Typography `base` | `15px / relaxed` | same | same | atom scale | body paragraphs |
@@ -315,18 +317,18 @@ Bagian ini menangkap angka mentah untuk rhythm, control sizing, panel padding, d
 
 | Primitive | Mobile | Tablet | Desktop | Notes | Live use case |
 | --- | --- | --- | --- | --- | --- |
-| `--space-xs` | `4px` | `4px` | `4px` | tight inline gaps | micro gaps |
-| `--space-sm` | `8px` | `8px` | `8px` | inline/action spacing | chip rows |
-| `--space-md` | `14px` | `14px` | `14px` | compact control/panel spacing | control interiors |
+| `--space-2xs` | `4px` | `4px` | `4px` | tight inline gaps | micro gaps |
+| `--space-xs` | `8px` | `8px` | `8px` | inline/action spacing | chip rows |
+| `--space-sm` | `12px` | `12px` | `12px` | compact component spacing | stacked control interiors |
+| `--space-md` | `16px` | `16px` | `16px` | standard component spacing | panel/control padding |
 | `--space-lg` | `20px` | `20px` | `20px` | panel band | large card padding |
 | `--space-xl` | `28px` | `28px` | `28px` | roomy component gap | hero/control separation |
 | `--space-2xl` | `40px` | `40px` | `40px` | section margin seed | big stack separation |
 | `--space-3xl` | `64px` | `64px` | `64px` | hero band | large editorial break |
-| Button default height | `44px` | `44px` | `44px` | `h-11` | primary action |
-| Button small height | `36px` | `36px` | `36px` | `h-9` | compact pills |
-| Button large height | `48px` | `56px` | `56px` | `h-12 md:h-14` | hero CTA |
-| Button icon height | `44px` | `44px` | `44px` | `h-11 w-11` | player/search close |
-| Input height | `44px` | `44px` | `44px` | `h-11` | search/auth/filter |
+| `--size-control-sm` | `36px` | `36px` | `36px` | compact control token | compact pills |
+| `--size-control-md` | `44px` | `44px` | `44px` | standard control token | primary action, input height |
+| `--size-control-lg` | `48px` | `48px` | `48px` | large control token | hero CTA |
+| `--size-touch` | `44px` | `44px` | `44px` | minimum hit target | player/search close |
 | Paper padding | `16px` | `20px` | `20px` | `p-4 md:p-5` | cards and panels |
 | radius-sm | `0.9rem` | `0.9rem` | `0.9rem` | compact control radius | badges, metadata pills |
 | radius-md | `1.15rem` | `1.15rem` | `1.15rem` | control default radius | buttons, inputs |
@@ -394,12 +396,12 @@ Jawatch memakai adaptive container system, bukan 12-column editorial grid formal
 
 | Primitive | Mobile | Tablet | Desktop | Notes |
 | --- | --- | --- | --- | --- |
-| `layout-max` | `76rem` | `76rem` | `76rem` | default content max width |
-| `layout-max-wide` | `88rem` | `88rem` | `88rem` | wide discovery/detail shell |
-| `layout-max-immersive` | `96rem` | `96rem` | `96rem` | immersive watch-ready cap |
-| `layout-pad` | `1rem -> 1.25rem` | `1.25rem` | `2rem` effective | wide phone uplift folded into mobile |
-| `section-gap` | `1.5rem` | `1.5rem` | `2rem` effective | default vertical stack gap |
-| `section-gap-wide` | `2.5rem` | `2.5rem` | `3rem` effective | larger stack gap |
+| `grid-content-max` / `layout-max` | `76rem` | `76rem` | `76rem` | default content max width |
+| `grid-content-wide` / `layout-max-wide` | `88rem` | `88rem` | `88rem` | wide discovery/detail shell |
+| `grid-content-immersive` / `layout-max-immersive` | `96rem` | `96rem` | `96rem` | immersive watch-ready cap |
+| `grid-margin` / `layout-pad` | `1rem -> 1.25rem` | `1.5rem` | `2rem -> 2.5rem wide` | shell gutters |
+| `grid-section-gap` / `section-gap` | `1.5rem` | `1.75rem` | `2rem` | default vertical stack gap |
+| `grid-section-gap-wide` / `section-gap-wide` | `2.5rem` | `2.75rem` | `3rem` | larger stack gap |
 | `app-shell` bottom inset | `calc(4.9rem + safe-area + overlay-offset)` | `3.5rem` | `3.5rem` | mobile nav + safe area aware |
 
 **Source References**
@@ -424,10 +426,11 @@ Catalog content memakai grid kartu responsif dengan density variants.
 
 | Grid family | Mobile | Tablet | Desktop | Notes |
 | --- | --- | --- | --- | --- |
-| default | `2` | `2` | `5` effective | `--card-columns` |
-| dense | `2` | `2` | `6` effective | `--card-columns-dense` |
-| comfortable | `1 -> 2` | `2` | `4` effective | wide phone uplift folded into mobile |
-| card gap | `0.875rem -> 1rem` | `1rem` | `1.25rem` effective | gap scales with density |
+| planning columns | `4` | `8` | `12` | `--grid-columns` |
+| default | `2` | `3` | `4 -> 5 wide` | `--grid-card-columns` |
+| dense | `2` | `4` | `5 -> 6 wide` | `--grid-card-columns-dense` |
+| comfortable | `1 -> 2` | `2` | `3 -> 4 wide` | wide phone uplift folded into mobile |
+| card gap | `0.875rem -> 1rem` | `1.125rem` | `1.125rem -> 1.25rem wide` | gap scales with density |
 
 **Source References**
 
@@ -450,9 +453,9 @@ Discovery shelves memakai horizontal rail grid yang menghitung lebar kolom berda
 
 | Rail family | Mobile | Tablet | Desktop | Notes |
 | --- | --- | --- | --- | --- |
-| compact | `2` | `2` | `5` effective | mengikuti default card columns |
-| comfortable | `1 -> 2` | `2` | `4` effective | mengikuti comfortable columns |
-| shelf | `1.08 -> 1.28` | `1.28` | `2.85` effective | cinematic shelf rail |
+| compact | `2` | `3` | `4 -> 5 wide` | mengikuti default card columns |
+| comfortable | `1 -> 2` | `2` | `3 -> 4 wide` | mengikuti comfortable columns |
+| shelf | `1.08 -> 1.28` | `1.8` | `2.35 -> 2.85 wide` | cinematic shelf rail |
 | scroll behavior | `x proximity` | `x proximity` | still horizontal, often enough width to feel static | rail remains same primitive |
 
 **Source References**
@@ -471,64 +474,26 @@ Discovery shelves memakai horizontal rail grid yang menghitung lebar kolom berda
 
 **Spec**
 
-Nilai desktop di `globals.css` tidak bisa dibaca naif dari satu blok media query saja. Dokumen ini selalu memisahkan `raw specified values` dan `effective desktop values`.
+Breakpoint grid sekarang eksplisit: mobile default, mobile-wide `430px`, tablet `768px`, desktop `1024px`, dan wide `1440px`. Nilai lama yang bertumpuk di `1440px` sudah diratakan supaya implementasi bisa dibaca langsung.
 
 **Anatomy**
 
-### Layered desktop overrides at `1440px`
-
-Raw specified order:
-
-1. first desktop pass
-   - `layout-pad: 1.5rem`
-   - `section-gap: 1.75rem`
-   - `section-gap-wide: 2.75rem`
-   - `card-columns: 3`
-   - `card-columns-dense: 4`
-   - `card-columns-comfortable: 2`
-   - `card-gap: 1.125rem`
-   - shelf `1.8`
-2. second desktop pass
-   - `layout-pad: 2rem`
-   - `section-gap: 2rem`
-   - `section-gap-wide: 3rem`
-   - `card-columns: 4`
-   - `card-columns-dense: 5`
-   - `card-columns-comfortable: 3`
-   - shelf `2.35`
-3. third desktop pass
-   - `card-columns: 5`
-   - `card-columns-dense: 6`
-   - `card-columns-comfortable: 4`
-   - `card-gap: 1.25rem`
-   - shelf `2.85`
-
-Effective desktop end state:
-
-- `layout-pad: 2rem`
-- `section-gap: 2rem`
-- `section-gap-wide: 3rem`
-- `card-columns: 5`
-- `card-columns-dense: 6`
-- `card-columns-comfortable: 4`
-- `card-gap: 1.25rem`
-- shelf `2.85`
-
-### Tablet caveat
-
-Tidak ada blok `768px` khusus untuk grid density. Akibatnya:
-- tablet mewarisi hasil efektif dari mobile-wide `430px` untuk banyak primitive layout
-- satu-satunya perubahan `768px` yang eksplisit di shell dasar saat ini adalah pengurangan bottom padding `app-shell`
+| State | Trigger | Effective layout intent |
+| --- | --- | --- |
+| mobile | default | 4 planning columns, 2-up default catalog |
+| mobile-wide | `430px` | wider gutters and 2-up comfortable grid |
+| tablet | `768px` | 8 planning columns, 3-up default catalog |
+| desktop | `1024px` | 12 planning columns, 4-up default catalog |
+| wide | `1440px` | 5-up default catalog, 6-up dense catalog |
 
 **Source References**
 
-- [globals.css tablet shell override](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:406)
-- [globals.css layered desktop overrides](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css:503)
+- [globals.css breakpoint overrides](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/app/globals.css)
 
 **Real Use Cases**
 
-- memahami effective values ini penting sebelum menulis token layout dan breakpoint behavior
-- tanpa catatan ini, dokumentasi akan salah membaca grid desktop Jawatch
+- memahami effective values ini penting sebelum migrasi komponen ke token layout
+- contract test menjaga agar breakpoint wide tidak lagi terduplikasi
 
 ## Real Use Cases
 
