@@ -5,6 +5,7 @@ import { ThemeType } from '@/lib/utils';
 interface DetailPageScaffoldProps {
   hero: React.ReactNode;
   children: React.ReactNode;
+  breadcrumbs?: React.ReactNode;
   sidebar?: React.ReactNode;
   footer?: React.ReactNode;
   theme?: ThemeType;
@@ -15,6 +16,7 @@ interface DetailPageScaffoldProps {
 export async function DetailPageScaffold({
   hero,
   children,
+  breadcrumbs,
   sidebar,
   footer,
   theme,
@@ -28,6 +30,7 @@ export async function DetailPageScaffold({
   return (
     <div className="app-shell" data-theme={theme} data-view-mode="comfortable">
       <div className="app-container-wide flex flex-col gap-12 pb-6 pt-8 md:gap-16">
+        {breadcrumbs ? <div className="-mb-8 md:-mb-12">{breadcrumbs}</div> : null}
         {hero}
 
         {AdSection ? <AdSection theme={theme} /> : null}

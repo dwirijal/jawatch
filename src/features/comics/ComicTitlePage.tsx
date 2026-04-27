@@ -11,6 +11,7 @@ import { PosterImageWithFallback } from '@/components/atoms/PosterImageWithFallb
 import { StatCard } from '@/components/molecules/StatCard';
 import { DetailActionCard } from '@/components/molecules/DetailActionCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
+import { Breadcrumbs } from '@/components/molecules/Breadcrumbs';
 import { TitleBlock } from '@/components/atoms/TitleBlock';
 import { TitleCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
@@ -106,6 +107,16 @@ export default async function ComicDetailPage({ params }: PageProps) {
 
       <ReaderMediaDetailPage
         theme="manga"
+        breadcrumbs={
+          <Breadcrumbs
+            items={[
+              { label: 'Beranda', href: '/' },
+              { label: 'Baca', href: '/read' },
+              { label: 'Komik', href: '/read/comics' },
+              { label: manga.title },
+            ]}
+          />
+        }
         hero={
           <section className="surface-panel-elevated relative overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">

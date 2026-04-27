@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 import {
   DESKTOP_NAV_ITEMS,
@@ -15,7 +17,11 @@ test('top-level navigation exposes Beranda, Nonton, Baca, and Koleksi', () => {
   assert.deepEqual(getPrimaryNavLabels(DESKTOP_NAV_ITEMS), ['Beranda', 'Nonton', 'Baca', 'Koleksi']);
 
   const vaultItem = DESKTOP_NAV_ITEMS.find((item) => item.key === 'vault');
-  assert.equal(vaultItem && 'href' in vaultItem ? vaultItem.href : null, '/vault');
+  assert.equal(vaultItem?.type, 'group');
+  assert.deepEqual(
+    vaultItem && 'group' in vaultItem ? vaultItem.group.items.map((item) => item.href) : [],
+    ['/vault', '/vault/history', '/vault/saved', '/vault/profile'],
+  );
 });
 
 test('mobile nav keeps search as an action and avoids legacy top-level labels', () => {
@@ -43,6 +49,34 @@ test('mobile menu groups expose the new Nonton, Baca, and Koleksi sections', () 
   assert.ok(vaultGroup);
   assert.deepEqual(
     vaultGroup?.items.map((item) => item.href),
-    ['/vault'],
+    ['/vault', '/vault/history', '/vault/saved', '/vault/profile'],
   );
+});
+
+test('canonical IA routes are backed by app tree pages', () => {
+  const pageRoutes = [
+    'src/app/(public)/page.tsx',
+    'src/app/(public)/watch/page.tsx',
+    'src/app/(public)/watch/movies/page.tsx',
+    'src/app/(public)/watch/series/page.tsx',
+    'src/app/(public)/read/page.tsx',
+    'src/app/(public)/read/comics/page.tsx',
+    'src/app/(public)/search/page.tsx',
+    'src/app/(public)/blog/page.tsx',
+    'src/app/(public)/movies/[slug]/page.tsx',
+    'src/app/(public)/series/[slug]/page.tsx',
+    'src/app/(public)/series/[slug]/ep/[episodeNumber]/page.tsx',
+    'src/app/(public)/series/[slug]/special/[episodeSlug]/page.tsx',
+    'src/app/(public)/comics/[slug]/page.tsx',
+    'src/app/(public)/comics/[slug]/ch/[chapterNumber]/page.tsx',
+    'src/app/(public)/comics/[slug]/chapter/[chapterSlug]/page.tsx',
+    'src/app/(vault)/vault/page.tsx',
+    'src/app/(vault)/vault/history/page.tsx',
+    'src/app/(vault)/vault/saved/page.tsx',
+    'src/app/(vault)/vault/profile/page.tsx',
+  ];
+
+  for (const route of pageRoutes) {
+    assert.equal(existsSync(join(process.cwd(), route)), true, `${route} should exist`);
+  }
 });

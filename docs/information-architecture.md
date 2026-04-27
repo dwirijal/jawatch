@@ -11,7 +11,7 @@ It should be read together with:
 
 ## IA Summary
 
-Jawatch is currently organized around five top-level product zones:
+Jawatch is currently organized around five top-level product zones plus a supporting editorial zone:
 
 | Zone | Primary route | Purpose |
 | --- | --- | --- |
@@ -20,6 +20,7 @@ Jawatch is currently organized around five top-level product zones:
 | Read | `/read` | Browse entry for reading surfaces, currently comics |
 | Search | `/search` | Global title discovery surface |
 | Vault | `/vault` | Authenticated personal area for profile, history, and saved items |
+| Blog | `/blog` | Supporting SEO/editorial guides linked from footer discovery |
 
 Outside those zones, the app also includes:
 
@@ -40,10 +41,11 @@ These routes define the primary public product structure:
 | `/watch` | Watch hub |
 | `/watch/movies` | Movie browse lane |
 | `/watch/series` | Series browse lane |
-| `/watch/shorts` | Shorts browse lane, currently degraded to a fallback surface when source stability is limited |
+| `/watch/shorts` | Hidden browse lane while source stability is limited; direct visits fall back to `/watch` |
 | `/read` | Read hub |
 | `/read/comics` | Comics browse lane |
 | `/search` | Global search results page |
+| `/blog` | Editorial guide index for SEO and internal discovery |
 
 ### Public utility and trust routes
 

@@ -9,6 +9,7 @@ import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { StaticMediaCard } from '@/components/atoms/StaticMediaCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
+import { Breadcrumbs } from '@/components/molecules/Breadcrumbs';
 import { UnitCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
@@ -182,6 +183,16 @@ export default async function MovieDetailPage({ params }: PageProps) {
       />
       <HorizontalMediaDetailPage
         theme="movie"
+        breadcrumbs={
+          <Breadcrumbs
+            items={[
+              { label: 'Beranda', href: '/' },
+              { label: 'Nonton', href: '/watch' },
+              { label: 'Film', href: '/watch/movies' },
+              { label: movie.title },
+            ]}
+          />
+        }
         hero={
           <VideoDetailHero
             theme="movie"

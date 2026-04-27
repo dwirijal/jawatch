@@ -12,10 +12,11 @@ This document records the implemented public information architecture for Jawatc
 | `/watch` | Watch hub for movies, series, and shorts. |
 | `/watch/movies` | Movie browse, genre filters, latest/popular sections. |
 | `/watch/series` | Series browse for anime, donghua, and drama via `?type=` filters. |
-| `/watch/shorts` | Paused for now while source stability is fixed; direct visits fall back to `/watch`. |
+| `/watch/shorts` | Hidden while source stability is fixed; direct visits fall back to `/watch`. |
 | `/read` | Read hub. |
 | `/read/comics` | Comics browse for manga, manhwa, and manhua via `?type=` filters. |
 | `/search` | Global search surface, launched from navbar/command UI. |
+| `/blog` | Editorial SEO guide index linked from footer discovery. |
 | `/vault` | Saved/history/profile area with auth/onboarding gates. |
 
 ## Canonical Content Routes

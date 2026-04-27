@@ -8,6 +8,7 @@ import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
+import { Breadcrumbs } from '@/components/molecules/Breadcrumbs';
 import { TitleCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
 import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
@@ -212,6 +213,16 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
       />
       <HorizontalMediaDetailPage
         theme={theme}
+        breadcrumbs={
+          <Breadcrumbs
+            items={[
+              { label: 'Beranda', href: '/' },
+              { label: 'Nonton', href: '/watch' },
+              { label: 'Series', href: '/watch/series' },
+              { label: series.title },
+            ]}
+          />
+        }
         hero={
           <VideoDetailHero
             theme={theme}

@@ -21,11 +21,21 @@ const FOOTER_GROUPS = [
     ],
   },
   {
-    title: 'Akun',
+    title: 'Panduan',
     links: [
       { href: '/', label: 'Beranda' },
       { href: '/search', label: 'Cari' },
+      { href: '/blog', label: 'Blog' },
+      { href: '/blog/urutan-nonton-dr-stone', label: 'Urutan nonton' },
+      { href: '/blog/anime-mirip-frieren', label: 'Rekomendasi anime' },
+    ],
+  },
+  {
+    title: 'Akun',
+    links: [
       { href: '/vault', label: 'Koleksi' },
+      { href: '/vault/history', label: 'Riwayat' },
+      { href: '/vault/saved', label: 'Tersimpan' },
       { href: '/support', label: 'Dukung' },
       { href: '/login', label: 'Masuk' },
     ],
@@ -73,7 +83,7 @@ export function FooterContent() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-[var(--space-2xl)] sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-[var(--space-2xl)] sm:grid-cols-4">
             {FOOTER_GROUPS.map((group) => (
               <div key={group.title} className="space-y-4">
                 <h4 className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">{group.title}</h4>

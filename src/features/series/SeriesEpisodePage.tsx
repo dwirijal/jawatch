@@ -6,6 +6,7 @@ import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { Typography } from '@/components/atoms/Typography';
 import { MediaWatchExtras } from '@/components/organisms/MediaWatchExtras';
+import { Breadcrumbs } from '@/components/molecules/Breadcrumbs';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { WatchModeSurface } from '@/components/organisms/WatchModeSurface';
 import { SeriesWatchRail } from '@/components/organisms/WatchRails';
@@ -150,6 +151,17 @@ async function renderSeriesEpisodePageForRoute(route: EpisodeRouteInput) {
 
       <WatchModeSurface
         kind="series"
+        breadcrumbs={
+          <Breadcrumbs
+            items={[
+              { label: 'Beranda', href: '/' },
+              { label: 'Nonton', href: '/watch' },
+              { label: 'Series', href: '/watch/series' },
+              { label: episode.seriesTitle, href: episode.detailHref },
+              { label: episodeLabel },
+            ]}
+          />
+        }
         header={
           <div className="space-y-3 md:space-y-4">
             <div className="flex flex-wrap items-center gap-2">

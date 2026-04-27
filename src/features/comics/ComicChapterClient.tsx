@@ -10,6 +10,7 @@ import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
 import { UnitCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredReadingSettings } from '@/components/molecules/DeferredReadingSettings';
+import { Breadcrumbs } from '@/components/molecules/Breadcrumbs';
 import { ImageReaderScaffold } from '@/components/organisms/ImageReaderScaffold';
 import { useUIStore } from '@/store/useUIStore';
 import { buildComicChapterHref } from '@/lib/comic-chapter-paths';
@@ -146,6 +147,17 @@ export default function ComicChapterClient({ slug, chapterSlug, chapter, routeBa
       <ImageReaderScaffold
         backHref={`${routeBase}/${slug}`}
         title={chapter.manga_title || chapter.title}
+        breadcrumbs={
+          <Breadcrumbs
+            items={[
+              { label: 'Beranda', href: '/' },
+              { label: 'Baca', href: '/read' },
+              { label: 'Komik', href: '/read/comics' },
+              { label: chapter.manga_title || chapter.title, href: `${routeBase}/${slug}` },
+              { label: chapter.chapter_title || chapterSlug },
+            ]}
+          />
+        }
         subtitle={chapter.chapter_title || chapterSlug}
         leftAside={
           <div className="sticky top-24">

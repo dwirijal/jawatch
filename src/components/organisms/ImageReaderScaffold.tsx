@@ -6,6 +6,7 @@ import { Link } from '@/components/atoms/Link';
 interface ImageReaderScaffoldProps {
   backHref: string;
   title: string;
+  breadcrumbs?: React.ReactNode;
   subtitle?: React.ReactNode;
   headerActions?: React.ReactNode;
   leftAside?: React.ReactNode;
@@ -16,6 +17,7 @@ interface ImageReaderScaffoldProps {
 export function ImageReaderScaffold({
   backHref,
   title,
+  breadcrumbs,
   subtitle,
   headerActions,
   leftAside,
@@ -43,6 +45,7 @@ export function ImageReaderScaffold({
       </header>
 
       <main className="app-container-wide min-h-screen py-5 md:py-7">
+        {breadcrumbs ? <div className="mb-[var(--space-md)]">{breadcrumbs}</div> : null}
         <div className="grid grid-cols-1 gap-[var(--space-lg)] xl:grid-cols-[minmax(150px,190px)_minmax(0,1fr)_minmax(150px,190px)] xl:gap-6">
           <aside className="hidden xl:block">{leftAside}</aside>
           <div className="flex min-w-0 flex-col items-center">{children}</div>

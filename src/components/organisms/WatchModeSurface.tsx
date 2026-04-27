@@ -13,6 +13,7 @@ import { useUIStore } from '@/store/useUIStore';
 interface WatchModeSurfaceProps {
   kind: Exclude<WatchSurfaceKind, 'shorts'>;
   header: React.ReactNode;
+  breadcrumbs?: React.ReactNode;
   headerActions?: React.ReactNode;
   stage: React.ReactNode;
   body?: React.ReactNode;
@@ -22,6 +23,7 @@ interface WatchModeSurfaceProps {
 export function WatchModeSurface({
   kind,
   header,
+  breadcrumbs,
   headerActions,
   stage,
   body,
@@ -98,6 +100,7 @@ export function WatchModeSurface({
       data-watch-mode={layout.effectiveMode}
     >
       <div className="mx-auto flex w-[min(var(--layout-max-immersive),calc(100%-var(--layout-pad)*2))] flex-col gap-[var(--space-xl)] py-[var(--space-md)] md:gap-8 md:py-6">
+        {breadcrumbs}
         <section className="flex flex-col gap-[var(--space-md)] border-b border-border-subtle/80 pb-4 md:flex-row md:items-end md:justify-between md:gap-6">
           <div className="min-w-0 flex-1">{header}</div>
           <div className="flex flex-wrap items-center gap-[var(--space-xs)] md:justify-end">

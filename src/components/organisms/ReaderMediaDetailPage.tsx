@@ -5,6 +5,7 @@ import { ThemeType } from '@/lib/utils';
 interface ReaderMediaDetailPageProps {
   hero: React.ReactNode;
   children: React.ReactNode;
+  breadcrumbs?: React.ReactNode;
   sidebar?: React.ReactNode;
   footer?: React.ReactNode;
   theme: ThemeType;
@@ -15,6 +16,7 @@ interface ReaderMediaDetailPageProps {
 export function ReaderMediaDetailPage({
   hero,
   children,
+  breadcrumbs,
   sidebar,
   footer,
   theme,
@@ -24,6 +26,7 @@ export function ReaderMediaDetailPage({
   return (
     <DetailPageScaffold
       hero={hero}
+      breadcrumbs={breadcrumbs}
       sidebar={sidebar}
       footer={footer}
       theme={theme}

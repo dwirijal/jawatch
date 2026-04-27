@@ -97,7 +97,10 @@ const VAULT_GROUP: NavigationGroup = {
   description: 'Simpanan, riwayat, dan area akun.',
   isActive: createGroupPathMatcher(VAULT_PATH_ALIASES),
   items: [
-    { label: 'Koleksi', href: '/vault', description: 'Buka simpanan dan riwayat kamu.' },
+    { label: 'Ringkasan', href: '/vault', description: 'Lihat aktivitas watch dan read kamu.' },
+    { label: 'Riwayat', href: '/vault/history', description: 'Lanjutkan tontonan dan bacaan terakhir.' },
+    { label: 'Tersimpan', href: '/vault/saved', description: 'Buka judul yang sudah kamu simpan.' },
+    { label: 'Profil', href: '/vault/profile', description: 'Kelola identitas dan preferensi.' },
   ],
 };
 
@@ -131,10 +134,8 @@ export const DESKTOP_NAV_ITEMS: NavigationPrimaryItem[] = [
   },
   {
     key: 'vault',
-    type: 'link',
-    label: 'Koleksi',
-    href: '/vault',
-    icon: BookMarked,
+    type: 'group',
+    group: VAULT_GROUP,
     match: (pathname) => startsWithAnyPath(pathname, ['/vault']),
   },
 ];
