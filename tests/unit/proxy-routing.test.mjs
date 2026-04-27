@@ -51,6 +51,13 @@ test('legacy alias redirects rescue removed public routes before 404 handling', 
   assert.equal(getLegacyRedirectPath('/comic/magic-emperor'), '/read/comics');
 });
 
+test('legacy non-numbered series episode redirects to implemented special episode route', () => {
+  assert.equal(
+    getLegacyRedirectPath('/series/blue-lock/episodes/blue-lock-episode-nagi'),
+    '/series/blue-lock/special/episode-nagi',
+  );
+});
+
 test('legacy redirect URL builder preserves request origin and query', () => {
   const url = 'https://jawatch.web.id/comics/eleceed/eleceed-chapter-347?utm_source=ahrefs';
   assert.equal(

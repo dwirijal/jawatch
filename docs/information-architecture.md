@@ -1,6 +1,6 @@
 # Jawatch Information Architecture
 
-Last updated: 2026-04-26
+Last updated: 2026-04-27
 
 This document describes the information architecture that is implemented in the current Jawatch codebase. It is an implementation-state reference, not a future-state product spec.
 

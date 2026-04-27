@@ -1,6 +1,6 @@
 # Jawatch IA Route Map
 
-Last updated: 2026-04-17
+Last updated: 2026-04-27
 
 This document records the implemented public information architecture for Jawatch. It follows `docs/superpowers/specs/2026-04-15-jawatch-ia-design.md` and keeps browse surfaces separate from canonical title/player/reader routes.
 
@@ -53,8 +53,8 @@ These folders/routes are intentionally removed instead of redirected:
 | `/series/year/[year]` | `/watch/series` with canonical filters |
 | `/series/watch/[slug]` | `/series/[slug]/ep/[number]` or `/series/[slug]/special/[episodeSlug]` |
 | `/series/short/*` | `/watch/shorts`, `/shorts/[slug]`, `/shorts/[slug]/episodes/[episodeSlug]` |
-| `/drachin/*` | `/watch/shorts` and `/shorts/*` |
-| `/dramabox/*` | `/watch/shorts` and `/shorts/*` |
+| `/drachin/*` | `/watch` for hub-level traffic while shorts are paused; `/shorts/*` for canonical legacy episodes |
+| `/dramabox/*` | `/watch` for hub-level traffic while shorts are paused; `/shorts/*` for canonical legacy episodes |
 | `/comic/*` | `/read/comics` and `/comics/*` |
 | `/collection/*` | `/vault/*` |
 | `/novel/*` | Not part of the current IA |

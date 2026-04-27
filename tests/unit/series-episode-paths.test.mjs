@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 import {
   buildSeriesEpisodeHref,
@@ -28,6 +30,13 @@ test('buildSeriesEpisodeHref uses /special/[slug] for non-numbered episodes', ()
       number: null,
     }),
     '/series/blue-lock/special/episode-nagi',
+  );
+});
+
+test('special episode route is implemented in the Next app tree', () => {
+  assert.equal(
+    existsSync(join(process.cwd(), 'src/app/(public)/series/[slug]/special/[episodeSlug]/page.tsx')),
+    true,
   );
 });
 
