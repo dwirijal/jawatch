@@ -189,6 +189,8 @@ Jawatch memakai scale spacing yang relatif ringkas, lalu memetakannya ke band se
 | `size.control-lg` | `3rem` | same | same | `--size-control-lg` | hero CTA |
 | `size.touch` | `2.75rem` | same | same | `--size-touch` | minimum touch target |
 | `size.icon-sm/md/lg` | `1rem / 1.25rem / 1.5rem` | same | same | `--size-icon-*` | icon-only buttons |
+| `size.avatar-sm/md/lg` | `1.25rem / 2.25rem / 3rem` | same | same | `--size-avatar-*` | account and identity avatars |
+| `size.switch-track/thumb` | `2rem / 0.75rem` | same | same | `--size-switch-*` | compact binary toggles |
 
 **Source References**
 
@@ -196,6 +198,7 @@ Jawatch memakai scale spacing yang relatif ringkas, lalu memetakannya ke band se
 - [Button.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/atoms/Button.tsx:17)
 - [Input.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/atoms/Input.tsx:16)
 - [Paper.tsx](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/src/components/atoms/Paper.tsx:31)
+- [design token contract test](/home/dwizzy/workspace/projects/dwizzyOS/jawatch/tests/unit/design-token-palette-contract.test.mjs:344) guards shared components from raw UI primitives
 
 **Real Use Cases**
 

@@ -56,42 +56,42 @@ export function VerticalShortsPager({ shorts, onNext, hasNext }: VerticalShortsP
           </div>
 
           {/* TikTok-style right-side overlays */}
-          <div className="absolute right-4 bottom-32 z-50 flex flex-col items-center gap-6">
-            <div className="flex flex-col items-center gap-1">
+          <div className="absolute right-4 bottom-32 z-50 flex flex-col items-center gap-[var(--space-xl)]">
+            <div className="flex flex-col items-center gap-[var(--space-2xs)]">
               <div className="relative">
-                <div className="h-12 w-12 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 shadow-xl">
+                <div className="h-[var(--size-control-lg)] w-[var(--size-control-lg)] rounded-full bg-surface-2 border border-border-strong flex items-center justify-center text-muted-foreground shadow-xl">
                   <User className="w-6 h-6" />
                 </div>
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-rose-600 rounded-full p-0.5 border-2 border-black">
-                  <ChevronDown className="w-3 h-3 text-white" />
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[var(--signal-danger)] rounded-full p-0.5 border-2 border-black">
+                  <ChevronDown className="w-3 h-3 text-[var(--accent-contrast)]" />
                 </div>
               </div>
             </div>
 
-            <button className="flex flex-col items-center gap-1 text-white drop-shadow-lg">
-              <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-black/60 transition-colors">
+            <button className="flex flex-col items-center gap-[var(--space-2xs)] text-[var(--accent-contrast)] drop-shadow-lg">
+              <div className="h-[var(--size-control-lg)] w-[var(--size-control-lg)] rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-black/60 transition-colors">
                 <Share2 className="w-6 h-6" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-tighter">Share</span>
+              <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-normal)]">Share</span>
             </button>
 
-            <Link href={`/series/${short.slug}`} className="flex flex-col items-center gap-1 text-white drop-shadow-lg">
-              <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-black/60 transition-colors">
+            <Link href={`/series/${short.slug}`} className="flex flex-col items-center gap-[var(--space-2xs)] text-[var(--accent-contrast)] drop-shadow-lg">
+              <div className="h-[var(--size-control-lg)] w-[var(--size-control-lg)] rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-black/60 transition-colors">
                 <LinkIcon className="w-6 h-6" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-tighter">Series</span>
+              <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-normal)]">Series</span>
             </Link>
           </div>
 
           {/* Bottom info overlay */}
-          <div className="absolute bottom-10 left-4 right-20 z-50 text-white pointer-events-none">
-            <div className="flex items-center gap-2 mb-2">
-               <span className="bg-rose-600 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">Short</span>
-               <span className="text-zinc-400 text-xs font-medium">#{index + 1} in Feed</span>
+          <div className="absolute bottom-10 left-4 right-20 z-50 text-[var(--accent-contrast)] pointer-events-none">
+            <div className="flex items-center gap-[var(--space-xs)] mb-2">
+               <span className="bg-[var(--signal-danger)] text-[var(--type-size-xs)] font-black px-[var(--space-xs)] py-0.5 rounded uppercase tracking-[var(--type-tracking-kicker)]">Short</span>
+               <span className="text-muted-foreground text-xs font-medium">#{index + 1} in Feed</span>
             </div>
             <h3 className="font-black text-xl leading-tight drop-shadow-2xl">@{short.title}</h3>
             {short.subtitle && (
-              <p className="text-sm text-zinc-200 mt-2 line-clamp-2 drop-shadow-lg max-w-[80%] font-medium opacity-90">{short.subtitle}</p>
+              <p className="text-sm text-foreground/90 mt-2 line-clamp-2 drop-shadow-lg max-w-[80%] font-medium opacity-90">{short.subtitle}</p>
             )}
           </div>
 

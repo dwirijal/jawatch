@@ -32,7 +32,7 @@ export function DesktopNavGroup({ active, group, pathname }: DesktopNavGroupProp
             aria-expanded={open}
             aria-haspopup="menu"
             className={cn(
-              'focus-tv relative flex items-center gap-2 rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] transition-colors outline-none',
+              'focus-tv relative flex items-center gap-[var(--space-xs)] rounded-full px-[var(--space-sm)] py-[var(--space-xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] transition-colors outline-none',
               active || open
                 ? 'text-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -48,16 +48,16 @@ export function DesktopNavGroup({ active, group, pathname }: DesktopNavGroupProp
         <PopperContent
           align="start"
           sideOffset={14}
-          className="z-[220] w-[22rem] rounded-[var(--radius-xl)] border border-border-subtle bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-elevated)_94%,white_6%)_0%,var(--surface-1)_100%)] p-2 shadow-[0_36px_92px_-52px_var(--shadow-color-strong)] backdrop-blur-2xl"
+          className="z-[220] w-[22rem] rounded-[var(--radius-xl)] border border-border-subtle bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-elevated)_94%,white_6%)_0%,var(--surface-1)_100%)] p-[var(--space-xs)] shadow-[0_36px_92px_-52px_var(--shadow-color-strong)] backdrop-blur-2xl"
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <div role="menu" aria-label={group.label}>
-            <div className="border-b border-border-subtle px-3 py-3">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-foreground">{group.label}</p>
+            <div className="border-b border-border-subtle px-[var(--space-sm)] py-[var(--space-sm)]">
+              <p className="text-xs font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">{group.label}</p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">{group.description}</p>
             </div>
 
-            <div className="space-y-1 p-1">
+            <div className="space-y-1 p-[var(--space-2xs)]">
               {group.items.map((item) => {
                 const itemActive = item.href === activeHref;
 
@@ -66,11 +66,11 @@ export function DesktopNavGroup({ active, group, pathname }: DesktopNavGroupProp
                     <div
                       key={item.label}
                       role="presentation"
-                      className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-3 py-3 opacity-70"
+                      className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-[var(--space-sm)] py-[var(--space-sm)] opacity-70"
                     >
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">{item.label}</p>
-                        <span className="rounded-full border border-border-subtle px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+                      <div className="flex items-center justify-between gap-[var(--space-sm)]">
+                        <p className="text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">{item.label}</p>
+                        <span className="rounded-full border border-border-subtle px-[var(--space-xs)] py-0.5 text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">
                           Soon
                         </span>
                       </div>
@@ -85,15 +85,15 @@ export function DesktopNavGroup({ active, group, pathname }: DesktopNavGroupProp
                     href={item.href}
                     role="menuitem"
                     className={cn(
-                      'block rounded-[var(--radius-sm)] border px-3 py-3 transition-colors outline-none',
+                      'block rounded-[var(--radius-sm)] border px-[var(--space-sm)] py-[var(--space-sm)] transition-colors outline-none',
                       itemActive
                         ? 'border-border-subtle bg-surface-1'
                         : 'border-transparent hover:border-border-subtle hover:bg-surface-1 focus:border-border-subtle focus:bg-surface-1'
                     )}
                     onClick={() => setOpen(false)}
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">{item.label}</p>
+                    <div className="flex items-center justify-between gap-[var(--space-sm)]">
+                      <p className="text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">{item.label}</p>
                       {itemActive ? (
                         <span className="flex h-5 w-5 items-center justify-center rounded-full border border-border-subtle bg-foreground text-background">
                           <Check className="h-3 w-3" />

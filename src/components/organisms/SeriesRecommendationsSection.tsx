@@ -49,7 +49,7 @@ export async function SeriesRecommendationsSection({
         theme={theme}
         aside={<Badge variant="outline">{recommendations.length} Judul Menantimu</Badge>}
       />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-[var(--space-md)] sm:grid-cols-2 xl:grid-cols-4">
         {recommendations.map((item) => (
           <Link key={item.slug} href={`/series/${item.slug}`} prefetch={false} className="group block h-full">
             <Paper tone="muted" shadow="sm" padded={false} className="h-full overflow-hidden transition-transform duration-300 group-hover:-translate-y-1">
@@ -67,9 +67,9 @@ export async function SeriesRecommendationsSection({
                 <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent" />
               </div>
 
-              <div className="space-y-2 p-4">
-                <h3 className="line-clamp-2 text-sm font-bold text-white">{item.title}</h3>
-                <p className="line-clamp-2 text-xs leading-5 text-zinc-400">{formatSeriesCardSubtitle(item)}</p>
+              <div className="space-y-2 p-[var(--space-md)]">
+                <h3 className="line-clamp-2 text-sm font-bold text-[var(--accent-contrast)]">{item.title}</h3>
+                <p className="line-clamp-2 text-xs leading-5 text-muted-foreground">{formatSeriesCardSubtitle(item)}</p>
               </div>
             </Paper>
           </Link>

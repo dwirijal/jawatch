@@ -28,8 +28,8 @@ export function ThemeToggle({ className, compact = false }: ThemeToggleProps) {
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-1 p-1 text-muted-foreground shadow-[0_18px_36px_-28px_rgba(12,10,9,0.38)] backdrop-blur-xl',
-        compact && 'gap-1 p-[3px]',
+        'inline-flex items-center gap-[var(--space-2xs)] rounded-full border border-border-subtle bg-surface-1 p-[var(--space-2xs)] text-muted-foreground shadow-[0_18px_36px_-28px_var(--shadow-color)] backdrop-blur-xl',
+        compact && 'p-[calc(var(--space-2xs)*0.75)]',
         className,
       )}
       role="group"
@@ -49,17 +49,17 @@ export function ThemeToggle({ className, compact = false }: ThemeToggleProps) {
             title={option.label}
             onClick={() => setPreference(option.value)}
             className={cn(
-              'focus-tv inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all duration-300 active:scale-95',
-              compact ? 'h-9 min-w-9 justify-center px-2.5' : 'h-10',
+              'focus-tv inline-flex cursor-pointer items-center gap-[var(--space-xs)] rounded-full border px-[var(--space-sm)] py-[var(--space-xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] transition-all duration-300 active:scale-95',
+              compact ? 'h-[var(--size-control-sm)] min-w-[var(--size-control-sm)] justify-center px-[calc(var(--space-xs)+var(--space-2xs))]' : 'h-[calc(var(--size-control-md)-var(--space-2xs))]',
               active
-                ? 'border-transparent bg-foreground text-background shadow-[0_12px_24px_-10px_rgba(12,10,9,0.8)] scale-100'
+                ? 'scale-100 border-transparent bg-foreground text-background shadow-[0_12px_24px_-10px_var(--shadow-color-strong)]'
                 : 'border-transparent bg-transparent text-muted-foreground hover:scale-105 hover:border-border-subtle hover:bg-surface-elevated hover:text-foreground hover:shadow-sm',
             )}
           >
             <Icon className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
             {!compact ? <span>{option.value}</span> : null}
             {!compact && showResolved ? (
-              <span className="rounded-full border border-current/16 px-2 py-0.5 text-[10px] opacity-75">
+              <span className="rounded-full border border-current/16 px-[var(--space-xs)] py-[calc(var(--space-2xs)/2)] text-[var(--type-size-xs)] opacity-75">
                 {resolved}
               </span>
             ) : null}

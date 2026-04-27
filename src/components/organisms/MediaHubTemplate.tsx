@@ -137,7 +137,7 @@ export function MediaHubTemplate({
                     variant="link"
                     size="sm"
                     onClick={onClearResults}
-                    className="focus-tv shrink-0 text-xs font-semibold tracking-[0.02em] text-zinc-500 hover:text-white"
+                    className="focus-tv shrink-0 text-xs font-semibold tracking-[var(--type-tracking-normal)] text-muted-foreground hover:text-[var(--accent-contrast)]"
                   >
                     Hapus filter
                   </Button>

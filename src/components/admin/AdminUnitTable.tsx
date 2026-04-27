@@ -8,13 +8,13 @@ const unitRows = [
 export function AdminUnitTable() {
   return (
     <Paper tone="muted" shadow="sm" className="overflow-hidden">
-      <div className="border-b border-border-subtle p-5">
+      <div className="border-b border-border-subtle p-[var(--space-lg)]">
         <h2 className="text-xl font-black">Units</h2>
-        <p className="text-sm text-zinc-400">Inspect readiness, parent title context, unit state, and light moderation signals.</p>
+        <p className="text-sm text-muted-foreground">Inspect readiness, parent title context, unit state, and light moderation signals.</p>
       </div>
       <div className="divide-y divide-border-subtle">
         {unitRows.map((row) => (
-          <div key={row.unit} className="grid gap-3 p-5 text-sm md:grid-cols-4">
+          <div key={row.unit} className="grid gap-[var(--space-sm)] p-[var(--space-lg)] text-sm md:grid-cols-4">
             <strong>{row.unit}</strong>
             <span>{row.state}</span>
             <span>{row.parent}</span>

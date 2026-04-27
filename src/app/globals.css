@@ -165,10 +165,15 @@
   --size-icon-sm: 1rem;
   --size-icon-md: 1.25rem;
   --size-icon-lg: 1.5rem;
+  --size-avatar-sm: 1.25rem;
+  --size-avatar-md: 2.25rem;
+  --size-avatar-lg: 3rem;
   --size-control-sm: 2.25rem;
   --size-control-md: 2.75rem;
   --size-control-lg: 3rem;
   --size-touch: 2.75rem;
+  --size-switch-track: 2rem;
+  --size-switch-thumb: 0.75rem;
   --size-poster-sm: 5.5rem;
   --size-poster-md: 8rem;
   --size-panel-sm: 20rem;

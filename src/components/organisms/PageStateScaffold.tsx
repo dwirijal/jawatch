@@ -6,7 +6,7 @@ interface PageStateScaffoldProps {
 
 export function PageStateScaffold({ children }: PageStateScaffoldProps) {
   return (
-    <div className="app-shell bg-background text-white">
+    <div className="app-shell bg-background text-[var(--accent-contrast)]">
       <main className="app-container-immersive py-6">{children}</main>
     </div>
   );

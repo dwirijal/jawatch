@@ -47,7 +47,7 @@ export function FooterContent() {
       <div className="app-container-wide flex flex-col gap-10">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.6fr)] lg:items-start">
           <div className="space-y-5">
-            <Link href="/" className="group inline-flex items-center gap-3">
+            <Link href="/" className="group inline-flex items-center gap-[var(--space-sm)]">
               <span className="font-[var(--font-heading)] text-3xl font-bold tracking-[-0.06em] text-foreground">
                 Ja<span className="text-[var(--accent-strong)]">watch</span>
               </span>
@@ -55,28 +55,28 @@ export function FooterContent() {
             <p className="max-w-md text-sm leading-7 text-muted-foreground">
               Katalog nonton dan baca untuk anime, donghua, drama Asia, film, manga, manhwa, dan manhua bahasa Indonesia.
             </p>
-            <div className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-accent-soft px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-foreground">
+            <div className="inline-flex items-center gap-[var(--space-xs)] rounded-full border border-border-subtle bg-accent-soft px-[var(--space-md)] py-[var(--space-xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">
               <span className="h-2 w-2 rounded-full bg-[var(--accent)]" />
               Watch dan read dalam satu katalog
             </div>
-            <div className="rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2 p-4">
+            <div className="rounded-[var(--radius-lg)] border border-border-subtle bg-surface-2 p-[var(--space-md)]">
               <p className="text-sm font-bold text-foreground">{supportCta.title}</p>
               <p className="mt-2 text-xs leading-6 text-muted-foreground">{supportCta.description}</p>
               <TrackedMarketingLink
                 href={supportCta.href}
                 eventName="support_click"
                 eventProperties={{ placement: 'footer-support-card', title: supportCta.title }}
-                className="mt-4 inline-flex cursor-pointer items-center rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-black transition-colors hover:bg-[var(--accent-strong)]"
+                className="mt-4 inline-flex cursor-pointer items-center rounded-full border border-[var(--accent)] bg-[var(--accent)] px-[var(--space-md)] py-[var(--space-xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground transition-colors hover:bg-[var(--accent-strong)]"
               >
                 {supportCta.label}
               </TrackedMarketingLink>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-[var(--space-2xl)] sm:grid-cols-3">
             {FOOTER_GROUPS.map((group) => (
               <div key={group.title} className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">{group.title}</h4>
+                <h4 className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">{group.title}</h4>
                 <ul className="space-y-3 text-sm text-muted-foreground">
                   {group.links.map((item) => (
                     <li key={`${group.title}-${item.href}`}>
@@ -91,19 +91,19 @@ export function FooterContent() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-border-subtle pt-6 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-[var(--space-md)] border-t border-border-subtle pt-6 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             {LEGAL_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
+                className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground transition-colors hover:text-foreground"
               >
                 {item.label}
               </Link>
             ))}
           </div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+          <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">
             &copy; {new Date().getFullYear()} jawatch. Dibangun untuk sesi nonton dan baca yang nyaman.
           </p>
         </div>

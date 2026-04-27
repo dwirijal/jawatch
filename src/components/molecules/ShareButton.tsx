@@ -54,7 +54,7 @@ export function ShareButton({ title, mediaType = 'media', theme = 'default', cla
       name: 'WhatsApp',
       icon: MessageCircle,
       href: `https://wa.me/?text=${encodeURIComponent(`${shareText} ${resolvedShareUrl}`)}`,
-      color: 'text-green-500 hover:bg-green-500/10'
+      color: 'text-[var(--signal-success)] hover:bg-green-500/10'
     },
     {
       name: 'X / Twitter',
@@ -76,10 +76,10 @@ export function ShareButton({ title, mediaType = 'media', theme = 'default', cla
         <Button 
           variant="outline" 
           size="icon" 
-          className={cn("h-11 w-11 rounded-2xl border-zinc-800 hover:bg-white/5 transition-all", className)}
+          className={cn("h-[var(--size-control-md)] w-[var(--size-control-md)] rounded-2xl border-border-subtle hover:bg-white/5 transition-all", className)}
           aria-label="Bagikan konten"
         >
-          <Share2 className="w-5 h-5 text-zinc-400" />
+          <Share2 className="w-5 h-5 text-muted-foreground" />
         </Button>
       </PopperTrigger>
       
@@ -88,15 +88,15 @@ export function ShareButton({ title, mediaType = 'media', theme = 'default', cla
         className="w-64"
         contentClassName="space-y-4"
       >
-          <h4 className="px-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Bagikan konten ini</h4>
+          <h4 className="px-[var(--space-xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">Bagikan konten ini</h4>
 
           {canUseNativeShare ? (
             <button
               type="button"
               onClick={onNativeShare}
-              className="flex w-full cursor-pointer items-center gap-3 rounded-2xl p-3 text-sm font-bold text-zinc-200 transition-all hover:bg-white/10"
+              className="flex w-full cursor-pointer items-center gap-[var(--space-sm)] rounded-2xl p-[var(--space-sm)] text-sm font-bold text-foreground/90 transition-all hover:bg-white/10"
             >
-              <Share2 className="h-4 w-4 text-zinc-500" />
+              <Share2 className="h-4 w-4 text-muted-foreground" />
               Bagikan via perangkat
             </button>
           ) : null}
@@ -110,7 +110,7 @@ export function ShareButton({ title, mediaType = 'media', theme = 'default', cla
                 rel="noopener noreferrer"
                 onClick={() => trackMarketingEvent('share_social', { title, mediaType, network: link.name })}
                 className={cn(
-                  'flex cursor-pointer items-center gap-3 rounded-2xl p-3 text-sm font-bold transition-all',
+                  'flex cursor-pointer items-center gap-[var(--space-sm)] rounded-2xl p-[var(--space-sm)] text-sm font-bold transition-all',
                   link.color
                 )}
               >
@@ -120,16 +120,16 @@ export function ShareButton({ title, mediaType = 'media', theme = 'default', cla
             ))}
           </div>
 
-          <div className="mx-2 h-px bg-zinc-900" />
+          <div className="mx-2 h-px bg-surface-1" />
 
           <button
             type="button"
             onClick={onCopy}
-            className="group flex w-full cursor-pointer items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900 p-3 transition-all hover:bg-zinc-800"
+            className="group flex w-full cursor-pointer items-center justify-between rounded-2xl border border-border-subtle bg-surface-1 p-[var(--space-sm)] transition-all hover:bg-surface-2"
           >
-            <div className="flex items-center gap-3">
-              {copied ? <Check className="w-4 h-4 text-green-500" /> : <LinkIcon className="w-4 h-4 text-zinc-500" />}
-              <span className={cn('text-sm font-bold', copied ? 'text-green-500' : 'text-zinc-300')}>
+            <div className="flex items-center gap-[var(--space-sm)]">
+              {copied ? <Check className="w-4 h-4 text-[var(--signal-success)]" /> : <LinkIcon className="w-4 h-4 text-muted-foreground" />}
+              <span className={cn('text-sm font-bold', copied ? 'text-[var(--signal-success)]' : 'text-foreground/80')}>
                 {copied ? 'Link disalin' : 'Salin link'}
               </span>
             </div>

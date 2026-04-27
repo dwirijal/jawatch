@@ -198,20 +198,20 @@ export default function MediaDownloadOptionsPanel({
   }
 
   return (
-    <Paper id={id} as="article" tone="muted" shadow="sm" className="space-y-4 p-4 md:space-y-5 md:p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <Paper id={id} as="article" tone="muted" shadow="sm" className="space-y-4 p-[var(--space-md)] md:space-y-5 md:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-[var(--space-sm)]">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Unduhan</p>
-          <h2 className="mt-1.5 text-lg font-black tracking-tight text-foreground md:text-xl">Pilihan download</h2>
+          <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">Unduhan</p>
+          <h2 className="mt-1.5 text-lg font-black tracking-[var(--type-tracking-normal)] text-foreground md:text-xl">Pilihan download</h2>
         </div>
         <Badge variant="outline">{normalizedGroups.length} tersedia</Badge>
       </div>
 
       <div className="space-y-3.5">
         <div className="space-y-2.5">
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Kualitas</p>
-          <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex w-max items-center gap-1.5 pb-1">
+          <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">Kualitas</p>
+          <div className="-mx-4 overflow-x-auto px-[var(--space-md)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex w-max items-center gap-[calc(var(--space-2xs)*1.5)] pb-1">
               {qualityOptions.map((quality) => {
                 const isActive = quality === activeQuality;
 
@@ -221,7 +221,7 @@ export default function MediaDownloadOptionsPanel({
                     type="button"
                     onClick={() => setActiveQuality(quality)}
                     className={cn(
-                      'shrink-0 rounded-[var(--radius-sm)] border px-3.5 py-2.5 text-[11px] font-black uppercase tracking-[0.18em] transition',
+                      'shrink-0 rounded-[var(--radius-sm)] border px-[calc(var(--space-sm)+var(--space-2xs))] py-[calc(var(--space-xs)+var(--space-2xs))] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] transition',
                       isActive ? QUALITY_ACCENT_CLASS[accent] : 'border-border-subtle bg-surface-2 text-muted-foreground hover:bg-surface-elevated hover:text-foreground'
                     )}
                   >
@@ -233,7 +233,7 @@ export default function MediaDownloadOptionsPanel({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-[calc(var(--space-xs)+var(--space-2xs))] xl:grid-cols-2">
           {activeGroups.map((group) => {
             const tone = getFormatTone(group.format);
 
@@ -243,31 +243,31 @@ export default function MediaDownloadOptionsPanel({
               as="section"
               tone="outline"
               padded={false}
-              className={cn('p-3.5 md:p-4', tone.card)}
+              className={cn('p-[calc(var(--space-sm)+var(--space-2xs))] md:p-4', tone.card)}
             >
-                <div className="mb-3.5 flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] bg-black/20 text-foreground">
+                <div className="mb-3.5 flex items-start justify-between gap-[var(--space-sm)]">
+                  <div className="flex items-center gap-[var(--space-sm)]">
+                    <div className="flex h-[var(--size-control-sm)] w-[var(--size-control-sm)] items-center justify-center rounded-[var(--radius-sm)] bg-surface-1/20 text-foreground">
                       <Download className="h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">Metode</p>
-                      <p className="mt-1 text-sm font-black tracking-[0.08em] text-foreground">{group.format}</p>
+                      <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">Metode</p>
+                      <p className="mt-1 text-sm font-black tracking-[var(--type-tracking-normal)] text-foreground">{group.format}</p>
                     </div>
                   </div>
 
-                  <span className={cn('rounded-[var(--radius-sm)] border px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.18em]', tone.label)}>
+                  <span className={cn('rounded-[var(--radius-sm)] border px-[calc(var(--space-xs)+var(--space-2xs))] py-1.5 text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)]', tone.label)}>
                     Metode
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-[calc(var(--space-2xs)*1.5)]">
                   {group.links.map((link) => (
                     <Button
                       key={`${group.format}-${group.quality}-${link.label}-${link.href}`}
                       variant="outline"
                       size="sm"
-                      className={cn('h-9 rounded-[var(--radius-sm)] px-4', tone.button)}
+                      className={cn('h-[var(--size-control-sm)] rounded-[var(--radius-sm)] px-[var(--space-md)]', tone.button)}
                       asChild
                     >
                       <a href={link.href} target="_blank" rel="noopener noreferrer">

@@ -27,20 +27,20 @@ type WatchPlayerTheme = Extract<ThemeType, 'anime' | 'donghua' | 'movie' | 'dram
 
 const THEME_ACCENT = {
   anime: {
-    spinner: 'border-blue-600',
-    panel: 'bg-blue-600/15 text-blue-300',
+    spinner: 'border-[color:var(--theme-anime-fill)]',
+    panel: 'bg-[var(--theme-anime-surface)] text-[var(--theme-anime-text)]',
   },
   donghua: {
-    spinner: 'border-red-600',
-    panel: 'bg-red-600/15 text-red-300',
+    spinner: 'border-[color:var(--theme-donghua-fill)]',
+    panel: 'bg-[var(--theme-donghua-surface)] text-[var(--theme-donghua-text)]',
   },
   movie: {
-    spinner: 'border-indigo-600',
-    panel: 'bg-indigo-600/15 text-indigo-300',
+    spinner: 'border-[color:var(--theme-movie-fill)]',
+    panel: 'bg-[var(--theme-movie-surface)] text-[var(--theme-movie-text)]',
   },
   drama: {
-    spinner: 'border-rose-600',
-    panel: 'bg-rose-600/15 text-rose-300',
+    spinner: 'border-[color:var(--theme-drama-fill)]',
+    panel: 'bg-[var(--theme-drama-surface)] text-[var(--theme-drama-text)]',
   },
 } as const;
 
@@ -128,17 +128,17 @@ export function VideoPlayer({
       )}
     >
       {isLightsDimmed && !isTheaterMode ? (
-        <div className="fixed inset-0 z-[140] animate-in fade-in bg-black/95 duration-500" onClick={toggleLights} />
+        <div className="fixed inset-0 z-[140] animate-in fade-in bg-surface-1/95 duration-500" onClick={toggleLights} />
       ) : null}
 
       {!isTheaterMode ? (
         <div
           className={cn(
             'absolute inset-0 z-0 opacity-20 blur-[120px] transition-all duration-1000',
-            theme === 'anime' && 'bg-blue-600',
-            theme === 'donghua' && 'bg-red-600',
-            theme === 'movie' && 'bg-indigo-600',
-            theme === 'drama' && 'bg-rose-600',
+            theme === 'anime' && 'bg-[var(--theme-anime-fill)]',
+            theme === 'donghua' && 'bg-[var(--theme-donghua-fill)]',
+            theme === 'movie' && 'bg-[var(--theme-movie-fill)]',
+            theme === 'drama' && 'bg-[var(--theme-drama-fill)]',
           )}
           style={{ transform: 'scale(1.1)' }}
         />
@@ -148,8 +148,8 @@ export function VideoPlayer({
         className={cn(
           'group relative z-10 overflow-hidden border border-border-subtle bg-surface-2 hard-shadow-md transition-all duration-700',
           frameClassName,
-          isTheaterMode && format === 'landscape' && 'border-white/15 shadow-[0_30px_120px_rgba(0,0,0,0.28)]',
-          isLightsDimmed && !isTheaterMode && 'ring-4 ring-zinc-100/10',
+          isTheaterMode && format === 'landscape' && 'border-white/15 shadow-[0_30px_120px_color-mix(in_srgb,var(--shadow-color-strong)_48%,transparent)]',
+          isLightsDimmed && !isTheaterMode && 'ring-4 ring-foreground/10',
         )}
       >
         <VideoPlayerFrame
@@ -169,7 +169,7 @@ export function VideoPlayer({
         >
           <div
             className={cn(
-              'flex items-center gap-2 rounded-full border border-white/10 bg-black/55 px-2 py-2 shadow-[0_24px_60px_-36px_rgba(0,0,0,0.8)] backdrop-blur-xl transition-opacity duration-300',
+              'flex items-center gap-[var(--space-xs)] rounded-full border border-white/10 bg-surface-1/55 px-[var(--space-xs)] py-[var(--space-xs)] shadow-[0_24px_60px_-36px_rgba(0,0,0,0.8)] backdrop-blur-xl transition-opacity duration-300',
               isTheaterMode
                 ? 'pointer-events-auto opacity-100'
                 : 'pointer-events-auto opacity-100 lg:pointer-events-none lg:opacity-0 lg:group-hover:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:pointer-events-auto lg:group-focus-within:opacity-100',

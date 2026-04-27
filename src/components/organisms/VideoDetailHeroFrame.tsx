@@ -73,12 +73,12 @@ export function VideoDetailHeroFrame({
         <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/20 to-black/80" />
       </div>
 
-      <div className="relative z-10 flex h-full flex-col px-5 py-5 md:px-7 md:py-7">
+      <div className="relative z-10 flex h-full flex-col px-[var(--space-lg)] py-5 md:px-7 md:py-7">
         <nav className="mb-4 shrink-0 md:mb-6">
           <Button
             variant="outline"
             asChild
-            className="h-11 rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 px-4 text-[11px] uppercase tracking-[0.18em] hover:bg-surface-elevated"
+            className="h-[var(--size-control-md)] rounded-[var(--radius-lg)] border-border-subtle bg-surface-1 px-[var(--space-md)] text-[var(--type-size-xs)] uppercase tracking-[var(--type-tracking-kicker)] hover:bg-surface-elevated"
           >
             <Link href={backHref}>
               <ChevronLeft className="h-4 w-4" /> {backLabel}
@@ -86,11 +86,11 @@ export function VideoDetailHeroFrame({
           </Button>
         </nav>
 
-        <div className="grid min-h-0 flex-1 gap-4 lg:grid-rows-[minmax(0,1fr)_auto] lg:gap-5">
-          <div className="flex min-h-0 flex-col-reverse gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-6">
+        <div className="grid min-h-0 flex-1 gap-[var(--space-md)] lg:grid-rows-[minmax(0,1fr)_auto] lg:gap-5">
+          <div className="flex min-h-0 flex-col-reverse gap-[var(--space-lg)] lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-6">
             <div className="min-w-0 self-start space-y-4 lg:self-end lg:space-y-5">
-              <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col gap-[var(--space-sm)] xl:flex-row xl:items-start xl:justify-between">
+                <div className="flex flex-wrap gap-[var(--space-xs)]">
                   {badges.map((badge) => (
                     <Badge key={badge} variant={theme}>
                       {badge}
@@ -111,7 +111,7 @@ export function VideoDetailHeroFrame({
                 className="max-w-3xl space-y-2.5 md:space-y-3"
               />
 
-              <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-[calc(var(--space-xs)+var(--space-2xs))]">
                 {primaryAction}
                 {secondaryAction}
                 {controls}
@@ -122,7 +122,7 @@ export function VideoDetailHeroFrame({
               tone="muted"
               shadow="sm"
               padded={false}
-              className="relative mx-auto aspect-[2/3] w-[55%] max-w-[200px] overflow-hidden bg-[#06070b] premium-shadow lg:mx-0 lg:h-full lg:w-auto lg:max-w-none lg:justify-self-end"
+              className="relative mx-auto aspect-[2/3] w-[55%] max-w-[200px] overflow-hidden bg-surface-1 premium-shadow lg:mx-0 lg:h-full lg:w-auto lg:max-w-none lg:justify-self-end"
             >
               <div className="relative h-full w-full lg:w-auto">
                 <PosterImageWithFallback
@@ -137,16 +137,16 @@ export function VideoDetailHeroFrame({
             </Paper>
           </div>
 
-          <div className={cn('scrollbars-hidden flex snap-x snap-mandatory scroll-p-2 gap-2.5 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 lg:grid-cols-6 lg:overflow-visible lg:pb-0', isCompactGallery && 'xl:grid-cols-3')}>
+          <div className={cn('scrollbars-hidden flex snap-x snap-mandatory scroll-p-2 gap-[calc(var(--space-xs)+var(--space-2xs))] overflow-x-auto pb-1 sm:grid sm:grid-cols-3 lg:grid-cols-6 lg:overflow-visible lg:pb-0', isCompactGallery && 'xl:grid-cols-3')}>
             {metadata.map((item) => (
               <Paper
                 key={item.label}
                 tone="muted"
                 shadow="sm"
-                className={cn('glass-morphism min-w-[130px] shrink-0 snap-start px-3.5 py-3 sm:min-w-0 sm:shrink', isCompactGallery && 'rounded-[var(--radius-md)] px-3 py-2.5')}
+                className={cn('glass-morphism min-w-[130px] shrink-0 snap-start px-[calc(var(--space-sm)+var(--space-2xs))] py-[var(--space-sm)] sm:min-w-0 sm:shrink', isCompactGallery && 'rounded-[var(--radius-md)] px-[var(--space-sm)] py-[calc(var(--space-xs)+var(--space-2xs))]')}
               >
                 <p className="type-metadata">{item.label}</p>
-                <p className={cn('mt-1.5 text-sm font-bold text-zinc-100', isCompactGallery && 'mt-1 text-[13px] leading-5')}>
+                <p className={cn('mt-1.5 text-sm font-bold text-foreground', isCompactGallery && 'mt-1 text-[var(--type-size-sm)] leading-5')}>
                   {item.value}
                 </p>
               </Paper>

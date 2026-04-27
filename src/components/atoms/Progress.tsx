@@ -25,7 +25,7 @@ export function Progress({
       aria-valuemin={0}
       aria-valuemax={max}
       aria-valuenow={Math.round(value)}
-      className={cn('h-1.5 w-full overflow-hidden bg-zinc-800', className)}
+      className={cn('h-1.5 w-full overflow-hidden bg-surface-2', className)}
       {...props}
     >
       <div

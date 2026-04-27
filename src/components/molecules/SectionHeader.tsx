@@ -24,18 +24,18 @@ export function SectionHeader({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 md:flex-row md:items-end md:justify-between md:gap-6',
+        'flex flex-col gap-[var(--space-sm)] md:flex-row md:items-end md:justify-between md:gap-6',
         className
       )}
     >
       <div className={cn('min-w-0 flex-1 space-y-2', contentClassName)}>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-[calc(var(--space-2xs)*1.5)]">
           {subtitle && (
             <span className="type-kicker">
               {subtitle}
             </span>
           )}
-          <div className="flex min-w-0 items-center gap-4">
+          <div className="flex min-w-0 items-center gap-[var(--space-md)]">
             {leading}
             <h2 className="type-section-title min-w-0 text-balance text-foreground">
               {title}

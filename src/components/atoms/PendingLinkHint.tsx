@@ -23,7 +23,7 @@ export function PendingLinkHint({
         <span
           aria-hidden
           className={cn(
-            'pointer-events-none absolute right-3 top-3 inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-background/80 text-zinc-100 opacity-0 transition-opacity duration-150 [transition-delay:120ms]',
+            'pointer-events-none absolute right-3 top-3 inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-background/80 text-foreground opacity-0 transition-opacity duration-150 [transition-delay:120ms]',
             pending && 'opacity-100',
             className
           )}

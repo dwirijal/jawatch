@@ -62,7 +62,7 @@ export function SectionCard({
         icon={resolvedIcon ?? undefined}
         iconName={resolvedIcon ? undefined : iconName}
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-[var(--space-xs)]">
             {mode === 'rail' ? (
               <>
                 <Button
@@ -89,7 +89,7 @@ export function SectionCard({
             ) : null}
             {viewAllHref ? (
               <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:bg-surface-1 hover:text-foreground">
-                <Link href={viewAllHref} className="focus-tv flex items-center gap-2 text-xs font-semibold tracking-[0.02em]">
+                <Link href={viewAllHref} className="focus-tv flex items-center gap-[var(--space-xs)] text-xs font-semibold tracking-[var(--type-tracking-normal)]">
                   Lihat semua <ChevronRight className="h-4 w-4" />
                 </Link>
               </Button>

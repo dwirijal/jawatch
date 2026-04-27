@@ -40,37 +40,37 @@ export interface CastCardProps {
 
 const MEDIA_CARD_ACCENT: Record<ThemeType, { glow: string; labelBg: string; labelText: string }> = {
   anime: {
-    glow: 'rgba(200, 137, 170, 0.22)',
+    glow: 'color-mix(in srgb, var(--theme-anime-shadow) 22%, transparent)',
     labelBg: 'var(--theme-anime-surface)',
     labelText: 'var(--theme-anime-text)',
   },
   manga: {
-    glow: 'rgba(199, 154, 99, 0.22)',
+    glow: 'color-mix(in srgb, var(--theme-manga-shadow) 22%, transparent)',
     labelBg: 'var(--theme-manga-surface)',
     labelText: 'var(--theme-manga-text)',
   },
   donghua: {
-    glow: 'rgba(205, 139, 115, 0.22)',
+    glow: 'color-mix(in srgb, var(--theme-donghua-shadow) 22%, transparent)',
     labelBg: 'var(--theme-donghua-surface)',
     labelText: 'var(--theme-donghua-text)',
   },
   movie: {
-    glow: 'rgba(209, 168, 111, 0.24)',
+    glow: 'color-mix(in srgb, var(--theme-movie-shadow) 24%, transparent)',
     labelBg: 'var(--theme-movie-surface)',
     labelText: 'var(--theme-movie-text)',
   },
   drama: {
-    glow: 'rgba(184, 138, 168, 0.24)',
+    glow: 'color-mix(in srgb, var(--theme-drama-shadow) 24%, transparent)',
     labelBg: 'var(--theme-drama-surface)',
     labelText: 'var(--theme-drama-text)',
   },
   novel: {
-    glow: 'rgba(178, 154, 121, 0.22)',
+    glow: 'color-mix(in srgb, var(--theme-novel-shadow) 22%, transparent)',
     labelBg: 'var(--theme-novel-surface)',
     labelText: 'var(--theme-novel-text)',
   },
   default: {
-    glow: 'rgba(31, 27, 23, 0.18)',
+    glow: 'color-mix(in srgb, var(--theme-default-shadow) 18%, transparent)',
     labelBg: 'var(--theme-default-surface)',
     labelText: 'var(--theme-default-text)',
   },
@@ -207,46 +207,46 @@ export function MediaCard({
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(7,8,11,0.08)_0%,rgba(7,8,11,0.18)_38%,rgba(7,8,11,0.88)_100%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(7,8,11,0.42)_0%,rgba(7,8,11,0.08)_45%,rgba(7,8,11,0.42)_100%)]" />
 
-      <div className="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5 sm:left-4 sm:top-4">
-        <div className="rounded-full border border-white/16 bg-black/42 px-2.5 py-1 backdrop-blur-md">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
+      <div className="absolute left-[var(--space-sm)] top-[var(--space-sm)] flex max-w-[calc(100%-var(--space-xl))] flex-wrap gap-[var(--space-2xs)] sm:left-[var(--space-md)] sm:top-[var(--space-md)]">
+        <div className="rounded-full border border-white/16 bg-surface-1/42 px-[calc(var(--space-xs)+var(--space-2xs))] py-[var(--space-2xs)] backdrop-blur-md">
+          <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-[var(--accent-contrast)]">
             {typeLabel}
           </span>
         </div>
         {showAuxiliaryBadge ? (
-          <div className="rounded-full border border-white/16 bg-[var(--card-badge-bg)] px-2.5 py-1 backdrop-blur-md">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--card-badge-text)]">
+          <div className="rounded-full border border-white/16 bg-[var(--card-badge-bg)] px-[calc(var(--space-xs)+var(--space-2xs))] py-[var(--space-2xs)] backdrop-blur-md">
+            <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-[var(--card-badge-text)]">
               {auxiliaryBadge}
             </span>
           </div>
         ) : null}
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-        <div className="max-w-[85%] space-y-2 sm:max-w-[78%]">
+      <div className="absolute inset-x-0 bottom-0 p-[var(--space-md)] sm:p-[var(--space-lg)]">
+        <div className="max-w-[85%] space-y-[var(--space-xs)] sm:max-w-[78%]">
           <Typography
             as="h3"
             className={cn(
-              'line-clamp-2 text-white transition-colors duration-200 group-hover:text-white/95',
-              compactCopy ? 'text-base leading-5 sm:text-lg' : 'text-lg leading-5 sm:text-[1.35rem] sm:leading-6',
+              'line-clamp-2 text-[var(--accent-contrast)] transition-colors duration-200 group-hover:text-[var(--accent-contrast)]/95',
+              compactCopy ? 'text-[var(--type-size-base)] leading-[var(--type-line-heading)] sm:text-[var(--type-size-lg)]' : 'text-[var(--type-size-lg)] leading-[var(--type-line-heading)] sm:text-[var(--type-size-xl)]',
             )}
           >
             {displayTitle}
           </Typography>
 
           {effectiveSubtitle ? (
-            <p className="line-clamp-2 text-[11px] leading-5 text-white/78 sm:text-sm sm:leading-5">
+            <p className="line-clamp-2 text-[var(--type-size-xs)] leading-[var(--type-line-body)] text-[var(--accent-contrast)]/78 sm:text-[var(--type-size-sm)]">
               {effectiveSubtitle}
             </p>
           ) : null}
 
-          <div className="flex items-center gap-2 pt-1 text-white/72">
+          <div className="flex items-center gap-[var(--space-xs)] pt-[var(--space-2xs)] text-[var(--accent-contrast)]/72">
             {displayMetaLine ? (
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/78">
+              <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-[var(--accent-contrast)]/78">
                 {displayMetaLine}
               </p>
             ) : null}
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/14 bg-black/22 transition-transform duration-200 group-hover:translate-x-1">
+            <span className="inline-flex h-[calc(var(--size-icon-lg)+var(--space-2xs))] w-[calc(var(--size-icon-lg)+var(--space-2xs))] items-center justify-center rounded-full border border-white/14 bg-surface-1/22 transition-transform duration-200 group-hover:translate-x-1">
               <svg
                 width="16"
                 height="16"
@@ -284,15 +284,15 @@ export function MediaCard({
           <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(7,8,11,0.08)_40%,rgba(7,8,11,0.72)_100%)]" />
         ) : null}
 
-        <div className="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5">
-          <div className="rounded-full border border-white/18 bg-black/55 px-2.5 py-1 backdrop-blur-md">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
+        <div className="absolute left-[var(--space-sm)] top-[var(--space-sm)] flex max-w-[calc(100%-var(--space-xl))] flex-wrap gap-[var(--space-2xs)]">
+          <div className="rounded-full border border-white/18 bg-surface-1/55 px-[calc(var(--space-xs)+var(--space-2xs))] py-[var(--space-2xs)] backdrop-blur-md">
+            <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-[var(--accent-contrast)]">
               {typeLabel}
             </span>
           </div>
           {showAuxiliaryBadge ? (
-            <div className="rounded-full border border-white/18 bg-[var(--card-badge-bg)] px-2.5 py-1 backdrop-blur-md">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--card-badge-text)]">
+            <div className="rounded-full border border-white/18 bg-[var(--card-badge-bg)] px-[calc(var(--space-xs)+var(--space-2xs))] py-[var(--space-2xs)] backdrop-blur-md">
+              <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-[var(--card-badge-text)]">
                 {auxiliaryBadge}
               </span>
             </div>
@@ -300,33 +300,33 @@ export function MediaCard({
         </div>
       </div>
 
-      <div className="relative flex flex-col gap-3 border-t border-white/8 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-elevated)_94%,white_6%)_0%,var(--surface-elevated)_100%)] p-4">
-        <div className="space-y-2">
+      <div className="relative flex flex-col gap-[var(--space-sm)] border-t border-white/8 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-elevated)_94%,white_6%)_0%,var(--surface-elevated)_100%)] p-[var(--space-md)]">
+        <div className="space-y-[var(--space-xs)]">
           <Typography
             as="h3"
             className={cn(
               'line-clamp-2 text-foreground transition-colors duration-200 group-hover:text-[var(--accent-strong)]',
-              compactCopy ? 'text-base leading-5 sm:text-lg' : 'text-lg leading-5 sm:text-xl',
+              compactCopy ? 'text-[var(--type-size-base)] leading-[var(--type-line-heading)] sm:text-[var(--type-size-lg)]' : 'text-[var(--type-size-lg)] leading-[var(--type-line-heading)] sm:text-[var(--type-size-xl)]',
             )}
           >
             {displayTitle}
           </Typography>
 
           {effectiveSubtitle ? (
-            <p className="line-clamp-2 text-xs leading-5 text-muted-foreground sm:text-[13px]">
+            <p className="line-clamp-2 text-[var(--type-size-xs)] leading-[var(--type-line-body)] text-muted-foreground sm:text-[var(--type-size-sm)]">
               {effectiveSubtitle}
             </p>
           ) : null}
         </div>
 
-        <div className="mt-auto flex items-center gap-3 pt-1">
+        <div className="mt-auto flex items-center gap-[var(--space-sm)] pt-[var(--space-2xs)]">
           {displayMetaLine ? (
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+            <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">
               {displayMetaLine}
             </p>
           ) : null}
           <div className="h-px flex-1 bg-border-subtle" />
-          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground">
+          <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">
             Open
           </span>
           <span className="text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5">
@@ -373,7 +373,7 @@ export function CastCard({ item, layout = 'grid' }: CastCardProps) {
 
   if (layout === 'scroll') {
     return (
-      <article className="group relative w-[160px] shrink-0 overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-elevated shadow-[0_20px_48px_-38px_var(--shadow-color)] transition-all duration-300 hover:-translate-y-1 hover:border-border-strong">
+      <article className="group relative w-[calc(var(--size-panel-sm)/2)] shrink-0 overflow-hidden rounded-[var(--radius-lg)] border border-border-subtle bg-surface-elevated shadow-[0_20px_48px_-38px_var(--shadow-color)] transition-all duration-300 hover:-translate-y-1 hover:border-border-strong">
         <div className="relative aspect-[4/5] overflow-hidden">
           {item.image ? (
             <Image
@@ -386,20 +386,20 @@ export function CastCard({ item, layout = 'grid' }: CastCardProps) {
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-surface-2">
-              <span className="text-xl font-medium uppercase tracking-tighter text-muted-foreground">
+              <span className="text-xl font-medium uppercase tracking-[var(--type-tracking-normal)] text-muted-foreground">
                 {initials}
               </span>
             </div>
           )}
         </div>
 
-        <div className="space-y-2 p-4">
-          <Typography as="h3" className="line-clamp-1 text-[14px] font-bold tracking-tight text-foreground">
+        <div className="space-y-[var(--space-xs)] p-[var(--space-md)]">
+          <Typography as="h3" className="line-clamp-1 text-[var(--type-size-sm)] font-bold tracking-[var(--type-tracking-normal)] text-foreground">
             {item.name}
           </Typography>
 
           {item.role ? (
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            <p className="text-[var(--type-size-xs)] font-bold uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">
               {item.role}
             </p>
           ) : null}
@@ -409,8 +409,8 @@ export function CastCard({ item, layout = 'grid' }: CastCardProps) {
   }
 
   return (
-    <article className="group flex items-center gap-4 rounded-[var(--radius-lg)] border border-border-subtle bg-surface-elevated p-4 shadow-[0_20px_48px_-38px_var(--shadow-color)] transition-all duration-300 hover:border-border-strong">
-      <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border-subtle bg-surface-2">
+    <article className="group flex items-center gap-[var(--space-md)] rounded-[var(--radius-lg)] border border-border-subtle bg-surface-elevated p-[var(--space-md)] shadow-[0_20px_48px_-38px_var(--shadow-color)] transition-all duration-300 hover:border-border-strong">
+      <div className="relative flex h-[calc(var(--size-avatar-lg)+var(--space-xs))] w-[calc(var(--size-avatar-lg)+var(--space-xs))] shrink-0 items-center justify-center overflow-hidden rounded-full border border-border-subtle bg-surface-2">
         {item.image ? (
           <Image
             src={item.image}
@@ -421,23 +421,23 @@ export function CastCard({ item, layout = 'grid' }: CastCardProps) {
             unoptimized
           />
         ) : (
-          <span className="text-sm font-medium uppercase tracking-tighter text-muted-foreground">{initials}</span>
+          <span className="text-[var(--type-size-sm)] font-medium uppercase tracking-[var(--type-tracking-normal)] text-muted-foreground">{initials}</span>
         )}
       </div>
 
       <div className="min-w-0 flex-1">
-        <Typography as="h3" className="line-clamp-1 text-[15px] font-bold tracking-tight text-foreground">
+        <Typography as="h3" className="line-clamp-1 text-[var(--type-size-base)] font-bold tracking-[var(--type-tracking-normal)] text-foreground">
           {item.name}
         </Typography>
 
         {item.role ? (
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          <p className="text-[var(--type-size-xs)] font-bold uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">
             {item.role}
           </p>
         ) : null}
 
         {item.secondary ? (
-          <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+          <p className="mt-[var(--space-2xs)] line-clamp-1 text-[var(--type-size-xs)] text-muted-foreground">
             {item.secondaryLabel ? `${item.secondaryLabel}: ` : null}
             {item.secondary}
           </p>

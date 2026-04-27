@@ -14,16 +14,16 @@ export function Switch({ checked, className, ...props }: SwitchProps) {
       role="switch"
       aria-checked={checked}
       className={cn(
-        'relative h-4 w-8 rounded-full transition-all',
-        checked ? 'bg-orange-600' : 'bg-zinc-800',
+        'relative h-[calc(var(--size-switch-thumb)+var(--space-2xs))] w-[var(--size-switch-track)] rounded-full transition-all',
+        checked ? 'bg-accent' : 'bg-surface-2',
         className
       )}
       {...props}
     >
       <div
         className={cn(
-          'absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all',
-          checked ? 'left-4.5' : 'left-0.5'
+          'absolute left-[calc(var(--space-2xs)/2)] top-[calc(var(--space-2xs)/2)] h-[var(--size-switch-thumb)] w-[var(--size-switch-thumb)] rounded-full bg-[var(--accent-contrast)] transition-all',
+          checked ? 'translate-x-[calc(var(--size-switch-track)-var(--size-switch-thumb)-var(--space-2xs))]' : 'translate-x-0'
         )}
       />
     </button>

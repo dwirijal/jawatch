@@ -23,8 +23,8 @@ const RESULT_ICON = {
 } as const;
 
 const RESULT_ICON_CLASS = {
-  comic: 'text-orange-400',
-  series: 'text-rose-400',
+  comic: 'text-[var(--signal-warning)]',
+  series: 'text-[var(--signal-danger)]',
   movies: 'text-indigo-400',
 } as const;
 
@@ -150,10 +150,10 @@ export function SearchModal() {
 
   return (
     <ModalRoot open={isSearchOpen} onOpenChange={setSearchOpen}>
-      <ModalContent className="w-full max-w-3xl p-4 animate-in zoom-in-95 duration-300" overlayClassName="z-[200] bg-black/50 backdrop-blur-2xl animate-in fade-in duration-300">
+      <ModalContent className="w-full max-w-3xl p-[var(--space-md)] animate-in zoom-in-95 duration-300" overlayClassName="z-[200] bg-surface-1/50 backdrop-blur-2xl animate-in fade-in duration-300">
         <ModalTitle className="sr-only">Cari konten</ModalTitle>
         <Paper glassy padded={false} className="overflow-hidden rounded-[var(--radius-2xl)] border border-border-subtle bg-surface-elevated shadow-[0_34px_90px_-48px_var(--shadow-color-strong)]">
-          <div className="flex items-center border-b border-border-subtle bg-surface-1 px-6 py-6">
+          <div className="flex items-center border-b border-border-subtle bg-surface-1 px-[var(--space-xl)] py-6">
             <Search className="mr-4 h-6 w-6 text-muted-foreground" />
             <Input
               id={inputId}
@@ -169,7 +169,7 @@ export function SearchModal() {
                   openSearchResults();
                 }
               }}
-              className="h-auto flex-1 border-0 px-0 py-0 text-lg font-black uppercase tracking-tight text-foreground shadow-none focus-visible:ring-0 md:text-2xl"
+              className="h-auto flex-1 border-0 px-0 py-0 text-lg font-black uppercase tracking-[var(--type-tracking-normal)] text-foreground shadow-none focus-visible:ring-0 md:text-2xl"
             />
             {loading ? (
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -180,7 +180,7 @@ export function SearchModal() {
                 size="icon"
                 onClick={() => setSearchOpen(false)}
                 aria-label="Tutup pencarian"
-                className="h-10 w-10 rounded-full text-muted-foreground hover:bg-surface-elevated hover:text-foreground"
+                className="h-[calc(var(--size-control-md)-var(--space-2xs))] w-[calc(var(--size-control-md)-var(--space-2xs))] rounded-full text-muted-foreground hover:bg-surface-elevated hover:text-foreground"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -188,7 +188,7 @@ export function SearchModal() {
           </div>
 
           <ScrollArea className="max-h-[65vh]">
-            <div className="space-y-6 p-6">
+            <div className="space-y-6 p-[var(--space-xl)]">
               {result.topMatch ? (
                 <Paper asChild tone="muted" shadow="sm" interactive className="overflow-hidden p-0">
                   <button type="button" onClick={() => onSelect(result.topMatch!.href)} className="grid w-full gap-0 text-left sm:grid-cols-[7rem_minmax(0,1fr)]">
@@ -202,8 +202,8 @@ export function SearchModal() {
                       />
                       <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(9,10,14,0.52)_100%)]" />
                     </div>
-                    <div className="space-y-3 p-4">
-                      <div className="flex flex-wrap items-center gap-2">
+                    <div className="space-y-3 p-[var(--space-md)]">
+                      <div className="flex flex-wrap items-center gap-[var(--space-xs)]">
                         <Badge variant={result.topMatch.theme}>Paling cocok</Badge>
                         {result.topMatch.badgeText ? <Badge variant="outline">{result.topMatch.badgeText}</Badge> : null}
                       </div>
@@ -221,7 +221,7 @@ export function SearchModal() {
               ) : null}
 
               {previewItems.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-[var(--space-sm)] sm:grid-cols-2">
                   {previewItems.map((item) => {
                     const Icon = RESULT_ICON[item.routeType];
                     return (
@@ -235,9 +235,9 @@ export function SearchModal() {
                         <button
                           type="button"
                           onClick={() => onSelect(item.href)}
-                          className="flex w-full items-center gap-4 p-3 text-left"
+                          className="flex w-full items-center gap-[var(--space-md)] p-[var(--space-sm)] text-left"
                         >
-                          <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 refractive-border">
+                          <div className="relative h-20 w-[calc(var(--size-control-lg)+var(--space-xs))] shrink-0 overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 refractive-border">
                             <Image
                               src={item.image || '/favicon.ico'}
                               alt=""
@@ -247,10 +247,10 @@ export function SearchModal() {
                             />
                           </div>
                           <div className="min-w-0 flex-1 space-y-1.5">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-[var(--space-xs)]">
                               <Icon className={cn('h-3.5 w-3.5', RESULT_ICON_CLASS[item.routeType])} />
                               {item.badgeText ? (
-                                <Badge variant={item.theme} className="px-2 py-0.5 text-[8px] tracking-[0.2em]">
+                                <Badge variant={item.theme} className="px-[var(--space-xs)] py-0.5 text-[var(--type-size-xs)] tracking-[var(--type-tracking-kicker)]">
                                   {item.badgeText}
                                 </Badge>
                               ) : null}
@@ -276,8 +276,8 @@ export function SearchModal() {
                 </Paper>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Cari cepat</p>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">Cari cepat</p>
+                  <div className="flex flex-wrap gap-[var(--space-xs)]">
                     {['One Piece', 'Solo Leveling', 'Avengers', 'Naruto'].map((suggestion) => (
                       <Button
                         key={suggestion}
@@ -295,7 +295,7 @@ export function SearchModal() {
               )}
 
               <div className="flex items-center justify-between border-t border-border-subtle pt-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-[var(--space-xs)]">
                   <Command className="h-4 w-4" />
                   <span>Tekan Enter untuk lihat semua hasil</span>
                 </div>

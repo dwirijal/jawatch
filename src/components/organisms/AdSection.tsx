@@ -52,7 +52,7 @@ export function AdSection({
   }
 
   const slotsClassName = cn(
-    'grid gap-4',
+    'grid gap-[var(--space-md)]',
     slotCount === 2 && type !== 'vertical' && 'md:grid-cols-2',
     slotCount === 2 && type === 'vertical' && 'xl:grid-cols-2',
   );

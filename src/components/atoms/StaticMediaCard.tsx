@@ -59,13 +59,13 @@ function splitCardTitle(title: string): { title: string; derivedSubtitle?: strin
 
 function getAccent(href: string | undefined, title: string, theme: ThemeType): string {
   const palettes: Record<ThemeType, string[]> = {
-    anime: ['rgba(59,130,246,0.24)', 'rgba(96,165,250,0.18)'],
-    manga: ['rgba(234,88,12,0.22)', 'rgba(251,146,60,0.18)'],
-    donghua: ['rgba(239,68,68,0.22)', 'rgba(248,113,113,0.18)'],
-    movie: ['rgba(99,102,241,0.22)', 'rgba(129,140,248,0.18)'],
-    drama: ['rgba(244,63,94,0.22)', 'rgba(251,113,133,0.18)'],
-    novel: ['rgba(180,83,9,0.24)', 'rgba(245,158,11,0.18)'],
-    default: ['rgba(168,85,247,0.24)', 'rgba(56,189,248,0.22)', 'rgba(251,191,36,0.18)'],
+    anime: ['color-mix(in srgb, var(--theme-anime-shadow) 24%, transparent)', 'color-mix(in srgb, var(--theme-anime-fill) 18%, transparent)'],
+    manga: ['color-mix(in srgb, var(--theme-manga-shadow) 22%, transparent)', 'color-mix(in srgb, var(--theme-manga-fill) 18%, transparent)'],
+    donghua: ['color-mix(in srgb, var(--theme-donghua-shadow) 22%, transparent)', 'color-mix(in srgb, var(--theme-donghua-fill) 18%, transparent)'],
+    movie: ['color-mix(in srgb, var(--theme-movie-shadow) 22%, transparent)', 'color-mix(in srgb, var(--theme-movie-fill) 18%, transparent)'],
+    drama: ['color-mix(in srgb, var(--theme-drama-shadow) 22%, transparent)', 'color-mix(in srgb, var(--theme-drama-fill) 18%, transparent)'],
+    novel: ['color-mix(in srgb, var(--theme-novel-shadow) 24%, transparent)', 'color-mix(in srgb, var(--theme-novel-fill) 18%, transparent)'],
+    default: ['color-mix(in srgb, var(--theme-default-shadow) 24%, transparent)', 'color-mix(in srgb, var(--accent) 22%, transparent)', 'color-mix(in srgb, var(--signal-warning) 18%, transparent)'],
   };
 
   const pool = palettes[theme] ?? palettes.default;
@@ -99,7 +99,7 @@ export function StaticMediaCard({
 
   const cardBody = (
     <div
-      className="refractive-border glass-noise relative h-full overflow-hidden rounded-[var(--radius-2xl)] bg-[#0a0a0f] shadow-[0_10px_28px_rgba(0,0,0,0.22)] transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
+      className="refractive-border glass-noise relative h-full overflow-hidden rounded-[var(--radius-2xl)] bg-surface-1 shadow-[0_10px_28px_color-mix(in_srgb,var(--shadow-color)_58%,transparent)] transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_color-mix(in_srgb,var(--shadow-color-strong)_64%,transparent)]"
       style={{ '--hover-glow': accent } as CSSProperties}
     >
       <div className="absolute -inset-2 bg-[var(--hover-glow)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-15" />
@@ -115,9 +115,9 @@ export function StaticMediaCard({
             quality={68}
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_52%),linear-gradient(160deg,rgba(32,36,52,0.98),rgba(12,14,21,1))] p-4 text-center text-muted-foreground">
-            <span className="text-[10px] font-black uppercase tracking-[0.18em] leading-tight text-zinc-300">Poster Missing</span>
-            <span className="mt-2 line-clamp-3 text-[11px] font-bold leading-relaxed tracking-tight text-zinc-500">{title}</span>
+          <div className="flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_top,color-mix(in_srgb,var(--surface-2)_70%,white_30%),transparent_52%),linear-gradient(160deg,var(--surface-2),var(--surface-1))] p-[var(--space-md)] text-center text-muted-foreground">
+            <span className="text-[var(--type-size-xs)] font-black uppercase leading-[var(--type-line-tight)] tracking-[var(--type-tracking-kicker)] text-muted-foreground">Poster Missing</span>
+            <span className="mt-[var(--space-xs)] line-clamp-3 text-[var(--type-size-xs)] font-bold leading-[var(--type-line-body)] tracking-[var(--type-tracking-normal)] text-muted-foreground">{title}</span>
           </div>
         )}
 
@@ -129,39 +129,39 @@ export function StaticMediaCard({
         <div className="absolute inset-x-0 top-0 h-px bg-white/12" />
         <div className="absolute inset-0 bg-white/[0.02] opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100" />
 
-        <div className="absolute left-4 top-4 flex max-w-[calc(100%-2rem)] flex-wrap items-center gap-2">
-          <div className="rounded-full border border-white/16 bg-black/50 px-2.5 py-1 backdrop-blur-md">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">{typeLabel}</span>
+        <div className="absolute left-[var(--space-md)] top-[var(--space-md)] flex max-w-[calc(100%-calc(var(--space-md)*2))] flex-wrap items-center gap-[var(--space-xs)]">
+          <div className="rounded-full border border-white/16 bg-surface-1/50 px-[calc(var(--space-xs)+var(--space-2xs))] py-[var(--space-2xs)] backdrop-blur-md">
+            <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-[var(--accent-contrast)]">{typeLabel}</span>
           </div>
           {showAuxiliaryBadge ? (
-            <div className="rounded-full border border-white/16 bg-white/10 px-2.5 py-1 backdrop-blur-md">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/82">{auxiliaryBadge}</span>
+            <div className="rounded-full border border-white/16 bg-white/10 px-[calc(var(--space-xs)+var(--space-2xs))] py-[var(--space-2xs)] backdrop-blur-md">
+              <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-[var(--accent-contrast)]/82">{auxiliaryBadge}</span>
             </div>
           ) : null}
         </div>
 
         {!isNovelCard ? (
-          <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+          <div className="absolute inset-x-0 bottom-0 p-[var(--space-md)] sm:p-[var(--space-lg)]">
             <div className={cn('max-w-[82%] sm:max-w-[78%]', compactCopy && 'sm:max-w-[84%]')}>
               <h3
                 className={cn(
-                  'line-clamp-2 text-balance font-extrabold tracking-[-0.026em] text-white/95 drop-shadow-[0_4px_18px_rgba(0,0,0,0.42)] transition-colors duration-500 ease-out group-hover:text-white',
-                  compactCopy ? 'text-[20px] leading-[1.06] sm:text-[24px]' : 'text-[22px] leading-[1.03] sm:text-[27px]'
+                  'line-clamp-2 text-balance font-extrabold tracking-[var(--type-tracking-normal)] text-[var(--accent-contrast)]/95 drop-shadow-[0_4px_18px_rgba(0,0,0,0.42)] transition-colors duration-500 ease-out group-hover:text-[var(--accent-contrast)]',
+                  compactCopy ? 'text-[var(--type-size-xl)] leading-[var(--type-line-heading)] sm:text-[var(--type-size-2xl)]' : 'text-[var(--type-size-2xl)] leading-[var(--type-line-heading)] sm:text-[var(--type-size-3xl)]'
                 )}
               >
                 {displayTitle}
               </h3>
 
               {effectiveSubtitle ? (
-                <p className="mt-2 max-w-[33ch] line-clamp-2 text-[12px] leading-[1.54] text-white/58 transition-colors duration-500 ease-out group-hover:text-white/68 sm:text-[13px]">
+                <p className="mt-[var(--space-xs)] max-w-[33ch] line-clamp-2 text-[var(--type-size-xs)] leading-[var(--type-line-body)] text-[var(--accent-contrast)]/58 transition-colors duration-500 ease-out group-hover:text-[var(--accent-contrast)]/68 sm:text-[var(--type-size-sm)]">
                   {effectiveSubtitle}
                 </p>
               ) : (
-                <p className="mt-2 select-none text-[12px] leading-[1.54] text-transparent sm:text-[13px]">{'\u00A0'}</p>
+                <p className="mt-[var(--space-xs)] select-none text-[var(--type-size-xs)] leading-[var(--type-line-body)] text-transparent sm:text-[var(--type-size-sm)]">{'\u00A0'}</p>
               )}
 
               {metaLine ? (
-                <p className="mt-2 line-clamp-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/42 transition-colors duration-500 ease-out group-hover:text-white/60">
+                <p className="mt-[var(--space-xs)] line-clamp-1 text-[var(--type-size-xs)] font-semibold uppercase tracking-[var(--type-tracking-kicker)] text-[var(--accent-contrast)]/42 transition-colors duration-500 ease-out group-hover:text-[var(--accent-contrast)]/60">
                   {metaLine}
                 </p>
               ) : null}

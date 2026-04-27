@@ -19,7 +19,7 @@ export function Slider({ value, className, min = 0, max = 100, ...props }: Slide
       min={min}
       max={max}
       className={cn(
-        'h-2 w-full cursor-pointer appearance-none rounded-full bg-zinc-800',
+        'h-2 w-full cursor-pointer appearance-none rounded-full bg-surface-2',
         '[&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white',
         '[&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white',
         className

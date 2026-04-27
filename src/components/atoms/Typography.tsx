@@ -12,16 +12,16 @@ export interface TypographyProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 const SIZE_CLASS = {
-  xs: "text-[11px] uppercase tracking-[0.2em] font-bold",
-  sm: "text-xs leading-relaxed",
-  base: "text-[15px] leading-relaxed",
-  lg: "text-lg leading-relaxed tracking-tight",
-  xl: "text-xl leading-snug tracking-tight font-medium",
-  "2xl": "text-2xl leading-snug tracking-tight font-medium",
-  "3xl": "text-3xl leading-tight tracking-tight font-[var(--font-heading)] font-medium",
-  "4xl": "text-4xl md:text-5xl leading-[1.1] tracking-[-0.04em] font-[var(--font-heading)]",
-  "5xl": "text-5xl md:text-7xl leading-[1.02] tracking-[-0.055em] font-[var(--font-heading)]",
-  "6xl": "text-6xl md:text-8xl leading-[0.95] tracking-[-0.065em] font-[var(--font-heading)]",
+  xs: "text-[var(--type-size-xs)] uppercase leading-[var(--type-line-tight)] tracking-[var(--type-tracking-kicker)] font-bold",
+  sm: "text-[var(--type-size-sm)] leading-[var(--type-line-body)] tracking-[var(--type-tracking-normal)]",
+  base: "text-[var(--type-size-base)] leading-[var(--type-line-body)] tracking-[var(--type-tracking-normal)]",
+  lg: "text-[var(--type-size-lg)] leading-[var(--type-line-relaxed)] tracking-[var(--type-tracking-normal)]",
+  xl: "text-[var(--type-size-xl)] leading-[var(--type-line-heading)] tracking-[var(--type-tracking-normal)] font-medium",
+  "2xl": "text-[var(--type-size-2xl)] leading-[var(--type-line-heading)] tracking-[var(--type-tracking-normal)] font-medium",
+  "3xl": "text-[var(--type-size-3xl)] leading-[var(--type-line-heading)] tracking-[var(--type-tracking-normal)] font-[var(--font-heading)] font-medium",
+  "4xl": "text-[var(--type-size-4xl)] md:text-[var(--type-size-section-title)] leading-[var(--type-line-heading)] tracking-[var(--type-tracking-normal)] font-[var(--font-heading)]",
+  "5xl": "text-[var(--type-size-display)] md:text-[var(--type-size-display)] leading-[var(--type-line-heading)] tracking-[var(--type-tracking-normal)] font-[var(--font-heading)]",
+  "6xl": "text-[var(--type-size-display)] md:text-[calc(var(--type-size-display)+var(--type-size-xl))] leading-[var(--type-line-heading)] tracking-[var(--type-tracking-normal)] font-[var(--font-heading)]",
 } as const;
 
 export const Typography = React.forwardRef<HTMLElement, TypographyProps>(

@@ -56,13 +56,13 @@ export function BookCoverArt({
           />
           <div className="absolute inset-y-0 left-[10%] w-px" style={{ backgroundColor: palette.spine }} />
           <div className="absolute inset-x-[12%] top-[10%] h-px" style={{ backgroundColor: palette.rule }} />
-          <div className="absolute inset-x-[14%] bottom-[12%] space-y-3" style={{ color: palette.text }}>
-            <p className="text-[10px] font-black uppercase tracking-[0.28em]" style={{ color: palette.eyebrow }}>Novel Edition</p>
-            <h3 className="line-clamp-4 text-[clamp(1rem,2vw,1.45rem)] font-black leading-[1.06] tracking-[-0.03em] text-balance drop-shadow-[0_3px_10px_rgba(0,0,0,0.25)]">
+          <div className="absolute inset-x-[14%] bottom-[12%] space-y-[var(--space-sm)]" style={{ color: palette.text }}>
+            <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)]" style={{ color: palette.eyebrow }}>Novel Edition</p>
+            <h3 className="line-clamp-4 text-[var(--type-size-lg)] font-black leading-[var(--type-line-heading)] tracking-[var(--type-tracking-normal)] text-balance drop-shadow-[0_3px_10px_rgba(0,0,0,0.25)] md:text-[var(--type-size-xl)]">
               {splitTitle.title}
             </h3>
             {coverSubtitle ? (
-              <p className="line-clamp-3 max-w-[18ch] text-[11px] leading-[1.45]" style={{ color: palette.subtitle }}>
+              <p className="line-clamp-3 max-w-[18ch] text-[var(--type-size-xs)] leading-[var(--type-line-body)]" style={{ color: palette.subtitle }}>
                 {coverSubtitle}
               </p>
             ) : null}

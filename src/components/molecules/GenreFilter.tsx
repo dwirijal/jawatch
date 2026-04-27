@@ -26,14 +26,14 @@ export function GenreFilter({
   const isRail = layout === 'rail';
 
   return (
-    <div className={cn("space-y-4", className)}>
-      <div className="flex items-center gap-2">
-        <Filter className="w-4 h-4 text-zinc-500" />
+    <div className={cn("space-y-[var(--space-md)]", className)}>
+      <div className="flex items-center gap-[var(--space-xs)]">
+        <Filter className="h-[var(--size-icon-sm)] w-[var(--size-icon-sm)] text-muted-foreground" />
         <h3 id={headingId} className="type-kicker">Filter by Genres</h3>
       </div>
       <div
         className={cn(
-          'flex gap-2',
+          'flex gap-[var(--space-xs)]',
           isRail
             ? 'overflow-x-auto overflow-y-hidden whitespace-nowrap pb-1 scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none] touch-pan-x md:flex-wrap md:overflow-visible md:whitespace-normal md:pb-0'
             : 'flex-wrap'
@@ -49,7 +49,7 @@ export function GenreFilter({
             onClick={() => onGenreClick(genre)}
             aria-pressed={activeGenre === genre}
             className={cn(
-              'rounded-xl text-[10px] uppercase font-black px-4 h-9 border-zinc-800',
+              'h-[var(--size-control-sm)] rounded-xl border-border-subtle px-[var(--space-md)] text-[var(--type-size-xs)] font-black uppercase',
               isRail && 'shrink-0'
             )}
           >

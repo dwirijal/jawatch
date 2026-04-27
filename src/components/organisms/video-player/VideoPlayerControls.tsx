@@ -31,7 +31,7 @@ interface VideoPlayerControlsProps {
 }
 
 const overlayButtonClass =
-  'h-11 w-11 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/90 text-foreground backdrop-blur-md hover:bg-surface-elevated hover:text-foreground';
+  'h-[var(--size-control-md)] w-[var(--size-control-md)] rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/90 text-foreground backdrop-blur-md hover:bg-surface-elevated hover:text-foreground';
 
 function renderControlIcon(
   control: VideoPlayerControlDescriptor,
@@ -59,7 +59,7 @@ function resolveControlVariant(
 ) {
   if (control.id === 'next') {
     return {
-      className: 'h-11 w-11 rounded-[var(--radius-sm)]',
+      className: 'h-[var(--size-control-md)] w-[var(--size-control-md)] rounded-[var(--radius-sm)]',
       variant: props.theme,
     } as const;
   }
@@ -68,7 +68,7 @@ function resolveControlVariant(
     return {
       className: cn(
         overlayButtonClass,
-        props.reportDisabled ? 'text-green-400' : 'hover:bg-red-500/20 hover:text-red-400',
+        props.reportDisabled ? 'text-[var(--signal-success)]' : 'hover:bg-[var(--signal-danger-surface)] hover:text-[var(--signal-danger)]',
       ),
       variant: 'ghost',
     } as const;

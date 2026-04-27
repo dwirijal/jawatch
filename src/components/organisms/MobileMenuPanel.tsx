@@ -33,25 +33,25 @@ export function MobileMenuPanel() {
   return (
     <ModalRoot open={isSidebarOpen} onOpenChange={setSidebarOpen}>
         <ModalContent className="inset-y-0 right-0 left-auto flex w-full max-w-sm translate-x-0 -translate-y-0 flex-col border-l border-border-subtle bg-background shadow-2xl" overlayClassName="z-[180] bg-black/60 backdrop-blur-sm">
-          <div className="flex items-center justify-between border-b border-border-subtle px-5 py-5">
+          <div className="flex items-center justify-between border-b border-border-subtle px-[var(--space-lg)] py-5">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-muted-foreground">Navigasi</p>
-              <ModalTitle className="mt-1 text-xl font-black uppercase tracking-[0.12em] text-foreground">
+              <p className="text-xs font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">Navigasi</p>
+              <ModalTitle className="mt-1 text-xl font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">
                 jawatch
               </ModalTitle>
               <p className="mt-2 text-xs text-muted-foreground">Nonton, baca, dan koleksi.</p>
             </div>
-            <ModalClose className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 p-2 text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground">
+            <ModalClose className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 p-[var(--space-xs)] text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground">
               <X className="h-5 w-5" />
             </ModalClose>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 py-6">
+          <div className="flex-1 overflow-y-auto px-[var(--space-lg)] py-6">
             <div className="space-y-8">
               <section className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-[var(--space-sm)]">
                   <div>
-                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-foreground">Tema warna</h2>
+                    <h2 className="text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">Tema warna</h2>
                     <p className="mt-1 text-xs text-muted-foreground">Gelap, terang, atau ikut sistem.</p>
                   </div>
                 </div>
@@ -69,9 +69,9 @@ export function MobileMenuPanel() {
 
                 return (
                 <section key={group.key} className="space-y-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-[var(--space-xs)]">
                     <group.icon className="h-4 w-4 text-muted-foreground" />
-                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-foreground">{group.label}</h2>
+                    <h2 className="text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">{group.label}</h2>
                   </div>
                   <p className="text-xs text-muted-foreground">{group.description}</p>
                   <div className="space-y-2">
@@ -83,14 +83,14 @@ export function MobileMenuPanel() {
                           <Link
                             href={item.href}
                             className={cn(
-                              'block rounded-[var(--radius-sm)] border px-4 py-3 transition-colors',
+                              'block rounded-[var(--radius-sm)] border px-[var(--space-md)] py-[var(--space-sm)] transition-colors',
                               itemActive
                                 ? 'border-border-subtle bg-surface-1'
                                 : 'border-transparent hover:border-border-subtle hover:bg-surface-1'
                             )}
                           >
-                            <div className="flex items-center justify-between gap-3">
-                              <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">{item.label}</p>
+                            <div className="flex items-center justify-between gap-[var(--space-sm)]">
+                              <p className="text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">{item.label}</p>
                               {itemActive ? (
                                 <span className="flex h-5 w-5 items-center justify-center rounded-full border border-border-subtle bg-foreground text-background">
                                   <Check className="h-3 w-3" />
@@ -101,10 +101,10 @@ export function MobileMenuPanel() {
                           </Link>
                         </ModalClose>
                       ) : (
-                        <div key={item.label} className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-3 opacity-60">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">{item.label}</p>
-                            <span className="rounded-full border border-border-subtle px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+                        <div key={item.label} className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-[var(--space-md)] py-[var(--space-sm)] opacity-60">
+                          <div className="flex items-center justify-between gap-[var(--space-sm)]">
+                            <p className="text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">{item.label}</p>
+                            <span className="rounded-full border border-border-subtle px-[var(--space-xs)] py-0.5 text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">
                               Segera
                             </span>
                           </div>
@@ -118,9 +118,9 @@ export function MobileMenuPanel() {
               })}
 
               <section className="space-y-3 border-t border-border-subtle pt-6">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-[var(--space-xs)]">
                   <ACCOUNT_PANEL_META.icon className="h-4 w-4 text-muted-foreground" />
-                  <h2 className="text-sm font-black uppercase tracking-[0.2em] text-foreground">{ACCOUNT_PANEL_META.label}</h2>
+                  <h2 className="text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">{ACCOUNT_PANEL_META.label}</h2>
                 </div>
                 <p className="text-xs text-muted-foreground">{ACCOUNT_PANEL_META.description}</p>
 
@@ -130,10 +130,10 @@ export function MobileMenuPanel() {
                   <ModalClose asChild>
                     <Link
                       href={buildLoginUrl(redirectTarget)}
-                      className="flex items-center justify-between rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-4 transition-colors hover:bg-surface-elevated"
+                      className="flex items-center justify-between rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-[var(--space-md)] py-[var(--space-md)] transition-colors hover:bg-surface-elevated"
                     >
                       <div>
-                        <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Masuk</p>
+                        <p className="text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">Masuk</p>
                         <p className="mt-1 text-xs text-muted-foreground">Masuk untuk sinkron bookmark dan riwayat.</p>
                       </div>
                       <UserRound className="h-5 w-5 text-muted-foreground" />
@@ -141,25 +141,25 @@ export function MobileMenuPanel() {
                   </ModalClose>
                 ) : (
                   <div className="space-y-3">
-                    <div className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-4">
-                      <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">{session.user.displayName}</p>
+                    <div className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-[var(--space-md)] py-[var(--space-md)]">
+                      <p className="text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">{session.user.displayName}</p>
                       <p className="mt-1 text-xs text-muted-foreground">Masuk dengan {session.user.provider ?? 'discord'}</p>
                     </div>
                     <form action={logoutRequest.url} method={logoutRequest.method}>
                       <input type="hidden" name="returnTo" value={returnTo} />
                       <button
                         type="submit"
-                        className="flex w-full items-center justify-between rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-4 text-left transition-colors hover:bg-surface-1"
+                        className="flex w-full items-center justify-between rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-[var(--space-md)] py-[var(--space-md)] text-left transition-colors hover:bg-surface-1"
                       >
                         <div>
-                          <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Keluar</p>
+                          <p className="text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">Keluar</p>
                           <p className="mt-1 text-xs text-muted-foreground">Kembali ke aplikasi ini setelah keluar.</p>
                         </div>
                         <LogOut className="h-5 w-5 text-muted-foreground" />
                       </button>
                     </form>
-                    <div className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-4 py-4 opacity-70">
-                      <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">Pengaturan akun</p>
+                    <div className="rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-[var(--space-md)] py-[var(--space-md)] opacity-70">
+                      <p className="text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">Pengaturan akun</p>
                       <p className="mt-1 text-xs text-muted-foreground">Segera hadir di jawatch.</p>
                     </div>
                   </div>

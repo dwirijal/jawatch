@@ -100,7 +100,7 @@ export function PWAInstallPrompt() {
       data-theme={theme}
       className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+5rem)] left-3 right-3 z-[300] animate-in slide-in-from-bottom-8 duration-500 md:bottom-6 md:left-auto md:right-6 md:w-[22rem]"
     >
-      <Paper tone="muted" shadow="md" className="group relative overflow-hidden rounded-[var(--radius-2xl)] px-3 py-2.5 text-foreground md:px-5 md:py-5">
+      <Paper tone="muted" shadow="md" className="group relative overflow-hidden rounded-[var(--radius-2xl)] px-[var(--space-sm)] py-[calc(var(--space-xs)+var(--space-2xs))] text-foreground md:px-5 md:py-5">
         <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-accent-soft blur-[56px] transition-opacity group-hover:opacity-90" />
 
         <Button
@@ -109,30 +109,30 @@ export function PWAInstallPrompt() {
           size="icon"
           onClick={dismissPrompt}
           aria-label="Tutup prompt install"
-          className="absolute right-1 top-1 h-9 w-9 rounded-full text-muted-foreground hover:text-foreground md:right-1.5 md:top-1.5 md:h-11 md:w-11"
+          className="absolute right-1 top-1 h-[var(--size-control-sm)] w-9 rounded-full text-muted-foreground hover:text-foreground md:right-1.5 md:top-1.5 md:h-11 md:w-11"
         >
           <X className="h-5 w-5" />
         </Button>
 
         <div className="relative md:hidden">
-          <div className="flex items-center gap-2.5 pr-8">
+          <div className="flex items-center gap-[calc(var(--space-xs)+var(--space-2xs))] pr-8">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-accent text-[var(--accent-contrast)] hard-shadow-sm">
               <Download className="h-3.5 w-3.5" />
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-black leading-tight tracking-tight text-foreground">Pasang jawatch</h3>
+              <div className="flex items-center gap-[var(--space-xs)]">
+                <h3 className="text-sm font-black leading-tight tracking-[var(--type-tracking-normal)] text-foreground">Pasang jawatch</h3>
                 {!showIOSGuide ? (
-                  <span className="rounded-full border border-border-subtle bg-surface-1 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+                  <span className="rounded-full border border-border-subtle bg-surface-1 px-[var(--space-xs)] py-0.5 text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">
                     App
                   </span>
                 ) : null}
               </div>
               {showIOSGuide ? (
-                <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">Bagikan, lalu tambah ke Home supaya aksesnya lebih cepat.</p>
+                <p className="mt-0.5 text-[var(--type-size-xs)] leading-4 text-muted-foreground">Bagikan, lalu tambah ke Home supaya aksesnya lebih cepat.</p>
               ) : (
-                <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">Buka lebih cepat tanpa chrome browser.</p>
+                <p className="mt-0.5 text-[var(--type-size-xs)] leading-4 text-muted-foreground">Buka lebih cepat tanpa chrome browser.</p>
               )}
             </div>
 
@@ -141,7 +141,7 @@ export function PWAInstallPrompt() {
                 onClick={handleInstall}
                 variant={installVariant}
                 className={cn(
-                  'h-8 shrink-0 rounded-full px-3 text-[11px] font-black',
+                  'h-8 shrink-0 rounded-full px-[var(--space-sm)] text-[var(--type-size-xs)] font-black',
                   installVariant === 'outline' ? 'border-border-subtle bg-surface-1 hover:bg-surface-elevated' : undefined
                 )}
               >
@@ -151,25 +151,25 @@ export function PWAInstallPrompt() {
           </div>
 
           {showIOSGuide ? (
-            <div className="mt-2 flex items-center gap-1.5 rounded-[var(--radius-xl)] border border-white/10 bg-black/16 px-3 py-2 text-[11px] leading-4 text-white/92 backdrop-blur-sm">
+            <div className="mt-2 flex items-center gap-[calc(var(--space-2xs)*1.5)] rounded-[var(--radius-xl)] border border-white/10 bg-surface-1/16 px-[var(--space-sm)] py-[var(--space-xs)] text-[var(--type-size-xs)] leading-4 text-[var(--accent-contrast)]/92 backdrop-blur-sm">
               <Share className="h-3.5 w-3.5 shrink-0 text-[var(--accent-strong)]" />
-              <span className="font-semibold text-white">Bagikan</span>
-              <span className="text-white/56">›</span>
+              <span className="font-semibold text-[var(--accent-contrast)]">Bagikan</span>
+              <span className="text-[var(--accent-contrast)]/56">›</span>
               <PlusSquare className="h-3.5 w-3.5 shrink-0 text-[var(--accent-strong)]" />
-              <span className="font-semibold text-white">Tambah ke Home</span>
+              <span className="font-semibold text-[var(--accent-contrast)]">Tambah ke Home</span>
             </div>
           ) : null}
         </div>
 
         <div className="relative hidden md:block">
-          <div className="flex items-start gap-3 pr-12">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-accent text-[var(--accent-contrast)] hard-shadow-sm">
+          <div className="flex items-start gap-[var(--space-sm)] pr-12">
+            <div className="flex h-[var(--size-control-lg)] w-[var(--size-control-lg)] shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-accent text-[var(--accent-contrast)] hard-shadow-sm">
               <Download className="h-5 w-5" />
             </div>
 
             <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent-strong)]">Pasang app</p>
-              <h3 className="text-base font-black leading-tight tracking-tight text-foreground">Pasang jawatch</h3>
+              <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-[var(--accent-strong)]">Pasang app</p>
+              <h3 className="text-base font-black leading-tight tracking-[var(--type-tracking-normal)] text-foreground">Pasang jawatch</h3>
               <p className="text-sm leading-6 text-muted-foreground">
                 {showIOSGuide
                   ? 'Pakai Bagikan, lalu Tambah ke Layar Utama supaya nonton dan baca lebih cepat.'
@@ -180,18 +180,18 @@ export function PWAInstallPrompt() {
 
           <div className="mt-4 space-y-0">
             {showIOSGuide ? (
-              <div className="grid grid-cols-2 gap-2">
-                <Paper tone="outline" padded={false} className="flex h-11 items-center gap-2 rounded-[var(--radius-xl)] px-3 py-2 md:min-h-12 md:px-3.5 md:py-3">
+              <div className="grid grid-cols-2 gap-[var(--space-xs)]">
+                <Paper tone="outline" padded={false} className="flex h-[var(--size-control-md)] items-center gap-[var(--space-xs)] rounded-[var(--radius-xl)] px-[var(--space-sm)] py-[var(--space-xs)] md:min-h-12 md:px-3.5 md:py-3">
                   <Share className="h-4 w-4 shrink-0 text-[var(--accent-strong)]" />
                   <div className="min-w-0">
-                    <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Langkah 1</span>
+                    <span className="block text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">Langkah 1</span>
                     <span className="block text-sm font-semibold text-foreground">Bagikan</span>
                   </div>
                 </Paper>
-                <Paper tone="outline" padded={false} className="flex h-11 items-center gap-2 rounded-[var(--radius-xl)] px-3 py-2 md:min-h-12 md:px-3.5 md:py-3">
+                <Paper tone="outline" padded={false} className="flex h-[var(--size-control-md)] items-center gap-[var(--space-xs)] rounded-[var(--radius-xl)] px-[var(--space-sm)] py-[var(--space-xs)] md:min-h-12 md:px-3.5 md:py-3">
                   <PlusSquare className="h-4 w-4 shrink-0 text-[var(--accent-strong)]" />
                   <div className="min-w-0">
-                    <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Langkah 2</span>
+                    <span className="block text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">Langkah 2</span>
                     <span className="block text-sm font-semibold text-foreground">Tambah ke Home</span>
                   </div>
                 </Paper>
@@ -201,7 +201,7 @@ export function PWAInstallPrompt() {
                 onClick={handleInstall}
                 variant={installVariant}
                 className={cn(
-                  'h-12 w-full rounded-[var(--radius-xl)] text-sm font-black',
+                  'h-[var(--size-control-lg)] w-full rounded-[var(--radius-xl)] text-sm font-black',
                   installVariant === 'outline' ? 'border-border-subtle bg-surface-1 hover:bg-surface-elevated' : undefined
                 )}
               >

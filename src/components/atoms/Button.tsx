@@ -20,10 +20,10 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const SIZE_CLASS: Record<NonNullable<ButtonProps["size"]>, string> = {
-  default: "h-11 px-4 text-sm",
-  sm: "h-9 px-3.5 text-xs",
-  lg: "h-12 px-5 text-sm md:h-14 md:px-6 md:text-base",
-  icon: "h-11 w-11",
+  default: "h-[var(--size-control-md)] px-[var(--space-md)] text-[var(--type-size-sm)]",
+  sm: "h-[var(--size-control-sm)] px-[var(--space-sm)] text-[var(--type-size-xs)]",
+  lg: "h-[var(--size-control-lg)] px-[var(--space-lg)] text-[var(--type-size-sm)] md:h-[calc(var(--size-control-lg)+var(--space-xs))] md:px-[var(--space-xl)] md:text-[var(--type-size-base)]",
+  icon: "h-[var(--size-touch)] w-[var(--size-touch)]",
 };
 
 const VARIANT_CLASS: Record<Exclude<ButtonVariant, ThemeType>, string> = {
@@ -36,9 +36,9 @@ const VARIANT_CLASS: Record<Exclude<ButtonVariant, ThemeType>, string> = {
   ghost:
     "border-transparent bg-transparent text-muted-foreground hover:border-border-subtle hover:bg-surface-1 hover:text-foreground",
   media:
-    "border-white/12 bg-black/34 text-white shadow-[0_28px_70px_-42px_rgba(0,0,0,0.58)] backdrop-blur-xl hover:bg-black/48",
+    "border-white/12 bg-surface-1/34 text-[var(--accent-contrast)] shadow-[0_28px_70px_-42px_color-mix(in_srgb,var(--shadow-color-strong)_70%,transparent)] backdrop-blur-xl hover:bg-surface-1/48",
   danger:
-    "border-transparent bg-rose-600 text-white shadow-[0_22px_50px_-34px_rgba(225,29,72,0.5)] hover:-translate-y-0.5 hover:bg-rose-500",
+    "border-transparent bg-[var(--signal-danger)] text-[var(--signal-danger-contrast)] shadow-[0_22px_50px_-34px_var(--signal-danger)] hover:-translate-y-0.5 hover:brightness-[1.05]",
   outline:
     "border-border-strong bg-transparent text-foreground hover:border-border-strong hover:bg-surface-1",
   link: "h-auto rounded-none border-transparent bg-transparent px-0 py-0 text-foreground hover:text-[var(--accent-strong)]",
@@ -54,7 +54,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         ref={ref}
         className={cn(
-          "focus-tv inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-md)] border font-semibold tracking-[0.01em] transition-[background,border-color,color,box-shadow,transform,filter] duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
+          "focus-tv inline-flex shrink-0 cursor-pointer items-center justify-center gap-[var(--space-xs)] rounded-[var(--radius-md)] border font-semibold tracking-[var(--type-tracking-normal)] transition-[background,border-color,color,box-shadow,transform,filter] duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
           variant !== "link" && SIZE_CLASS[size],
           isThemeVariant
             ? cn(

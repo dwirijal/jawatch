@@ -16,8 +16,8 @@ export function HomePageView({ heroItems, sections }: HomePageClientProps) {
 
   return (
     <main className="app-shell relative overflow-hidden" data-view-mode="compact">
-      <div className="relative z-10 app-container-wide flex flex-col gap-5 py-3 sm:gap-8 sm:py-5 lg:gap-10">
-        <div className="flex flex-col gap-6 sm:gap-9 lg:gap-10">
+      <div className="relative z-10 app-container-wide flex flex-col gap-[var(--space-lg)] py-[var(--space-sm)] sm:gap-8 sm:py-5 lg:gap-10">
+        <div className="flex flex-col gap-[var(--space-xl)] sm:gap-9 lg:gap-10">
           {featuredHero ? (
             <HomeHeroStage item={featuredHero} secondaryItems={secondaryHeroes} />
           ) : (

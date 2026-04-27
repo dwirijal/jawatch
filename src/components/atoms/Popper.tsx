@@ -23,7 +23,7 @@ export const PopperContent = React.forwardRef<
         sideOffset={sideOffset}
         align={align}
         className={cn(
-          'z-[250] rounded-[var(--radius-sm)] border border-border-subtle bg-background p-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200',
+          'z-[250] rounded-[var(--radius-sm)] border border-border-subtle bg-background p-[var(--space-md)] shadow-2xl animate-in fade-in zoom-in-95 duration-200',
           className
         )}
         {...props}

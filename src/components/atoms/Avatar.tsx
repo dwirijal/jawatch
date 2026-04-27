@@ -10,9 +10,9 @@ interface AvatarProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const SIZE_CLASS = {
-  sm: 'h-5 w-5 text-[10px]',
-  md: 'h-9 w-9 text-sm',
-  lg: 'h-12 w-12 text-base',
+  sm: 'h-[var(--size-avatar-sm)] w-[var(--size-avatar-sm)] text-[var(--type-size-xs)]',
+  md: 'h-[var(--size-avatar-md)] w-[var(--size-avatar-md)] text-[var(--type-size-sm)]',
+  lg: 'h-[var(--size-avatar-lg)] w-[var(--size-avatar-lg)] text-[var(--type-size-base)]',
 } as const;
 
 function getInitial(name?: string) {
@@ -24,7 +24,7 @@ export function Avatar({ src, alt = '', name, size = 'md', className, ...props }
     <span
       aria-hidden="true"
       className={cn(
-        'relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-800 bg-zinc-900 font-black uppercase text-white',
+        'relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-border-subtle bg-surface-1 font-black uppercase text-[var(--accent-contrast)]',
         SIZE_CLASS[size],
         className
       )}
@@ -35,7 +35,7 @@ export function Avatar({ src, alt = '', name, size = 'md', className, ...props }
           src={src}
           alt={alt}
           fill
-          sizes={size === 'lg' ? '48px' : size === 'md' ? '36px' : '20px'}
+          sizes={`var(--size-avatar-${size})`}
           className="object-cover"
           unoptimized
         />

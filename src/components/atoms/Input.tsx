@@ -24,7 +24,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          "focus-tv flex h-11 w-full rounded-[var(--radius-md)] border px-4 py-2 text-sm shadow-[0_12px_26px_-24px_var(--shadow-color)] outline-none transition-[background,border-color,color,box-shadow] duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50",
+          "focus-tv flex h-[var(--size-control-md)] w-full rounded-[var(--radius-md)] border px-[var(--space-md)] py-[var(--space-xs)] text-[var(--type-size-sm)] shadow-[0_12px_26px_-24px_var(--shadow-color)] outline-none transition-[background,border-color,color,box-shadow] duration-200 file:border-0 file:bg-transparent file:text-[var(--type-size-sm)] file:font-medium disabled:cursor-not-allowed disabled:opacity-50",
           INPUT_VARIANTS[variant],
           className,
         )}

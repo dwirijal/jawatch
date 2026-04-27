@@ -43,11 +43,11 @@ export function Paper({
   return (
     <Comp
       className={cn(
-        'rounded-[var(--radius-sm)] border text-foreground relative',
+        'relative rounded-[var(--radius-sm)] border text-foreground',
         TONE_CLASS[tone],
         SHADOW_CLASS[shadow],
         glassy && 'refractive-border glass-noise border-none',
-        padded && 'p-4 md:p-5',
+        padded && 'p-[var(--space-md)] md:p-[var(--space-lg)]',
         interactive && 'transition-all duration-300 hover:-translate-y-1 hover:border-border-strong',
         className
       )}

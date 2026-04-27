@@ -69,13 +69,13 @@ export function TitleBlock({
   return (
     <div className={cn('space-y-3', className)}>
       {eyebrow ? (
-        <p ref={eyebrowRef} className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">
+        <p ref={eyebrowRef} className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">
           {eyebrow}
         </p>
       ) : null}
       {displayLogo ? (
         <div ref={logoBlockRef} className="space-y-2">
-          <Typography as="h1" size="5xl" variant={theme} className="sr-only text-white leading-none">
+          <Typography as="h1" size="5xl" variant={theme} className="sr-only text-[var(--accent-contrast)] leading-none">
             {title}
           </Typography>
           <Image
@@ -90,12 +90,12 @@ export function TitleBlock({
           />
         </div>
       ) : (
-        <Typography ref={titleRef} as="h1" size="5xl" variant={theme} className="text-white leading-none">
+        <Typography ref={titleRef} as="h1" size="5xl" variant={theme} className="text-[var(--accent-contrast)] leading-none">
           {title}
         </Typography>
       )}
       {subtitle ? (
-        <p ref={subtitleRef} className="max-w-2xl text-sm font-medium leading-relaxed text-zinc-400 md:text-base">
+        <p ref={subtitleRef} className="max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground md:text-base">
           {subtitle}
         </p>
       ) : null}

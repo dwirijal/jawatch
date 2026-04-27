@@ -89,11 +89,11 @@ export function VideoPlayerFrame({
       <div className="flex h-full w-full flex-col items-center justify-center bg-surface-1">
         <div
           className={cn(
-            'mb-4 h-12 w-12 animate-spin rounded-full border-4 border-t-transparent',
+            'mb-4 h-[var(--size-control-lg)] w-[var(--size-control-lg)] animate-spin rounded-full border-4 border-t-transparent',
             spinnerClassName,
           )}
         />
-        <p className="animate-pulse text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">
+        <p className="animate-pulse text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">
           Preparing Stream...
         </p>
       </div>
@@ -107,7 +107,7 @@ export function VideoPlayerFrame({
           <button
             type="button"
             aria-label="Putar video"
-            className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/20 bg-white/15 text-white shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur transition hover:scale-105 hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/70"
+            className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/20 bg-white/15 text-[var(--accent-contrast)] shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur transition hover:scale-105 hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/70"
             onClick={() => setEmbedActivated(true)}
           >
             <Play className="ml-1 h-7 w-7 fill-current" aria-hidden="true" />

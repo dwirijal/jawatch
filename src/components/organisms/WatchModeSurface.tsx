@@ -54,7 +54,7 @@ export function WatchModeSurface({
 
   const modeSwitch = layout.allowModeSwitch ? (
     <div
-      className="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-1 p-1"
+      className="inline-flex items-center gap-[var(--space-2xs)] rounded-full border border-border-subtle bg-surface-1 p-[var(--space-2xs)]"
       data-watch-mode-switch
     >
       <button
@@ -62,10 +62,10 @@ export function WatchModeSurface({
         onClick={() => setTheaterMode(false)}
         aria-pressed={layout.effectiveMode === 'default'}
         className={cn(
-          'inline-flex cursor-pointer items-center gap-2 rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] transition',
+          'inline-flex cursor-pointer items-center gap-[var(--space-xs)] rounded-full px-[var(--space-sm)] py-[var(--space-xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] transition',
           layout.effectiveMode === 'default'
             ? 'bg-foreground text-background'
-            : 'text-zinc-500 hover:bg-surface-2 hover:text-foreground'
+            : 'text-muted-foreground hover:bg-surface-2 hover:text-foreground'
         )}
       >
         <MonitorPlay className="h-3.5 w-3.5" />
@@ -76,10 +76,10 @@ export function WatchModeSurface({
         onClick={() => setTheaterMode(true)}
         aria-pressed={layout.effectiveMode === 'theatrical'}
         className={cn(
-          'inline-flex cursor-pointer items-center gap-2 rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] transition',
+          'inline-flex cursor-pointer items-center gap-[var(--space-xs)] rounded-full px-[var(--space-sm)] py-[var(--space-xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] transition',
           layout.effectiveMode === 'theatrical'
             ? 'bg-foreground text-background'
-            : 'text-zinc-500 hover:bg-surface-2 hover:text-foreground'
+            : 'text-muted-foreground hover:bg-surface-2 hover:text-foreground'
         )}
       >
         <Clapperboard className="h-3.5 w-3.5" />
@@ -92,15 +92,15 @@ export function WatchModeSurface({
     <div
       className={cn(
         'w-full transition-colors duration-300',
-        layout.effectiveMode === 'theatrical' && 'bg-[#f4f1ec] md:-mt-[5.25rem]'
+        layout.effectiveMode === 'theatrical' && 'bg-surface-2 md:-mt-[5.25rem]'
       )}
       data-watch-kind={kind}
       data-watch-mode={layout.effectiveMode}
     >
-      <div className="mx-auto flex w-[min(var(--layout-max-immersive),calc(100%-var(--layout-pad)*2))] flex-col gap-6 py-4 md:gap-8 md:py-6">
-        <section className="flex flex-col gap-4 border-b border-border-subtle/80 pb-4 md:flex-row md:items-end md:justify-between md:gap-6">
+      <div className="mx-auto flex w-[min(var(--layout-max-immersive),calc(100%-var(--layout-pad)*2))] flex-col gap-[var(--space-xl)] py-[var(--space-md)] md:gap-8 md:py-6">
+        <section className="flex flex-col gap-[var(--space-md)] border-b border-border-subtle/80 pb-4 md:flex-row md:items-end md:justify-between md:gap-6">
           <div className="min-w-0 flex-1">{header}</div>
-          <div className="flex flex-wrap items-center gap-2 md:justify-end">
+          <div className="flex flex-wrap items-center gap-[var(--space-xs)] md:justify-end">
             {headerActions}
             {modeSwitch}
           </div>
@@ -108,7 +108,7 @@ export function WatchModeSurface({
 
         {layout.showRail ? (
           <>
-            <section className="flex flex-col gap-6 xl:hidden">
+            <section className="flex flex-col gap-[var(--space-xl)] xl:hidden">
               {compactSections.map((section) => {
                 if (section.id === 'stage') {
                   return (
@@ -146,7 +146,7 @@ export function WatchModeSurface({
 
             <section
               className={cn(
-                'hidden gap-6 xl:grid xl:grid-cols-[minmax(0,1.45fr)_22rem] xl:gap-8',
+                'hidden gap-[var(--space-xl)] xl:grid xl:grid-cols-[minmax(0,1.45fr)_22rem] xl:gap-8',
                 !rail && 'xl:grid-cols-1'
               )}
             >
@@ -167,7 +167,7 @@ export function WatchModeSurface({
             {(body || rail) ? (
               <section
                 className={cn(
-                  'grid gap-6 border-t border-border-subtle/80 pt-5 xl:grid-cols-[minmax(0,1.45fr)_22rem] xl:gap-8',
+                  'grid gap-[var(--space-xl)] border-t border-border-subtle/80 pt-5 xl:grid-cols-[minmax(0,1.45fr)_22rem] xl:gap-8',
                   !rail && 'grid-cols-1'
                 )}
               >

@@ -36,7 +36,7 @@ export function SplitLayout({
   return (
     <div
       className={cn(
-        'grid grid-cols-1 gap-6',
+        'grid grid-cols-1 gap-[var(--space-xl)]',
         mobileGoldenRows && 'grid-rows-[minmax(0,1.618fr)_minmax(0,1fr)]',
         desktopColumnsClassName || BREAKPOINT_CLASS[breakpoint],
         className

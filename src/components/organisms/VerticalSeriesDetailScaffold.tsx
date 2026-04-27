@@ -16,9 +16,9 @@ export function VerticalSeriesDetailScaffold({
   footer,
 }: VerticalSeriesDetailScaffoldProps) {
   return (
-    <div className="app-shell bg-background text-white">
+    <div className="app-shell bg-background text-[var(--accent-contrast)]">
       <main className="app-container-wide app-section-stack py-6 md:py-8">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-[var(--space-sm)]">
           <Button variant="outline" asChild>
             <Link href={backHref}>{backLabel}</Link>
           </Button>

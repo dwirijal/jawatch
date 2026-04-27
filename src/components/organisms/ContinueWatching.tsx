@@ -103,7 +103,7 @@ export function ContinueWatching({
       ) : null}
 
       <ScrollArea className="w-full overflow-hidden">
-        <div className="flex gap-4 pb-4 md:gap-6 md:pb-6">
+        <div className="flex gap-[var(--space-md)] pb-4 md:gap-6 md:pb-6">
           {history.map((item) => {
             const config = THEME_CONFIG[item.type as ThemeType] || THEME_CONFIG.default;
             const progress = getProgress(item.id);
@@ -134,19 +134,19 @@ export function ContinueWatching({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                     
                     <div className="absolute inset-0 flex scale-90 items-center justify-center opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100">
-                      <div className={cn("flex h-14 w-14 items-center justify-center rounded-full text-white shadow-2xl", config.primary, config.shadow)}>
+                      <div className={cn("flex h-[calc(var(--size-control-lg)+var(--space-xs))] w-[calc(var(--size-control-lg)+var(--space-xs))] items-center justify-center rounded-full text-[var(--accent-contrast)] shadow-2xl", config.primary, config.shadow)}>
                         <Play className="ml-1 h-6 w-6 fill-current" />
                       </div>
                     </div>
 
                     <div className="absolute bottom-4 left-4 right-4">
-                      <div className="mb-1.5 flex items-center gap-2">
-                        <Badge variant={item.type as ThemeType} className="px-2.5 py-0.5 text-[10px] tracking-[0.2em]">
+                      <div className="mb-1.5 flex items-center gap-[var(--space-xs)]">
+                        <Badge variant={item.type as ThemeType} className="px-[calc(var(--space-xs)+var(--space-2xs))] py-0.5 text-[var(--type-size-xs)] tracking-[var(--type-tracking-kicker)]">
                           {item.type}
                         </Badge>
                       </div>
-                      <h3 className="line-clamp-1 text-sm font-black tracking-tight text-white">{item.title}</h3>
-                      <p className="mt-1 line-clamp-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                      <h3 className="line-clamp-1 text-sm font-black tracking-[var(--type-tracking-normal)] text-[var(--accent-contrast)]">{item.title}</h3>
+                      <p className="mt-1 line-clamp-1 text-[var(--type-size-xs)] font-bold uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">
                         {item.type === 'manga' ? 'Baca:' : 'Nonton:'} {item.lastChapterOrEpisode}
                       </p>
                     </div>

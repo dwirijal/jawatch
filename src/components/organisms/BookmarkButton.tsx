@@ -51,11 +51,11 @@ export function BookmarkButton({
   };
 
   const themeClasses = {
-    manga: isSaved ? 'bg-orange-600 text-white hover:bg-orange-700 border-transparent' : 'text-orange-500 hover:bg-orange-600/10 border-orange-600/50',
-    anime: isSaved ? 'bg-blue-600 text-white hover:bg-blue-700 border-transparent' : 'text-blue-500 hover:bg-blue-600/10 border-blue-600/50',
-    donghua: isSaved ? 'bg-red-600 text-white hover:bg-red-700 border-transparent' : 'text-red-500 hover:bg-red-600/10 border-red-600/50',
-    movie: isSaved ? 'bg-indigo-600 text-white hover:bg-indigo-700 border-transparent' : 'text-indigo-500 hover:bg-indigo-600/10 border-indigo-600/50',
-    drama: isSaved ? 'bg-rose-600 text-white hover:bg-rose-700 border-transparent' : 'text-rose-400 hover:bg-rose-600/10 border-rose-600/50',
+    manga: isSaved ? 'bg-[var(--signal-warning)] text-[var(--accent-contrast)] hover:brightness-[1.05] border-transparent' : 'text-[var(--signal-warning)] hover:bg-[var(--signal-warning)]/10 border-[color:var(--signal-warning)]',
+    anime: isSaved ? 'bg-blue-600 text-[var(--accent-contrast)] hover:bg-blue-700 border-transparent' : 'text-blue-500 hover:bg-blue-600/10 border-blue-600/50',
+    donghua: isSaved ? 'bg-[var(--signal-danger)] text-[var(--accent-contrast)] hover:brightness-[1.05] border-transparent' : 'text-[var(--signal-danger)] hover:bg-[var(--signal-danger)]/10 border-[color:var(--signal-danger)]',
+    movie: isSaved ? 'bg-indigo-600 text-[var(--accent-contrast)] hover:bg-indigo-700 border-transparent' : 'text-indigo-500 hover:bg-indigo-600/10 border-indigo-600/50',
+    drama: isSaved ? 'bg-[var(--signal-danger)] text-[var(--accent-contrast)] hover:brightness-[1.05] border-transparent' : 'text-[var(--signal-danger)] hover:bg-[var(--signal-danger)]/10 border-[color:var(--signal-danger)]',
   };
 
   return (
@@ -66,7 +66,7 @@ export function BookmarkButton({
         disabled={isPending}
         aria-busy={isPending}
         className={cn(
-          "h-11 gap-2 px-4.5 transition-all duration-300",
+          "h-[var(--size-control-md)] gap-[var(--space-xs)] px-[calc(var(--space-md)+var(--space-2xs))] transition-all duration-300",
           isPending && "cursor-wait opacity-70",
           themeClasses[theme],
           className

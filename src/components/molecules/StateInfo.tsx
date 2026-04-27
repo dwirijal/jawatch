@@ -35,8 +35,8 @@ export function StateInfo({
       shadow="sm"
     >
       <div className={cn(
-        "p-4 rounded-[var(--radius-sm)]",
-        type === "error" ? "bg-red-500/10 text-red-300" : "bg-surface-2 text-muted-foreground"
+        "p-[var(--space-md)] rounded-[var(--radius-sm)]",
+        type === "error" ? "bg-[var(--signal-danger-surface)] text-[var(--signal-danger)]" : "bg-surface-2 text-muted-foreground"
       )}>
         <FinalIcon className="w-10 h-10" />
       </div>

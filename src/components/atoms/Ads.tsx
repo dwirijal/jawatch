@@ -160,14 +160,14 @@ export function Ads({ type = 'horizontal', className, theme, onStatusChange }: A
           className
         )}
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between px-3 py-2">
-          <span className="rounded-[var(--radius-xs)] border border-border-subtle bg-background/80 px-2 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-zinc-500 backdrop-blur">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between px-[var(--space-sm)] py-[var(--space-xs)]">
+          <span className="rounded-[var(--radius-xs)] border border-border-subtle bg-background/80 px-[var(--space-xs)] py-[var(--space-2xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground backdrop-blur">
             Sponsor
           </span>
         </div>
 
         {hasAdsenseInventory ? (
-          <div className="h-full w-full px-2 py-8 md:px-3">
+          <div className="h-full w-full px-[var(--space-xs)] py-8 md:px-3">
             <ins
               ref={adsenseRef}
               className="adsbygoogle block h-full w-full overflow-hidden"

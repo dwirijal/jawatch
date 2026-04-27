@@ -19,14 +19,14 @@ export function AuthNavEntry() {
   const redirectTarget = useRedirectTarget();
 
   if (session.loading) {
-    return <div className="h-10 w-32 animate-pulse rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1" />;
+    return <div className="h-[calc(var(--size-control-md)-var(--space-2xs))] w-32 animate-pulse rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1" />;
   }
 
   if (!session.authenticated || !session.user) {
     return (
       <Link
         href={buildLoginUrl(redirectTarget)}
-        className="focus-tv rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-4 py-2.5 text-sm font-black uppercase tracking-[0.2em] text-foreground transition-colors hover:bg-surface-elevated"
+        className="focus-tv rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-[var(--space-md)] py-[calc(var(--space-xs)+var(--space-2xs))] text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground transition-colors hover:bg-surface-elevated"
       >
         Masuk
       </Link>
@@ -37,13 +37,13 @@ export function AuthNavEntry() {
   const returnTo = logoutRequest.body.get('returnTo') ?? '/';
 
   return (
-    <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-2 py-2">
+    <div className="flex items-center gap-[var(--space-sm)] rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1 px-[var(--space-xs)] py-[var(--space-xs)]">
       <Avatar name={session.user.displayName} className="border-border-subtle bg-surface-2" />
       <div className="min-w-0">
-        <p className="truncate text-sm font-black uppercase tracking-[0.16em] text-foreground">
+        <p className="truncate text-sm font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground">
           {compactDisplayName(session.user.displayName)}
         </p>
-        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">Sudah masuk</p>
+        <p className="text-[var(--type-size-xs)] font-bold uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">Sudah masuk</p>
       </div>
       <form action={logoutRequest.url} method={logoutRequest.method}>
         <input type="hidden" name="returnTo" value={returnTo} />

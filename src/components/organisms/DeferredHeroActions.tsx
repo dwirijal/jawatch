@@ -68,7 +68,7 @@ function ActionPlaceholder({ wide = false }: { wide?: boolean }) {
           aria-hidden="true"
           className={wide
         ? 'inline-flex min-h-11 min-w-[7.5rem] rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/80'
-        : 'inline-flex h-11 w-11 rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/80'}
+        : 'inline-flex h-[var(--size-control-md)] w-[var(--size-control-md)] rounded-[var(--radius-sm)] border border-border-subtle bg-surface-1/80'}
     />
   );
 }

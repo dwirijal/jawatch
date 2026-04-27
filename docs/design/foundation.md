@@ -329,6 +329,11 @@ Bagian ini menangkap angka mentah untuk rhythm, control sizing, panel padding, d
 | `--size-control-md` | `44px` | `44px` | `44px` | standard control token | primary action, input height |
 | `--size-control-lg` | `48px` | `48px` | `48px` | large control token | hero CTA |
 | `--size-touch` | `44px` | `44px` | `44px` | minimum hit target | player/search close |
+| `--size-avatar-sm` | `20px` | `20px` | `20px` | small identity token | dense account markers |
+| `--size-avatar-md` | `36px` | `36px` | `36px` | default identity token | navbar/profile avatar |
+| `--size-avatar-lg` | `48px` | `48px` | `48px` | large identity token | community/profile cards |
+| `--size-switch-track` | `32px` | `32px` | `32px` | switch track width | reader/settings toggles |
+| `--size-switch-thumb` | `12px` | `12px` | `12px` | switch thumb size | reader/settings toggles |
 | Paper padding | `16px` | `20px` | `20px` | `p-4 md:p-5` | cards and panels |
 | radius-sm | `0.9rem` | `0.9rem` | `0.9rem` | compact control radius | badges, metadata pills |
 | radius-md | `1.15rem` | `1.15rem` | `1.15rem` | control default radius | buttons, inputs |

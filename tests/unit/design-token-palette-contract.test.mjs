@@ -1,10 +1,32 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 function read(relativePath) {
   return readFileSync(join(process.cwd(), relativePath), 'utf8');
+}
+
+function listSourceFiles(relativeDir) {
+  const root = join(process.cwd(), relativeDir);
+  const files = [];
+
+  function walk(dir) {
+    for (const entry of readdirSync(dir)) {
+      const fullPath = join(dir, entry);
+      if (statSync(fullPath).isDirectory()) {
+        walk(fullPath);
+        continue;
+      }
+
+      if (/\.(ts|tsx)$/.test(fullPath)) {
+        files.push(fullPath);
+      }
+    }
+  }
+
+  walk(root);
+  return files;
 }
 
 function extractBlock(source, startMarker, endMarker) {
@@ -201,10 +223,15 @@ const FOUNDATION_TOKEN_VALUES = {
   'space-2xl': '2.5rem',
   'space-3xl': '4rem',
   'space-4xl': '6rem',
+  'size-avatar-sm': '1.25rem',
+  'size-avatar-md': '2.25rem',
+  'size-avatar-lg': '3rem',
   'size-touch': '2.75rem',
   'size-control-sm': '2.25rem',
   'size-control-md': '2.75rem',
   'size-control-lg': '3rem',
+  'size-switch-track': '2rem',
+  'size-switch-thumb': '0.75rem',
   'type-size-xs': '0.75rem',
   'type-size-sm': '0.875rem',
   'type-size-base': '1rem',
@@ -311,5 +338,14 @@ test('@theme inline exports every approved primitive alias family and scale', ()
         `${tokenName} should mirror the primitive alias`,
       );
     }
+  }
+});
+
+test('shared design-system components consume semantic tokens instead of raw UI primitives', () => {
+  const forbidden = /--primitive-color|#[0-9a-fA-F]{3,8}|(?:bg|text|border)-(?:zinc|orange|red|rose)-|tracking-\[[0-9.]+em\]|tracking-tight|tracking-tighter|text-\[[0-9]+px\]/;
+
+  for (const filePath of listSourceFiles('src/components')) {
+    const source = readFileSync(filePath, 'utf8');
+    assert.doesNotMatch(source, forbidden, filePath.replace(`${process.cwd()}/`, ''));
   }
 });

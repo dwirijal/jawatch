@@ -20,7 +20,7 @@ export function Badge({ className, variant = "outline", ...props }: BadgeProps) 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase leading-none tracking-[0.18em] transition-[background,border-color,color,transform] duration-200",
+        "inline-flex items-center gap-[var(--space-2xs)] rounded-full border px-[calc(var(--space-xs)+var(--space-2xs))] py-[var(--space-2xs)] text-[var(--type-size-xs)] font-black uppercase leading-[var(--type-line-tight)] tracking-[var(--type-tracking-kicker)] transition-[background,border-color,color,transform] duration-200",
         isThemeVariant
           ? cn(config?.bg, config?.text, config?.border)
           : BADGE_VARIANTS[variant as Exclude<BadgeVariant, ThemeType>],

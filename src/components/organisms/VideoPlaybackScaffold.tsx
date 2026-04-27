@@ -19,12 +19,12 @@ export function VideoPlaybackScaffold(props: VideoPlaybackScaffoldProps) {
   const { stage, sidebar, desktopColumnsClassName, stretchSidebarToStage = false, children } = props;
 
   return (
-    <div className="app-shell bg-background text-white">
-      <main className="app-container-wide app-section-stack py-3 md:py-5">
+    <div className="app-shell bg-background text-[var(--accent-contrast)]">
+      <main className="app-container-wide app-section-stack py-[var(--space-sm)] md:py-5">
         <SplitLayout
           breakpoint="xl"
           desktopColumnsClassName={desktopColumnsClassName}
-          className={cn(stretchSidebarToStage ? 'items-stretch' : 'items-start', 'gap-6 xl:gap-8')}
+          className={cn(stretchSidebarToStage ? 'items-stretch' : 'items-start', 'gap-[var(--space-xl)] xl:gap-8')}
           stage={<div className="space-y-5">{stage}</div>}
           gallery={
             sidebar ? (

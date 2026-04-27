@@ -56,7 +56,7 @@ export function MediaHubHeader({
   );
   const iconWrapperClassName = cn(
     'mt-1 flex shrink-0 items-center justify-center rounded-[var(--radius-lg)] border border-border-subtle shadow-[0_18px_44px_-30px_var(--shadow-color)]',
-    layoutVariant === 'editorial' ? 'h-12 w-12 md:h-14 md:w-14' : 'h-11 w-11 md:h-12 md:w-12',
+    layoutVariant === 'editorial' ? 'h-[var(--size-control-lg)] w-[var(--size-control-lg)] md:h-14 md:w-14' : 'h-[var(--size-control-md)] w-[var(--size-control-md)] md:h-12 md:w-12',
     config.primary
   );
   const iconClassName = cn(layoutVariant === 'editorial' ? 'h-6 w-6 md:h-7 md:w-7' : 'h-5 w-5 md:h-6 md:w-6', config.contrast);
@@ -95,18 +95,18 @@ export function MediaHubHeader({
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(6,7,10,0.46)_0%,rgba(6,7,10,0.2)_44%,rgba(6,7,10,0.38)_100%)]" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0.08)_0%,rgba(8,10,14,0.16)_24%,rgba(8,10,14,0.9)_100%)]" />
 
-        <div className={cn(containerClassName, 'relative z-10 flex min-h-[11.5rem] items-end py-4 sm:min-h-[12.5rem] sm:py-5 md:min-h-[18rem] md:py-6 lg:min-h-[21rem] lg:py-8 xl:min-h-[23rem]')}>
+        <div className={cn(containerClassName, 'relative z-10 flex min-h-[11.5rem] items-end py-[var(--space-md)] sm:min-h-[12.5rem] sm:py-5 md:min-h-[18rem] md:py-6 lg:min-h-[21rem] lg:py-8 xl:min-h-[23rem]')}>
           <div className="w-full space-y-4 md:space-y-5">
             <div className="max-w-3xl space-y-3 md:space-y-4">
-              <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-[calc(var(--space-xs)+var(--space-2xs))]">
                 {eyebrow ? (
-                  <span className="text-[10px] font-black uppercase tracking-[0.28em] text-zinc-200/82">
+                  <span className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground/82">
                     {eyebrow}
                   </span>
                 ) : null}
 
                 {spotlight.label ? (
-                  <span className="rounded-full border border-white/14 bg-black/24 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/92 backdrop-blur-sm">
+                  <span className="rounded-full border border-white/14 bg-black/24 px-[var(--space-sm)] py-[var(--space-2xs)] text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-[var(--accent-contrast)]/92 backdrop-blur-sm">
                     {spotlight.label}
                   </span>
                 ) : null}
@@ -128,26 +128,26 @@ export function MediaHubHeader({
                     />
                   </div>
                 ) : (
-                  <h1 className="line-clamp-2 max-w-3xl text-balance font-[var(--font-heading)] text-[clamp(1.85rem,7vw,4.5rem)] font-bold leading-[0.94] tracking-[-0.06em] text-white">
+                  <h1 className="line-clamp-2 max-w-3xl text-balance font-[var(--font-heading)] text-[clamp(1.85rem,7vw,4.5rem)] font-bold leading-[0.94] tracking-[-0.06em] text-[var(--accent-contrast)]">
                     {title}
                   </h1>
                 )}
-                <p className="max-w-2xl text-xs leading-5 text-zinc-100/84 sm:text-sm sm:leading-6 md:text-base md:leading-7">
+                <p className="max-w-2xl text-xs leading-5 text-foreground/84 sm:text-sm sm:leading-6 md:text-base md:leading-7">
                   {description}
                 </p>
                 {spotlight.meta ? (
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-200/70 md:text-xs">
+                  <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground/70 md:text-xs">
                     {spotlight.meta}
                   </p>
                 ) : null}
               </div>
 
               {spotlightBadges.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-[var(--space-xs)]">
                   {spotlightBadges.map((badge) => (
                     <span
                       key={badge}
-                      className="rounded-full border border-white/12 bg-black/20 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-100 backdrop-blur-sm"
+                      className="rounded-full border border-white/12 bg-surface-1/20 px-[var(--space-sm)] py-1.5 text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-foreground backdrop-blur-sm"
                     >
                       {badge}
                     </span>
@@ -157,7 +157,7 @@ export function MediaHubHeader({
 
               {spotlight.actions || children ? (
                 <div className="w-fit max-w-full rounded-[var(--radius-xl)] border border-white/10 bg-black/26 p-2.5 shadow-[0_24px_70px_-38px_rgba(0,0,0,0.72)] backdrop-blur-md sm:p-3">
-                  <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                  <div className="flex flex-wrap items-center gap-[calc(var(--space-xs)+var(--space-2xs))] sm:gap-3">
                     {spotlight.actions}
                     {children}
                   </div>
@@ -167,7 +167,7 @@ export function MediaHubHeader({
 
             {footer ? (
               <div className="border-t border-white/10 pt-3 md:pt-4">
-                <div className="flex min-h-[3rem] flex-col gap-3 md:min-h-0 md:flex-row md:items-center md:justify-between md:gap-4">
+                <div className="flex min-h-[3rem] flex-col gap-[var(--space-sm)] md:min-h-0 md:flex-row md:items-center md:justify-between md:gap-4">
                   {footer}
                 </div>
               </div>
@@ -180,18 +180,18 @@ export function MediaHubHeader({
 
   if (layoutVariant === 'editorial') {
     return (
-      <header className="surface-panel-elevated relative overflow-hidden px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-7">
+      <header className="surface-panel-elevated relative overflow-hidden px-[var(--space-md)] py-5 sm:px-6 sm:py-6 md:px-8 md:py-7">
         <div className={cn('pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full opacity-[0.2] blur-3xl', config.primary)} />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_72%)]" />
         <div className={cn(containerClassName, 'relative z-10 space-y-4 md:space-y-5')}>
-          <div className={cn('grid gap-5 lg:gap-6', children ? 'xl:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)] xl:items-end' : undefined)}>
+          <div className={cn('grid gap-[var(--space-lg)] lg:gap-6', children ? 'xl:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)] xl:items-end' : undefined)}>
             <div className="space-y-3.5 md:space-y-4">
               {eyebrow ? (
-                <p className="text-[10px] font-black uppercase tracking-[0.32em] text-muted-foreground">{eyebrow}</p>
+                <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">{eyebrow}</p>
               ) : null}
 
               <div className="max-w-3xl space-y-3 md:space-y-4">
-                <div className="flex items-start gap-3 md:gap-4">
+                <div className="flex items-start gap-[var(--space-sm)] md:gap-4">
                   <div className={iconWrapperClassName}>
                     {Icon ? (
                       <Icon className={iconClassName} />
@@ -215,8 +215,8 @@ export function MediaHubHeader({
             </div>
 
             {children ? (
-              <div className="flex min-h-[3rem] flex-wrap items-center gap-2.5 rounded-[var(--radius-xl)] border border-border-subtle bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-1)_92%,white_8%)_0%,var(--surface-1)_100%)] p-3 md:gap-3 md:p-4 xl:justify-end">
-                <div className="flex flex-wrap items-center gap-2.5 md:gap-3">
+              <div className="flex min-h-[3rem] flex-wrap items-center gap-[calc(var(--space-xs)+var(--space-2xs))] rounded-[var(--radius-xl)] border border-border-subtle bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-1)_92%,white_8%)_0%,var(--surface-1)_100%)] p-[var(--space-sm)] md:gap-3 md:p-4 xl:justify-end">
+                <div className="flex flex-wrap items-center gap-[calc(var(--space-xs)+var(--space-2xs))] md:gap-3">
                   {children}
                 </div>
               </div>
@@ -224,7 +224,7 @@ export function MediaHubHeader({
           </div>
 
           {footer ? (
-            <div className="flex min-h-[3.5rem] flex-col gap-3 border-t border-border-subtle pt-4 md:min-h-0 md:flex-row md:items-center md:justify-between md:gap-4">
+            <div className="flex min-h-[3.5rem] flex-col gap-[var(--space-sm)] border-t border-border-subtle pt-4 md:min-h-0 md:flex-row md:items-center md:justify-between md:gap-4">
               {footer}
             </div>
           ) : null}
@@ -234,17 +234,17 @@ export function MediaHubHeader({
   }
 
   return (
-    <header className="surface-panel-elevated relative overflow-hidden px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-7">
+    <header className="surface-panel-elevated relative overflow-hidden px-[var(--space-md)] py-5 sm:px-6 sm:py-6 md:px-8 md:py-7">
       <div className={cn('pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full opacity-[0.18] blur-3xl', config.primary)} />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top_left,var(--accent-soft),transparent_72%)]" />
       <div className={cn(containerClassName, 'relative z-10 space-y-5 md:space-y-6')}>
-        <div className={cn('grid gap-5 lg:gap-6', children ? 'lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end' : undefined)}>
+        <div className={cn('grid gap-[var(--space-lg)] lg:gap-6', children ? 'lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end' : undefined)}>
           <div className="space-y-4 md:space-y-5">
             {eyebrow ? (
-              <p className="text-[10px] font-black uppercase tracking-[0.32em] text-muted-foreground">{eyebrow}</p>
+              <p className="text-[var(--type-size-xs)] font-black uppercase tracking-[var(--type-tracking-kicker)] text-muted-foreground">{eyebrow}</p>
             ) : null}
 
-            <div className="flex items-start gap-3 md:gap-4">
+            <div className="flex items-start gap-[var(--space-sm)] md:gap-4">
               <div className={iconWrapperClassName}>
                 {Icon ? (
                   <Icon className={iconClassName} />
@@ -265,14 +265,14 @@ export function MediaHubHeader({
           </div>
 
           {children ? (
-            <div className="flex flex-wrap items-center gap-2.5 rounded-[var(--radius-xl)] border border-border-subtle bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-1)_92%,white_8%)_0%,var(--surface-1)_100%)] p-3 md:gap-3 md:p-4 lg:justify-end">
+            <div className="flex flex-wrap items-center gap-[calc(var(--space-xs)+var(--space-2xs))] rounded-[var(--radius-xl)] border border-border-subtle bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface-1)_92%,white_8%)_0%,var(--surface-1)_100%)] p-[var(--space-sm)] md:gap-3 md:p-4 lg:justify-end">
               {children}
             </div>
           ) : null}
         </div>
 
         {footer ? (
-          <div className="flex flex-col gap-3 border-t border-border-subtle pt-4 md:flex-row md:items-center md:justify-between md:gap-4">
+          <div className="flex flex-col gap-[var(--space-sm)] border-t border-border-subtle pt-4 md:flex-row md:items-center md:justify-between md:gap-4">
             {footer}
           </div>
         ) : null}
