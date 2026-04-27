@@ -2,14 +2,24 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import { ArrowRight, CalendarDays, Clapperboard, Clock3, Film, Play, Tv, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
+import { MediaCard } from '@/components/atoms/Card';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { SegmentedNav } from '@/components/molecules/SegmentedNav';
 import { MediaPageHeader } from '@/components/organisms/MediaPageHeader';
+import { loadMoviePageData } from '@/features/movies/server/loadMoviePageData';
+import { getSeriesHubData } from '@/lib/adapters/series';
+import {
+  formatMovieCardMetaLine,
+  formatMovieCardSubtitle,
+  getMovieCardBadgeText,
+} from '@/lib/card-presentation';
 import { WATCH_PRIMARY_SEGMENTS } from '@/lib/media-hub-segments';
 import { buildCollectionPageJsonLd, buildMetadata } from '@/lib/seo';
+import { formatSeriesCardSubtitle, getSeriesTheme, type SeriesCardItem } from '@/lib/series-presentation';
 import { SHORTS_HUB_ENABLED } from '@/lib/shorts-paths';
 import { cn, THEME_CONFIG, type ThemeType } from '@/lib/utils';
+import type { MovieCardItem } from '@/lib/types';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Nonton Subtitle Indonesia',
@@ -86,6 +96,51 @@ const QUICK_LINKS = [
   },
 ] as const;
 
+type WatchSuggestion =
+  | {
+      kind: 'series';
+      item: SeriesCardItem;
+    }
+  | {
+      kind: 'movie';
+      item: MovieCardItem;
+    };
+
+async function loadWatchSuggestions(): Promise<WatchSuggestion[]> {
+  const [seriesData, movieData] = await Promise.all([
+    getSeriesHubData(8, { includeNsfw: false, includeFilters: false }).catch(() => ({
+      popular: [],
+      latest: [],
+      dramaSpotlight: [],
+      weeklySchedule: [],
+    })),
+    loadMoviePageData({
+      activeGenre: null,
+      limit: 8,
+      includeNsfw: false,
+    }).catch(() => ({ popular: [], latest: [], initialResults: null })),
+  ]);
+
+  const suggestions: WatchSuggestion[] = [
+    ...seriesData.latest.slice(0, 4).map((item) => ({ kind: 'series' as const, item })),
+    ...seriesData.popular.slice(0, 2).map((item) => ({ kind: 'series' as const, item })),
+    ...movieData.popular.slice(0, 4).map((item) => ({ kind: 'movie' as const, item })),
+    ...movieData.latest.slice(0, 2).map((item) => ({ kind: 'movie' as const, item })),
+  ];
+
+  const seen = new Set<string>();
+  return suggestions.filter((suggestion) => {
+    const href = suggestion.kind === 'series'
+      ? `/series/${suggestion.item.slug}`
+      : `/movies/${suggestion.item.slug}`;
+    if (seen.has(href)) {
+      return false;
+    }
+    seen.add(href);
+    return true;
+  }).slice(0, 8);
+}
+
 function WatchCategoryCard({ category, priority = false }: { category: WatchCategory; priority?: boolean }) {
   const Icon = category.icon;
   const config = THEME_CONFIG[category.theme] ?? THEME_CONFIG.default;
@@ -150,7 +205,9 @@ function WatchCategoryCard({ category, priority = false }: { category: WatchCate
   );
 }
 
-export default function WatchPage() {
+export default async function WatchPage() {
+  const suggestions = await loadWatchSuggestions();
+
   return (
     <main className="app-shell" data-theme="movie">
       <JsonLd
@@ -242,6 +299,54 @@ export default function WatchPage() {
             );
           })}
         </section>
+
+        {suggestions.length > 0 ? (
+          <section className="mt-8 space-y-4 md:mt-10">
+            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div className="space-y-2">
+                <p className="type-kicker">Saran tontonan</p>
+                <h2 className="type-section-title text-foreground">Pilih judul dan langsung masuk.</h2>
+              </div>
+              <Button variant="link" asChild>
+                <Link href="/watch/series">Lihat katalog</Link>
+              </Button>
+            </div>
+            <div className="media-grid" data-grid-density="default">
+              {suggestions.map((suggestion) => {
+                if (suggestion.kind === 'movie') {
+                  const item = suggestion.item;
+                  return (
+                    <MediaCard
+                      key={`movie:${item.slug}`}
+                      href={`/movies/${item.slug}`}
+                      image={item.poster}
+                      title={item.title}
+                      subtitle={formatMovieCardSubtitle(item)}
+                      metaLine={formatMovieCardMetaLine(item)}
+                      badgeText={getMovieCardBadgeText()}
+                      theme="movie"
+                    />
+                  );
+                }
+
+                const item = suggestion.item;
+                const theme = getSeriesTheme(item.type);
+                return (
+                  <MediaCard
+                    key={`series:${item.slug}`}
+                    href={`/series/${item.slug}`}
+                    image={item.poster}
+                    title={item.title}
+                    subtitle={formatSeriesCardSubtitle(item)}
+                    metaLine={item.rating ? `Rating ${item.rating}` : undefined}
+                    badgeText={item.type.toUpperCase()}
+                    theme={theme}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
 
         <section className="mt-6 overflow-hidden rounded-[var(--radius-2xl)] border border-border-subtle bg-[linear-gradient(135deg,var(--surface-1)_0%,var(--surface-2)_100%)] p-[var(--space-md)] md:p-6">
           <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
