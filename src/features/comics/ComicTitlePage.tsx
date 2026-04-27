@@ -15,7 +15,7 @@ import { Breadcrumbs } from '@/components/molecules/Breadcrumbs';
 import { TitleBlock } from '@/components/atoms/TitleBlock';
 import { TitleCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
-import { ReaderMediaDetailPage } from '@/components/organisms/ReaderMediaDetailPage';
+import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
 import { User, Activity, Layout, ShieldAlert, ChevronLeft, Play } from 'lucide-react';
 import { resolveViewerNsfwAccess } from '@/lib/server/viewer-nsfw-access';
 import { isReservedComicSlug } from '@/lib/canonical-route-guards';
@@ -105,8 +105,9 @@ export default async function ComicDetailPage({ params }: PageProps) {
       />
       <ComicDetailHistoryTracker slug={manga.slug} title={manga.title} image={hdImage} href={`/comics/${manga.slug}`} />
 
-      <ReaderMediaDetailPage
+      <DetailPageScaffold
         theme="manga"
+        desktopColumnsClassName="xl:grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.95fr)] xl:grid-rows-1"
         breadcrumbs={
           <Breadcrumbs
             items={[
@@ -308,7 +309,7 @@ export default async function ComicDetailPage({ params }: PageProps) {
             }))}
           />
         </section>
-      </ReaderMediaDetailPage>
+      </DetailPageScaffold>
     </>
   );
 }

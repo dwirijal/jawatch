@@ -4,17 +4,17 @@ import { Suspense } from 'react';
 import { Play } from 'lucide-react';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
+import { MediaCard } from '@/components/atoms/Card';
 import { JsonLd } from '@/components/atoms/JsonLd';
 import { Link } from '@/components/atoms/Link';
 import { Paper } from '@/components/atoms/Paper';
-import { StaticMediaCard } from '@/components/atoms/StaticMediaCard';
 import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeading';
 import { Breadcrumbs } from '@/components/molecules/Breadcrumbs';
 import { UnitCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
-import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
+import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
 import { LazyTrailerEmbed } from '@/components/organisms/LazyTrailerEmbed';
-import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
+import { VideoDetailHeroFrame } from '@/components/organisms/VideoDetailHeroFrame';
 import { VideoPlayer } from '@/components/organisms/VideoPlayer';
 import { resolveViewerNsfwAccess } from '@/lib/server/viewer-nsfw-access';
 import {
@@ -181,7 +181,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
           genres: movie.genres,
         })}
       />
-      <HorizontalMediaDetailPage
+      <DetailPageScaffold
         theme="movie"
         breadcrumbs={
           <Breadcrumbs
@@ -194,7 +194,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
           />
         }
         hero={
-          <VideoDetailHero
+          <VideoDetailHeroFrame
             theme="movie"
             backHref="/watch/movies"
             backLabel="Kembali ke film"
@@ -333,7 +333,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
               />
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {movie.recommendations.map((item) => (
-                  <StaticMediaCard
+                  <MediaCard
                     key={item.slug}
                     href={`/movies/${item.slug}`}
                     image={item.poster}
@@ -348,7 +348,7 @@ export default async function MovieDetailPage({ params }: PageProps) {
             </section>
           ) : null}
         </Suspense>
-      </HorizontalMediaDetailPage>
+      </DetailPageScaffold>
     </>
   );
 }

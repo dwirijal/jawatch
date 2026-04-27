@@ -11,10 +11,10 @@ import { DetailSectionHeading } from '@/components/molecules/DetailSectionHeadin
 import { Breadcrumbs } from '@/components/molecules/Breadcrumbs';
 import { TitleCommunityPanel } from '@/components/organisms/CommunityPanel';
 import { DeferredHeroActions } from '@/components/organisms/DeferredHeroActions';
-import { HorizontalMediaDetailPage } from '@/components/organisms/HorizontalMediaDetailPage';
+import { DetailPageScaffold } from '@/components/organisms/DetailPageScaffold';
 import { LazyTrailerEmbed } from '@/components/organisms/LazyTrailerEmbed';
 import { SeriesRecommendationsSection } from '@/components/organisms/SeriesRecommendationsSection';
-import { VideoDetailHero } from '@/components/organisms/VideoDetailHero';
+import { VideoDetailHeroFrame } from '@/components/organisms/VideoDetailHeroFrame';
 import { getSeriesDetailPageData } from '@/domains/series/server/series-detail-data';
 import { SeriesEpisodeSection } from '@/domains/series/ui/SeriesEpisodeSection';
 import { resolveViewerNsfwAccess } from '@/lib/server/viewer-nsfw-access';
@@ -211,7 +211,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
           year: series.year,
         })}
       />
-      <HorizontalMediaDetailPage
+      <DetailPageScaffold
         theme={theme}
         breadcrumbs={
           <Breadcrumbs
@@ -224,7 +224,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
           />
         }
         hero={
-          <VideoDetailHero
+          <VideoDetailHeroFrame
             theme={theme}
             backHref="/watch/series"
             backLabel="Kembali ke series"
@@ -399,7 +399,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
             theme={theme}
           />
         </Suspense>
-      </HorizontalMediaDetailPage>
+      </DetailPageScaffold>
     </>
   );
 }
